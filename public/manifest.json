@@ -1,0 +1,25 @@
+{
+  "name": "ሜሽ የፅዳት አገልግሎት | Mesh Cleaning Solution",
+  "short_name": "ሜሽ | Mesh",
+  "description": "የሜሽ የፅዳት አገልግሎት - ዘመናዊ የሶፋ፣ ምንጣፍ፣ ፍራሽ፣ መስታወት እና አጠቃላይ የቤትና ቢሮ ፅዳት",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#0891B2",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

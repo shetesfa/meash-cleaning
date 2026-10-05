@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ሜሽ የፅዳት አገልግሎት - የተሟላ የሲስተም አጠቃቀም ማኑዋል (Complete Master Operating Guide)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Noto+Sans+Ethiopic:wght@400;500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans Ethiopic', 'Plus Jakarta Sans', sans-serif;
+            background-color: #0B1120;
+            color: #1E293B;
+        }
+
+        @media print {
+            body {
+                background-color: #FFFFFF !important;
+                color: #000000 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .page-break {
+                page-break-after: always;
+                break-after: page;
+            }
+            .avoid-break {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .print-card {
+                border: 1px solid #CBD5E1 !important;
+                box-shadow: none !important;
+                background-color: #FFFFFF !important;
+                color: #000000 !important;
+            }
+            .print-bg-light {
+                background-color: #F8FAFC !important;
+                border: 1px solid #E2E8F0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-800 antialiased p-3 sm:p-6 lg:p-8">
+
+    <!-- FLOATING PRINT / PDF ACTION BAR (NO PRINT) -->
+    <div class="no-print fixed top-4 right-4 z-50 flex items-center gap-3 bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl border border-cyan-500/40 shadow-2xl">
+        <button onclick="window.print()" class="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-2 transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            <span>🖨️ በ PDF አስቀምጥ / አትም (Save as PDF)</span>
+        </button>
+        <a href="/app" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold rounded-xl border border-slate-700 transition-all">
+            ወደ አድሚን ገጽ (/app)
+        </a>
+        <a href="/" target="_blank" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl border border-slate-700 transition-all">
+            ወደ ዌብሳይት (/)
+        </a>
+    </div>
+
+    <!-- MAIN PRINTABLE CONTAINER -->
+    <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden print-card">
+        
+        <!-- COVER / HEADER SECTION -->
+        <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-cyan-950 p-8 sm:p-12 text-white relative overflow-hidden">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center text-slate-950 shadow-xl text-3xl font-black shrink-0">
+                    ✨
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-4xl font-black tracking-tight">MEASH CLEANING SOLUTION</h1>
+                    <p class="text-xs sm:text-sm font-bold text-cyan-400 tracking-wider uppercase">ሜሽ የፅዳት ቴክኖሎጂ — የተሟላ የሲስተም አሰራር መመሪያ (Complete Operating Manual)</p>
+                </div>
+            </div>
+            <div class="mt-6 pt-6 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs">
+                <div>
+                    <span class="text-slate-400 block">ሰነድ:</span>
+                    <strong class="text-cyan-300 text-sm">ለአዲስ ሰራተኛ፣ ለባለቤት እና ለሪሴፕሽን ደረጃ-በደረጃ የማሰልጠኛ ማንዋል</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 block">ስሪት:</span>
+                    <strong class="text-white">v2.5 (3D Web + Full Amharic Admin + Bot)</strong>
+                </div>
+                <div>
+                    <span class="text-slate-400 block">የሪሴፕሽን ስልክ:</span>
+                    <strong class="text-white font-mono text-sm">0943854325</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- BODY CONTENT -->
+        <div class="p-6 sm:p-12 space-y-12">
+
+            <!-- TABLE OF CONTENTS -->
+            <div class="border-b border-slate-200 pb-8 avoid-break">
+                <h2 class="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
+                    <span>📑</span>
+                    <span>የይዘት ማውጫ (Table of Contents)</span>
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <a href="#ch1" class="p-3 bg-slate-50 hover:bg-cyan-50 rounded-xl border border-slate-200 block transition-all">
+                        <strong class="text-cyan-900 block font-bold">ምዕራፍ 1: የ 3D ደንበኞች ድረ-ገጽ (Customer Website - /)</strong>
+                        <span class="text-slate-500 text-[11px]">3D ውጤት፣ ዋጋ ማሽን፣ የቀጥታ SMS፣ 4-ደረጃ ቀጠሮ ማስያዣ</span>
+                    </a>
+                    <a href="#ch2" class="p-3 bg-slate-50 hover:bg-cyan-50 rounded-xl border border-slate-200 block transition-all">
+                        <strong class="text-cyan-900 block font-bold">ምዕራፍ 2: የቢዝነስ መምሪያ አድሚን ገጽ (/app)</strong>
+                        <span class="text-slate-500 text-[11px]">የባለቤት ዳሽቦርድ፣ ሪሴፕሽን፣ ፅዳት ቡድን፣ ሽያጭ እና ፋይናንስ</span>
+                    </a>
+                    <a href="#ch3" class="p-3 bg-slate-50 hover:bg-cyan-50 rounded-xl border border-slate-200 block transition-all">
+                        <strong class="text-cyan-900 block font-bold">ምዕራፍ 3: የቴሌግራም ቦት እና ሚኒ አፕ (@meash_bot)</strong>
+                        <span class="text-slate-500 text-[11px]">ትዕዛዞች፣ ኢንላይን ካርዶች እና የቀጥታ ማረጋገጫ መልዕክት</span>
+                    </a>
+                    <a href="#ch4" class="p-3 bg-slate-50 hover:bg-cyan-50 rounded-xl border border-slate-200 block transition-all">
+                        <strong class="text-cyan-900 block font-bold">ምዕራፍ 4: ኦፍላይን አሰራር እና ማስጀመሪያ ፋይሎች (.bat)</strong>
+                        <span class="text-slate-500 text-[11px]">ያለ ቦት በኮምፒውተር ማስኬጃ እና PWA አጠቃቀም</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- CHAPTER 1: 3D WEBSITE -->
+            <div id="ch1" class="border-b border-slate-200 pb-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="w-9 h-9 rounded-2xl bg-cyan-600 text-white font-black flex items-center justify-center text-sm shadow-md">1</span>
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">የ 3D ደንበኞች ድረ-ገጽ ዝርዝር (Customer Website - /)</h2>
+                        <p class="text-xs text-slate-500">ደንበኞች በስልካቸው ወይም በኮምፒውተራቸው ሲከፍቱ የሚያዩትና የሚያደርጉት ነገር</p>
+                    </div>
+                </div>
+
+                <!-- 1.1 Top Header & Hero -->
+                <div class="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 avoid-break">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 class="font-black text-slate-900 text-sm">1.1 የላይኛው ማውጫ እና 3D ሄሮ (Hero & 3D Steam Canvas)</h3>
+                        <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 font-bold text-[10px]">ገጽ 1</span>
+                    </div>
+                    <ul class="space-y-2 text-slate-700">
+                        <li><strong>የስልክ ቁጥር ማሳወቂያ ባር:</strong> ከላይኛው ጫፍ ላይ የሪሴፕሽን ስልክ <strong class="text-cyan-700 font-mono">0943854325</strong> ይታያል፤ በስልክ ሲነኩት ወዲያውኑ መደወል ይጀምራል::</li>
+                        <li><strong>የቋንቋ መቀየሪያ (አማ / EN):</strong> "አማ" እና "EN" በመንካት ድረ-ገጹን ወደ አማርኛ ወይም እንግሊዝኛ መቀየር ይችላሉ::</li>
+                        <li><strong>3D የእንፋሎት ቅንጣቶች (Steam Particles):</strong> በጀርባው የሚንሳፈፉ ቅንጣቶች አይጤ ሲንቀሳቀስ ይገፋሉ:: <strong>ማንኛውም ቦታ ላይ ጠቅ (Click) ሲያደርጉ የ 12 ቅንጣት እንፋሎት ፍንዳታ (Steam Blast) ይፈጠራል!</strong></li>
+                        <li><strong>"በ 1 ደቂቃ ውስጥ ይዘዙ":</strong> ይህን ደማቅ አዝራር ሲጫኑ ስክሪኑ ወደ ታች ተንሸራቶ ወደ 4-ደረጃ የቀጠሮ ማስያዣ ዊዛርድ ይወስዳል::</li>
+                    </ul>
+                </div>
+
+                <!-- 1.2 Before & After Slider -->
+                <div class="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 avoid-break">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 class="font-black text-slate-900 text-sm">1.2 የ 3D ውጤት ንፅፅር (3D Reality Before & After Slider)</h3>
+                        <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 font-bold text-[10px]">ገጽ 2</span>
+                    </div>
+                    <p class="text-slate-700">ይህ ክፍል ደንበኛው ከፅዳት በፊት እና ከፅዳት በኋላ ያለውን ልዩነት በዓይኑ እንዲያይ ያደርጋል::</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="p-3 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-cyan-900 block mb-1">🔘 የምድብ መምረጫ አዝራሮች:</strong>
+                            <p class="text-slate-600">"🛋️ የቬልቬት ሶፋ"፣ "🧶 የሳሎን ምንጣፍ"፣ "🛏️ የአልጋ ፍራሽ" ሲጫኑ የጨርቁ ምስል እና ማብራሪያው በቅጽበት ይቀየራል::</p>
+                        </div>
+                        <div class="p-3 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-cyan-900 block mb-1">↔️ የ 3D ሌዘር መስመር ማንሸራተት:</strong>
+                            <p class="text-slate-600">በመሃል ያለውን ክብ የሌዘር መስመር በጣት ወይም በአይጤ ወደ ግራና ቀኝ በማንሸራተት የእድፍ መጥፋትን መመልከት ይቻላል::</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1.3 Service Cards -->
+                <div class="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 avoid-break">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 class="font-black text-slate-900 text-sm">1.3 ባለ 3D ጥልቀት የአገልግሎት ካርዶች (Interactive 3D Tilt Cards)</h3>
+                        <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 font-bold text-[10px]">ገጽ 3</span>
+                    </div>
+                    <p class="text-slate-700">6ቱ ዋና ዋና አገልግሎቶች ከአይጤ እንቅስቃሴ ጋር በ 1000px perspective ዘንበል የሚሉ (3D tilt) ካርዶች ናቸው::</p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        <li><strong>የሶፋ ጥልቅ እጥበት:</strong> 350 ብር / መቀመጫ</li>
+                        <li><strong>የምንጣፍ ማጠብና ስቲም:</strong> 80 ብር / ካሬ</li>
+                        <li><strong>የፍራሽ ሳኒታይዜሽን:</strong> 600 ብር / ፍራሽ</li>
+                        <li><strong>የመስታወት እና መስኮት ፅዳት:</strong> 70 ብር / ካሬ</li>
+                        <li><strong>የመኖሪያ ቤት አጠቃላይ ፅዳት:</strong> ከ 2,500 ብር ጀምሮ</li>
+                        <li><strong>የድርጅት እና ቢሮ ፅዳት:</strong> በኮንትራት / ካሬ</li>
+                    </ul>
+                    <div class="p-3 bg-cyan-50 rounded-xl border border-cyan-200">
+                        <strong class="text-cyan-950 font-bold block mb-0.5">💡 ቁልፍ ተግባር:</strong>
+                        <p class="text-cyan-900">በማንኛውም ካርድ ስር ያለውን <strong>"ቀጠሮ ያዝ"</strong> ሲጫኑ፣ ሲስተሙ ወዲያውኑ ወደ ታች ሸኝቶ ያንን አገልግሎትና ዋጋ በቀጠሮ ማስያዣው ፎርም ላይ በራሱ መርጦ ያስቀምጣል!</p>
+                    </div>
+                </div>
+
+                <!-- 1.4 Price Calculator & SMS Test -->
+                <div class="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 avoid-break">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 class="font-black text-slate-900 text-sm">1.4 የዋጋ ማሽን እና የቀጥታ SMS መሞከሪያ</h3>
+                        <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 font-bold text-[10px]">ገጽ 4</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1.5">
+                            <strong class="text-slate-900 block font-bold">🧮 የዋጋ ማስያ ማሽን:</strong>
+                            <p class="text-slate-600">አገልግሎት መርጠው የመቀመጫ ወይም የካሬ ሜትር መጠኑን በስላይደሩ ሲያንሸራቱ አጠቃላይ የሚከፍሉት ዋጋ (ለምሳሌ 5 መቀመጫ x 350 = 1,750 ብር) ወዲያውኑ ይታያል:: "በዚህ ዋጋ ቀጠሮ ይያዙ" ሲጫኑ ቀጥታ ወደ ፎርሙ ይወስዳል::</p>
+                        </div>
+                        <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1.5">
+                            <strong class="text-slate-900 block font-bold">📱 የቀጥታ SMS መሞከሪያ:</strong>
+                            <p class="text-slate-600">ስልክ ቁጥር በማስገባት አረንጓዴውን "የሙከራ ኤስኤምኤስ ላክ" ሲጫኑ፣ የሜሽ የቴሌኮም ኤስኤምኤስ ጌትዌይ ወዲያውኑ መልዕክቱን ወደ ስልክዎ ይልካል፤ የኔትወርክ ምላሹም በስክሪኑ ላይ ይታያል::</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1.5 4-Step Booking Wizard -->
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 avoid-break">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 class="font-black text-slate-900 text-sm">1.5 ባለ 4-ደረጃ የቀጠሮ ማስያዣ ዊዛርድ (4-Step Customer Wizard)</h3>
+                        <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 font-bold text-[10px]">ገጽ 5</span>
+                    </div>
+                    <ol class="list-decimal list-inside space-y-2 text-slate-700">
+                        <li><strong>ደረጃ 1 (አገልግሎትና ብዛት):</strong> የሚፈለገውን አገልግሎት ይጫኑ፤ የብዛት መቀነሻ (-) እና መጨመሪያ (+) ቁልፎችን ሲነኩ ዋጋው ወዲያውኑ ይሰላል::</li>
+                        <li><strong>ደረጃ 2 (አድራሻ እና GPS):</strong> 
+                            <ul class="list-disc list-inside ml-4 mt-1 space-y-0.5 text-slate-600">
+                                <li><strong>"ካርታዬን ያዝ (Get GPS)"</strong> ሲጫኑ የስልኩ/የኮምፒውተሩ የቀጥታ ጂፒኤስ መገኛ (Latitude/Longitude) ይመዘገባል::</li>
+                                <li>10ሩ የአዲስ አበባ ክፍለ ከተሞች (ቦሌ፣ ለሚ ኩራ፣ የካ፣ ወዘተ) እና ልዩ ሰፈር ይሞላል::</li>
+                            </ul>
+                        </li>
+                        <li><strong>ደረጃ 3 (ቀንና ሰዓት):</strong> የቀጠሮ ቀኑን እና ተመራጭ ሰዓት (ጠዋት፣ ከሰዓት፣ ወይም ሙሉ ቀን) ይመርጣሉ::</li>
+                        <li><strong>ደረጃ 4 (ስም፣ ስልክ እና ማረጋገጫ):</strong> ስም እና ስልክ ሞልተው <strong>"ቀጠሮውን አረጋግጥ"</strong> ሲጫኑ፡
+                            <div class="mt-1 p-2 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-900 font-semibold">
+                                🎉 ትዕዛዙ በሲስተሙ ይመዘገባል ➔ ልዩ የትዕዛዝ መለያ (ለምሳሌ MEASH-000042) ይወጣል ➔ በሪሴፕሽን ዳሽቦርድ ላይ ወዲያውኑ ማንቂያ ይጮሃል!
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- PAGE BREAK -->
+            <div class="page-break"></div>
+
+            <!-- CHAPTER 2: ADMIN OPERATING SYSTEM -->
+            <div id="ch2" class="border-b border-slate-200 pb-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="w-9 h-9 rounded-2xl bg-cyan-600 text-white font-black flex items-center justify-center text-sm shadow-md">2</span>
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">የአድሚን ሲስተም ዝርዝር አሰራር (Business OS - /app)</h2>
+                        <p class="text-xs text-slate-500">ለስራ አስኪያጅ፣ ለሪሴፕሽን፣ ለአጽጂ ቡድን እና ለሽያጭ ሰራተኞች የተዘጋጀ የውስጥ መምሪያ</p>
+                    </div>
+                </div>
+
+                <!-- 2.1 Owner Dashboard -->
+                <div class="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 avoid-break">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 class="font-black text-slate-900 text-sm">2.1 👑 የባለቤት እና የስራ አስኪያጅ ዳሽቦርድ (Executive BI)</h3>
+                        <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 font-bold text-[10px]">Role: Owner</span>
+                    </div>
+                    <p class="text-slate-700">ይህ ገጽ የኩባንያውን አጠቃላይ የስራ እና የፋይናንስ እንቅስቃሴ በአንድ እይታ ያሳያል::</p>
+                    
+                    <strong class="text-slate-900 block font-bold">10ሩ ዋና ዋና የዳሽቦርድ ካርዶች ትርጉም:</strong>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px]">
+                        <div class="p-2 bg-white rounded-lg border border-slate-200 text-center"><strong class="block text-slate-900">የዛሬ ስራዎች</strong>የቀኑ አጠቃላይ የፅዳት ቀጠሮዎች</div>
+                        <div class="p-2 bg-white rounded-lg border border-slate-200 text-center"><strong class="block text-amber-600">ማረጋገጫ የሚጠብቁ</strong>ከድረ-ገጽ የገቡ አዳዲስ ትዕዛዞች</div>
+                        <div class="p-2 bg-white rounded-lg border border-slate-200 text-center"><strong class="block text-red-600">ቡድን ያልተመደቡ</strong>አጽጂ ቡድን ገና ያልተሰጣቸው</div>
+                        <div class="p-2 bg-white rounded-lg border border-slate-200 text-center"><strong class="block text-cyan-700">አዳዲስ ደንበኞች</strong>ዛሬ የተመዘገቡ አዳዲስ ሰዎች</div>
+                        <div class="p-2 bg-white rounded-lg border border-slate-200 text-center"><strong class="block text-blue-700">የክትትል ጥሪዎች</strong>ዛሬ መደወል ያለባቸው ደንበኞች</div>
+                        <div class="p-2 bg-white rounded-lg border border-slate-200 text-center"><strong class="block text-red-700">ክፍት ቅሬታዎች</strong>እስካሁን ያልተፈቱ የደንበኛ አቤቱታዎች</div>
+                        <div class="p-2 bg-white rounded-lg border border-slate-200 text-center"><strong class="block text-purple-700">የሚጠበቁ ፕሮፎርማዎች</strong>ድርድር ላይ ያሉ የኮንትራት ጥያቄዎች</div>
+                        <div class="p-2 bg-emerald-50 rounded-lg border border-emerald-200 text-center"><strong class="block text-emerald-800">የዛሬ ገቢ</strong>ዛሬ የተሰበሰበ ትክክለኛ ብር</div>
+                        <div class="p-2 bg-red-50 rounded-lg border border-red-200 text-center"><strong class="block text-red-800">የዛሬ ወጪ</strong>የተመዘገቡ የቀኑ ወጪዎች</div>
+                        <div class="p-2 bg-cyan-50 rounded-lg border border-cyan-200 text-center"><strong class="block text-cyan-900">የዛሬ የተጣራ ውጤት</strong>የዛሬ ገቢ ሲቀነስ የዛሬ ወጪ</div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <div class="p-3 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-slate-900 block mb-1">🔘 "+ አዲስ ትዕዛዝ መዝግብ" ሲጫኑ:</strong>
+                            <p class="text-slate-600">የቀጠሮ መመዝገቢያ ፎርም ይከፈታል፤ የደንበኛ ስም፣ ስልክ፣ አድራሻ፣ አገልግሎት እና ቀን ሞልተው ሲያስቀምጡ ትዕዛዙ ወዲያውኑ ይመዘገባል::</p>
+                        </div>
+                        <div class="p-3 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-slate-900 block mb-1">🔘 "- ወጪ መዝግብ" ሲጫኑ:</strong>
+                            <p class="text-slate-600">የወጪ መመዝገቢያ ፎርም ይከፈታል፤ ኬሚካል፣ ነዳጅ፣ የማሽን ጥገና፣ ወይም የሰራተኛ ክፍያ መርጠው የብር መጠኑን ሲመዘግቡ የዳሽቦርዱ ወጪና ትርፍ ወዲያውኑ ይቀነሳል::</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2.2 Reception Desk -->
+                <div class="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 avoid-break">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 class="font-black text-slate-900 text-sm">2.2 📞 የሪሴፕሽን ስራ መምሪያ ዴስክ (Reception Command Desk)</h3>
+                        <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 font-bold text-[10px]">Role: Reception</span>
+                    </div>
+                    <p class="text-slate-700">ሪሴፕሽን ደንበኛ በ <strong>0943854325</strong> ሲደውል ጥሪውን የምትቀበልበት እና ስራዎችን የምትመራበት ክፍል ነው::</p>
+                    
+                    <strong class="text-slate-900 block font-bold">4ቱ ዋና ዋና የሪሴፕሽን ቅደም ተከተሎች:</strong>
+                    <div class="space-y-2">
+                        <div class="p-3 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-cyan-900 block font-bold mb-1">1. ማረጋገጫ የሚሹ አዳዲስ ትዕዛዞች (New Bookings Requiring Confirmation):</strong>
+                            <p class="text-slate-600 mb-1.5">ከድረ-ገጽ የተያዙ ቀጠሮዎች እዚህ ይቀመጣሉ:: ሪሴፕሽን ለደንበኛው ደውላ ካረጋገጠች በኋላ:</p>
+                            <div class="flex gap-2">
+                                <span class="px-2.5 py-1 bg-cyan-600 text-white font-bold rounded-lg text-[10px]">አረጋግጥ እና ቡድን መድብ</span>
+                                <span class="text-slate-500 self-center">➔ ቡድን (አልፋ፣ ብራቮ) ሲመረጥ ትዕዛዙ ወዲያውኑ በአጽጂዎች ስልክ ላይ ይታያል!</span>
+                            </div>
+                            <div class="flex gap-2 mt-1">
+                                <span class="px-2.5 py-1 bg-amber-500 text-white font-bold rounded-lg text-[10px]">📅 አስተላልፍ</span>
+                                <span class="text-slate-500 self-center">➔ ደንበኛው ወይም ቡድኑ ሌላ ቀን ከፈለጉ አዲስ ቀንና ሰዓት ይመርጣል፤ ለደንበኛው በራሱ SMS ይልካል!</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-slate-900 block font-bold mb-1">2. የዛሬ የስራ መርሃ-ግብር እና ቡድኖች (Today's Schedule & Teams):</strong>
+                            <p class="text-slate-600">ዛሬ የሚሰሩ ስራዎች፣ ሰዓታቸው፣ የተመደበው ቡድን እና ስራው በምን ደረጃ ላይ እንዳለ (በመሰራት ላይ/የተጠናቀቀ) ያሳያል::</p>
+                        </div>
+
+                        <div class="p-3 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-slate-900 block font-bold mb-1">3. ለደንበኞች የሚደረጉ የክትትል ጥሪዎች (Customer Follow-up Calls):</strong>
+                            <p class="text-slate-600">ትናንት የፀዳላቸው ደንበኞች እዚህ ይወጣሉ:: <strong>"ጥሪ መዝግብ"</strong> ሲጫኑ የ 1 እስከ 5 ኮከብ የእርካታ ደረጃ እና ደንበኛው የተናገረውን አስተያየት መዝግባ ታስቀምጣለች::</p>
+                        </div>
+
+                        <div class="p-3 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-slate-900 block font-bold mb-1">4. ንቁ የደንበኞች ቅሬታዎች (Active Complaints):</strong>
+                            <p class="text-slate-600">ደንበኛ ቅሬታ ካለው እዚህ ይታያል:: <strong>"መፍትሄ ስጥ"</strong> ሲጫኑ የተወሰደውን የእርምት እርምጃ (ለምሳሌ በነጻ ሄዶ ማስተካከል) መዝግባ ቅሬታውን ትዘጋለች::</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2.3 Cleaner Mobile Hub -->
+                <div class="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 avoid-break">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 class="font-black text-slate-900 text-sm">2.3 🧹 የመስክ የፅዳት ቡድን መከታተያ (Field Cleaner Mobile Hub)</h3>
+                        <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 font-bold text-[10px]">Role: Cleaner</span>
+                    </div>
+                    <p class="text-slate-700">ይህ ክፍል ለሞባይል ስልኮች (በተለይ ለአንድሮይድ እና አይፎን) የተዘጋጀ ሲሆን <strong>ያለ ኢንተርኔትም (100% Offline)</strong> ይሰራል::</p>
+                    
+                    <strong class="text-slate-900 block font-bold">በእያንዳንዱ ስራ ስር ያሉ አዝራሮች እና ተግባራቸው:</strong>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-slate-900 block mb-0.5">📞 ደውል (Call Customer):</strong>
+                            <span class="text-slate-600">ስልክ ቁጥሩን መጫን ብቻ ወዲያውኑ ለደንበኛው ይደውላል::</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-emerald-800 block mb-0.5">📍 ጂፒኤስ ካርታ (GPS Map):</strong>
+                            <span class="text-slate-600">የጉግል ካርታን ከፍቶ በቀጥታ ወደ ደንበኛው ቤት መመሪያ (Navigation) ይሰጣል::</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-blue-800 block mb-0.5">▶️ ስራ ጀምር (Start Job):</strong>
+                            <span class="text-slate-600">ቦታው ሲደረስ ይጫናል፤ የትዕዛዙን ሁኔታ ወደ "እየፀዳ ነው (cleaning)" ይቀይረዋል::</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-emerald-800 block mb-0.5">✅ ስራ ጨርስ (Complete Job):</strong>
+                            <span class="text-slate-600">ስራው ሲያልቅ ይጫናል፤ የተጠናቀቀበትን ሰዓት ይይዛል፤ ክፍያ እንዲቀበሉ ያስታውሳል::</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-red-800 block mb-0.5">⚠️ ችግር (Problem Report):</strong>
+                            <span class="text-slate-600">በሩ ከተቆለፈ፣ ውሃ/መብራት ከሌለ ወይም የማይለቅ እድፍ ካለ ለሪሴፕሽን ማሳወቂያ ይልካል::</span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <strong class="text-amber-800 block mb-0.5">📅 ቀጠሮ አስተላልፍ:</strong>
+                            <span class="text-slate-600">ደንበኛው በቦታው ካልተገኘ ስራውን ወደ ሌላ ቀን ያሸጋሽጋል::</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2.4 Sales CRM & Other Modules -->
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-3 avoid-break">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <h3 class="font-black text-slate-900 text-sm">2.4 💼 የውጭ ሽያጭ፣ ትዕዛዞች፣ ፋይናንስ እና ካላንደር</h3>
+                        <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-900 font-bold text-[10px]">Modules</span>
+                    </div>
+                    <ul class="space-y-2 text-slate-700">
+                        <li><strong>የውጭ ሽያጭ CRM (Sales Pipeline):</strong> ሆቴሎችን፣ ባንኮችን እና ኤምባሲዎችን መጎብኘት፤ "+ አዲስ ድርጅት" መመዝገብ፤ "+ ጉብኝት መዝግብ" በመጫን የተነጋገሩትን ነጥብ ማስቀመጥ እና ደረጃ ማሻገር (Lead ➔ Visited ➔ Proforma ➔ Contract Won)::</li>
+                        <li><strong>የትዕዛዞች ዝርዝር (All Orders):</strong> ሁሉንም ትዕዛዞች መፈለግ፣ ሁኔታቸውን መመልከት፣ እና <strong>"ዝርዝር እይ"</strong> ሲጫኑ የደንበኛውን የቀጥታ የጂፒኤስ ካርታ ፒን ማየት::</li>
+                        <li><strong>የደንበኞች መረጃ ቋት (CRM):</strong> የደንበኞችን ስም መፈለግ፣ ስልካቸውን ማየት እና <strong>"የአገልግሎት ታሪክ እይ"</strong> ሲጫኑ ከዚህ በፊት የተሰሩላቸውን ስራዎች በሙሉ በጊዜ ሰሌዳ (Timeline) ማየት::</li>
+                        <li><strong>ፋይናንስ እና ትርፍ (Finance & Net Profit):</strong> የተጣራ ትርፍ ማየት (ጠቅላላ ገቢ ሲቀነስ ወጪዎች)::</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PAGE BREAK -->
+            <div class="page-break"></div>
+
+            <!-- CHAPTER 3: TELEGRAM BOT & MINI APP -->
+            <div id="ch3" class="border-b border-slate-200 pb-8 avoid-break">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="w-9 h-9 rounded-2xl bg-cyan-600 text-white font-black flex items-center justify-center text-sm shadow-md">3</span>
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">የቴሌግራም ቦት እና ሚኒ አፕ (@meash_cleaning_solution_bot)</h2>
+                        <p class="text-xs text-slate-500">በቴሌግራም በኩል ደንበኞች በ 24 ሰዓት ውስጥ ቀጠሮ የሚይዙበት እና ትዕዛዛቸውን የሚከታተሉበት</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                        <strong class="text-cyan-900 block font-bold text-sm">🤖 የቦቱ ዋና ዋና ትዕዛዞች (Commands):</strong>
+                        <ul class="space-y-1 text-slate-700 font-mono text-[11px]">
+                            <li><strong>/start</strong> ➔ ዋናውን ማውጫ እና የቦታ ማስያዣ አዝራሮችን ያሳያል</li>
+                            <li><strong>/services</strong> ➔ የሶፋ፣ ምንጣፍ፣ ፍራሽ እና መስታወት ዋጋ ዝርዝር</li>
+                            <li><strong>/book</strong> ➔ የቴሌግራም ሚኒ አፕን (Mini App) በቀጥታ በቻቱ ውስጥ ይከፍታል</li>
+                            <li><strong>/status MEASH-000042</strong> ➔ የትዕዛዙን ሁኔታ (እየፀዳ ነው/ተጠናቋል) ያሳያል</li>
+                            <li><strong>/contact</strong> ➔ የሪሴፕሽን ስልክ (0943854325) ያሳያል</li>
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                        <strong class="text-cyan-900 block font-bold text-sm">✨ ኢንላይን ካርዶች (Telegram Inline Mode):</strong>
+                        <p class="text-slate-600 leading-relaxed">
+                            በማንኛውም የቴሌግራም ቻት፣ ቻናል ወይም ግሩፕ ውስጥ <strong>@meash_cleaning_solution_bot </strong> (ስፔስ አድርገው) ሲጽፉ 11 ዘመናዊ የፎቶ ካርዶች በቅጽበት ይወጣሉ፤ ሰዎች በቻት ውስጥ በቀጥታ እንዲያዩት መላክ ይችላሉ::
+                        </p>
+                        <p class="text-emerald-800 font-semibold">
+                            በቴሌግራም የተያዘ ማንኛውም ቀጠሮ ወዲያውኑ በሪሴፕሽን ዳሽቦርድ ላይ ይታያል፤ ለደንበኛውም SMS ይላካል::
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHAPTER 4: STARTUP & OFFLINE -->
+            <div id="ch4" class="avoid-break">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="w-9 h-9 rounded-2xl bg-cyan-600 text-white font-black flex items-center justify-center text-sm shadow-md">4</span>
+                    <div>
+                        <h2 class="text-xl font-black text-slate-900">የቴክኒክ፣ ኦፍላይን እና ማስጀመሪያ ፋይሎች (.bat Guide)</h2>
+                        <p class="text-xs text-slate-500">ኮምፒውተር ላይ ሲስተሙን በየቀኑ እንዴት እንደሚያስነሱ እና ያለ ቦት እንዴት እንደሚጠቀሙ</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                    <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <strong class="text-cyan-900 block text-sm">🚀 Start_Without_Bot.bat (አዲስ የተዘጋጀ)</strong>
+                            <span class="text-slate-600 text-[11px]">የቴሌግራም ቦቱን ሳይከፍት ሰርቨሩን ብቻ በኮምፒውተርዎ ላይ ያስነሳል፤ 3D ዌብሳይቱንና አድሚን ገጹን ወዲያውኑ ይከፍታል::</span>
+                        </div>
+                        <span class="px-3 py-1 bg-cyan-100 text-cyan-900 font-black rounded-xl text-[10px] shrink-0">ያለ ቦት ማስኬጃ</span>
+                    </div>
+
+                    <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <strong class="text-slate-900 block text-sm">🌐 Start_All.bat</strong>
+                            <span class="text-slate-600 text-[11px]">ሰርቨሩንም የቴሌግራም ቦቱንም በአንድ ጊዜ ማስነሳት ሲፈልጉ ይህንን ይጠቀማሉ::</span>
+                        </div>
+                        <span class="px-3 py-1 bg-emerald-100 text-emerald-900 font-black rounded-xl text-[10px] shrink-0">ሁሉንም ማስጀመሪያ</span>
+                    </div>
+
+                    <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                            <strong class="text-slate-900 block text-sm">🤖 Start_Telegram_Bot.bat</strong>
+                            <span class="text-slate-600 text-[11px]">የቴሌግራም ቦቱን ሞተር ብቻ ለብቻው ለማስኬድ የሚያገለግል::</span>
+                        </div>
+                        <span class="px-3 py-1 bg-slate-200 text-slate-800 font-black rounded-xl text-[10px] shrink-0">ቦት ብቻ</span>
+                    </div>
+                </div>
+
+                <!-- Offline PWA Instructions -->
+                <div class="mt-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs space-y-2">
+                    <strong class="text-emerald-950 block font-bold text-sm">📲 መተግበሪያውን በስልክ ላይ መጫን (PWA App Installation):</strong>
+                    <ul class="list-disc list-inside space-y-1 text-emerald-900">
+                        <li><strong>በአንድሮይድ ስልክ (Android/Chrome):</strong> ዌብሳይቱን ወይም አድሚን ገጹን ሲከፍቱ ከላይ የብሮውዘሩን 3 ነጥብ ሜኑ ነክተው <strong>"Install app"</strong> ወይም <strong>"Add to Home screen"</strong> ይበሉ::</li>
+                        <li><strong>በአይፎን (iPhone/Safari):</strong> ከስር ያለውን የሼር (Share) ምልክት ነክተው <strong>"Add to Home Screen"</strong> የሚለውን ይምረጡ::</li>
+                        <li>መተግበሪያው ልክ እንደ መደበኛ አፕ ስልክዎ ላይ ይቀመጣል፤ <strong>ኢንተርኔት በሌለበት ጊዜም ይከፈታል!</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- FOOTER SIGN OFF -->
+            <div class="pt-8 border-t border-slate-200 text-center text-xs text-slate-500 avoid-break">
+                <p class="font-black text-slate-800 text-sm">MEASH CLEANING SOLUTION — የተሟላ የቢዝነስ ኦፕሬቲንግ ሲስተም</p>
+                <p class="mt-1">አዲስ አበባ፣ ኢትዮጵያ | የሪሴፕሽን ስልክ: <strong class="text-cyan-700 font-mono">0943854325</strong> | ቴሌግራም: <strong>@meash_cleaning_solution_bot</strong></p>
+                <p class="text-[10px] text-slate-400 mt-2">&copy; 2026 ሜሽ የፅዳት ቴክኖሎጂ:: መብቱ በህግ የተጠበቀ ነው::</p>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

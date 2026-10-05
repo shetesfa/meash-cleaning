@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="am" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>ሜሽ የፅዳት አገልግሎት | Mesh Cleaning Solution - World-Class 3D Cleaning</title>
+    <meta name="description" content="ሜሽ የፅዳት አገልግሎት (Mesh Cleaning Solution) - በአዲስ አበባ የሶፋ፣ ምንጣፍ፣ ፍራሽ፣ መስታወት እና ጥልቅ የቤትና ቢሮ ፅዳት በሆስፒታል ደረጃ ስቲም ቴክኖሎጂ።">
+    <meta name="theme-color" content="#0F172A">
+    
+    <!-- PWA Manifest & Icons -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icon-192.png">
+    <link rel="icon" type="image/jpeg" href="/logo.jpg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ሜሽ ክሊኒንግ">
+
+    <!-- OpenGraph Social Preview -->
+    <meta property="og:title" content="ሜሽ የፅዳት አገልግሎት | Mesh Cleaning Solution">
+    <meta property="og:description" content="የሆስፒታል ደረጃ የሶፋ፣ ምንጣፍ፣ ፍራሽና የመስታወት ጥልቅ እጥበት በአዲስ አበባ።">
+    <meta property="og:image" content="/logo.jpg">
+    <meta property="og:type" content="website">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mesh: {
+                            navy: '#0B1120',
+                            card: '#131D31',
+                            surface: '#1E293B',
+                            cyan: '#06B6D4',
+                            blue: '#0284C7',
+                            teal: '#0D9488',
+                            emerald: '#10B981',
+                            accent: '#38BDF8',
+                        }
+                    },
+                    boxShadow: {
+                        '3d-cyan': '0 20px 50px -10px rgba(6, 182, 212, 0.3)',
+                        '3d-blue': '0 20px 50px -10px rgba(2, 132, 199, 0.3)',
+                        '3d-emerald': '0 20px 50px -10px rgba(16, 185, 129, 0.3)',
+                        'glow': '0 0 30px rgba(56, 189, 248, 0.25)',
+                    },
+                    animation: {
+                        'float-slow': 'float 6s ease-in-out infinite',
+                        'float-reverse': 'floatRev 7s ease-in-out infinite',
+                        'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+                        'shimmer': 'shimmer 2.5s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-15px) rotate(1.5deg)' },
+                        },
+                        floatRev: {
+                            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                            '50%': { transform: 'translateY(15px) rotate(-1.5deg)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.4', filter: 'blur(20px)' },
+                            '50%': { opacity: '0.8', filter: 'blur(30px)' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Translations & Offline Engine -->
+    <script src="/js/meash-i18n.js"></script>
+    <script src="/js/meash-offline.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Noto+Sans+Ethiopic:wght@400;600;700;800;900&display=swap');
+        body {
+            font-family: 'Noto Sans Ethiopic', 'Plus Jakarta Sans', sans-serif;
+            background-color: #070B14;
+            color: #F8FAFC;
+            overflow-x: hidden;
+        }
+        /* 3D Canvas Background */
+        #clean-3d-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: rgba(19, 29, 49, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card-interactive {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        .glass-card-interactive:hover {
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 20px 40px -15px rgba(6, 182, 212, 0.35);
+        }
+        /* 3D Before/After Comparison Container */
+        .before-after-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            user-select: none;
+            touch-action: pan-y;
+        }
+        .after-image-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            overflow: hidden;
+            width: 50%;
+            border-right: 3px solid #38BDF8;
+        }
+        .slider-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 44px;
+            height: 44px;
+            background: #0284C7;
+            border: 3px solid #FFFFFF;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.8);
+            cursor: ew-resize;
+            z-index: 20;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #070B14; }
+        ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.2); }
+        ::-webkit-scrollbar-thumb:hover { background: #0284C7; }
+    </style>
+</head>
+<body class="selection:bg-cyan-500 selection:text-white">
+
+    <!-- 3D INTERACTIVE PARTICLE & STEAM CANVAS -->
+    <canvas id="clean-3d-canvas"></canvas>
+
+    <!-- PWA INSTALL BANNER (Native prompt trigger) -->
+    <div id="pwa-install-banner" class="hidden fixed bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-50 p-4 rounded-2xl glass-panel border border-cyan-500/40 shadow-2xl shadow-cyan-500/20 animate-bounce">
+        <div class="flex items-center gap-3">
+            <img src="/logo.jpg" alt="Mesh Logo" class="w-12 h-12 rounded-xl object-cover border border-cyan-400/50 shadow-md shrink-0">
+            <div class="flex-1 min-w-0">
+                <h4 class="text-xs font-black text-white truncate">ሜሽ የፅዳት መተግበሪያ</h4>
+                <p class="text-[11px] text-slate-300">ስልክዎ ላይ በቀጥታ በመጫን ፈጣን ፅዳት ይዘዙ!</p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="triggerPwaInstall()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold text-xs shadow-md shadow-cyan-500/30 hover:scale-105 active:scale-95 transition-all">ጫን (Install)</button>
+                <button onclick="dismissPwaBanner()" class="text-slate-400 hover:text-white p-1 text-base">&times;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP ANNOUNCEMENT BAR -->
+    <div class="relative z-30 bg-gradient-to-r from-cyan-900/90 via-blue-900/90 to-slate-900/90 backdrop-blur-md border-b border-cyan-500/20 px-4 py-2 text-xs font-medium text-white shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                </span>
+                <span class="font-bold tracking-tight">✨ ሜሽ የፅዳት አገልግሎት - በአዲስ አበባ የላቀ የ 3D ስቲም ቴክኖሎጂ</span>
+            </div>
+            <div class="flex items-center gap-4 text-[11px]">
+                <a href="tel:0911000002" class="flex items-center gap-1.5 font-bold hover:text-cyan-300 transition-colors">
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-cyan-400"></i>
+                    <span>ሪሴፕሽን: <strong>0911000002 / 0911000001</strong></span>
+                </a>
+                <!-- Language Switcher -->
+                <div class="flex items-center bg-black/40 rounded-lg p-0.5 border border-white/20">
+                    <button onclick="toggleLang('am')" id="top-btn-am" class="px-2 py-0.5 rounded font-extrabold text-white bg-cyan-600 transition-all">አማ</button>
+                    <button onclick="toggleLang('en')" id="top-btn-en" class="px-2 py-0.5 rounded font-bold text-slate-400 hover:text-white transition-all">EN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN NAVBAR (3D Glassmorphism) -->
+    <header class="sticky top-0 z-40 backdrop-blur-2xl bg-slate-950/80 border-b border-white/10 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="/" class="flex items-center gap-3.5 group">
+                <div class="relative">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl blur-sm opacity-70 group-hover:opacity-100 transition duration-300"></div>
+                    <img src="/logo.jpg" alt="Mesh Cleaning Solution Logo" class="relative w-12 h-12 rounded-xl object-cover border border-cyan-400/40 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform duration-300">
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2">
+                        ሜሽ
+                        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800">MESH 3D</span>
+                    </h1>
+                    <p class="text-[10px] font-bold tracking-wider text-cyan-400 uppercase">Cleaning Solution</p>
+                </div>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-300">
+                <a href="#services" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i><span id="nav-svc">አገልግሎቶች</span></a>
+                <a href="#comparison" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5"><i data-lucide="layers" class="w-4 h-4 text-cyan-400"></i><span id="nav-compare">3D ውጤት (Before/After)</span></a>
+                <a href="#calculator" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5"><i data-lucide="calculator" class="w-4 h-4 text-cyan-400"></i><span id="nav-calc">ዋጋ አስላ</span></a>
+                <a href="#track" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5"><i data-lucide="navigation" class="w-4 h-4 text-cyan-400"></i><span id="nav-track">ትዕዛዝ ተከታተል</span></a>
+                <a href="#sms-test-section" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5"><i data-lucide="message-square" class="w-4 h-4 text-cyan-400"></i><span>SMS ሞክር</span></a>
+            </nav>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2.5">
+                <!-- Real Device Notifications Test Button -->
+                <button onclick="requestPushNotification()" class="p-2 sm:px-3 sm:py-2 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-cyan-400 border border-slate-700/80 transition-all flex items-center gap-1.5" title="ማሳወቂያዎችን ፍቀድና ሞክር (Test Notifications)">
+                    <i data-lucide="bell" class="w-4 h-4 text-cyan-400"></i>
+                    <span class="hidden md:inline text-[11px]">ማሳወቂያ</span>
+                </button>
+
+                <!-- Telegram Direct Bot Link -->
+                <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 transition-all">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">@meash_cleaning_solution_bot</span>
+                    <span class="md:hidden">ቦት</span>
+                </a>
+
+                <!-- Staff Login -->
+                <a href="/app" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-all">
+                    <i data-lucide="lock" class="w-3.5 h-3.5 text-cyan-400"></i>
+                    <span class="hidden sm:inline">ሰራተኛ</span>
+                </a>
+
+                <!-- Instant Book CTA Button -->
+                <a href="#book" class="inline-flex items-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-extrabold rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-cyan-500 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all transform hover:-translate-y-0.5">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span id="nav-cta-book">ቦታ ያስይዙ</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION (3D Futuristic Cleaning Experience) -->
+    <section class="relative pt-12 pb-24 lg:pt-20 lg:pb-32 overflow-hidden z-10">
+        <!-- Glow Orbs -->
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-cyan-600/20 via-blue-600/15 to-emerald-500/10 rounded-full blur-[100px] pointer-events-none animate-pulse-glow"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <!-- Left Column: Copy & CTAs -->
+                <div class="lg:col-span-7 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-cyan-500/30 text-cyan-300 text-xs font-bold mb-6 shadow-sm">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400 animate-spin" style="animation-duration: 6s;"></i>
+                        <span>የአዲስ አበባ ፕሪሚየም የ 3D ስቲም ፅዳት ቴክኖሎጂ</span>
+                    </div>
+
+                    <h2 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.1] mb-6">
+                        ጥልቅ ፅዳት። <br>
+                        <span class="bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">አዲስ የህይወት እስትንፋስ።</span>
+                    </h2>
+
+                    <p class="text-base sm:text-lg text-slate-300 leading-relaxed mb-8 max-w-2xl mx-auto lg:mx-0 font-normal">
+                        የሶፋ፣ ምንጣፍ፣ ፍራሽ እና መስታወት ንፅህናን በሆስፒታል ደረጃ ከፍተኛ ሙቀት ባለው ስቲም (Steam Extraction) እናቀርባለን። 99.9% ጀርሞችንና አቧራን አጥፍተን በ 45 ደቂቃ ውስጥ እንዲደርቅ እናደርጋለን።
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-10">
+                        <a href="#book" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-cyan-500 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-base shadow-3d-cyan hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+                            <i data-lucide="calendar" class="w-5 h-5"></i>
+                            <span>በ 1 ደቂቃ ውስጥ ይዘዙ (Book Now)</span>
+                        </a>
+                        <a href="#comparison" class="w-full sm:w-auto px-7 py-4 rounded-2xl glass-panel hover:bg-slate-800 text-slate-200 font-bold text-base border border-slate-700 transition-all flex items-center justify-center gap-3">
+                            <i data-lucide="eye" class="w-5 h-5 text-cyan-400"></i>
+                            <span>3D ውጤቱን እይ (Before & After)</span>
+                        </a>
+                    </div>
+
+                    <!-- Live Metrics Strip -->
+                    <div class="grid grid-cols-3 gap-4 pt-8 border-t border-slate-800/80 max-w-lg mx-auto lg:mx-0">
+                        <div class="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-center">
+                            <span class="text-2xl sm:text-3xl font-black text-cyan-400 block">99.9%</span>
+                            <span class="text-[11px] text-slate-400 font-medium">ጀርም እና አቧራ ማስወገድ</span>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-center">
+                            <span class="text-2xl sm:text-3xl font-black text-emerald-400 block">45 ደቂቃ</span>
+                            <span class="text-[11px] text-slate-400 font-medium">ፈጣን ማድረቂያ ቴክኖሎጂ</span>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-slate-900/60 border border-slate-800 text-center">
+                            <span class="text-2xl sm:text-3xl font-black text-blue-400 block">10</span>
+                            <span class="text-[11px] text-slate-400 font-medium">ክፍለ ከተሞች ሙሉ ሽፋን</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: 3D Interactive Floating Visual Card -->
+                <div class="lg:col-span-5 relative">
+                    <div class="relative mx-auto max-w-md">
+                        <!-- Background Glow Accent -->
+                        <div class="absolute -inset-4 bg-gradient-to-tr from-cyan-500/30 to-blue-600/30 rounded-3xl blur-2xl opacity-60 animate-pulse-glow"></div>
+
+                        <!-- 3D Card Stack -->
+                        <div class="relative rounded-3xl glass-card-interactive p-6 border border-cyan-500/30 shadow-2xl animate-float-slow">
+                            <!-- Card Header -->
+                            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+                                <div class="flex items-center gap-3">
+                                    <img src="/logo.jpg" alt="Mesh" class="w-11 h-11 rounded-xl object-cover border border-cyan-400 shadow-md">
+                                    <div>
+                                        <h3 class="text-sm font-extrabold text-white">ሜሽ ጥልቅ ስቲም እጥበት</h3>
+                                        <p class="text-[10px] text-cyan-400 font-semibold">Hospital Grade Deep Sanitization</p>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/40">● ኦንላይን ክፍት</span>
+                            </div>
+
+                            <!-- Showcase Simulation Media / Graphic -->
+                            <div class="relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 mb-5 p-5 text-center">
+                                <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 mx-auto flex items-center justify-center text-white mb-3 shadow-lg shadow-cyan-500/30">
+                                    <i data-lucide="sparkles" class="w-10 h-10"></i>
+                                </div>
+                                <h4 class="text-base font-extrabold text-white mb-1">የሶፋ እና የምንጣፍ 3D ስቲም እጥበት</h4>
+                                <p class="text-xs text-slate-400">በእድፍ፣ በአቧራ እና በጀርም የተያዙ ጨርቆችን ወደ አዲስነት እንቀይራለን።</p>
+                                <div class="mt-4 flex items-center justify-center gap-2">
+                                    <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] text-cyan-300 font-bold">🛋 350 ብር / መቀመጫ</span>
+                                    <span class="px-2.5 py-1 rounded-lg bg-slate-800 text-[11px] text-cyan-300 font-bold">🧶 80 ብር / ካሬ</span>
+                                </div>
+                            </div>
+
+                            <!-- Interactive 1-Click Order Link -->
+                            <div class="space-y-2">
+                                <a href="#book" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all">
+                                    <i data-lucide="zap" class="w-4 h-4"></i>
+                                    <span>አሁኑኑ በ 350 ብር ጀምረው ይዘዙ</span>
+                                </a>
+                                <p class="text-center text-[10px] text-slate-400">ክፍያ የሚፈጸመው ስራው በአግባቡ ተጠናቆ ሲረከቡ ብቻ ነው!</p>
+                            </div>
+                        </div>
+
+                        <!-- Floating Micro Badges -->
+                        <div class="absolute -top-4 -left-4 p-3 rounded-2xl glass-panel border border-cyan-500/40 shadow-xl flex items-center gap-2.5 animate-float-reverse hidden sm:flex">
+                            <div class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">
+                                💨
+                            </div>
+                            <div>
+                                <p class="text-[11px] font-black text-white">160°C ስቲም</p>
+                                <p class="text-[9px] text-cyan-300">ጀርሞችን ወዲያውኑ ያጠፋል</p>
+                            </div>
+                        </div>
+
+                        <div class="absolute -bottom-5 -right-4 p-3 rounded-2xl glass-panel border border-emerald-500/40 shadow-xl flex items-center gap-2.5 animate-float-slow hidden sm:flex">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                                🌿
+                            </div>
+                            <div>
+                                <p class="text-[11px] font-black text-white">100% ኬሚካል-አልባ</p>
+                                <p class="text-[9px] text-emerald-300">ለህፃናትና የቤት እንስሳት አስተማማኝ</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3D INTERACTIVE BEFORE & AFTER COMPARISON SLIDER -->
+    <section id="comparison" class="py-20 relative z-20 bg-slate-950/80 border-y border-white/5">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <span class="px-3.5 py-1 rounded-full bg-cyan-950 border border-cyan-500/30 text-cyan-400 text-xs font-bold uppercase tracking-wider">3D Real-Life Transformation</span>
+                <h2 class="text-3xl sm:text-4xl font-black text-white mt-3">ከፅዳት በፊት እና ከፅዳት በኋላ (Before & After)</h2>
+                <p class="text-slate-400 text-sm mt-2">በመሃል ያለውን መስመር ወደ ግራ እና ቀኝ በመጎተት የሜሽን አስደናቂ ጥልቅ ፅዳት ውጤት በዓይንዎ ይመስክሩ።</p>
+            </div>
+
+            <!-- Comparison Interactive Container -->
+            <div class="relative rounded-3xl overflow-hidden shadow-2xl border border-cyan-500/30 bg-slate-900 before-after-wrapper max-w-3xl mx-auto" id="ba-container">
+                <!-- Base Image: Before (Dusty, Stained Velvet Fabric) -->
+                <div class="relative w-full h-[320px] sm:h-[420px] bg-slate-900 flex items-center justify-center overflow-hidden">
+                    <!-- High-Res Before Graphic/Visual Pattern -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-amber-950/60 via-slate-900 to-amber-900/40 flex flex-col items-center justify-center p-6 text-center">
+                        <span class="text-6xl mb-3 opacity-60">🛋️</span>
+                        <div class="p-4 rounded-2xl bg-black/60 backdrop-blur-md border border-amber-500/30 max-w-sm">
+                            <span class="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-black text-xs uppercase tracking-wider block mb-2">❌ ከፅዳት በፊት (BEFORE)</span>
+                            <p class="text-xs text-slate-300">ያረጀ እድፍ፣ የፈሳሽ ምልክቶች፣ የአቧራ ቅንጣቶች እና የረጅም ጊዜ የባክቴሪያ ክምችት።</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overlay Image: After (Sparkling Clean, Sanitized Velvet) -->
+                <div class="after-image-layer" id="ba-after-layer">
+                    <div class="absolute inset-0 w-[768px] h-[320px] sm:h-[420px] bg-gradient-to-br from-cyan-950/80 via-blue-950 to-emerald-950/70 flex flex-col items-center justify-center p-6 text-center">
+                        <span class="text-6xl mb-3 drop-shadow-[0_0_20px_rgba(6,182,212,0.8)]">✨🛋️</span>
+                        <div class="p-4 rounded-2xl bg-black/70 backdrop-blur-md border border-cyan-400/50 max-w-sm shadow-xl">
+                            <span class="px-3 py-1 rounded-lg bg-cyan-500/30 text-cyan-300 font-black text-xs uppercase tracking-wider block mb-2">✅ ከሜሽ ጥልቅ ፅዳት በኋላ (AFTER MESH)</span>
+                            <p class="text-xs text-cyan-100 font-semibold">100% የታደሰ የጨርቅ ቀለም፣ በ 160°C ስቲም የጸዳ፣ በ 45 ደቂቃ የደረቀ እና አዲስ መዓዛ ያለው!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Draggable Handle -->
+                <div class="slider-handle" id="ba-handle">
+                    <i data-lucide="move-horizontal" class="w-5 h-5 text-white"></i>
+                </div>
+            </div>
+
+            <p class="text-center text-xs text-slate-400 mt-4">👉 ስክሪኑን ወይም አይጤውን (Mouse) ወደ ግራና ቀኝ በማንሸራተት ልዩነቱን ይፈትሹ</p>
+        </div>
+    </section>
+
+    <!-- 3D PERSPECTIVE TILT SERVICES GRID -->
+    <section id="services" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+            <span class="text-xs font-bold text-cyan-400 tracking-wider uppercase">የሜሽ ዋና ዋና አገልግሎቶች</span>
+            <h2 class="text-3xl sm:text-5xl font-black text-white mt-2">ልዩ የፅዳት ዘርፎች እና ግልጽ ዋጋ</h2>
+            <p class="text-slate-400 text-sm mt-3">ምንም ዓይነት የተደበቀ ተጨማሪ ክፍያ የለም፤ በቦታው ደርሰን በጥራት እንሰራለን።</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Service 1: Sofa -->
+            <div class="glass-card-interactive rounded-3xl p-7 relative flex flex-col justify-between" onmousemove="handleTilt(event, this)" onmouseleave="resetTilt(this)">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-2xl mb-5 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+                        🛋
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xl font-black text-white">የሶፋ ጥልቅ እጥበት</h3>
+                        <span class="text-xs font-black text-cyan-400 px-2.5 py-1 rounded-xl bg-cyan-950 border border-cyan-800">350 ብር / መቀመጫ</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-5">የጨርቅ እና የቆዳ ሶፋዎችን እጥበት፣ የቆሸሸ እድፍ ማስወጣት፣ የከፍተኛ ሙቀት ስቲም ሳኒታይዜሽን እና አዲስ መዓዛ መስጠት።</p>
+                    <ul class="text-xs text-slate-400 space-y-2 mb-6">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የሻይ፣ ቡና እና የምግብ እድፎችን ማስወገድ</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የቤት እንስሳት ጠረንና አቧራ ማስለቀቅ</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የፋይበር ቀለምን ሳይጎዳ ማደስ</span></li>
+                    </ul>
+                </div>
+                <button onclick="quickBookSvc('sofa', 350, 'መቀመጫ')" class="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>ሶፋ ቀጠሮ ያዝ (Book Sofa)</span>
+                </button>
+            </div>
+
+            <!-- Service 2: Carpet -->
+            <div class="glass-card-interactive rounded-3xl p-7 relative flex flex-col justify-between" onmousemove="handleTilt(event, this)" onmouseleave="resetTilt(this)">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-2xl mb-5 border border-blue-500/30 shadow-lg shadow-blue-500/10">
+                        🧶
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xl font-black text-white">የምንጣፍ ማጠብና ስቲም</h3>
+                        <span class="text-xs font-black text-cyan-400 px-2.5 py-1 rounded-xl bg-cyan-950 border border-cyan-800">80 ብር / ካሬ</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-5">ምንጣፍዎን ሳያነሱ ባሉበት ቦታ ሆነው በኢንዱስትሪ ማሽን ማጠብና ማድረቅ፤ ወይም ወስደን አጥበን በታሸገ ሁኔታ መመለስ።</p>
+                    <ul class="text-xs text-slate-400 space-y-2 mb-6">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የውስጠኛ አሸዋና አቧራ በቫኪዩም መምጠጥ</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የስቲም ባክቴሪያ መግደያ ቴክኖሎጂ</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>ፈጣን ማድረቅ (ሳይሸት ይደርቃል)</span></li>
+                    </ul>
+                </div>
+                <button onclick="quickBookSvc('carpet', 80, 'ካሬ')" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>ምንጣፍ ቀጠሮ ያዝ (Book Carpet)</span>
+                </button>
+            </div>
+
+            <!-- Service 3: Mattress -->
+            <div class="glass-card-interactive rounded-3xl p-7 relative flex flex-col justify-between" onmousemove="handleTilt(event, this)" onmouseleave="resetTilt(this)">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-5 border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                        🛏
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xl font-black text-white">የፍራሽ ሳኒታይዜሽን</h3>
+                        <span class="text-xs font-black text-cyan-400 px-2.5 py-1 rounded-xl bg-cyan-950 border border-cyan-800">600 ብር / ፍራሽ</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-5">የአልጋ ፍራሾችን ከጀርም፣ ከትኋን፣ ከላብ እድፍና ከአለርጂ አምጪ ተህዋስያን በ 160°C ስቲም ነፃ ማድረግ።</p>
+                    <ul class="text-xs text-slate-400 space-y-2 mb-6">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የአለርጂና አስም አምጪ ተህዋስያንን ማጥፋት</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የሰውነት ላብና ቢጫ እድፍ ማፅዳት</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>100% ኬሚካል-አልባ የህፃናት ፍራሽ ፅዳት</span></li>
+                    </ul>
+                </div>
+                <button onclick="quickBookSvc('mattress', 600, 'ፍራሽ')" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>ፍራሽ ቀጠሮ ያዝ (Book Mattress)</span>
+                </button>
+            </div>
+
+            <!-- Service 4: Glass -->
+            <div class="glass-card-interactive rounded-3xl p-7 relative flex flex-col justify-between" onmousemove="handleTilt(event, this)" onmouseleave="resetTilt(this)">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center text-2xl mb-5 border border-teal-500/30 shadow-lg shadow-teal-500/10">
+                        🪟
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xl font-black text-white">የመስታወት እና መስኮት ፅዳት</h3>
+                        <span class="text-xs font-black text-cyan-400 px-2.5 py-1 rounded-xl bg-cyan-950 border border-cyan-800">70 ብር / ካሬ</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-5">የፎቅ ህንፃዎች፣ ቪላዎች እና የሱቆች የፊት መስታወቶች በናኖ ቴክኖሎጂ ያለ ጭረትና ብዥታ አንፀባራቂ ፅዳት።</p>
+                    <ul class="text-xs text-slate-400 space-y-2 mb-6">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የዝናብና የጭስ እድፍ ሙሉ በሙሉ ማስወገድ</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የአሉሚኒየም ፍሬሞችና መከለያዎች እጥበት</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>ደህንነታቸው የተጠበቁ ባለሙያዎች</span></li>
+                    </ul>
+                </div>
+                <button onclick="quickBookSvc('glass', 70, 'ካሬ')" class="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>መስታወት ቀጠሮ ያዝ (Book Glass)</span>
+                </button>
+            </div>
+
+            <!-- Service 5: Residential -->
+            <div class="glass-card-interactive rounded-3xl p-7 relative flex flex-col justify-between" onmousemove="handleTilt(event, this)" onmouseleave="resetTilt(this)">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl mb-5 border border-indigo-500/30 shadow-lg shadow-indigo-500/10">
+                        🏡
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xl font-black text-white">የመኖሪያ ቤት አጠቃላይ ፅዳት</h3>
+                        <span class="text-xs font-black text-cyan-400 px-2.5 py-1 rounded-xl bg-cyan-950 border border-cyan-800">ከ 2,500 ብር ጀምሮ</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-5">ከግንባታ በኋላ፣ አዲስ ቤት ሲገቡ ወይም በየወሩ የሚደረግ የተሟላ የቪላ እና የአፓርታማ ጥልቅ ፅዳት።</p>
+                    <ul class="text-xs text-slate-400 space-y-2 mb-6">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የኩሽና የዘይትና ስብ ጥልቅ እጥበት</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የመታጠቢያ ቤትና የሰረሚክ ማጠብ</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>የበር፣ ኮርኒስ እና ግድግዳ አቧራ ማፅዳት</span></li>
+                    </ul>
+                </div>
+                <button onclick="quickBookSvc('residential', 2500, 'ቤት')" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>የቤት ፅዳት ይዘዙ (Book Home)</span>
+                </button>
+            </div>
+
+            <!-- Service 6: Commercial -->
+            <div class="glass-card-interactive rounded-3xl p-7 relative flex flex-col justify-between" onmousemove="handleTilt(event, this)" onmouseleave="resetTilt(this)">
+                <div>
+                    <div class="w-14 h-14 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-2xl mb-5 border border-purple-500/30 shadow-lg shadow-purple-500/10">
+                        🏢
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xl font-black text-white">የድርጅት እና ቢሮ ፅዳት</h3>
+                        <span class="text-xs font-black text-cyan-400 px-2.5 py-1 rounded-xl bg-cyan-950 border border-cyan-800">በኮንትራት / ካሬ</span>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-5">ለባንኮች፣ ኤምባሲዎች፣ ሆቴሎች እና ኮርፖሬት ቢሮዎች የሚሰጥ ቋሚ ወይም የአንድ ጊዜ የኮንትራት ፅዳት።</p>
+                    <ul class="text-xs text-slate-400 space-y-2 mb-6">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>ኦፊሴላዊ የግብር ደረሰኝ እና ቫት (VAT)</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>በደንብ የሰለጠኑ ዩኒፎርም የለበሱ ሰራተኞች</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i><span>ከስራ ሰዓት ውጭ (ምሽት/ቅዳሜና እሁድ) ስራ</span></li>
+                    </ul>
+                </div>
+                <button onclick="quickBookSvc('commercial', 5000, 'ተቋም')" class="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>የድርጅት ፕሮፎርማ ጠይቅ</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- INTERACTIVE 3D LIVE COST ESTIMATOR -->
+    <section id="calculator" class="py-20 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-y border-white/5 relative z-20">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-10">
+                <span class="px-3 py-1 rounded-full bg-cyan-950 border border-cyan-500/30 text-cyan-400 text-xs font-bold uppercase tracking-wider">Live Price Estimator</span>
+                <h2 class="text-3xl sm:text-4xl font-black text-white mt-2">የዋጋ ማሽን (Interactive Cost Calculator)</h2>
+                <p class="text-slate-400 text-sm mt-1">አገልግሎት እና መጠኑን ይምረጡ፤ ወዲያውኑ የሚከፍሉትን ትክክለኛ የብር መጠን ይመልከቱ።</p>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-6 sm:p-10 border border-cyan-500/30 shadow-2xl">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">1. አገልግሎት ይምረጡ</label>
+                            <select id="calc-service" onchange="calculatePrice()" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                                <option value="sofa" data-price="350" data-unit="መቀመጫ (Seats)">🛋 የሶፋ ጥልቅ እጥበት (350 ብር / መቀመጫ)</option>
+                                <option value="carpet" data-price="80" data-unit="ካሬ ሜትር (Sqm)">🧶 የምንጣፍ ማጠብና ስቲም (80 ብር / ካሬ)</option>
+                                <option value="mattress" data-price="600" data-unit="ፍራሽ (Mattress)">🛏 የፍራሽ ሳኒታይዜሽን (600 ብር / ፍራሽ)</option>
+                                <option value="glass" data-price="70" data-unit="ካሬ ሜትር (Sqm)">🪟 የመስታወት ፅዳት (70 ብር / ካሬ)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-xs font-bold text-slate-300 uppercase tracking-wider" id="calc-unit-label">2. የመቀመጫዎች ብዛት (Quantity)</label>
+                                <span class="text-lg font-black text-cyan-400" id="calc-qty-badge">5</span>
+                            </div>
+                            <input type="range" id="calc-range" min="1" max="50" value="5" oninput="updateRangeValue(this.value)" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                            <div class="flex justify-between text-[11px] text-slate-500 mt-1">
+                                <span>1</span>
+                                <span>10</span>
+                                <span>25</span>
+                                <span>50+</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Output Card -->
+                    <div class="rounded-2xl p-6 bg-gradient-to-tr from-cyan-950/80 via-blue-950/70 to-slate-900 border border-cyan-500/40 text-center shadow-xl">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">የተገመተ ጠቅላላ ዋጋ (Estimated Total)</span>
+                        <div class="text-4xl sm:text-5xl font-black text-cyan-300 my-3" id="calc-total-display">1,750 ብር</div>
+                        <p class="text-xs text-slate-400 mb-6" id="calc-summary-desc">5 መቀመጫ ሶፋ በ 350 ብር = 1,750 ብር</p>
+
+                        <button onclick="bookCalculatedPrice()" class="w-full py-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-sm shadow-3d-cyan flex items-center justify-center gap-2 transition-all">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                            <span>በዚህ ዋጋ ቀጠሮ ይያዙ (Book at this price)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REAL CARRIER SMS TEST WIDGET SECTION -->
+    <section id="sms-test-section" class="py-16 relative z-20 max-w-4xl mx-auto px-4 sm:px-6">
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-cyan-500/30 shadow-2xl">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xl shadow-md">
+                        📱
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-white">የቀጥታ የኤስኤምኤስ (Real SMS) መሞከሪያ</h3>
+                        <p class="text-xs text-slate-400">ስልክ ቁጥርዎን በማስገባት የሜሽ የኤስኤምኤስ ማረጋገጫ መልዕክት ይሞክሩ</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 text-xs font-bold">AfroMessage / Ethio Telecom SMS</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div class="md:col-span-7 space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">የሞባይል ስልክ ቁጥርዎ *</label>
+                        <input type="tel" id="test-sms-phone" value="0943854325" placeholder="0943854325" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">የመልዕክት ይዘት (አማራጭ)</label>
+                        <textarea id="test-sms-message" rows="2" placeholder="የሙከራ የኤስኤምኤስ ከሜሽ የፅዳት አገልግሎት..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"></textarea>
+                    </div>
+                    <button type="button" onclick="dispatchTestSms()" id="btn-dispatch-test-sms" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-xs shadow-lg flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>📨 የሙከራ ኤስኤምኤስ ወደ ስልኬ ላክ (Send Test SMS)</span>
+                    </button>
+                </div>
+
+                <div class="md:col-span-5 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between text-xs">
+                    <div>
+                        <span class="font-bold text-slate-300 block mb-2">📋 የሲስተም ሁኔታ (Gateway Status):</span>
+                        <div id="sms-test-result" class="text-slate-400 text-[11px] leading-relaxed">
+                            ስልክ ቁጥርዎን አስገብተው አረንጓዴውን ቁልፍ ሲጫኑ የኤስኤምኤስ ምላሽ እዚህ ጋር ይታያል።
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-[10px] text-slate-500">
+                        💡 በኢትዮጵያ ውስጥ ወደ ደንበኞች እውነተኛ ሲም ካርድ SMS ለመላክ የ AfroMessage Token በ <code>.env</code> ውስጥ ማከል ይቻላል።
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LIVE ORDER TRACKER SECTION -->
+    <section id="track" class="py-16 relative z-20 max-w-4xl mx-auto px-4 sm:px-6">
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-2xl">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">
+                    <i data-lucide="navigation" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white">የትዕዛዝ ሁኔታ መከታተያ (Track Order)</h3>
+                    <p class="text-xs text-slate-400">የትዕዛዝ ቁጥርዎን (ለምሳሌ MEASH-000024) ወይም ስልክ ቁጥርዎን በማስገባት የፅዳት ቡድኑን ሁኔታ ይከታተሉ</p>
+                </div>
+            </div>
+            <form id="form-track" onsubmit="trackOrder(event)" class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="track-input" required placeholder="የትዕዛዝ ቁጥር ወይም ስልክ ቁጥር ያስገቡ..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-5 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                    <span>ይፈትሹ</span>
+                </button>
+            </form>
+            <div id="track-result" class="hidden mt-6 pt-6 border-t border-slate-700/80"></div>
+        </div>
+    </section>
+
+    <!-- 7-STEP CUSTOMER BOOKING WIZARD (Direct Database Connection) -->
+    <section id="book" class="py-24 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-t border-white/5 relative z-20">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="inline-block px-3.5 py-1 rounded-full bg-cyan-950 border border-cyan-500/30 text-cyan-400 text-xs font-bold uppercase tracking-wider">Fast 1-Minute Reservation</span>
+                <h2 class="text-3xl sm:text-5xl font-black text-white mt-3">የፅዳት ቀጠሮ ማስያዣ</h2>
+                <p class="text-slate-400 text-sm mt-2">በቀጥታ ከሪሴፕሽን ዳሽቦርዳችን ጋር የተገናኘ፤ ቀጠሮዎ በኤስኤምኤስ እና በስልክ ወዲያውኑ ይረጋገጣል።</p>
+            </div>
+
+            <!-- Wizard Card -->
+            <div class="glass-panel border border-cyan-500/30 rounded-3xl p-6 sm:p-10 shadow-2xl">
+                <!-- Progress Indicators -->
+                <div class="flex items-center justify-between mb-8 pb-6 border-b border-slate-700/80">
+                    <div class="flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-full bg-cyan-500 text-white text-xs font-black flex items-center justify-center" id="wizard-step-badge">1</span>
+                        <span class="font-extrabold text-sm text-white" id="wizard-step-title">አገልግሎት ይምረጡ</span>
+                    </div>
+                    <span class="text-xs text-slate-400 font-medium">ደረጃ <span id="current-step-num">1</span> ከ 4</span>
+                </div>
+
+                <form id="booking-form" onsubmit="submitBooking(event)">
+                    <!-- STEP 1: Services & Items -->
+                    <div id="step-1" class="wizard-step">
+                        <h4 class="text-base font-bold text-slate-200 mb-4">1. ዋናውን አገልግሎት ይምረጡ</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" id="wizard-service-selector">
+                            <button type="button" onclick="selectServiceForBooking('sofa')" class="p-3.5 rounded-2xl border border-cyan-500 bg-cyan-950/40 text-left transition-all svc-select-btn" data-svc="sofa">
+                                <span class="text-2xl block mb-1">🛋</span>
+                                <span class="text-xs font-bold text-white block">የሶፋ እጥበት</span>
+                                <span class="text-[10px] text-cyan-400">350 ብር / መቀመጫ</span>
+                            </button>
+                            <button type="button" onclick="selectServiceForBooking('carpet')" class="p-3.5 rounded-2xl border border-slate-700 bg-slate-900 text-left transition-all svc-select-btn" data-svc="carpet">
+                                <span class="text-2xl block mb-1">🧶</span>
+                                <span class="text-xs font-bold text-white block">የምንጣፍ ማጠብ</span>
+                                <span class="text-[10px] text-cyan-400">80 ብር / ካሬ</span>
+                            </button>
+                            <button type="button" onclick="selectServiceForBooking('mattress')" class="p-3.5 rounded-2xl border border-slate-700 bg-slate-900 text-left transition-all svc-select-btn" data-svc="mattress">
+                                <span class="text-2xl block mb-1">🛏</span>
+                                <span class="text-xs font-bold text-white block">የፍራሽ ሳኒታይዜሽን</span>
+                                <span class="text-[10px] text-cyan-400">600 ብር / ፍራሽ</span>
+                            </button>
+                            <button type="button" onclick="selectServiceForBooking('glass')" class="p-3.5 rounded-2xl border border-slate-700 bg-slate-900 text-left transition-all svc-select-btn" data-svc="glass">
+                                <span class="text-2xl block mb-1">🪟</span>
+                                <span class="text-xs font-bold text-white block">የመስታወት ፅዳት</span>
+                                <span class="text-[10px] text-cyan-400">70 ብር / ካሬ</span>
+                            </button>
+                        </div>
+
+                        <h4 class="text-base font-bold text-slate-200 mb-2">2. መጠን / ብዛት</h4>
+                        <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-700 flex items-center justify-between mb-6">
+                            <div>
+                                <span class="text-sm font-bold text-white block" id="wizard-selected-svc-title">የሶፋ ጥልቅ እጥበት</span>
+                                <span class="text-xs text-slate-400" id="wizard-unit-desc">የመቀመጫ ብዛት (Seats)</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button type="button" onclick="changeWizardQty(-1)" class="w-10 h-10 rounded-xl bg-slate-800 text-white font-bold text-lg flex items-center justify-center hover:bg-slate-700 active:scale-95 transition-all">-</button>
+                                <span id="wizard-qty" class="text-lg font-black text-white w-10 text-center">5</span>
+                                <button type="button" onclick="changeWizardQty(1)" class="w-10 h-10 rounded-xl bg-slate-800 text-white font-bold text-lg flex items-center justify-center hover:bg-slate-700 active:scale-95 transition-all">+</button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-700 flex justify-between items-center mb-6">
+                            <span class="text-sm font-semibold text-slate-300">የተገመተ ጠቅላላ ዋጋ:</span>
+                            <span class="text-2xl font-black text-cyan-400" id="wizard-total-preview">1,750.00 ብር</span>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="button" onclick="nextWizardStep(2)" class="px-7 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-sm rounded-xl flex items-center gap-2 shadow-lg">
+                                <span>ወደ አድራሻ ይቀጥሉ</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: Location / Address with Real GPS & Accuracy Feedback -->
+                    <div id="step-2" class="wizard-step hidden">
+                        <h4 class="text-base font-bold text-slate-200 mb-2">የፅዳት አድራሻ በአዲስ አበባ</h4>
+                        <p class="text-xs text-slate-400 mb-4">ፅዳት የሚደረግበት ቦታ ላይ ከሆኑ የቀጥታ ጂፒኤስ ካርታ መላክ ይችላሉ:: በቤትዎ ካልሆኑ አድራሻዎን ከታች ይጻፉ::</p>
+
+                        <!-- Live GPS Detection Card -->
+                        <div class="mb-5 p-4 rounded-2xl bg-gradient-to-r from-cyan-950/40 to-slate-900 border border-cyan-500/30">
+                            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <div>
+                                    <span class="text-xs font-bold text-white block flex items-center gap-1.5">
+                                        <i data-lucide="navigation" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                        <span>📍 የቀጥታ ካርታ / Live GPS መገኛ</span>
+                                    </span>
+                                    <span class="text-[11px] text-slate-400">አሁን ባሉበት ቦታ ሆነው የቀጥታ ካርታ ፒን ያያይዙ</span>
+                                </div>
+                                <button type="button" onclick="detectWebGpsLocation()" id="btn-web-gps" class="w-full sm:w-auto px-4 py-2.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2 shrink-0 transition-all">
+                                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                    <span id="btn-web-gps-txt">ካርታዬን ያዝ (Get GPS)</span>
+                                </button>
+                            </div>
+                            <div id="web-gps-feedback" class="hidden mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between text-xs font-bold">
+                                <span class="flex items-center gap-1.5">
+                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                                    <span id="web-gps-label">የቀጥታ GPS ተመዝግቧል</span>
+                                </span>
+                                <a id="web-gps-link" href="#" target="_blank" class="text-cyan-400 underline text-[11px] hover:text-cyan-300">በጉግል ካርታ እይ &rarr;</a>
+                            </div>
+                            <input type="hidden" id="book-latitude" value="">
+                            <input type="hidden" id="book-longitude" value="">
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5">ክፍለ ከተማ (Subcity) *</label>
+                                <select id="book-subcity" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                                    <option value="">ይምረጡ...</option>
+                                    <option value="Bole">Bole (ቦሌ)</option>
+                                    <option value="Lemi Kura">Lemi Kura (ለሚ ኩራ)</option>
+                                    <option value="Yeka">Yeka (የካ)</option>
+                                    <option value="Kirkos">Kirkos (ቂርቆስ)</option>
+                                    <option value="Lideta">Lideta (ልደታ)</option>
+                                    <option value="Nifas Silk">Nifas Silk Lafto (ንፋስ ስልክ)</option>
+                                    <option value="Kolfe Keranio">Kolfe Keranio (ኮልፌ ቀራንዮ)</option>
+                                    <option value="Arada">Arada (አራዳ)</option>
+                                    <option value="Gulele">Gulele (ጉለሌ)</option>
+                                    <option value="Akaki Kality">Akaki Kality (አቃቂ ቃሊቲ)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5">ሰፈር እና ልዩ መለያ ቦታ (Landmark) *</label>
+                                <input type="text" id="book-landmark" required placeholder="ለምሳሌ ቦሌ መድሃኒአለም፣ ከአትላስ ሆቴል አጠገብ" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">ሙሉ አድራሻ ወይም የቤት ቁጥር *</label>
+                            <textarea id="book-address" rows="2" required placeholder="የመንደር፣ የአፓርታማ ወይም የቢሮ ዝርዝር መረጃ..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <button type="button" onclick="prevWizardStep(1)" class="px-5 py-3 bg-slate-800 text-slate-300 font-semibold text-sm rounded-xl">ተመለስ</button>
+                            <button type="button" onclick="nextWizardStep(3)" class="px-7 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold text-sm rounded-xl flex items-center gap-2">
+                                <span>ወደ ቀንና ሰዓት</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: Date & Time -->
+                    <div id="step-3" class="wizard-step hidden">
+                        <h4 class="text-base font-bold text-slate-200 mb-4">የቀጠሮ ቀን እና ሰዓት ይምረጡ</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5">የፅዳት ቀን *</label>
+                                <input type="date" id="book-date" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5">የቀጠሮ ሰዓት *</label>
+                                <select id="book-time-slot" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                                    <option value="Morning (08:30 - 12:00)">ጠዋት (ከ 2:30 - 6:00)</option>
+                                    <option value="Afternoon (13:30 - 17:00)">ከሰዓት (ከ 7:30 - 11:00)</option>
+                                    <option value="Flexible (Anytime Today)">ሙሉ ቀን (ምቹ በሆነ ሰዓት)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">ልዩ ማስታወሻ ወይም የእድፍ አይነት (አማራጭ)</label>
+                            <textarea id="book-notes" rows="2" placeholder="ለምሳሌ፡ ጥቁር የወይን ጠጅ እድፍ አለበት..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <button type="button" onclick="prevWizardStep(2)" class="px-5 py-3 bg-slate-800 text-slate-300 font-semibold text-sm rounded-xl">ተመለስ</button>
+                            <button type="button" onclick="nextWizardStep(4)" class="px-7 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold text-sm rounded-xl flex items-center gap-2">
+                                <span>የእርስዎን መረጃ ያስገቡ</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: Customer Details & Confirmation -->
+                    <div id="step-4" class="wizard-step hidden">
+                        <h4 class="text-base font-bold text-slate-200 mb-4">የእርስዎ መረጃና ማረጋገጫ</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5">ሙሉ ስም *</label>
+                                <input type="text" id="book-name" required placeholder="ተስፋሁን ባዬ" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-1.5">ስልክ ቁጥር *</label>
+                                <input type="tel" id="book-phone" required placeholder="0943854325" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                        </div>
+
+                        <div class="mb-6 p-4 rounded-2xl bg-cyan-950/40 border border-cyan-500/20">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" id="book-consent" checked class="mt-1 w-4 h-4 text-cyan-500 bg-slate-900 border-slate-700 rounded focus:ring-cyan-500">
+                                <span class="text-xs text-slate-300">
+                                    በሜሽ የፅዳት አገልግሎት የቀጠሮ ማረጋገጫ ኤስኤምኤስ (SMS) እና የዋጋ ቅናሽ ማሳወቂያዎች በስልኬ እንዲደርሰኝ እስማማለሁ።
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <button type="button" onclick="prevWizardStep(3)" class="px-5 py-3 bg-slate-800 text-slate-300 font-semibold text-sm rounded-xl">ተመለስ</button>
+                            <button type="submit" id="btn-submit-booking" class="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-sm rounded-xl shadow-xl shadow-emerald-500/30 flex items-center gap-2">
+                                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                                <span>ቀጠሮውን አረጋግጥ (Confirm Booking)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SUCCESS CONFIRMATION STATE -->
+                    <div id="step-success" class="hidden text-center py-8">
+                        <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4 border border-emerald-500/40 shadow-lg shadow-emerald-500/20">
+                            <i data-lucide="check" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-white mb-2">🎉 ቀጠሮዎ በተሳካ ሁኔታ ተመዝግቧል!</h3>
+                        <p class="text-sm text-slate-300 max-w-md mx-auto mb-6">
+                            እናመሰግናለን! ትዕዛዝዎ በሜሽ ማዕከላዊ ሲስተም ተመዝግቧል። የሪሴፕሽን ሰራተኞቻችን በቅርቡ በስልክ ደውለው ያረጋግጣሉ።
+                        </p>
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-700 max-w-xs mx-auto mb-6 shadow-md">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider block mb-1">የትዕዛዝ መለያ ቁጥር (Order ID)</span>
+                            <span class="text-2xl font-black text-cyan-400" id="success-booking-id">MEASH-000000</span>
+                        </div>
+                        <button type="button" onclick="resetWizard()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl border border-slate-700">ሌላ ቀጠሮ ያዝ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-16 relative z-20 text-xs text-slate-400">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+                <!-- Col 1 -->
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <img src="/logo.jpg" alt="Mesh Logo" class="w-10 h-10 rounded-xl object-cover border border-cyan-500/40">
+                        <div>
+                            <span class="text-base font-black text-white block">ሜሽ የፅዳት አገልግሎት</span>
+                            <span class="text-[10px] text-cyan-400 font-bold uppercase">Mesh Cleaning Solution</span>
+                        </div>
+                    </div>
+                    <p class="leading-relaxed">በአዲስ አበባ የሶፋ፣ ምንጣፍ፣ ፍራሽ፣ መስታወት እና የቤትና ቢሮ ጥልቅ ፅዳት አስተማማኝ አጋርዎ።</p>
+                </div>
+
+                <!-- Col 2 -->
+                <div>
+                    <h4 class="font-bold text-white uppercase tracking-wider mb-4">ዋና አገልግሎቶች</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#services" class="hover:text-cyan-400 transition-colors">የሶፋ ጥልቅ እጥበት (Sofa Deep Clean)</a></li>
+                        <li><a href="#services" class="hover:text-cyan-400 transition-colors">የምንጣፍ ማጠብና ስቲም (Carpet Wash)</a></li>
+                        <li><a href="#services" class="hover:text-cyan-400 transition-colors">የፍራሽ ሳኒታይዜሽን (Mattress Clean)</a></li>
+                        <li><a href="#services" class="hover:text-cyan-400 transition-colors">የመስታወት ፅዳት (High-Rise Glass)</a></li>
+                        <li><a href="#services" class="hover:text-cyan-400 transition-colors">የመኖሪያ ቤት አጠቃላይ ፅዳት</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3 -->
+                <div>
+                    <h4 class="font-bold text-white uppercase tracking-wider mb-4">ቀጥታ መገናኛ</h4>
+                    <ul class="space-y-2.5">
+                        <li class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4 text-cyan-400"></i><span>0911000002 / 0911000001</span></li>
+                        <li class="flex items-center gap-2"><i data-lucide="send" class="w-4 h-4 text-cyan-400"></i><a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="text-cyan-300 hover:underline">@meash_cleaning_solution_bot</a></li>
+                        <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-cyan-400"></i><span>አዲስ አበባ፣ ኢትዮጵያ</span></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: PWA & Apps -->
+                <div>
+                    <h4 class="font-bold text-white uppercase tracking-wider mb-4">ፈጣን መተግበሪያ</h4>
+                    <p class="mb-3">ስልክዎ ላይ በቀጥታ ጫነው ያለ ኢንተርኔት ክፍተት ይጠቀሙ።</p>
+                    <button onclick="triggerPwaInstall()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 mb-2 transition-all">
+                        <i data-lucide="download" class="w-4 h-4 text-cyan-400"></i>
+                        <span>📲 መተግበሪያውን ጫን (PWA App)</span>
+                    </button>
+                    <a href="/app" class="w-full py-2 bg-slate-900/60 hover:bg-slate-900 border border-slate-800 text-slate-300 font-medium text-xs rounded-xl flex items-center justify-center gap-2">
+                        <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-500"></i>
+                        <span>የሰራተኞች መግቢያ (Staff OS)</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="pt-8 border-t border-slate-900 text-center flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p>&copy; 2026 ሜሽ የፅዳት አገልግሎት (Mesh Cleaning Solution). All rights reserved.</p>
+                <div class="flex items-center gap-4">
+                    <a href="/guide" class="hover:text-cyan-400">የአጠቃቀም መመሪያ (Guide)</a>
+                    <a href="#services" class="hover:text-cyan-400">ዋጋ ዝርዝር</a>
+                    <a href="#track" class="hover:text-cyan-400">ትዕዛዝ መከታተያ</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT: 3D Canvas, Before/After Slider, Price Calculator, PWA, Notifications, SMS Test -->
+    <script>
+        // 1. 3D Interactive Particle & Steam Clean Canvas Engine
+        (function init3DParticleCanvas() {
+            const canvas = document.getElementById('clean-3d-canvas');
+            const ctx = canvas.getContext('2d');
+            let w, h;
+            let particles = [];
+            const particleCount = 45;
+            let mouse = { x: -1000, y: -1000, radius: 140 };
+
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+            window.addEventListener('mouseleave', () => {
+                mouse.x = -1000;
+                mouse.y = -1000;
+            });
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.vx = (Math.random() - 0.5) * 0.8;
+                    this.vy = -(Math.random() * 1.2 + 0.3); // floats upward like clean steam
+                    this.radius = Math.random() * 3 + 1.2;
+                    this.baseAlpha = Math.random() * 0.4 + 0.15;
+                    this.alpha = this.baseAlpha;
+                    this.color = Math.random() > 0.4 ? '6, 182, 212' : (Math.random() > 0.5 ? '56, 189, 248' : '16, 185, 129');
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Mouse interaction (bubbles/steam avoid or react to cursor)
+                    const dx = this.x - mouse.x;
+                    const dy = this.y - mouse.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.radius) {
+                        const force = (mouse.radius - dist) / mouse.radius;
+                        this.x += (dx / dist) * force * 5;
+                        this.y += (dy / dist) * force * 5;
+                        this.alpha = Math.min(0.9, this.baseAlpha + 0.4);
+                    } else {
+                        this.alpha = this.baseAlpha;
+                    }
+
+                    if (this.y < -10) this.reset();
+                    if (this.x < -10 || this.x > w + 10) this.x = Math.random() * w;
+                }
+                draw() {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${this.color}, ${this.alpha})`;
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = `rgba(${this.color}, 0.8)`;
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, w, h);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        // 2. 3D Interactive Before / After Slider Engine
+        (function initBeforeAfterSlider() {
+            const container = document.getElementById('ba-container');
+            const afterLayer = document.getElementById('ba-after-layer');
+            const handle = document.getElementById('ba-handle');
+            let isDragging = false;
+
+            function updateSlider(x) {
+                const rect = container.getBoundingClientRect();
+                let pos = (x - rect.left) / rect.width;
+                pos = Math.max(0.05, Math.min(0.95, pos));
+                const pct = pos * 100;
+                afterLayer.style.width = pct + '%';
+                handle.style.left = pct + '%';
+            }
+
+            handle.addEventListener('mousedown', () => isDragging = true);
+            window.addEventListener('mouseup', () => isDragging = false);
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                updateSlider(e.clientX);
+            });
+
+            // Touch events for mobile phones
+            handle.addEventListener('touchstart', () => isDragging = true);
+            window.addEventListener('touchend', () => isDragging = false);
+            window.addEventListener('touchmove', (e) => {
+                if (!isDragging || !e.touches[0]) return;
+                updateSlider(e.touches[0].clientX);
+            });
+
+            container.addEventListener('click', (e) => {
+                updateSlider(e.clientX);
+            });
+        })();
+
+        // 3. 3D Perspective Tilt on Card Hover
+        function handleTilt(e, card) {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = ((y - centerY) / centerY) * -8;
+            const rotateY = ((x - centerX) / centerX) * 8;
+
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+        }
+        function resetTilt(card) {
+            card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+        }
+
+        // 4. Interactive Live Cost Estimator
+        function calculatePrice() {
+            const select = document.getElementById('calc-service');
+            const opt = select.options[select.selectedIndex];
+            const price = parseFloat(opt.getAttribute('data-price'));
+            const unit = opt.getAttribute('data-unit');
+            const qty = parseInt(document.getElementById('calc-range').value);
+
+            document.getElementById('calc-unit-label').innerText = `2. የ${unit} ብዛት (Quantity)`;
+            document.getElementById('calc-qty-badge').innerText = qty;
+
+            const total = price * qty;
+            document.getElementById('calc-total-display').innerText = `${total.toLocaleString()} ብር`;
+            document.getElementById('calc-summary-desc').innerText = `${qty} ${unit} x ${price} ብር = ${total.toLocaleString()} ብር`;
+        }
+
+        function updateRangeValue(val) {
+            document.getElementById('calc-qty-badge').innerText = val;
+            calculatePrice();
+        }
+
+        function bookCalculatedPrice() {
+            const select = document.getElementById('calc-service');
+            const svcCode = select.value;
+            const qty = parseInt(document.getElementById('calc-range').value);
+
+            selectServiceForBooking(svcCode);
+            wizardQty = qty;
+            document.getElementById('wizard-qty').innerText = qty;
+            updateWizardTotal();
+
+            document.getElementById('book').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function quickBookSvc(code, price, unit) {
+            selectServiceForBooking(code);
+            document.getElementById('book').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 5. Booking Wizard State & Logic
+        const svcMeta = {
+            sofa: { name: 'የሶፋ ጥልቅ እጥበት', price: 350, unit: 'መቀመጫ (Seats)' },
+            carpet: { name: 'የምንጣፍ ማጠብና ስቲም', price: 80, unit: 'ካሬ ሜትር (Sqm)' },
+            mattress: { name: 'የፍራሽ ሳኒታይዜሽን', price: 600, unit: 'ፍራሽ (Mattress)' },
+            glass: { name: 'የመስታወት ፅዳት', price: 70, unit: 'ካሬ ሜትር (Sqm)' },
+            residential: { name: 'የመኖሪያ ቤት አጠቃላይ ፅዳት', price: 2500, unit: 'ቤት (Home)' },
+            commercial: { name: 'የድርጅት እና ቢሮ ፅዳት', price: 5000, unit: 'ተቋም (Commercial)' },
+        };
+        let selectedSvc = 'sofa';
+        let wizardQty = 5;
+
+        function selectServiceForBooking(code) {
+            selectedSvc = code;
+            wizardQty = code === 'carpet' ? 12 : (code === 'sofa' ? 5 : 1);
+            document.getElementById('wizard-qty').innerText = wizardQty;
+            document.getElementById('wizard-selected-svc-title').innerText = svcMeta[code].name;
+            document.getElementById('wizard-unit-desc').innerText = svcMeta[code].unit;
+
+            document.querySelectorAll('.svc-select-btn').forEach(btn => {
+                if (btn.getAttribute('data-svc') === code) {
+                    btn.classList.add('border-cyan-500', 'bg-cyan-950/40');
+                    btn.classList.remove('border-slate-700', 'bg-slate-900');
+                } else {
+                    btn.classList.remove('border-cyan-500', 'bg-cyan-950/40');
+                    btn.classList.add('border-slate-700', 'bg-slate-900');
+                }
+            });
+            updateWizardTotal();
+        }
+
+        function changeWizardQty(delta) {
+            wizardQty = Math.max(1, wizardQty + delta);
+            document.getElementById('wizard-qty').innerText = wizardQty;
+            updateWizardTotal();
+        }
+
+        function updateWizardTotal() {
+            const price = svcMeta[selectedSvc].price;
+            const total = wizardQty * price;
+            document.getElementById('wizard-total-preview').innerText = `${total.toLocaleString()}.00 ብር`;
+        }
+
+        function showWizardStep(step) {
+            document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+            document.getElementById('wizard-step-badge').innerText = step;
+            document.getElementById('current-step-num').innerText = step;
+            const titles = {
+                1: 'አገልግሎት ይምረጡ',
+                2: 'የፅዳት አድራሻ በአዲስ አበባ',
+                3: 'የቀጠሮ ቀን እና ሰዓት',
+                4: 'የእርስዎ መረጃ እና ማረጋገጫ'
+            };
+            document.getElementById('wizard-step-title').innerText = titles[step];
+        }
+
+        function nextWizardStep(step) {
+            showWizardStep(step);
+        }
+        function prevWizardStep(step) {
+            showWizardStep(step);
+        }
+
+        // 6. Live GPS Location Detection with Smart Accuracy Indicator
+        function detectWebGpsLocation() {
+            const btn = document.getElementById('btn-web-gps');
+            const txt = document.getElementById('btn-web-gps-txt');
+            if (!navigator.geolocation) {
+                alert('የእርስዎ ብሮውዘር ጂፒኤስ (Geolocation) አይደግፍም። እባክዎ አድራሻዎን ከታች ይጻፉ።');
+                return;
+            }
+            txt.innerText = 'በመፈለግ ላይ...';
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    const acc = Math.round(pos.coords.accuracy || 0);
+                    document.getElementById('book-latitude').value = lat;
+                    document.getElementById('book-longitude').value = lng;
+                    const feedback = document.getElementById('web-gps-feedback');
+                    feedback.classList.remove('hidden');
+
+                    if (acc > 1000) {
+                        feedback.className = 'mt-2.5 p-2.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between shadow-sm';
+                        document.getElementById('web-gps-label').innerHTML = `⚠️ በኮምፒውተር/IP የተገመተ መገኛ (±${(acc/1000).toFixed(1)}km): እባክዎ ክፍለ ከተማዎን ይምረጡ`;
+                    } else {
+                        feedback.className = 'mt-2.5 p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs flex items-center justify-between shadow-sm';
+                        document.getElementById('web-gps-label').innerHTML = `📍 ትክክለኛ የሞባይል GPS ተመዝግቧል (±${acc}m)`;
+                    }
+
+                    document.getElementById('web-gps-link').href = `https://www.google.com/maps?q=${lat},${lng}`;
+                    txt.innerText = '✅ ተገኝቷል (Location Set)';
+                    lucide.createIcons();
+                },
+                (err) => {
+                    txt.innerText = 'ካርታዬን ያዝ (Get GPS)';
+                    alert('ካርታውን ማግኘት አልተቻለም። እባክዎ አድራሻዎን ከታች ይጻፉ።');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        // 7. Booking Submission to Backend API
+        async function submitBooking(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-booking');
+            btn.disabled = true;
+            btn.innerText = 'በመመዝገብ ላይ...';
+
+            const payload = {
+                customer_name: document.getElementById('book-name').value,
+                customer_phone: document.getElementById('book-phone').value,
+                subcity: document.getElementById('book-subcity').value,
+                address: document.getElementById('book-address').value + ` (${document.getElementById('book-landmark').value})`,
+                latitude: document.getElementById('book-latitude').value ? parseFloat(document.getElementById('book-latitude').value) : null,
+                longitude: document.getElementById('book-longitude').value ? parseFloat(document.getElementById('book-longitude').value) : null,
+                appointment_date: document.getElementById('book-date').value,
+                appointment_time_slot: document.getElementById('book-time-slot').value,
+                notes: document.getElementById('book-notes').value || 'በሜሽ ዌብሳይት የተያዘ ቀጠሮ',
+                items: [
+                    {
+                        service_id: selectedSvc === 'carpet' ? 2 : (selectedSvc === 'mattress' ? 3 : (selectedSvc === 'glass' ? 4 : 1)),
+                        quantity: wizardQty,
+                    }
+                ]
+            };
+
+            try {
+                const res = await fetch('/api/public/book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    document.getElementById('step-4').classList.add('hidden');
+                    document.getElementById('step-success').classList.remove('hidden');
+                    document.getElementById('success-booking-id').innerText = data.order_number;
+                    lucide.createIcons();
+                } else {
+                    alert('❌ ስህተት ተፈጥሯል: ' + (data.message || 'ትዕዛዝ መመዝገብ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('❌ የግንኙነት ስህተት: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'ቀጠሮውን አረጋግጥ (Confirm Booking)';
+            }
+        }
+
+        function resetWizard() {
+            document.getElementById('booking-form').reset();
+            document.getElementById('step-success').classList.add('hidden');
+            showWizardStep(1);
+            selectServiceForBooking('sofa');
+        }
+
+        // 8. Live Order Tracking Engine
+        async function trackOrder(e) {
+            e.preventDefault();
+            const q = document.getElementById('track-input').value.trim();
+            const resContainer = document.getElementById('track-result');
+            resContainer.classList.remove('hidden');
+            resContainer.innerHTML = '<p class="text-xs text-cyan-400">የትዕዛዝ ሁኔታ በመፈተሽ ላይ...</p>';
+
+            try {
+                const res = await fetch(`/api/public/track-order?query=${encodeURIComponent(q)}`);
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const ord = data.order;
+                    resContainer.innerHTML = `
+                        <div class="rounded-2xl bg-slate-900/90 border border-cyan-500/30 p-5">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-xs font-bold text-slate-400">ትዕዛዝ ቁጥር: <strong class="text-white">${ord.order_number}</strong></span>
+                                <span class="px-2.5 py-1 rounded-full text-xs font-black uppercase bg-cyan-950 text-cyan-300 border border-cyan-800">${ord.status}</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 text-xs mb-4">
+                                <div><span class="text-slate-400 block">ደንበኛ:</span> <strong class="text-white">${ord.customer_name}</strong></div>
+                                <div><span class="text-slate-400 block">ቀንና ሰዓት:</span> <strong class="text-white">${ord.appointment_date || 'የዛሬ'} (${ord.time_slot || 'ቀን'})</strong></div>
+                                <div><span class="text-slate-400 block">የተመደበ ቡድን:</span> <strong class="text-cyan-300">${ord.assigned_team || 'በመመደብ ላይ'}</strong></div>
+                                <div><span class="text-slate-400 block">ጠቅላላ ክፍያ:</span> <strong class="text-emerald-400">${ord.total_amount} ብር</strong></div>
+                            </div>
+                            <div class="pt-3 border-t border-slate-800 text-[11px] text-slate-400">
+                                ጥያቄ ካለዎት የሜሽ ሪሴፕሽንን በ <strong>0911000002</strong> ይደውሉ።
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resContainer.innerHTML = `<p class="text-xs text-rose-400 font-bold">❌ ${data.message || 'ይህ የትዕዛዝ ቁጥር ወይም ስልክ በሲስተማችን አልተገኘም። እባክዎ እንደገና ያረጋግጡ።'}</p>`;
+                }
+            } catch (err) {
+                resContainer.innerHTML = `<p class="text-xs text-rose-400">ግንኙነት አልተሳካም: ${err.message}</p>`;
+            }
+        }
+
+        // 9. Real SMS Dispatch Test Engine
+        async function dispatchTestSms() {
+            const phone = document.getElementById('test-sms-phone').value.trim();
+            const message = document.getElementById('test-sms-message').value.trim();
+            const btn = document.getElementById('btn-dispatch-test-sms');
+            const resultBox = document.getElementById('sms-test-result');
+
+            if (!phone) {
+                alert('እባክዎ ስልክ ቁጥር ያስገቡ!');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin">⏳</span> በመላክ ላይ...';
+
+            try {
+                const res = await fetch('/api/public/sms/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ phone, message: message || null })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    const r = data.result;
+                    resultBox.innerHTML = `
+                        <div class="space-y-2">
+                            <span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-bold text-[10px] border border-emerald-800">✅ የተሳካ የሙከራ ሂደት</span>
+                            <p class="text-white font-bold">ወደ: ${r.phone}</p>
+                            <p class="text-slate-300">ሁኔታ: <span class="text-cyan-300 font-bold">${r.status}</span> (Carrier: ${r.is_live ? 'LIVE CARRIER 📶' : 'SIMULATED / AUDIT LOGGED 📋'})</p>
+                            <div class="p-2 rounded bg-black/60 border border-slate-800 text-[10px] text-slate-300 font-mono">
+                                ${r.message}
+                            </div>
+                            <p class="text-[10px] text-cyan-400">${r.provider_response}</p>
+                        </div>
+                    `;
+                } else {
+                    resultBox.innerHTML = `<p class="text-rose-400">❌ ስህተት ተፈጥሯል: ${data.message || 'መላክ አልተቻለም'}</p>`;
+                }
+            } catch (err) {
+                resultBox.innerHTML = `<p class="text-rose-400">ግንኙነት አልተሳካም: ${err.message}</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '📨 የሙከራ ኤስኤምኤስ ወደ ስልኬ ላክ (Send Test SMS)';
+                lucide.createIcons();
+            }
+        }
+
+        // 10. Real Device Push / Local Notifications Engine
+        async function requestPushNotification() {
+            if (!('Notification' in window)) {
+                alert('ይህ ብሮውዘር ማሳወቂያዎችን (Notifications) አይደግፍም።');
+                return;
+            }
+            const perm = await Notification.requestPermission();
+            if (perm === 'granted') {
+                if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+                    const reg = await navigator.serviceWorker.ready;
+                    reg.showNotification('ሜሽ የፅዳት አገልግሎት | Mesh Cleaning', {
+                        body: '✅ ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል! የትዕዛዝ እና የቀጠሮ ማንቂያዎች ይደርሱዎታል።',
+                        icon: '/assets/icon-192.png',
+                        badge: '/assets/icon-192.png',
+                        vibrate: [200, 100, 200]
+                    });
+                } else {
+                    new Notification('ሜሽ የፅዳት አገልግሎት | Mesh Cleaning', {
+                        body: '✅ ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል!',
+                        icon: '/assets/icon-192.png'
+                    });
+                }
+                alert('✅ ማሳወቂያዎች ተፈቅደዋል! የስልክዎ/የኮምፒውተርዎ የስክሪን ማሳወቂያ ደርሶዎታል።');
+            } else {
+                alert('⚠️ ማሳወቂያዎች አልተፈቀዱም። እባክዎ በብሮውዘር ቅንብር ውስጥ ይፍቀዱ።');
+            }
+        }
+
+        // 11. PWA Service Worker Registration & Install Prompt Engine
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) banner.classList.remove('hidden');
+        });
+
+        async function triggerPwaInstall() {
+            if (!deferredPrompt) {
+                alert('መተግበሪያው አስቀድሞ ተጭኗል ወይም በብሮውዘርዎ ሜኑ (Menu -> Add to Home Screen) መጫን ይችላሉ።');
+                return;
+            }
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to install prompt: ${outcome}`);
+            deferredPrompt = null;
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        function dismissPwaBanner() {
+            const banner = document.getElementById('pwa-install-banner');
+            if (banner) banner.classList.add('hidden');
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then((reg) => {
+                    console.log('Mesh ServiceWorker registered successfully:', reg.scope);
+                }).catch((err) => {
+                    console.warn('Mesh ServiceWorker registration failed:', err);
+                });
+            });
+        }
+
+        // 12. Bilingual Toggle (አማርኛ / English)
+        function toggleLang(lang) {
+            const amBtn = document.getElementById('top-btn-am');
+            const enBtn = document.getElementById('top-btn-en');
+            if (lang === 'am') {
+                amBtn.className = 'px-2 py-0.5 rounded font-extrabold text-white bg-cyan-600 transition-all';
+                enBtn.className = 'px-2 py-0.5 rounded font-bold text-slate-400 hover:text-white transition-all';
+                document.getElementById('nav-svc').innerText = 'አገልግሎቶች';
+                document.getElementById('nav-compare').innerText = '3D ውጤት (Before/After)';
+                document.getElementById('nav-calc').innerText = 'ዋጋ አስላ';
+                document.getElementById('nav-track').innerText = 'ትዕዛዝ ተከታተል';
+                document.getElementById('nav-cta-book').innerText = 'ቦታ ያስይዙ';
+            } else {
+                enBtn.className = 'px-2 py-0.5 rounded font-extrabold text-white bg-cyan-600 transition-all';
+                amBtn.className = 'px-2 py-0.5 rounded font-bold text-slate-400 hover:text-white transition-all';
+                document.getElementById('nav-svc').innerText = 'Services';
+                document.getElementById('nav-compare').innerText = '3D Results';
+                document.getElementById('nav-calc').innerText = 'Calculator';
+                document.getElementById('nav-track').innerText = 'Track Order';
+                document.getElementById('nav-cta-book').innerText = 'Book Now';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            calculatePrice();
+        });
+    </script>
+</body>
+</html>
