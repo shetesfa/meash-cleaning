@@ -10,6 +10,7 @@ php artisan db:seed --force || true
 
 # Cache Laravel configurations
 echo "Caching config & routes..."
+php artisan storage:link || true
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
