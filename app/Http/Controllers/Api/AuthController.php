@@ -14,13 +14,15 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'login' => 'required|string', // email or phone
+            'login' => 'required|string', // name, role, phone, or email
             'password' => 'required|string',
         ]);
 
-        $login = $request->input('login');
-        $user = User::where('email', $login)
+        $login = trim($request->input('login'));
+        $user = User::where('name', $login)
+            ->orWhere('role', $login)
             ->orWhere('phone', $login)
+            ->orWhere('email', $login)
             ->first();
 
         if (!$user || !Hash::check($request->input('password'), $user->password)) {

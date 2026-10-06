@@ -24,7 +24,12 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+  // Immediate dark mode theme initialization to avoid flash
+  if (localStorage.getItem('meash_theme') === 'dark' || (!localStorage.getItem('meash_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+  }
   tailwind.config = {
+    darkMode: 'class',
     theme: {
       extend: {
         fontFamily: {
@@ -42,7 +47,7 @@
   }
 </script>
 <style>
-  body { font-family: 'Inter', 'Noto Sans Ethiopic', sans-serif; background:#FFFFFF; color:#0B1220; }
+  body { font-family: 'Inter', 'Noto Sans Ethiopic', sans-serif; background:#FFFFFF; color:#0B1220; transition: background-color 0.3s ease, color 0.3s ease; }
   .font-serif { font-family: 'Fraunces', 'Noto Sans Ethiopic', serif; }
   ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background:#D7DCE2; border-radius:8px; }
   [data-lang-block] { display: none; }
@@ -55,6 +60,20 @@
   .lang-both-stack > [data-lang-block="en"] { opacity:.62; font-size:.82em; margin-top:.2em; font-weight:500; }
   .duo { background: linear-gradient(160deg, #0E7C7B 0%, #0B1220 100%); }
   .grain { background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px); background-size: 14px 14px; }
+
+  /* ================= DARK MODE STYLES ================= */
+  html.dark body { background: #0B1220 !important; color: #F1F5F9 !important; }
+  html.dark header { background: rgba(11, 18, 32, 0.95) !important; border-color: #1E293B !important; }
+  html.dark .text-navy { color: #F1F5F9 !important; }
+  html.dark .text-navy\/70, html.dark .text-navy\/65, html.dark .text-navy\/60, html.dark .text-navy\/55, html.dark .text-navy\/50 { color: #94A3B8 !important; }
+  html.dark .border-navy\/10, html.dark .border-navy\/15 { border-color: #1E293B !important; }
+  html.dark .bg-fog { background: #111B2E !important; }
+  html.dark .bg-white { background: #1E293B !important; color: #F1F5F9 !important; }
+  html.dark .bg-white\/95 { background: rgba(30, 41, 59, 0.95) !important; }
+  html.dark .bg-slate-50, html.dark .bg-gray-50 { background: #1E293B !important; }
+  html.dark .border-gray-200, html.dark .border-slate-200 { border-color: #334155 !important; }
+  html.dark input, html.dark select, html.dark textarea { background: #0F172A !important; color: #FFFFFF !important; border-color: #334155 !important; }
+  html.dark .shadow-xl, html.dark .shadow-lg, html.dark .shadow-md, html.dark .shadow-sm { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important; }
 </style>
 </head>
 <body class="antialiased">
@@ -73,6 +92,11 @@
       <a href="#track" class="hover:text-teal"><span data-lang-block="am">ትዕዛዝ ፈልግ</span><span data-lang-block="en">Track Order</span></a>
     </nav>
     <div class="flex items-center gap-2">
+      <!-- Dark Mode Toggle Button -->
+      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 rounded-full border border-navy/15 text-navy hover:bg-navy/5 transition cursor-pointer flex items-center justify-center" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
+        <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
+      </button>
+
       <div class="hidden sm:flex items-center gap-1 mr-1 border border-navy/15 rounded-full p-0.5">
         <button type="button" onclick="setLang('am')" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer">አማ</button>
         <button type="button" onclick="setLang('en')" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer">EN</button>
@@ -635,10 +659,9 @@
         <div>
           <label class="block text-[11px] font-bold text-navy/70 mb-1">የስራ ዘርፍ / ሚና (Staff Role)</label>
           <select id="staff-role-select" class="w-full px-3 py-2.5 rounded-lg border border-navy/20 bg-fog text-navy text-xs font-semibold focus:outline-none focus:border-teal cursor-pointer">
-            <option value="owner@meash.com">👑 ዋና ስራ አስኪያጅ (Owner / General Manager)</option>
-            <option value="reception@meash.com">📞 ሪሴፕሽን እና ሽያጭ (Reception &amp; Sales)</option>
-            <option value="cleaner1@meash.com">🧹 የፅዳት ቡድን መሪ (Cleaning Team)</option>
-            <option value="sales@meash.com">💼 የውጭ ሽያጭ ተወካይ (Outdoor Sales)</option>
+            <option value="owner">👑 1. ዋና ስራ አስኪያጅ (Owner / General Manager)</option>
+            <option value="reception">📞 2. ሪሴፕሽን እና ስራ ማስተናገጃ (Reception)</option>
+            <option value="cleaner">🧹 3. የፅዳት ሰራተኛ (Cleaner / Technician)</option>
           </select>
         </div>
 
@@ -1374,7 +1397,45 @@
     if (e.key === 'Escape') closeStaffModal();
   });
 
+  // ---- Theme (Dark/Light Mode) Engine ----
+  function initTheme() {
+    const saved = localStorage.getItem('meash_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(saved);
+  }
+
+  function applyTheme(theme) {
+    const icon = document.getElementById('theme-icon');
+    const btn = document.getElementById('theme-toggle-btn');
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      if (icon) {
+        icon.setAttribute('data-lucide', 'sun');
+      }
+      if (btn) {
+        btn.classList.add('text-amber-400', 'border-slate-700');
+        btn.classList.remove('text-navy', 'border-navy/15');
+      }
+    } else {
+      document.documentElement.classList.remove('dark');
+      if (icon) {
+        icon.setAttribute('data-lucide', 'moon');
+      }
+      if (btn) {
+        btn.classList.add('text-navy', 'border-navy/15');
+        btn.classList.remove('text-amber-400', 'border-slate-700');
+      }
+    }
+    localStorage.setItem('meash_theme', theme);
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+    applyTheme(isDark ? 'light' : 'dark');
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     if (window.lucide) lucide.createIcons();
     loadServicePrices();
     initEthDatePicker();
