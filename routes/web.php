@@ -40,14 +40,6 @@ Route::get('/docs/guide', function () {
     return response()->file(public_path('docs/owner_system_guide.html'));
 });
 
-// Download Official Word Proposal (.docx)
-Route::get('/proposal', function () {
-    $file = public_path('docs/Meash_Cleaning_Commercial_Proposal_Tesfahun_Bayih.docx');
-    if (file_exists($file)) {
-        return response()->download($file, 'Meash_Cleaning_Commercial_Proposal_Tesfahun_Bayih.docx');
-    }
-    return response('File not found', 404);
-});
 
 // Lightweight Health & Keep-Alive Ping Endpoints for 24/7 Uptime
 Route::get('/ping', function () {
