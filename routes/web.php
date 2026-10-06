@@ -40,3 +40,18 @@ Route::get('/docs/guide', function () {
     return response()->file(public_path('docs/owner_system_guide.html'));
 });
 
+// Lightweight Health & Keep-Alive Ping Endpoints for 24/7 Uptime
+Route::get('/ping', function () {
+    return response('pong', 200)->header('Content-Type', 'text/plain');
+});
+
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'service' => 'meash-cleaning',
+        'uptime' => 'active',
+        'timestamp' => now()->toIso8601String(),
+    ]);
+});
+
+
