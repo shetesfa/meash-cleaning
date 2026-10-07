@@ -141,32 +141,32 @@
     <!-- MAIN AUTHENTICATED SYSTEM WRAPPER -->
     <div id="app-authenticated-wrapper" class="h-full flex flex-col">
 
-    <!-- TOP MODERN ENTERPRISE HEADER -->
-    <header class="h-16 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shrink-0 px-3 sm:px-6 flex items-center justify-between z-40 transition-all">
+    <!-- TOP MODERN ENTERPRISE HEADER (Phone-First & Responsive) -->
+    <header class="h-14 sm:h-16 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shrink-0 px-2.5 sm:px-6 flex items-center justify-between z-40 transition-all">
         <!-- 1. Left: Brand Identity -->
-        <div class="flex items-center gap-2.5 sm:gap-3">
-            <img src="/logo.jpg" alt="Meash Logo" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-cyan-500/30 shadow-md shadow-cyan-500/10 shrink-0">
+        <div class="flex items-center gap-2">
+            <img src="/logo.jpg" alt="Meash Logo" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border border-cyan-500/30 shadow-md shrink-0">
             <div>
-                <div class="flex items-center gap-1.5">
-                    <span class="text-sm sm:text-base font-black text-white tracking-tight">ሜሽ ፅዳት</span>
-                    <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/80">OS</span>
+                <div class="flex items-center gap-1">
+                    <span class="text-xs sm:text-base font-black text-white tracking-tight">ሜሽ</span>
+                    <span class="text-[8px] sm:text-[9px] font-extrabold uppercase px-1 py-0.2 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/80">OS</span>
                 </div>
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" id="sync-indicator-dot"></span>
-                    <span class="text-[10px] text-slate-400 font-semibold" id="sync-status-text">ኦንላይን</span>
+                    <span class="text-[9px] sm:text-[10px] text-slate-400 font-semibold" id="sync-status-text">ኦንላይን</span>
                 </div>
             </div>
         </div>
 
-        <!-- 2. Center: Elegant Single-Select Role Switcher (Responsive Dropdown) -->
+        <!-- 2. Center: Elegant Compact Role Switcher -->
         <div class="relative">
-            <button type="button" onclick="toggleRoleDropdown(event)" id="role-dropdown-btn" class="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-slate-800/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/50 text-white font-bold text-xs shadow-sm transition cursor-pointer">
-                <span id="header-role-badge">👑 ዋና ስራ አስኪያጅ</span>
+            <button type="button" onclick="toggleRoleDropdown(event)" id="role-dropdown-btn" class="flex items-center gap-1.5 px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-cyan-500 text-white font-bold text-xs shadow-sm transition cursor-pointer">
+                <span id="header-role-badge">👑 owner</span>
                 <i data-lucide="chevron-down" id="role-chevron" class="w-3.5 h-3.5 text-slate-400 transition-transform"></i>
             </button>
 
             <!-- Floating Role Menu -->
-            <div id="role-dropdown-menu" class="hidden absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-60 bg-slate-900 border border-slate-700 rounded-2xl p-1.5 shadow-2xl z-50 space-y-1">
+            <div id="role-dropdown-menu" class="hidden absolute left-1/2 -translate-x-1/2 mt-2 w-56 sm:w-60 bg-slate-900 border border-slate-700 rounded-2xl p-1.5 shadow-2xl z-50 space-y-1">
                 <div class="px-3 py-1.5 border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     የስራ ዘርፍ ይቀይሩ (Switch Role)
                 </div>
@@ -180,46 +180,37 @@
                 <button type="button" onclick="switchRoleAccount('Bethlehem Tadesse', 'reception'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
                     <span class="flex items-center gap-2">
                         <span class="text-base">📞</span>
-                        <span>2. ሪሴፕሽን እና ስራ ማስተናገጃ</span>
+                        <span>2. ሪሴፕሽን</span>
                     </span>
                     <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-900">reception</span>
                 </button>
                 <button type="button" onclick="switchRoleAccount('Solomon Kebede', 'cleaner'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
                     <span class="flex items-center gap-2">
                         <span class="text-base">🧹</span>
-                        <span>3. የፅዳት ሰራተኛ</span>
+                        <span>3. ጽዳት ሰራተኛ</span>
                     </span>
                     <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-900">cleaner</span>
                 </button>
             </div>
         </div>
 
-        <!-- 3. Right: Language, Profile, Website & Logout -->
-        <div class="flex items-center gap-2 sm:gap-3">
+        <!-- 3. Right: Compact Language + Website + Logout -->
+        <div class="flex items-center gap-1 sm:gap-2">
             <!-- Language Toggle (Compact) -->
-            <div class="flex items-center bg-slate-800/80 rounded-lg p-0.5 border border-slate-700/80 text-[11px]">
+            <div class="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 text-[10px] sm:text-[11px]">
                 <button type="button" onclick="window.meashI18n.setLanguage('en')" class="px-1.5 py-0.5 rounded font-bold hover:bg-slate-700 text-slate-400" id="app-lang-en">EN</button>
                 <button type="button" onclick="window.meashI18n.setLanguage('am')" class="px-1.5 py-0.5 rounded font-bold hover:bg-slate-700 text-cyan-300" id="app-lang-am">አማ</button>
             </div>
 
-            <!-- User Info (Avatar + Name) -->
-            <div class="flex items-center gap-2 pl-1 sm:pl-2 sm:border-l border-slate-800">
-                <div class="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 flex items-center justify-center font-bold text-xs shrink-0" id="user-avatar-text">GM</div>
-                <div class="hidden md:block text-left">
-                    <p class="text-xs font-bold text-white leading-tight truncate max-w-[120px]" id="user-display-name">ስራ አስኪያጅ</p>
-                    <p class="text-[10px] text-cyan-400 font-semibold" id="user-display-role">ዋና ስራ አስኪያጅ</p>
-                </div>
-            </div>
-
-            <!-- Website link -->
-            <a href="/" target="_blank" title="የደንበኞች ድረ-ገጽ እይ" class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800/60 rounded-xl transition-colors">
+            <!-- Website link (Desktop only to save mobile space) -->
+            <a href="/" target="_blank" title="የደንበኞች ድረ-ገጽ እይ" class="hidden sm:flex p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800/60 rounded-xl transition-colors">
                 <i data-lucide="globe" class="w-4 h-4"></i>
             </a>
 
             <!-- Clean Logout Button -->
-            <button type="button" onclick="logoutUser()" title="ውጣ (Logout)" class="p-2 text-red-400 hover:text-red-300 hover:bg-red-950/40 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5">
+            <button type="button" onclick="logoutUser()" title="ውጣ (Logout)" class="p-1.5 sm:p-2 text-red-400 hover:text-red-300 hover:bg-red-950/40 rounded-xl transition-colors cursor-pointer flex items-center gap-1">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
-                <span class="hidden lg:inline text-xs font-bold">ውጣ</span>
+                <span class="hidden md:inline text-xs font-bold">ውጣ</span>
             </button>
         </div>
     </header>
@@ -840,87 +831,137 @@
                 const mtd = data.month_to_date || {};
 
                 container.innerHTML = `
-                    <div class="max-w-7xl mx-auto space-y-8">
+                    <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6">
                         <!-- Top Greeting & Header -->
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center justify-between gap-3">
                             <div>
-                                <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider">${today.eth_date || 'Today'}</span>
-                                <h2 class="text-2xl sm:text-3xl font-black text-white">ዋና ስራ አስኪያጅ Executive Dashboard</h2>
+                                <span class="text-[10px] sm:text-xs font-bold text-cyan-400 uppercase tracking-wider block">${today.eth_date || 'Today'}</span>
+                                <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight">ስራ አስኪያጅ መቆጣጠሪያ</h2>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <button onclick="openCreateOrderModal()" class="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2">
-                                    <i data-lucide="plus" class="w-4 h-4"></i>
-                                    <span>+ አዲስ ትዕዛዝ መዝግብ</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openCreateOrderModal()" class="px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-xs rounded-xl shadow-md shadow-cyan-500/20 flex items-center gap-1.5 transition cursor-pointer">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                    <span class="hidden sm:inline">+ አዲስ ትዕዛዝ</span>
+                                    <span class="sm:hidden">+ ትዕዛዝ</span>
                                 </button>
-                                <button onclick="openRecordExpenseModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 flex items-center gap-2">
-                                    <i data-lucide="minus-circle" class="w-4 h-4 text-red-400"></i>
-                                    <span>- ወጪ መዝግብ</span>
+                                <button onclick="openRecordExpenseModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 flex items-center gap-1.5 transition cursor-pointer">
+                                    <i data-lucide="minus-circle" class="w-3.5 h-3.5 text-red-400"></i>
+                                    <span class="hidden sm:inline">- ወጪ መዝግብ</span>
+                                    <span class="sm:hidden">- ወጪ</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- 10 CORE METRIC CARDS (Exact match to business specification) -->
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                            <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-                                <span class="text-xs text-slate-400 font-semibold">የዛሬ ስራዎች</span>
-                                <span class="text-2xl sm:text-3xl font-black text-white mt-2">${today.cleaning_jobs || 0}</span>
+                        <!-- 1. PHONE-FIRST EXECUTIVE PROFIT & LOSS HERO CARD -->
+                        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 p-4 sm:p-6 shadow-2xl">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                                    <span class="text-xs font-extrabold text-slate-300">የተጣራ የድርጅቱ ትርፍ (Net Profit)</span>
+                                </div>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/30">
+                                    ${parseFloat(mtd.net_profit || 0) >= 0 ? 'ትርፋማ' : 'ኪሳራ'} • ${parseFloat(mtd.income || 0) > 0 ? Math.round((parseFloat(mtd.net_profit || 0) / parseFloat(mtd.income || 1)) * 100) : 0}%
+                                </span>
                             </div>
-                            <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-                                <span class="text-xs text-slate-400 font-semibold">ማረጋገጫ የሚጠብቁ</span>
-                                <span class="text-2xl sm:text-3xl font-black text-amber-400 mt-2">${today.pending_bookings || 0}</span>
+
+                            <!-- Big Profit Number -->
+                            <div class="py-3">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-300 to-blue-400 tracking-tight">
+                                        ${parseFloat(mtd.net_profit || 0).toLocaleString()}
+                                    </span>
+                                    <span class="text-sm font-bold text-cyan-400 font-mono">ETB</span>
+                                </div>
+                                <p class="text-[10px] sm:text-xs text-slate-500 mt-0.5">የወሩ አጠቃላይ የተጣራ ትርፍ (ከተረጋገጡ ክፍያዎች እና ወጪዎች)</p>
                             </div>
-                            <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-                                <span class="text-xs text-slate-400 font-semibold">ቡድን ያልተመደቡ</span>
-                                <span class="text-2xl sm:text-3xl font-black text-red-400 mt-2">${today.unassigned_jobs || 0}</span>
-                            </div>
-                            <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-                                <span class="text-xs text-slate-400 font-semibold">አዳዲስ ደንበኞች</span>
-                                <span class="text-2xl sm:text-3xl font-black text-cyan-400 mt-2">${today.new_customers || 0}</span>
-                            </div>
-                            <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-                                <span class="text-xs text-slate-400 font-semibold">የክትትል ጥሪዎች</span>
-                                <span class="text-2xl sm:text-3xl font-black text-blue-400 mt-2">${today.followups_due || 0}</span>
-                            </div>
-                            <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-                                <span class="text-xs text-slate-400 font-semibold">ክፍት ቅሬታዎች</span>
-                                <span class="text-2xl sm:text-3xl font-black ${today.open_complaints > 0 ? 'text-red-400' : 'text-slate-400'} mt-2">${today.open_complaints || 0}</span>
-                            </div>
-                            <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-                                <span class="text-xs text-slate-400 font-semibold">የሚጠበቁ ፕሮፎርማዎች</span>
-                                <span class="text-2xl sm:text-3xl font-black text-purple-400 mt-2">${today.pending_proformas || 0}</span>
-                            </div>
-                            <div class="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex flex-col justify-between">
-                                <span class="text-xs text-emerald-400 font-semibold">የዛሬ ገቢ</span>
-                                <span class="text-xl sm:text-2xl font-black text-white mt-2">${parseFloat(today.income || 0).toLocaleString()} <span class="text-xs font-bold text-emerald-400">ETB</span></span>
-                            </div>
-                            <div class="p-4 rounded-2xl bg-red-950/40 border border-red-500/30 flex flex-col justify-between">
-                                <span class="text-xs text-red-400 font-semibold">የዛሬ ወጪ</span>
-                                <span class="text-xl sm:text-2xl font-black text-white mt-2">${parseFloat(today.expenses || 0).toLocaleString()} <span class="text-xs font-bold text-red-400">ETB</span></span>
-                            </div>
-                            <div class="p-4 rounded-2xl bg-gradient-to-tr from-cyan-950/80 to-blue-950/80 border border-cyan-500/30 flex flex-col justify-between">
-                                <span class="text-xs text-cyan-300 font-semibold">የዛሬ የተጣራ ውጤት</span>
-                                <span class="text-xl sm:text-2xl font-black text-white mt-2">${parseFloat(today.net_result || 0).toLocaleString()} <span class="text-xs font-bold text-cyan-400">ETB</span></span>
+
+                            <!-- Income vs Expense Bar in Mobile -->
+                            <div class="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-800/80">
+                                <div class="p-2.5 sm:p-3 rounded-2xl bg-emerald-950/20 border border-emerald-500/20">
+                                    <span class="text-[10px] text-emerald-400 font-bold block">የወሩ ገቢ</span>
+                                    <span class="text-base sm:text-lg font-black text-white mt-0.5 block">
+                                        ${parseFloat(mtd.income || 0).toLocaleString()} <span class="text-[9px] font-mono text-emerald-400">ETB</span>
+                                    </span>
+                                </div>
+                                <div class="p-2.5 sm:p-3 rounded-2xl bg-red-950/20 border border-red-500/20">
+                                    <span class="text-[10px] text-red-400 font-bold block">የወሩ ወጪ</span>
+                                    <span class="text-base sm:text-lg font-black text-white mt-0.5 block">
+                                        ${parseFloat(mtd.expenses || 0).toLocaleString()} <span class="text-[9px] font-mono text-red-400">ETB</span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Month-to-date Financial summary -->
-                        <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                            <div>
-                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">የወሩ አጠቃላይ የስራ አፈፃፀም (MTD Performance)</span>
-                                <p class="text-lg font-bold text-white mt-1">ከተረጋገጡ ክፍያዎች እና ከተመዘገቡ ወጪዎች በቀጥታ የተሰላ</p>
+                        <!-- 2. THE 4 ESSENTIAL OPERATIONAL STATUS CARDS -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">የዛሬ የስራ ሁኔታ</span>
+                                <button type="button" onclick="toggleDetailedMetrics()" class="text-[11px] text-cyan-400 font-bold hover:underline flex items-center gap-1 cursor-pointer">
+                                    <span id="text-toggle-metrics">ተጨማሪ ዝርዝር (6)</span>
+                                    <i data-lucide="chevron-down" id="icon-toggle-metrics" class="w-3.5 h-3.5 transition-transform"></i>
+                                </button>
                             </div>
-                            <div class="flex items-center gap-8">
-                                <div>
-                                    <span class="text-xs text-slate-500 block">የወሩ ገቢ (MTD Income)</span>
-                                    <span class="text-xl font-black text-emerald-400">${parseFloat(mtd.income || 0).toLocaleString()} ETB</span>
+
+                            <!-- 4 Key Grid Cards -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-medium block">የዛሬ ስራዎች</span>
+                                        <span class="text-xl font-black text-white mt-0.5 block">${today.cleaning_jobs || 0}</span>
+                                    </div>
+                                    <span class="text-lg">🧹</span>
                                 </div>
-                                <div>
-                                    <span class="text-xs text-slate-500 block">የወሩ ወጪ (MTD Expenses)</span>
-                                    <span class="text-xl font-black text-red-400">${parseFloat(mtd.expenses || 0).toLocaleString()} ETB</span>
+
+                                <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-medium block">ማረጋገጫ የሚጠብቁ</span>
+                                        <span class="text-xl font-black text-amber-400 mt-0.5 block">${today.pending_bookings || 0}</span>
+                                    </div>
+                                    <span class="text-lg">⏳</span>
                                 </div>
-                                <div class="pl-6 border-l border-slate-800">
-                                    <span class="text-xs text-slate-500 block">የወሩ የተጣራ ትርፍ (የተጣራ ትርፍ)</span>
-                                    <span class="text-2xl font-black text-cyan-400">${parseFloat(mtd.net_profit || 0).toLocaleString()} ETB</span>
+
+                                <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-medium block">ቡድን ያልተመደቡ</span>
+                                        <span class="text-xl font-black ${today.unassigned_jobs > 0 ? 'text-red-400' : 'text-slate-400'} mt-0.5 block">${today.unassigned_jobs || 0}</span>
+                                    </div>
+                                    <span class="text-lg">👥</span>
+                                </div>
+
+                                <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-medium block">የዛሬ የተጣራ</span>
+                                        <span class="text-base sm:text-lg font-black text-cyan-300 mt-0.5 block">${parseFloat(today.net_result || 0).toLocaleString()} <span class="text-[9px] font-mono">ETB</span></span>
+                                    </div>
+                                    <span class="text-lg">💰</span>
+                                </div>
+                            </div>
+
+                            <!-- Collapsible 6 Secondary Metric Cards -->
+                            <div id="detailed-metrics-drawer" class="hidden grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-2.5">
+                                <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800">
+                                    <span class="text-[10px] text-slate-400 font-medium block">አዳዲስ ደንበኞች</span>
+                                    <span class="text-lg font-black text-cyan-400 mt-0.5 block">${today.new_customers || 0}</span>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800">
+                                    <span class="text-[10px] text-slate-400 font-medium block">የክትትል ጥሪዎች</span>
+                                    <span class="text-lg font-black text-blue-400 mt-0.5 block">${today.followups_due || 0}</span>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800">
+                                    <span class="text-[10px] text-slate-400 font-medium block">ክፍት ቅሬታዎች</span>
+                                    <span class="text-lg font-black ${today.open_complaints > 0 ? 'text-red-400' : 'text-slate-400'} mt-0.5 block">${today.open_complaints || 0}</span>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800">
+                                    <span class="text-[10px] text-slate-400 font-medium block">የሚጠበቁ ፕሮፎርማዎች</span>
+                                    <span class="text-lg font-black text-purple-400 mt-0.5 block">${today.pending_proformas || 0}</span>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-500/20">
+                                    <span class="text-[10px] text-emerald-400 font-medium block">የዛሬ ገቢ</span>
+                                    <span class="text-base font-black text-white mt-0.5 block">${parseFloat(today.income || 0).toLocaleString()} ETB</span>
+                                </div>
+                                <div class="p-3 rounded-2xl bg-red-950/30 border border-red-500/20">
+                                    <span class="text-[10px] text-red-400 font-medium block">የዛሬ ወጪ</span>
+                                    <span class="text-base font-black text-white mt-0.5 block">${parseFloat(today.expenses || 0).toLocaleString()} ETB</span>
                                 </div>
                             </div>
                         </div>
@@ -957,6 +998,23 @@
                 lucide.createIcons();
             } catch (err) {
                 container.innerHTML = `<div class="p-6 text-center text-red-400">Failed to load ዋና ስራ አስኪያጅ summary: ${err.message}</div>`;
+            }
+        }
+
+        function toggleDetailedMetrics() {
+            const drawer = document.getElementById('detailed-metrics-drawer');
+            const txt = document.getElementById('text-toggle-metrics');
+            const icon = document.getElementById('icon-toggle-metrics');
+            if (!drawer) return;
+            const isHidden = drawer.classList.contains('hidden');
+            if (isHidden) {
+                drawer.classList.remove('hidden');
+                if (txt) txt.innerText = 'አሳንስ (Hide)';
+                if (icon) icon.classList.add('rotate-180');
+            } else {
+                drawer.classList.add('hidden');
+                if (txt) txt.innerText = 'ተጨማሪ ዝርዝር (6)';
+                if (icon) icon.classList.remove('rotate-180');
             }
         }
 
