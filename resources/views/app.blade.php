@@ -143,8 +143,12 @@
 
     <!-- TOP MODERN ENTERPRISE HEADER (Phone-First & Responsive) -->
     <header class="h-14 sm:h-16 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shrink-0 px-2.5 sm:px-6 flex items-center justify-between z-40 transition-all">
-        <!-- 1. Left: Brand Identity -->
-        <div class="flex items-center gap-2">
+        <!-- 1. Left: Mobile Menu Trigger + Brand Identity -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+            <!-- Mobile Sidebar Hamburger Button -->
+            <button type="button" onclick="toggleMobileSidebar()" class="md:hidden p-1.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white transition active:scale-95 cursor-pointer" title="ሳይድባር ሜኑ (Open Sidebar)">
+                <i data-lucide="menu" class="w-4 h-4"></i>
+            </button>
             <img src="/logo.jpg" alt="Meash Logo" class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border border-cyan-500/30 shadow-md shrink-0">
             <div>
                 <div class="flex items-center gap-1">
@@ -214,6 +218,31 @@
             </button>
         </div>
     </header>
+
+    <!-- MOBILE SIDEBAR SLIDE-OVER DRAWER (Android / iPhone) -->
+    <div id="mobile-sidebar-drawer" class="fixed inset-0 z-50 hidden transition-all">
+        <div class="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity cursor-pointer" onclick="toggleMobileSidebar()"></div>
+        <aside class="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-slate-900 border-r border-slate-800 p-4 flex flex-col z-10 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+                <div class="flex items-center gap-2">
+                    <img src="/logo.jpg" alt="Logo" class="w-7 h-7 rounded-lg object-cover">
+                    <span class="font-black text-white text-sm">ሜሽ OS ሙሉ ሜኑ</span>
+                </div>
+                <button type="button" onclick="toggleMobileSidebar()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <nav class="space-y-1 flex-1 overflow-y-auto" id="mobile-drawer-nav">
+                <!-- Navigation links populated by role -->
+            </nav>
+            <div class="pt-3 border-t border-slate-800/80 text-xs space-y-2 mt-auto">
+                <button onclick="promptPwaInstall(); toggleMobileSidebar();" class="w-full py-2 bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>መተግበሪያውን ጫን (PWA)</span>
+                </button>
+            </div>
+        </aside>
+    </div>
 
     <!-- APP BODY -->
     <div class="flex-1 flex overflow-hidden">
@@ -730,35 +759,60 @@
             loadActiveTab();
         }
 
+        function toggleMobileSidebar() {
+            const drawer = document.getElementById('mobile-sidebar-drawer');
+            if (drawer) {
+                drawer.classList.toggle('hidden');
+                if (!drawer.classList.contains('hidden')) {
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        }
+
         function renderNavigation() {
             const isAmharic = window.meashI18n.getLanguage() === 'am';
             const navs = roleNavs[currentUser.role] || roleNavs.owner;
             const sidebar = document.getElementById('nav-items-container');
+            const drawerNav = document.getElementById('mobile-drawer-nav');
             const mobile = document.getElementById('mobile-bottom-nav');
 
-            if (sidebar) {
-                sidebar.innerHTML = navs.map(item => {
-                    const label = isAmharic ? (item.label_am || item.label_en) : item.label_en;
-                    return `
-                        <button onclick="setTab('${item.id}')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${activeTab === item.id ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}">
-                            <i data-lucide="${item.icon}" class="w-4 h-4"></i>
-                            <span>${label}</span>
-                        </button>
-                    `;
-                }).join('');
-            }
+            const navItemsHtml = (isDrawer = false) => navs.map(item => {
+                const label = isAmharic ? (item.label_am || item.label_en) : item.label_en;
+                const clickHandler = isDrawer ? `setTab('${item.id}'); toggleMobileSidebar();` : `setTab('${item.id}');`;
+                return `
+                    <button onclick="${clickHandler}" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${activeTab === item.id ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}">
+                        <i data-lucide="${item.icon}" class="w-4 h-4"></i>
+                        <span>${label}</span>
+                    </button>
+                `;
+            }).join('');
 
-            // Mobile Nav (limit to max 4)
+            // 1. Desktop Sidebar (All tabs)
+            if (sidebar) sidebar.innerHTML = navItemsHtml(false);
+
+            // 2. Mobile Drawer Sidebar (All tabs accessible on phone!)
+            if (drawerNav) drawerNav.innerHTML = navItemsHtml(true);
+
+            // 3. Mobile Bottom Nav (Top 3 core tabs + "ተጨማሪ" / Menu button)
             if (mobile) {
-                mobile.innerHTML = navs.slice(0, 4).map(item => {
+                const topTabs = navs.slice(0, 3).map(item => {
                     const label = isAmharic ? (item.label_am || item.label_en) : item.label_en;
                     return `
-                        <button onclick="setTab('${item.id}')" class="flex flex-col items-center gap-1 p-2 text-[10px] font-bold ${activeTab === item.id ? 'text-cyan-400' : 'text-slate-400 hover:text-slate-200'}">
+                        <button onclick="setTab('${item.id}')" class="flex flex-col items-center gap-1 p-1.5 text-[10px] font-bold cursor-pointer ${activeTab === item.id ? 'text-cyan-400 font-black' : 'text-slate-400 hover:text-slate-200'}">
                             <i data-lucide="${item.icon}" class="w-5 h-5"></i>
-                            <span>${label.split(' ')[0]}</span>
+                            <span class="truncate max-w-[65px]">${label.split(' ')[0]}</span>
                         </button>
                     `;
                 }).join('');
+
+                const moreBtn = `
+                    <button onclick="toggleMobileSidebar()" class="flex flex-col items-center gap-1 p-1.5 text-[10px] font-bold text-slate-400 hover:text-cyan-300 cursor-pointer">
+                        <i data-lucide="grid" class="w-5 h-5 text-cyan-400"></i>
+                        <span>${isAmharic ? 'ተጨማሪ' : 'More'}</span>
+                    </button>
+                `;
+
+                mobile.innerHTML = topTabs + moreBtn;
             }
 
             lucide.createIcons();
@@ -786,9 +840,57 @@
             loadActiveTab();
         }
 
+        // Modern Skeleton Shimmer Loader (No more old text "ገጹ በመጫን ላይ ነው...")
+        function getSkeletonLoader() {
+            return `
+                <div class="max-w-7xl mx-auto space-y-4 animate-pulse">
+                    <!-- Skeleton Top Header -->
+                    <div class="flex items-center justify-between">
+                        <div class="space-y-1.5">
+                            <div class="h-2.5 w-24 bg-slate-800 rounded-full"></div>
+                            <div class="h-6 w-44 bg-slate-800 rounded-xl"></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="h-8 w-20 bg-slate-800 rounded-xl"></div>
+                            <div class="h-8 w-20 bg-slate-800 rounded-xl"></div>
+                        </div>
+                    </div>
+
+                    <!-- Skeleton Hero Profit Card -->
+                    <div class="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-3.5">
+                        <div class="flex justify-between items-center">
+                            <div class="h-3 w-36 bg-slate-800 rounded-full"></div>
+                            <div class="h-4 w-16 bg-slate-800 rounded-full"></div>
+                        </div>
+                        <div class="h-9 w-48 bg-slate-800 rounded-2xl"></div>
+                        <div class="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-800/80">
+                            <div class="h-12 bg-slate-800/60 rounded-2xl"></div>
+                            <div class="h-12 bg-slate-800/60 rounded-2xl"></div>
+                        </div>
+                    </div>
+
+                    <!-- Skeleton 4 Status Cards -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <div class="h-16 bg-slate-900 border border-slate-800 rounded-2xl"></div>
+                        <div class="h-16 bg-slate-900 border border-slate-800 rounded-2xl"></div>
+                        <div class="h-16 bg-slate-900 border border-slate-800 rounded-2xl"></div>
+                        <div class="h-16 bg-slate-900 border border-slate-800 rounded-2xl"></div>
+                    </div>
+
+                    <!-- Skeleton Items List Feed -->
+                    <div class="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 space-y-3">
+                        <div class="h-4 w-36 bg-slate-800 rounded-full"></div>
+                        <div class="h-12 bg-slate-800/40 rounded-2xl"></div>
+                        <div class="h-12 bg-slate-800/40 rounded-2xl"></div>
+                        <div class="h-12 bg-slate-800/40 rounded-2xl"></div>
+                    </div>
+                </div>
+            `;
+        }
+
         function loadActiveTab() {
             const viewport = document.getElementById('app-viewport');
-            viewport.innerHTML = '<div class="p-8 text-center text-slate-500"><i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-cyan-400"></i>ገጹ በመጫን ላይ ነው...</div>';
+            viewport.innerHTML = getSkeletonLoader();
             lucide.createIcons();
 
             if (currentUser.role === 'cleaner' || activeTab.startsWith('cleaner_')) {
