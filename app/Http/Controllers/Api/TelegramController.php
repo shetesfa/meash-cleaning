@@ -25,13 +25,13 @@ class TelegramController extends Controller
 
     public function __construct()
     {
-        $this->botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN', '');
-        $this->botUsername = config('services.telegram.bot_username') ?: env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot');
+        $this->botToken = (string)(config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN', '8964703337:AAEV9nUYr83pMQj9GxeLTep1uaWyxkrzX9w'));
+        $this->botUsername = (string)(config('services.telegram.bot_username') ?: env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'));
     }
 
     public function getMiniAppHttpsUrl(): ?string
     {
-        $miniAppUrl = env('TELEGRAM_MINIAPP_URL');
+        $miniAppUrl = config('services.telegram.miniapp_url') ?: env('TELEGRAM_MINIAPP_URL', 'https://shetesfa.github.io/meash-mini-app/');
         if (!empty($miniAppUrl) && str_starts_with($miniAppUrl, 'https://')) {
             return rtrim($miniAppUrl, '/');
         }
@@ -45,32 +45,42 @@ class TelegramController extends Controller
 
     public function webhook(Request $request): JsonResponse
     {
-        $secretToken = env('TELEGRAM_WEBHOOK_SECRET');
-        if (!empty($secretToken) && $request->header('X-Telegram-Bot-Api-Secret-Token') !== $secretToken) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        try {
+            $secretToken = config('services.telegram.webhook_secret') ?: env('TELEGRAM_WEBHOOK_SECRET');
+            if (!empty($secretToken) && $request->header('X-Telegram-Bot-Api-Secret-Token') !== $secretToken) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $update = $request->all();
+
+            // 1. Handle Inline Query (@meash_cleaning_solution_bot <query>)
+            if (isset($update['inline_query'])) {
+                $this->handleInlineQuery($update['inline_query']);
+                return response()->json(['status' => 'inline_handled']);
+            }
+
+            // 2. Handle Callback Query (Button clicks)
+            if (isset($update['callback_query'])) {
+                $this->handleCallbackQuery($update['callback_query']);
+                return response()->json(['status' => 'callback_handled']);
+            }
+
+            // 3. Handle Private Message
+            if (isset($update['message'])) {
+                $this->handleMessage($update['message']);
+                return response()->json(['status' => 'message_handled']);
+            }
+
+            return response()->json(['status' => 'ignored']);
+        } catch (\Throwable $e) {
+            Log::error("Telegram webhook error: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'file' => basename($e->getFile()),
+                'line' => $e->getLine(),
+            ], 200); // Return 200 to prevent Telegram from looping failed webhooks, while returning diagnostic details
         }
-
-        $update = $request->all();
-
-        // 1. Handle Inline Query (@meash_cleaning_solution_bot <query>)
-        if (isset($update['inline_query'])) {
-            $this->handleInlineQuery($update['inline_query']);
-            return response()->json(['status' => 'inline_handled']);
-        }
-
-        // 2. Handle Callback Query (Button clicks)
-        if (isset($update['callback_query'])) {
-            $this->handleCallbackQuery($update['callback_query']);
-            return response()->json(['status' => 'callback_handled']);
-        }
-
-        // 3. Handle Private Message
-        if (isset($update['message'])) {
-            $this->handleMessage($update['message']);
-            return response()->json(['status' => 'message_handled']);
-        }
-
-        return response()->json(['status' => 'ignored']);
     }
 
     /**
@@ -481,19 +491,22 @@ class TelegramController extends Controller
 
         // Upsert Telegram user record
         $tgUser = null;
-        try {
-            $tgUser = TelegramUser::updateOrCreate(
-                ['telegram_id' => $from['id']],
-                [
-                    'username' => $from['username'] ?? null,
-                    'first_name' => $from['first_name'] ?? null,
-                    'last_name' => $from['last_name'] ?? null,
-                    'language_code' => $from['language_code'] ?? 'am',
-                    'last_interaction_at' => now(),
-                ]
-            );
-        } catch (\Throwable $th) {
-            Log::warning('Could not record telegram user: ' . $th->getMessage());
+        $tgId = $from['id'] ?? $chatId;
+        if (!empty($tgId)) {
+            try {
+                $tgUser = TelegramUser::updateOrCreate(
+                    ['telegram_id' => $tgId],
+                    [
+                        'username' => $from['username'] ?? null,
+                        'first_name' => $from['first_name'] ?? ($message['chat']['first_name'] ?? null),
+                        'last_name' => $from['last_name'] ?? null,
+                        'language_code' => $from['language_code'] ?? 'am',
+                        'last_interaction_at' => now(),
+                    ]
+                );
+            } catch (\Throwable $th) {
+                Log::warning('Could not record telegram user: ' . $th->getMessage());
+            }
         }
 
         // Handle Mini App WebApp Data submission (Telegram.WebApp.sendData)
@@ -550,14 +563,18 @@ class TelegramController extends Controller
                 "ዛሬ ምን ማፅዳት ይፈልጋሉ? ከታች ካሉት አማራጮች አንዱን ይምረጡ:";
 
             $httpsUrl = $this->getMiniAppHttpsUrl();
-            $bookButton = $httpsUrl
-                ? ['text' => '📅 ቦታ ያስይዙ | Book Now (1 min)', 'web_app' => ['url' => $httpsUrl]]
-                : ['text' => '📅 ቦታ ያስይዙ | Book Now (1 min)', 'callback_data' => 'menu_book'];
+            $wizardButton = ['text' => '⚡ በቦቱ ቀጠሮ ያስይዙ (1 ደቂቃ)', 'callback_data' => 'book_start_wizard'];
+            $appButton = $httpsUrl
+                ? ['text' => '📱 በቴሌግራም ሚኒ አፕ (Mini App)', 'web_app' => ['url' => $httpsUrl]]
+                : ['text' => '📅 ቦታ ያስይዙ | Book Now', 'callback_data' => 'menu_book'];
 
             $replyMarkup = [
                 'inline_keyboard' => [
                     [
-                        $bookButton,
+                        $wizardButton,
+                    ],
+                    [
+                        $appButton,
                     ],
                     [
                         ['text' => '🛋 አገልግሎቶችና ዋጋ | Services', 'callback_data' => 'menu_services'],
@@ -812,8 +829,22 @@ class TelegramController extends Controller
         if (!$chatId) return;
 
         $tgUser = null;
-        if (!empty($from['id'])) {
-            $tgUser = TelegramUser::where('telegram_id', $from['id'])->first();
+        $tgId = $from['id'] ?? $chatId;
+        if (!empty($tgId)) {
+            try {
+                $tgUser = TelegramUser::firstOrCreate(
+                    ['telegram_id' => $tgId],
+                    [
+                        'username' => $from['username'] ?? null,
+                        'first_name' => $from['first_name'] ?? null,
+                        'last_name' => $from['last_name'] ?? null,
+                        'language_code' => $from['language_code'] ?? 'am',
+                        'last_interaction_at' => now(),
+                    ]
+                );
+            } catch (\Throwable $th) {
+                Log::warning('Could not get/create telegram user on callback: ' . $th->getMessage());
+            }
         }
 
         // Handle interactive booking wizard callbacks
@@ -1121,14 +1152,18 @@ class TelegramController extends Controller
             ]);
         }
 
+        // Update order subtotal and total
+        $order->subtotal = $subtotalCalc;
+        $order->total = $subtotalCalc;
+
         // Apply recurring subscription discount if chosen
         if ($discPercent > 0) {
             $subDiscount = ($subtotalCalc * $discPercent) / 100.0;
-            $order->update([
-                'subscription_discount' => $subDiscount,
-                'discount' => $order->discount + $subDiscount,
-                'total' => max(0, $subtotalCalc - ($order->discount + $subDiscount)),
-            ]);
+            $order->subscription_discount = $subDiscount;
+            $order->discount = (float)$order->discount + $subDiscount;
+            $order->total = max(0, $subtotalCalc - (float)$order->discount);
+        }
+        $order->save();
 
             $startDate = Carbon::parse($order->appointment_date);
             $nextDate = match ($plan) {
@@ -1213,6 +1248,17 @@ class TelegramController extends Controller
 
     public function startInteractiveBooking(?TelegramUser $tgUser, int|string $chatId): void
     {
+        if (!$tgUser) {
+            try {
+                $tgUser = TelegramUser::firstOrCreate(
+                    ['telegram_id' => $chatId],
+                    ['bot_state' => 'booking_service', 'payload_cache' => []]
+                );
+            } catch (\Throwable $e) {
+                Log::warning("Could not auto-create tgUser: " . $e->getMessage());
+            }
+        }
+
         if ($tgUser) {
             $tgUser->bot_state = 'booking_service';
             $tgUser->payload_cache = [];
@@ -1874,6 +1920,9 @@ class TelegramController extends Controller
             'subtotal' => $qty * $unitPrice,
         ]);
 
+        // Recalculate order totals
+        $order->recalculateTotals();
+
         // 4. Appointment
         Appointment::create([
             'order_id' => $order->id,
@@ -1892,7 +1941,7 @@ class TelegramController extends Controller
         }
 
         // 6. Send Rich Confirmation Card
-        $totalEst = $order->fresh()->total_amount;
+        $totalEst = (float)$order->total;
         $ethAppt = EthiopianCalendarService::toEthiopian($order->appointment_date);
         $timeSlotAm = match($timeSlot) {
             'morning' => 'ጠዋት (ከ 2:00 - 6:00)',
