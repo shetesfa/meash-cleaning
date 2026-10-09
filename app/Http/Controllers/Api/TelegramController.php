@@ -1162,8 +1162,6 @@ class TelegramController extends Controller
             $order->subscription_discount = $subDiscount;
             $order->discount = (float)$order->discount + $subDiscount;
             $order->total = max(0, $subtotalCalc - (float)$order->discount);
-        }
-        $order->save();
 
             $startDate = Carbon::parse($order->appointment_date);
             $nextDate = match ($plan) {
@@ -1188,6 +1186,7 @@ class TelegramController extends Controller
                 'notes' => "Auto-created from Telegram Mini App booking #{$orderNumber}",
             ]);
         }
+        $order->save();
 
         // Send instant notification in Amharic to customer if booked through Telegram
         if (!empty($validated['telegram_user_id'])) {
