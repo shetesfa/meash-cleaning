@@ -38,6 +38,15 @@ class TelegramPollCommand extends Command
 
         $botUser = $getMe['result']['username'] ?? 'unknown';
         $this->info("Successfully connected as @{$botUser}!");
+
+        // If webhook is active, clear it so local getUpdates doesn't conflict
+        $info = Http::get("https://api.telegram.org/bot{$token}/getWebhookInfo")->json();
+        if (!empty($info['result']['url'] ?? '')) {
+            $this->warn("Active webhook detected ({$info['result']['url']}).");
+            $this->info("Switching to Local Polling mode (clearing webhook)...");
+            Http::get("https://api.telegram.org/bot{$token}/deleteWebhook");
+        }
+
         $this->info("Listening for Telegram messages & Inline Queries (@{$botUser} ...)");
         $this->info("Press Ctrl+C to stop.\n");
 

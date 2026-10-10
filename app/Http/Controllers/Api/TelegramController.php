@@ -25,7 +25,7 @@ class TelegramController extends Controller
 
     public function __construct()
     {
-        $this->botToken = (string)(config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN', '8964703337:AAEV9nUYr83pMQj9GxeLTep1uaWyxkrzX9w'));
+        $this->botToken = (string)(config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN', '8964703337:AAGT7kcEiYGUdTFf4kCdwud_T7VNYoiWA3U'));
         $this->botUsername = (string)(config('services.telegram.bot_username') ?: env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'));
     }
 

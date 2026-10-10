@@ -36,9 +36,9 @@ return [
     ],
 
     'telegram' => [
-        'bot_token' => env('TELEGRAM_BOT_TOKEN', '8964703337:AAEV9nUYr83pMQj9GxeLTep1uaWyxkrzX9w'),
+        'bot_token' => env('TELEGRAM_BOT_TOKEN', '8964703337:AAGT7kcEiYGUdTFf4kCdwud_T7VNYoiWA3U'),
         'bot_username' => env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'),
-        'webhook_url' => env('TELEGRAM_WEBHOOK_URL'),
+        'webhook_url' => env('TELEGRAM_WEBHOOK_URL', 'https://meash-cleaning.onrender.com/api/telegram/webhook'),
         'miniapp_url' => env('TELEGRAM_MINIAPP_URL', 'https://shetesfa.github.io/meash-mini-app/'),
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
