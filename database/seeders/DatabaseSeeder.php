@@ -31,7 +31,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // ==========================================
+        if (User::where('email', 'owner@meash.com')->exists()) {
+            $this->command->info('Database is already seeded. Skipping seeder to prevent duplicate entries.');
+            return;
+        }
         // 1. CORE USERS ACROSS ALL ROLES
         // ==========================================
         $owner = User::create([

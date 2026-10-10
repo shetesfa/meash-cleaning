@@ -1749,10 +1749,9 @@
 
             const todayStr = new Date().toISOString().split('T')[0];
             const template = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <html>
                 <head>
                     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-                    <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Outdoor Sales Log</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
                     <style>
                         table { border-collapse: collapse; font-family: Segoe UI, Tahoma, sans-serif; font-size: 11pt; width: 100%; }
                         th { background-color: #1b4382; color: #ffffff; font-weight: bold; border: 1px solid #777777; padding: 10px; text-align: left; }
@@ -3652,6 +3651,17 @@
                                     </a>
                                 </div>
                                 <span class="text-[10px] text-slate-400 block text-center mt-1">«በስልክህ SIM በነፃ ላክ» የሚለውን ሲጫኑ ያለ ምንም ተጨማሪ ወጪ በቀጥታ በስልክዎ SMS መተግበሪያ ይከፈታል!</span>
+
+                                <!-- Quick Mobile QR Code Scanner -->
+                                <div class="mt-2 p-2.5 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center gap-3">
+                                    <div class="w-14 h-14 bg-white p-1 rounded-xl shrink-0 flex items-center justify-center shadow">
+                                        <img id="qr-sim-sms" src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=SMSTO:0922998581:ሰላም!%20ይህ%20ከሜሽ%20ክሊኒንግ%20(0943854325)%20የተላከ%20ይፋዊ%20የሙከራ%20ኤስኤምኤስ%20ነው።" alt="SMS QR" class="w-full h-full object-contain">
+                                    </div>
+                                    <div class="text-[11px] text-slate-300">
+                                        <p class="font-bold text-white flex items-center gap-1">📷 በስልክዎ ካሜራ ስካን ያድርጉ (QR)</p>
+                                        <p class="text-slate-400 text-[10px] mt-0.5 leading-snug">በኮምፒውተር ላይ ሲሆኑ ስልክዎን በዚህ QR ላይ ሲያነጣጥሩ ወዲያውኑ የ SMS መተግበሪያ ተከፍቶ በሲም ጥቅልዎ በነፃ ይላካል!</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -3745,6 +3755,10 @@
             const link = document.getElementById('btn-owner-direct-sim-sms');
             if (link) {
                 link.href = `sms:${phone.replace(/\s+/g, '')}?body=${encodeURIComponent(msg)}`;
+            }
+            const qr = document.getElementById('qr-sim-sms');
+            if (qr) {
+                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=SMSTO:${phone.replace(/\s+/g, '')}:${encodeURIComponent(msg)}`;
             }
         }
         // ==========================================
