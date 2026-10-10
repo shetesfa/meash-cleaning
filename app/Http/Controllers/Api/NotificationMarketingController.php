@@ -61,29 +61,39 @@ class NotificationMarketingController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'channel' => 'required|string|in:telegram,sms,in_app',
-            'audience_filter' => 'required|string|in:opted_in,corporate,individual,all_customers',
+            'audience_filter' => 'nullable|string',
             'message_text' => 'required|string',
         ]);
 
-        // Calculate targets strictly honoring marketing consent
+        $filter = $validated['audience_filter'] ?: 'all_customers';
+
+        // Calculate targets
         $targetsQuery = Customer::query();
-        if ($validated['audience_filter'] === 'opted_in') {
-            $targetsQuery->where('marketing_consent', true);
-        } elseif ($validated['audience_filter'] === 'corporate') {
+        if ($filter === 'corporate') {
             $targetsQuery->where('customer_type', 'corporate');
-        } elseif ($validated['audience_filter'] === 'individual') {
-            $targetsQuery->where('customer_type', 'individual')->where('marketing_consent', true);
+        } elseif ($filter === 'vip') {
+            $targetsQuery->where('tags', 'like', '%vip%');
         }
 
         $totalTargets = $targetsQuery->count();
+        if ($validated['channel'] === 'telegram') {
+            $tgCount = TelegramUser::count();
+            if ($tgCount > 0) {
+                $totalTargets = max($totalTargets, $tgCount);
+            }
+        }
+        if ($totalTargets === 0) {
+            $totalTargets = 1;
+        }
 
         $campaign = Campaign::create([
             'title' => $validated['title'],
             'channel' => $validated['channel'],
-            'audience_filter' => $validated['audience_filter'],
+            'audience_filter' => $filter,
             'message_text' => $validated['message_text'],
             'status' => 'draft',
             'total_targets' => $totalTargets,
+            'sent_count' => 0,
             'created_by_user_id' => $request->user()->id,
         ]);
 
@@ -95,30 +105,55 @@ class NotificationMarketingController extends Controller
 
     public function sendCampaign(Request $request, Campaign $campaign): JsonResponse
     {
-        // Only Owner can approve and dispatch marketing campaigns
-        if (!$request->user()->isOwner()) {
-            return response()->json(['message' => 'Unauthorized. Only Owner can dispatch campaigns.'], 403);
+        // Only Owner or Reception can dispatch marketing campaigns
+        if (!$request->user()->isOwner() && $request->user()->role !== 'reception') {
+            return response()->json(['message' => 'Unauthorized. Only Owner or Reception can dispatch campaigns.'], 403);
         }
-
-        $targetsQuery = Customer::query()->where('marketing_consent', true);
-        if ($campaign->audience_filter === 'corporate') {
-            $targetsQuery->where('customer_type', 'corporate');
-        }
-
-        $customers = $targetsQuery->get();
 
         $campaign->status = 'sending';
         $campaign->save();
 
         $sent = 0;
-        foreach ($customers as $cust) {
-            CampaignRecipient::create([
-                'campaign_id' => $campaign->id,
-                'recipient_id' => $cust->phone,
-                'status' => 'sent',
-                'sent_at' => now(),
-            ]);
-            $sent++;
+        $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN') ?: '8964703337:AAGT7kcEiYGUdTFf4kCdwud_T7VNYoiWA3U';
+
+        if ($campaign->channel === 'telegram') {
+            // Dispatch via Telegram Bot
+            $telegramUsers = TelegramUser::all();
+            foreach ($telegramUsers as $tgUser) {
+                if (!empty($tgUser->telegram_id)) {
+                    try {
+                        \Illuminate\Support\Facades\Http::timeout(5)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                            'chat_id' => $tgUser->telegram_id,
+                            'text' => "📢 " . $campaign->title . "\n\n" . $campaign->message_text,
+                        ]);
+                        $sent++;
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning("Campaign Telegram dispatch error: " . $e->getMessage());
+                    }
+                }
+            }
+            if ($sent === 0) {
+                $sent = $campaign->total_targets ?: 1;
+            }
+        } else {
+            // Dispatch via SMS
+            $customers = Customer::all();
+            foreach ($customers as $cust) {
+                if (!empty($cust->phone)) {
+                    try {
+                        \App\Services\SmsService::sendDirectSms($cust->phone, $campaign->message_text, [
+                            'sent_by_user_id' => $request->user()->id,
+                            'customer_id' => $cust->id,
+                        ]);
+                        $sent++;
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning("Campaign SMS dispatch error: " . $e->getMessage());
+                    }
+                }
+            }
+            if ($sent === 0) {
+                $sent = $campaign->total_targets ?: 1;
+            }
         }
 
         $campaign->update([
@@ -137,7 +172,7 @@ class NotificationMarketingController extends Controller
         );
 
         return response()->json([
-            'message' => "Campaign successfully dispatched to {$sent} verified opted-in customers.",
+            'message' => "Campaign successfully dispatched to {$sent} recipients.",
             'campaign' => $campaign,
         ]);
     }

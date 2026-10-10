@@ -3439,12 +3439,23 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             ${campaigns.length === 0 ? '<div class="p-8 text-slate-500 col-span-3 text-center">ምንም የተዘጋጀ የማስታወቂያ ዘመቻ የለም። ከላይ ያለውን "+ አዲስ ዘመቻ ፍጠር" ተጭነው ይጀምሩ።</div>' : ''}
                             ${campaigns.map(c => {
-                                const title = c.title || c.name || 'አጠቃላይ ማስታወቂያ';
-                                const msgText = c.message_text || c.message_template || 'መልዕክት አልተገለጸም';
-                                const audience = c.audience_filter || c.target_audience || 'ሁሉም ደንበኞች (All Customers)';
-                                const sentCount = c.sent_count ?? c.recipients_count ?? c.total_targets ?? 0;
-                                const channel = (c.channel || 'sms').toUpperCase();
-                                const isSent = c.status === 'sent' || c.status === 'completed';
+                                const title = (c && c.title && c.title !== 'undefined') ? c.title : (c && c.name ? c.name : 'የበዓላት ቅናሽ ማስታወቂያ');
+                                const msgText = (c && c.message_text && c.message_text !== 'undefined') ? c.message_text : (c && c.message ? c.message : 'መልዕክት አልተገለጸም');
+                                const audienceMap = {
+                                    'all_customers': 'ሁሉም ደንበኞች (All)',
+                                    'all': 'ሁሉም ደንበኞች (All)',
+                                    'vip': 'ቪአይፒ ደንበኞች (VIP)',
+                                    'regular': 'መደበኛ ደንበኞች (Regular)',
+                                    'dormant': 'የቆዩ ደንበኞች (Dormant)',
+                                    'corporate': 'ድርጅታዊ ደንበኞች (Corporate)',
+                                    'opted_in': 'ፍቃድ የሰጡ ደንበኞች'
+                                };
+                                const rawAudience = (c && c.audience_filter && c.audience_filter !== 'undefined') ? c.audience_filter : 'all_customers';
+                                const audience = audienceMap[rawAudience] || rawAudience;
+                                const sentCount = (c && c.sent_count !== undefined && c.sent_count !== null) ? c.sent_count : (c && c.total_targets ? c.total_targets : 0);
+                                const channel = ((c && c.channel) || 'sms').toUpperCase();
+                                const isSent = c && (c.status === 'sent' || c.status === 'completed');
+                                const isDraft = !isSent;
 
                                 return `
                                 <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 hover:border-slate-700 transition">
@@ -3454,7 +3465,7 @@
                                             ${channel} Campaign
                                         </span>
                                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${isSent ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
-                                            ${isSent ? 'ተጠናቋል (Completed)' : (c.status || 'በሂደት ላይ')}
+                                            ${isSent ? 'ተልኳል (Completed)' : 'ረቂቅ (Draft)'}
                                         </span>
                                     </div>
                                     <h3 class="text-base font-bold text-white">${title}</h3>
@@ -3465,6 +3476,14 @@
                                         <span>ዒላማ: <strong class="text-white">${audience}</strong></span>
                                         <span>የተላከላቸው: <strong class="text-cyan-400 font-mono text-sm">${sentCount}</strong></span>
                                     </div>
+                                    ${isDraft ? `
+                                        <div class="pt-2">
+                                            <button onclick="dispatchCampaignNow(${c.id})" class="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg cursor-pointer">
+                                                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                                <span>🚀 አሁን ለሁሉም ላክ (Send Now)</span>
+                                            </button>
+                                        </div>
+                                    ` : ''}
                                 </div>
                                 `;
                             }).join('')}
@@ -3474,6 +3493,22 @@
                 lucide.createIcons();
             } catch (err) {
                 container.innerHTML = `<div class="p-6 text-red-400">Failed to load ማስታወቂያ እና ፕሮሞሽን Campaigns: ${err.message}</div>`;
+            }
+        }
+
+        async function dispatchCampaignNow(campaignId) {
+            if (!confirm('ይህንን ማስታወቂያ አሁን ለታለሙ ደንበኞች በሙሉ መላክ ይፈልጋሉ?')) return;
+            try {
+                const res = await apiFetch(`/api/campaigns/${campaignId}/send`, { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('✓ ' + (data.message || 'ማስታወቂያው በተሳካ ሁኔታ ተልኳል!'));
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት፡ ' + (data.message || 'መላክ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የኔትወርክ ስህተት፡ ' + err.message);
             }
         }
 
@@ -3499,16 +3534,16 @@
                                     <label class="block text-slate-400 mb-1">የመላኪያ ቻናል *</label>
                                     <select id="cmp-channel" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer">
                                         <option value="sms">📱 SMS (የጽሑፍ መልዕክት)</option>
-                                        <option value="telegram">✈️ Telegram (ቴሌግራም)</option>
+                                        <option value="telegram">✈️ Telegram (ቴሌግራም ቦት)</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-slate-400 mb-1">የደንበኛ ዒላማ *</label>
                                     <select id="cmp-audience" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white cursor-pointer">
-                                        <option value="all">ሁሉም ደንበኞች (All)</option>
+                                        <option value="all_customers">ሁሉም ደንበኞች (All)</option>
                                         <option value="vip">ቪአይፒ ደንበኞች (VIP)</option>
+                                        <option value="corporate">ድርጅታዊ ደንበኞች (Corporate)</option>
                                         <option value="regular">መደበኛ ደንበኞች (Regular)</option>
-                                        <option value="dormant">የቆዩ ደንበኞች (Dormant)</option>
                                     </select>
                                 </div>
                             </div>
@@ -3516,14 +3551,19 @@
                                 <label class="block text-slate-400 mb-1">የመልዕክቱ ይዘት *</label>
                                 <textarea id="cmp-message" required rows="3" placeholder="ለደንበኞች የሚላከው ማስታወቂያ ወይም የቅናሽ መልዕክት..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white leading-relaxed"></textarea>
                             </div>
+                            <div class="flex items-center gap-2 pt-1">
+                                <input type="checkbox" id="cmp-send-now" checked class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
+                                <label for="cmp-send-now" class="text-slate-300 font-bold cursor-pointer">ወዲያውኑ ለደንበኞች ይላክ (Send Immediately)</label>
+                            </div>
                             <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
-                                <button type="submit" id="btn-submit-cmp" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg">ዘመቻውን ጀምር / ላክ</button>
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl cursor-pointer">ሰርዝ</button>
+                                <button type="submit" id="btn-submit-cmp" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg cursor-pointer">ዘመቻውን አስመዝግብ</button>
                             </div>
                         </form>
                     </div>
                 </div>
             `;
+            lucide.createIcons();
         }
 
         async function submitCreateCampaign(e) {
@@ -3537,30 +3577,34 @@
                 channel: document.getElementById('cmp-channel').value,
                 audience_filter: document.getElementById('cmp-audience').value,
                 message_text: document.getElementById('cmp-message').value.trim(),
-                status: 'sent',
-                total_targets: 12,
-                sent_count: 12,
             };
+
+            const shouldSendNow = document.getElementById('cmp-send-now')?.checked;
 
             try {
                 const res = await apiFetch('/api/campaigns', {
                     method: 'POST',
                     body: JSON.stringify(payload),
                 });
+                const data = await res.json();
                 if (res.ok) {
-                    alert('✓ የማስታወቂያ ዘመቻው በተሳካ ሁኔታ ተፈጥሯል!');
+                    const campaignId = data.campaign?.id;
+                    if (shouldSendNow && campaignId) {
+                        btn.textContent = 'ወዲያውኑ በመላክ ላይ...';
+                        await apiFetch(`/api/campaigns/${campaignId}/send`, { method: 'POST' });
+                    }
+                    alert('✓ የማስታወቂያ ዘመቻው በተሳካ ሁኔታ ተፈጥሮ ተልኳል!');
                     closeModal();
                     loadActiveTab();
                 } else {
-                    const err = await res.json();
-                    alert('ስህተት፡ ' + (err.message || 'ማስታወቂያውን መፍጠር አልተቻለም'));
+                    alert('ስህተት፡ ' + (data.message || 'ማስታወቂያውን መፍጠር አልተቻለም'));
                     btn.disabled = false;
-                    btn.textContent = 'ዘመቻውን ጀምር / ላክ';
+                    btn.textContent = 'ዘመቻውን አስመዝግብ';
                 }
             } catch (err) {
                 alert('የኔትወርክ ስህተት፡ ' + err.message);
                 btn.disabled = false;
-                btn.textContent = 'ዘመቻውን ጀምር / ላክ';
+                btn.textContent = 'ዘመቻውን አስመዝግብ';
             }
         }
 
@@ -3650,16 +3694,18 @@
                                         <span>📱 በስልክህ SIM በነፃ ላክ</span>
                                     </a>
                                 </div>
-                                <span class="text-[10px] text-slate-400 block text-center mt-1">«በስልክህ SIM በነፃ ላክ» የሚለውን ሲጫኑ ያለ ምንም ተጨማሪ ወጪ በቀጥታ በስልክዎ SMS መተግበሪያ ይከፈታል!</span>
 
-                                <!-- Quick Mobile QR Code Scanner -->
-                                <div class="mt-2 p-2.5 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center gap-3">
-                                    <div class="w-14 h-14 bg-white p-1 rounded-xl shrink-0 flex items-center justify-center shadow">
-                                        <img id="qr-sim-sms" src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=SMSTO:0922998581:ሰላም!%20ይህ%20ከሜሽ%20ክሊኒንግ%20(0943854325)%20የተላከ%20ይፋዊ%20የሙከራ%20ኤስኤምኤስ%20ነው።" alt="SMS QR" class="w-full h-full object-contain">
+                                <!-- Large High-Resolution Mobile QR Code Scanner -->
+                                <div class="mt-3 p-4 rounded-2xl bg-slate-800/90 border border-slate-700 flex flex-col items-center gap-3 text-center">
+                                    <div class="w-52 h-52 sm:w-60 sm:h-60 bg-white p-3 rounded-2xl shrink-0 flex items-center justify-center shadow-2xl ring-4 ring-emerald-500/20">
+                                        <img id="qr-sim-sms" src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=SMSTO:0922998581:ሰላም!%20ይህ%20ከሜሽ%20ክሊኒንግ%20(0943854325)%20የተላከ%20ይፋዊ%20የሙከራ%20ኤስኤምኤስ%20ነው።" alt="SMS QR" class="w-full h-full object-contain">
                                     </div>
-                                    <div class="text-[11px] text-slate-300">
-                                        <p class="font-bold text-white flex items-center gap-1">📷 በስልክዎ ካሜራ ስካን ያድርጉ (QR)</p>
-                                        <p class="text-slate-400 text-[10px] mt-0.5 leading-snug">በኮምፒውተር ላይ ሲሆኑ ስልክዎን በዚህ QR ላይ ሲያነጣጥሩ ወዲያውኑ የ SMS መተግበሪያ ተከፍቶ በሲም ጥቅልዎ በነፃ ይላካል!</p>
+                                    <div class="text-xs text-slate-300">
+                                        <p class="font-bold text-white flex items-center justify-center gap-1.5 text-sm">
+                                            <i data-lucide="qr-code" class="w-4 h-4 text-emerald-400"></i>
+                                            <span>በባለቤቱ ስልክ ካሜራ ስካን ያድርጉ</span>
+                                        </p>
+                                        <p class="text-slate-400 text-[11px] mt-1">በባለቤቱ ስልክ (0943854325) ካሜራ ይህንን QR ኮድ ሲያነቡ ወዲያውኑ መልዕክቱ ተዘጋጅቶ ይከፈታል።</p>
                                     </div>
                                 </div>
                             </div>
@@ -3681,10 +3727,6 @@
                                 <div class="flex justify-between items-center p-2 rounded-xl bg-slate-800/80">
                                     <span class="text-slate-400">የቦት ቶከን (Token):</span>
                                     <span class="font-mono text-cyan-300 font-bold text-[11px]">8964703337:AAGT...oiWA3U</span>
-                                </div>
-                                <div class="flex justify-between items-center p-2 rounded-xl bg-slate-800/80">
-                                    <span class="text-slate-400">የድሮ ቻናል ማስገደጃ (A_ToolsX):</span>
-                                    <span class="text-emerald-400 font-bold text-[11px]">❌ ሙሉ በሙሉ ተቋርጧል</span>
                                 </div>
                                 <div class="flex justify-between items-center p-2 rounded-xl bg-slate-800/80">
                                     <span class="text-slate-400">የቦት ሁኔታ:</span>
@@ -3709,10 +3751,6 @@
                                 <div class="p-3 rounded-2xl bg-amber-950/20 border border-amber-500/20">
                                     <p class="font-bold text-white text-sm">🗓 የዛሬ ቀን፡ ${EC.formatEth(new Date())}</p>
                                     <p class="text-[11px] text-slate-400 mt-1">የኢትዮጵያ ቀን አቆጣጠር አልጎሪዝም በትክክል ተስተካክሎ 2019 ዓ.ም እያሳየ ይገኛል።</p>
-                                </div>
-                                <div class="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80">
-                                    <p class="font-bold text-white">📍 የአዲስ አበባ ክፍለ ከተሞች</p>
-                                    <p class="text-[11px] text-slate-400 mt-0.5">ቦሌ፣ ቂርቆስ፣ አራዳ፣ ልደታ፣ የካ፣ ንፋስ ስልክ፣ ኮልፌ፣ ጉለሌ፣ አዲስ ከተማ፣ አቃቂ ቃሊቲ፣ ለሚ ኩራ።</p>
                                 </div>
                             </div>
                         </div>
@@ -3758,7 +3796,7 @@
             }
             const qr = document.getElementById('qr-sim-sms');
             if (qr) {
-                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=SMSTO:${phone.replace(/\s+/g, '')}:${encodeURIComponent(msg)}`;
+                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=SMSTO:${phone.replace(/\s+/g, '')}:${encodeURIComponent(msg)}`;
             }
         }
         // ==========================================
