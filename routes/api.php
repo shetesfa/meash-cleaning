@@ -44,6 +44,19 @@ Route::prefix('public')->group(function () {
 Route::prefix('telegram')->group(function () {
     Route::post('/webhook', [TelegramController::class, 'webhook']);
     Route::post('/miniapp/book', [TelegramController::class, 'miniAppBooking']);
+    Route::get('/diag', function () {
+        $token = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
+        $maskedToken = !empty($token) ? (substr($token, 0, 10) . '...' . substr($token, -6)) : 'EMPTY';
+        $testMe = \Illuminate\Support\Facades\Http::get("https://api.telegram.org/bot{$token}/getMe")->json();
+        $wh = \Illuminate\Support\Facades\Http::get("https://api.telegram.org/bot{$token}/getWebhookInfo")->json();
+        return response()->json([
+            'masked_token' => $maskedToken,
+            'get_me' => $testMe,
+            'webhook_info' => $wh,
+            'env_bot_token_present' => !empty(env('TELEGRAM_BOT_TOKEN')),
+            'config_bot_token_present' => !empty(config('services.telegram.bot_token')),
+        ]);
+    });
 });
 
 // 3. AUTHENTICATION
