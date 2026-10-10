@@ -191,76 +191,103 @@ class PublicWebsiteController extends Controller
 
     public function trackOrder(Request $request): JsonResponse
     {
-        $search = trim($request->input('tracking_id', $request->input('query', '')));
+        try {
+            $search = trim($request->input('tracking_id', $request->input('query', '')));
 
-        if (empty($search)) {
-            return response()->json(['success' => false, 'message' => 'Please provide an Order ID or Phone number.'], 422);
-        }
+            if (empty($search)) {
+                return response()->json(['success' => false, 'message' => 'Please provide an Order ID or Phone number.'], 422);
+            }
 
-        $order = Order::with(['customer:id,full_name,subcity,latitude,longitude', 'items.service:id,name_en,name_am', 'assignedTeam'])
-            ->where('order_number', $search)
-            ->orWhereHas('customer', function ($q) use ($search) {
-                $q->where('phone', $search);
-            })
-            ->latest()
-            ->first();
+            $order = Order::with(['customer:id,full_name,subcity,latitude,longitude', 'items.service:id,name_en,name_am', 'assignedTeam'])
+                ->where('order_number', $search)
+                ->orWhereHas('customer', function ($q) use ($search) {
+                    $q->where('phone', $search);
+                })
+                ->latest()
+                ->first();
 
-        if (!$order) {
+            if (!$order) {
+                return response()->json([
+                    'found' => false,
+                    'message' => 'No booking found with this ID or phone number.',
+                ], 404);
+            }
+
+            $eth = !empty($order->appointment_date)
+                ? EthiopianCalendarService::toEthiopian($order->appointment_date)
+                : ['formatted_am' => 'ቀን አልተወሰነም'];
+
+            $isCompletedOrCancelled = in_array($order->order_status, ['completed', 'cancelled']);
+
+            $teamLocation = null;
+            if ($order->assignedTeam && !$isCompletedOrCancelled) {
+                $team = $order->assignedTeam;
+                $updatedAtHuman = 'በቅርቡ';
+                if (!empty($team->location_updated_at)) {
+                    try {
+                        $updatedAtHuman = is_object($team->location_updated_at)
+                            ? $team->location_updated_at->diffForHumans()
+                            : Carbon::parse($team->location_updated_at)->diffForHumans();
+                    } catch (\Throwable $th) {
+                        $updatedAtHuman = 'በቅርቡ';
+                    }
+                }
+
+                $teamLocation = [
+                    'team_name' => $team->team_name ?? 'የሜሽ የፅዳት ቡድን',
+                    'phone' => $team->phone,
+                    'vehicle_plate' => $team->vehicle_plate,
+                    'latitude' => $team->current_latitude ? (float)$team->current_latitude : null,
+                    'longitude' => $team->current_longitude ? (float)$team->current_longitude : null,
+                    'status' => $team->status,
+                    'updated_at' => $updatedAtHuman,
+                ];
+            }
+
+            $custLat = $order->latitude !== null ? (float)$order->latitude : null;
+            $custLng = $order->longitude !== null ? (float)$order->longitude : null;
+
+            $customerLocation = ($custLat !== null && $custLng !== null) ? [
+                'latitude' => $custLat,
+                'longitude' => $custLng,
+            ] : null;
+
+            $apptDateStr = !empty($order->appointment_date)
+                ? (is_object($order->appointment_date) ? $order->appointment_date->toDateString() : substr((string)$order->appointment_date, 0, 10))
+                : now()->toDateString();
+
             return response()->json([
-                'found' => false,
-                'message' => 'No booking found with this ID or phone number.',
-            ], 404);
+                'success' => true,
+                'found' => true,
+                'order' => [
+                    'order_number' => $order->order_number,
+                    'customer_name' => $order->customer?->full_name ?? 'ውድ ደንበኛችን',
+                    'address' => $order->address,
+                    'subcity' => $order->subcity,
+                    'status' => $order->order_status,
+                    'payment_status' => $order->payment_status,
+                    'appointment_date' => $apptDateStr,
+                    'eth_appointment_date' => $eth['formatted_am'] ?? $apptDateStr,
+                    'appointment_time_slot' => $order->appointment_time_slot,
+                    'subscription_plan' => $order->subscription_plan ?? 'one_time',
+                    'subscription_discount' => (float)($order->subscription_discount ?? 0),
+                    'total' => (float) $order->total,
+                    'team_assigned' => $order->assignedTeam ? $order->assignedTeam->team_name : 'Pending Assignment',
+                    'team_location' => $teamLocation,
+                    'customer_location' => $customerLocation,
+                    'items' => $order->items,
+                    'is_tracking_expired' => $isCompletedOrCancelled,
+                    'expired_message' => $isCompletedOrCancelled ? 'የዚህ ትዕዛዝ የፅዳት ስራ ተጠናቋል! ለሰራተኞች ደህንነት እና ግላዊነት ጥበቃ የቀጥታ መገኛ መከታተያ ተዘግቷል። (Link expired for privacy)' : null,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Track order error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            return response()->json([
+                'success' => false,
+                'message' => 'ትዕዛዙን በመፈለግ ላይ ስህተት ተፈጥሯል። እባክዎን በስልክ (0970075509) ይደውሉልን።',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $eth = EthiopianCalendarService::toEthiopian($order->appointment_date);
-
-        $isCompletedOrCancelled = in_array($order->order_status, ['completed', 'cancelled']);
-
-        $teamLocation = null;
-        if ($order->assignedTeam && !$isCompletedOrCancelled) {
-            $teamLocation = [
-                'team_name' => $order->assignedTeam->team_name,
-                'phone' => $order->assignedTeam->phone,
-                'vehicle_plate' => $order->assignedTeam->vehicle_plate,
-                'latitude' => $order->assignedTeam->current_latitude ? (float)$order->assignedTeam->current_latitude : null,
-                'longitude' => $order->assignedTeam->current_longitude ? (float)$order->assignedTeam->current_longitude : null,
-                'status' => $order->assignedTeam->status,
-                'updated_at' => $order->assignedTeam->location_updated_at?->diffForHumans() ?? 'በቅርቡ',
-            ];
-        }
-
-        $custLat = $order->latitude !== null ? (float)$order->latitude : null;
-        $custLng = $order->longitude !== null ? (float)$order->longitude : null;
-
-        $customerLocation = ($custLat !== null && $custLng !== null) ? [
-            'latitude' => $custLat,
-            'longitude' => $custLng,
-        ] : null;
-
-        return response()->json([
-            'success' => true,
-            'found' => true,
-            'order' => [
-                'order_number' => $order->order_number,
-                'customer_name' => $order->customer->full_name,
-                'address' => $order->address,
-                'subcity' => $order->subcity,
-                'status' => $order->order_status,
-                'payment_status' => $order->payment_status,
-                'appointment_date' => $order->appointment_date->toDateString(),
-                'eth_appointment_date' => $eth['formatted_am'],
-                'appointment_time_slot' => $order->appointment_time_slot,
-                'subscription_plan' => $order->subscription_plan ?? 'one_time',
-                'subscription_discount' => (float)($order->subscription_discount ?? 0),
-                'total' => (float) $order->total,
-                'team_assigned' => $order->assignedTeam ? $order->assignedTeam->team_name : 'Pending Assignment',
-                'team_location' => $teamLocation,
-                'customer_location' => $customerLocation,
-                'items' => $order->items,
-                'is_tracking_expired' => $isCompletedOrCancelled,
-                'expired_message' => $isCompletedOrCancelled ? 'የዚህ ትዕዛዝ የፅዳት ስራ ተጠናቋል! ለሰራተኞች ደህንነት እና ግላዊነት ጥበቃ የቀጥታ መገኛ መከታተያ ተዘግቷል። (Link expired for privacy)' : null,
-            ],
-        ]);
     }
 
     public function publicReviews(): JsonResponse

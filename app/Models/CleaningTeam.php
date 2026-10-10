@@ -23,6 +23,12 @@ class CleaningTeam extends Model
         'notes',
     ];
 
+    protected $casts = [
+        'current_latitude' => 'float',
+        'current_longitude' => 'float',
+        'location_updated_at' => 'datetime',
+    ];
+
     public function leader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'team_leader_id');

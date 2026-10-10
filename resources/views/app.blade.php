@@ -2131,23 +2131,9 @@
                                 <textarea id="direct-sms-message" oninput="updateDirectSmsSimLink()" required rows="3" placeholder="መልእክትዎን እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-500">ሰላም ${safeName}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!</textarea>
                             </div>
 
-                            <!-- Mobile QR Scanner for Laptop/Desktop users -->
-                            <div class="p-3 bg-slate-800/80 rounded-2xl border border-slate-700/80 flex items-center gap-3">
-                                <div class="w-20 h-20 bg-white p-1 rounded-xl shrink-0 flex items-center justify-center shadow-md">
-                                    <img id="direct-sms-qr" src="" alt="SMS QR" class="w-full h-full object-contain">
-                                </div>
-                                <div class="text-[11px] text-slate-300 space-y-1">
-                                    <p class="font-bold text-white flex items-center gap-1">
-                                        <i data-lucide="qr-code" class="w-3.5 h-3.5 text-emerald-400"></i>
-                                        <span>በባለቤቱ iPhone ካሜራ ስካን ያድርጉ</span>
-                                    </p>
-                                    <p class="text-slate-400 text-[10px] leading-tight">ላፕቶፕ ላይ ሲሆኑ ባለቤቱ በስልኩ ካሜራ ይህን QR ስካን ሲያደርግ ወዲያውኑ በስልኩ መልዕክቱ ይከፈታል።</p>
-                                </div>
-                            </div>
-
                             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
                                 <a id="btn-direct-sim-sms" href="sms:${cleanPhone || '0970075509'}?body=ሰላም ${encodeURIComponent(safeName)}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
-                                    <span>📱 በ iPhone SIM ላክ</span>
+                                    <span>📱 በስልክ SIM ላክ</span>
                                 </a>
                                 <div class="flex items-center gap-2">
                                     <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700">ሰርዝ</button>
@@ -2744,26 +2730,12 @@
                             <p class="text-xs text-slate-400 mt-1">ለደንበኛው (${custName} - ${payload.customer_phone}) የማረጋገጫ SMS ይላኩ</p>
                         </div>
 
-                        <!-- Laptop-to-iPhone SMS QR Scanner -->
-                        <div class="p-4 bg-slate-800/90 rounded-2xl border border-slate-700 flex flex-col items-center gap-3">
-                            <div class="w-48 h-48 bg-white p-2.5 rounded-2xl shrink-0 flex items-center justify-center shadow-2xl ring-4 ring-emerald-500/20">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${qrData}" alt="Order SMS QR" class="w-full h-full object-contain">
-                            </div>
-                            <div class="text-xs text-slate-300">
-                                <p class="font-bold text-white flex items-center justify-center gap-1.5 text-sm">
-                                    <i data-lucide="smartphone" class="w-4 h-4 text-emerald-400"></i>
-                                    <span>በባለቤቱ iPhone ካሜራ ስካን ያድርጉ</span>
-                                </p>
-                                <p class="text-slate-400 text-[11px] mt-1">ላፕቶፕ ላይ ሲሆኑ ባለቤቱ በስልኩ ካሜራ ስካን በማድረግ በስልኩ Messages በቀጥታ በነፃ ይልካል።</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-2 pt-1">
+                        <div class="flex items-center gap-2 pt-2">
                             <button onclick="closeModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl cursor-pointer">
                                 አሁን ዝጋ
                             </button>
                             <a href="sms:${cleanPhone}?&body=${encodeURIComponent(msg)}" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer">
-                                <span>📱 በ iPhone SIM ላክ</span>
+                                <span>📱 በስልክ SIM ላክ</span>
                             </a>
                         </div>
                     </div>
@@ -3846,21 +3818,8 @@
                                         <span>በሲስተም SMS ላክ</span>
                                     </button>
                                     <a id="btn-owner-direct-sim-sms" href="sms:0970075509?&body=ሰላም! ይህ ከሜሽ ክሊኒንግ (0970075509) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው።" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
-                                        <span>📱 በ iPhone SIM ላክ</span>
+                                        <span>📱 በስልክ SIM ላክ</span>
                                     </a>
-                                </div>
-
-                                <!-- Large High-Resolution Mobile QR Code Scanner -->
-                                <div class="mt-3 p-4 rounded-2xl bg-slate-800/90 border border-slate-700 flex flex-col items-center gap-3 text-center">
-                                    <div class="w-52 h-52 sm:w-60 sm:h-60 bg-white p-3 rounded-2xl shrink-0 flex items-center justify-center shadow-2xl ring-4 ring-emerald-500/20">
-                                        <img id="qr-sim-sms" src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=SMSTO:0970075509:ሰላም!%20ይህ%20ከሜሽ%20ክሊኒንግ%20(0970075509)%20የተላከ%20ይፋዊ%20የሙከራ%20ኤስኤምኤስ%20ነው።" alt="SMS QR" class="w-full h-full object-contain">
-                                    </div>
-                                    <div class="text-xs text-slate-300">
-                                        <p class="font-bold text-white flex items-center justify-center gap-1.5 text-sm">
-                                            <i data-lucide="qr-code" class="w-4 h-4 text-emerald-400"></i>
-                                            <span>በ iPhone ካሜራ ስካን ያድርጉ</span>
-                                        </p>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -4965,25 +4924,6 @@
                             </div>
                         </div>
 
-                        <!-- Laptop-to-iPhone Owner Instant SMS QR Banner -->
-                        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 print:hidden">
-                            <div class="flex items-center gap-3">
-                                <div class="w-16 h-16 bg-white p-1 rounded-xl shrink-0 flex items-center justify-center shadow-md border border-emerald-200">
-                                    <img id="prof-sms-qr" src="" alt="Proforma SMS QR" class="w-full h-full object-contain">
-                                </div>
-                                <div class="text-xs text-slate-700">
-                                    <p class="font-extrabold text-emerald-950 flex items-center gap-1 text-[11px]">
-                                        <i data-lucide="smartphone" class="w-3.5 h-3.5 text-emerald-600"></i>
-                                        <span>በባለቤቱ iPhone ካሜራ ስካን ያድርጉ</span>
-                                    </p>
-                                    <p class="text-[10px] text-slate-600 mt-0.5">ላፕቶፕ ላይ ሲሆኑ ባለቤቱ በስልኩ ካሜራ ስካን በማድረግ የፕሮፎርማውን መረጃ ለደንበኛው በነፃ SMS ይልካል።</p>
-                                </div>
-                            </div>
-                            <a id="prof-sms-link" href="#" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-xl shadow shrink-0 text-center">
-                                📱 በስልክ በቀጥታ ላክ
-                            </a>
-                        </div>
-
                         <!-- OFFICIAL PRINTABLE PROFORMA SHEET -->
                         <div id="printable-proforma-area" class="space-y-6 text-slate-900 font-sans p-2">
                             <!-- Company Official Header & Logo -->
@@ -5392,16 +5332,11 @@
                                 <textarea id="postpone-reason" required rows="2" placeholder="ዝርዝር ምክንያት ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500">የቡድን ስራ መደራረብ (Team Overbooked / Cleaner engaged)</textarea>
                             </div>
 
-                            <div class="p-3 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-amber-300 text-[11px] leading-relaxed flex items-center gap-2">
-                                <i data-lucide="info" class="w-4 h-4 shrink-0 text-amber-400"></i>
-                                <span>ይህንን ሲያረጋግጡ ወዲያውኑ ለደንበኛው <strong>SMS እና የቴሌግራም መልዕክት</strong> በአዲሱ ቀን እና ምክንያት ይላካል::</span>
-                            </div>
-
                             <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl">ሰርዝ (Cancel)</button>
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl">ሰርዝ</button>
                                 <button type="submit" id="btn-submit-postpone" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-xs font-extrabold rounded-xl shadow-lg flex items-center gap-1.5">
                                     <i data-lucide="check" class="w-4 h-4"></i>
-                                    <span>ቀጠሮውን አስተላልፍ & SMS/ቴሌግራም ላክ</span>
+                                    <span>ቀጠሮውን አስተላልፍ</span>
                                 </button>
                             </div>
                         </form>
