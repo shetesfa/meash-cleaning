@@ -70,9 +70,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // C. Services
     Route::get('/services', [ServiceController::class, 'index']);
-    Route::get('/services/all', [ServiceController::class, 'all'])->middleware('role:owner');
-    Route::post('/services', [ServiceController::class, 'store'])->middleware('role:owner');
-    Route::put('/services/{service}', [ServiceController::class, 'update'])->middleware('role:owner');
+    Route::get('/services/all', [ServiceController::class, 'all'])->middleware('role:owner,reception');
+    Route::post('/services', [ServiceController::class, 'store'])->middleware('role:owner,reception');
+    Route::put('/services/{service}', [ServiceController::class, 'update'])->middleware('role:owner,reception');
 
     // D. Orders (Multi-item)
     Route::apiResource('orders', OrderController::class);

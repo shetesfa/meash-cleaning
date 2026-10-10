@@ -1140,7 +1140,18 @@
         }
 
         let mapHtml = '';
-        if (ord.customer_location && ord.customer_location.latitude && ord.customer_location.longitude) {
+        if (isCompleted || ord.is_tracking_expired) {
+          mapHtml = `
+            <div class="mt-4 pt-4 border-t border-navy/10">
+              <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-700 flex items-center justify-center shrink-0 text-xl font-bold">🔒</div>
+                <div>
+                  <p class="font-extrabold text-emerald-950 text-sm">ስራዎ በተሳካ ሁኔታ ተጠናቋል! (Job Completed)</p>
+                  <p class="text-[11px] text-emerald-800 mt-0.5">የሰራተኞችን ግላዊነት እና ደህንነት ለመጠበቅ የቀጥታ መገኛ መከታተያ ካርታው ተዘግቷል (Link expired for privacy protection)። ስለመረጡን እናመሰግናለን!</p>
+                </div>
+              </div>
+            </div>`;
+        } else if (ord.customer_location && ord.customer_location.latitude && ord.customer_location.longitude) {
           mapHtml = `
             <div class="mt-4 pt-4 border-t border-navy/10">
               <div class="flex items-center justify-between mb-2">
@@ -1223,8 +1234,8 @@
 
         if (window.lucide) lucide.createIcons();
 
-        // Initialize Leaflet map only if customer location exists
-        if (ord.customer_location && ord.customer_location.latitude && ord.customer_location.longitude && window.L) {
+        // Initialize Leaflet map only if active order and customer location exists
+        if (!isCompleted && !ord.is_tracking_expired && ord.customer_location && ord.customer_location.latitude && ord.customer_location.longitude && window.L) {
           setTimeout(() => {
             const mapContainer = document.getElementById('live-tracking-map');
             if (!mapContainer) return;

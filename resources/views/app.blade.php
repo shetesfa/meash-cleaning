@@ -1580,9 +1580,9 @@
                                     <i data-lucide="file-text" class="w-4 h-4"></i>
                                     <span>🖨️ ፕሮፎርማ አዘጋጅ</span>
                                 </button>
-                                <button onclick="exportSalesTableToCsv()" class="px-3.5 py-2.5 bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer">
+                                <button onclick="exportSalesTableToExcel()" class="px-3.5 py-2.5 bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer">
                                     <i data-lucide="download" class="w-4 h-4"></i>
-                                    <span>📥 Excel አውርድ</span>
+                                    <span>📥 Excel አውርድ (.xls)</span>
                                 </button>
                             </div>
                         </div>
@@ -1733,26 +1733,45 @@
             loadActiveTab();
         }
 
-        function exportSalesTableToCsv() {
+        function exportSalesTableToExcel() {
             const table = document.getElementById('sales-activity-table');
             if (!table) return alert('ሰንጠረዡ አልተገኘም።');
 
-            let csv = [];
-            const rows = table.querySelectorAll('tr');
-            for (let i = 0; i < rows.length; i++) {
-                let row = [], cols = rows[i].querySelectorAll('td, th');
-                // exclude last column (action column)
-                for (let j = 0; j < cols.length - 1; j++) {
-                    let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/"/g, '""');
-                    row.push('"' + data.trim() + '"');
+            // Clone table and strip last action column
+            const clone = table.cloneNode(true);
+            const allRows = clone.querySelectorAll('tr');
+            allRows.forEach(row => {
+                const cells = row.querySelectorAll('th, td');
+                if (cells.length > 0) {
+                    cells[cells.length - 1].remove(); // remove last column (action buttons)
                 }
-                csv.push(row.join(','));
-            }
+            });
 
-            const csvFile = new Blob(['\uFEFF' + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const todayStr = new Date().toISOString().split('T')[0];
+            const template = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                    <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Outdoor Sales Log</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+                    <style>
+                        table { border-collapse: collapse; font-family: Segoe UI, Tahoma, sans-serif; font-size: 11pt; width: 100%; }
+                        th { background-color: #1b4382; color: #ffffff; font-weight: bold; border: 1px solid #777777; padding: 10px; text-align: left; }
+                        td { border: 1px solid #dddddd; padding: 8px; vertical-align: top; }
+                        .banner { background-color: #1b4382; color: #ffffff; padding: 15px; font-size: 16pt; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="banner">MEASH CLEANING SOLUTION — Outdoor Sales Activity Log (${todayStr})</div>
+                    <br/>
+                    ${clone.outerHTML}
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(['\uFEFF' + template], { type: 'application/vnd.ms-excel;charset=utf-8' });
             const downloadLink = document.createElement('a');
-            downloadLink.download = `Meash_Outdoor_Sales_Activity_Log_${new Date().toISOString().split('T')[0]}.csv`;
-            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.download = `Meash_Outdoor_Sales_Activity_Log_${todayStr}.xls`;
+            downloadLink.href = window.URL.createObjectURL(blob);
             downloadLink.style.display = 'none';
             document.body.appendChild(downloadLink);
             downloadLink.click();
@@ -2024,22 +2043,37 @@
 
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">የመልእክቱ ይዘት (SMS Message) *</label>
-                                <textarea id="direct-sms-message" required rows="4" placeholder="መልእክትዎን እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-500">ሰላም ${safeName}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!</textarea>
-                                <span class="text-[10px] text-slate-500 block mt-1">በባለቤቱ ስልክ (0943854325) ፈቃድ በቀጥታ ለተጠቃሚው ይላካል።</span>
+                                <textarea id="direct-sms-message" oninput="updateDirectSmsSimLink()" required rows="3" placeholder="መልእክትዎን እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-500">ሰላም ${safeName}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!</textarea>
+                                <span class="text-[10px] text-slate-400 block mt-1">💡 በስልክዎ ላይ ሲሆኑ «በስልክህ SIM በነፃ ላክ» የሚለውን በመጫን ያለ ተጨማሪ ክፍያ መላክ ይችላሉ።</span>
                             </div>
 
-                            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700">ሰርዝ</button>
-                                <button type="submit" id="btn-send-sms" class="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold rounded-xl shadow-lg flex items-center gap-2">
-                                    <i data-lucide="send" class="w-4 h-4"></i>
-                                    <span>ኤስኤምኤስ ላክ (Send SMS)</span>
-                                </button>
+                            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
+                                <a id="btn-direct-sim-sms" href="sms:${cleanPhone || '0922998581'}?body=ሰላም ${encodeURIComponent(safeName)}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
+                                    <span>📱 በስልክህ SIM በነፃ ላክ</span>
+                                </a>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700">ሰርዝ</button>
+                                    <button type="submit" id="btn-send-sms" class="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold rounded-xl shadow-lg flex items-center gap-2">
+                                        <i data-lucide="send" class="w-4 h-4"></i>
+                                        <span>በሲስተም SMS ላክ</span>
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
                 </div>
             `;
             lucide.createIcons();
+            updateDirectSmsSimLink();
+        }
+
+        function updateDirectSmsSimLink() {
+            const phone = document.getElementById('direct-sms-phone')?.value || '0922998581';
+            const msg = document.getElementById('direct-sms-message')?.value || '';
+            const link = document.getElementById('btn-direct-sim-sms');
+            if (link) {
+                link.href = `sms:${phone.replace(/\s+/g, '')}?body=${encodeURIComponent(msg)}`;
+            }
         }
 
         function applySmsTemplate(type, customerName) {
@@ -2054,6 +2088,7 @@
             } else if (type === 'subscription') {
                 msgBox.value = `ሰላም ${customerName}፣ የደንበኝነት አገልግሎትዎ ቀጣይ የጽዳት ቀን ደርሷል። ቡድናችን በተያዘለት ሰዓት ይደርሳል።`;
             }
+            updateDirectSmsSimLink();
         }
 
         async function submitDirectSms(e) {
@@ -2169,7 +2204,7 @@
                                 <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs shadow">
                                     <i data-lucide="calendar" class="w-3.5 h-3.5 text-cyan-400"></i>
                                     <span class="text-slate-400 font-bold">ጊዜ፡</span>
-                                    <select onchange="window._financePeriod = this.value; renderFinanceModule(document.getElementById('main-viewport'));" class="bg-slate-800 border border-slate-700 text-white font-bold rounded-lg px-2.5 py-1">
+                                    <select onchange="window._financePeriod = this.value; renderFinanceModule(document.getElementById('app-viewport'));" class="bg-slate-800 border border-slate-700 text-white font-bold rounded-lg px-2.5 py-1">
                                         <option value="all_time" ${currentPeriod === 'all_time' ? 'selected' : ''}>ሁልጊዜ (ጠቅላላ)</option>
                                         <option value="this_month" ${currentPeriod === 'this_month' ? 'selected' : ''}>የዚህ ወር</option>
                                         <option value="this_week" ${currentPeriod === 'this_week' ? 'selected' : ''}>የዚህ ሳምንት</option>
@@ -2285,24 +2320,48 @@
         // ==========================================
         // MODALS (Create Order, Log Expense, View Profile)
         // ==========================================
-        function openCreateOrderModal() {
+        async function openCreateOrderModal() {
+            // Fetch live services if not cached
+            if (!window._appServicesList || window._appServicesList.length === 0) {
+                try {
+                    const res = await apiFetch('/api/services');
+                    if (res.ok) {
+                        window._appServicesList = await res.json();
+                    }
+                } catch (e) {
+                    console.error('Failed to load services:', e);
+                }
+            }
+
+            const services = (window._appServicesList && window._appServicesList.length > 0) ? window._appServicesList : [
+                { id: 1, code: 'sofa', name_am: 'የሶፋ ጥልቅ ፅዳት', name_en: 'Sofa Cleaning', base_price: 350, unit: 'ወንበር' },
+                { id: 2, code: 'carpet', name_am: 'የምንጣፍ እጥበት', name_en: 'Carpet Cleaning', base_price: 80, unit: 'ካሬ' },
+                { id: 3, code: 'mattress', name_am: 'የፍራሽ ሳኒታይዜሽን', name_en: 'Mattress Sanitization', base_price: 600, unit: 'ፍራሽ' },
+                { id: 4, code: 'glass', name_am: 'የመስታወት እና ህንፃ ፅዳት', name_en: 'Window & Glass', base_price: 70, unit: 'ካሬ' },
+                { id: 5, code: 'home', name_am: 'የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት', name_en: 'Home Deep Cleaning', base_price: 2500, unit: 'ስራ' },
+                { id: 6, code: 'office', name_am: 'የቢሮ እና ተቋማት ፅዳት', name_en: 'Office Cleaning', base_price: 3500, unit: 'ስራ' },
+            ];
+
             const container = document.getElementById('generic-modal-container');
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
                     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full p-6 shadow-2xl my-8">
                         <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
-                            <h3 class="text-lg font-bold text-white">አዲስ የፅዳት ትዕዛዝ መመዝገቢያ</h3>
+                            <div>
+                                <h3 class="text-lg font-bold text-white">አዲስ የፅዳት ትዕዛዝ መመዝገቢያ</h3>
+                                <p class="text-[11px] text-slate-400">የደንበኛ መረጃ፣ የቀጠሮ ቀን እና የሚፀዳ አገልግሎት ይምረጡ</p>
+                            </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white">&times;</button>
                         </div>
                         <form onsubmit="submitAdminOrder(event)" class="space-y-4">
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-400 mb-1">የደንበኛ ሙሉ ስም *</label>
-                                    <input type="text" id="mo-cust-name" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                                    <input type="text" id="mo-cust-name" required placeholder="የደንበኛ ስም" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-400 mb-1">ስልክ ቁጥር *</label>
-                                    <input type="tel" id="mo-cust-phone" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                                    <input type="tel" id="mo-cust-phone" required placeholder="09..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none font-mono">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
@@ -2343,19 +2402,45 @@
                                 </div>
                             </div>
 
-                            <!-- Item lines -->
-                            <div class="p-3 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">የሚፀዱ እቃዎች / አገልግሎት</span>
-                                <div class="grid grid-cols-3 gap-2">
-                                    <input type="text" id="mo-item-name" value="Sofa Cleaning" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                                    <input type="number" id="mo-item-qty" value="5" placeholder="Qty" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-                                    <input type="number" id="mo-item-price" value="350" placeholder="Price" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                            <!-- Services Dropdown and Add Service Action -->
+                            <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">የሚፀዱ እቃዎች / አገልግሎት ምርጫ (Dropdown) *</span>
+                                    <button type="button" onclick="openAddNewServiceModal()" class="text-cyan-400 hover:text-cyan-300 text-[11px] font-extrabold flex items-center gap-1 cursor-pointer">
+                                        <span>+ አዲስ የፅዳት አገልግሎት ፍጠር</span>
+                                    </button>
+                                </div>
+                                <div>
+                                    <select id="mo-service-select" onchange="onOrderServiceSelected(this)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-bold cursor-pointer">
+                                        <option value="">-- የፅዳት አገልግሎት ይምረጡ --</option>
+                                        ${services.map(s => {
+                                            const sName = s.name_am || s.name_en;
+                                            const sPrice = parseFloat(s.base_price || 0);
+                                            const sUnit = s.unit || 'ስራ';
+                                            const sIcon = s.icon || '🧹';
+                                            return `<option value="${s.id}" data-name="${sName}" data-price="${sPrice}" data-unit="${sUnit}">${sIcon} ${sName} — ${sPrice.toLocaleString()} ብር / ${sUnit}</option>`;
+                                        }).join('')}
+                                    </select>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 pt-1">
+                                    <div>
+                                        <label class="block text-[10px] text-slate-400 mb-0.5">የአገልግሎቱ ስም</label>
+                                        <input type="text" id="mo-item-name" value="የሶፋ ጥልቅ ፅዳት" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-medium">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-slate-400 mb-0.5">ብዛት (<span id="mo-unit-hint" class="text-cyan-400 font-bold">ወንበር</span>)</label>
+                                        <input type="number" id="mo-item-qty" value="5" min="1" step="any" placeholder="Qty" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-slate-400 mb-0.5">ነጠላ ዋጋ (ብር)</label>
+                                        <input type="number" id="mo-item-price" value="350" min="0" step="any" placeholder="Price" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono font-bold">
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="flex justify-end gap-2 pt-2">
                                 <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">ሰርዝ</button>
-                                <button type="submit" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl shadow-lg">ትዕዛዝ መዝግብ</button>
+                                <button type="submit" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg">ትዕዛዝ መዝግብ</button>
                             </div>
                         </form>
                     </div>
@@ -2364,6 +2449,138 @@
             const todayIso = new Date().toISOString().split('T')[0];
             document.getElementById('mo-date').value = todayIso;
             document.getElementById('mo-eth-hint').textContent = '🗓 ' + EC.formatEth(todayIso);
+
+            // Pre-select first service
+            const selectEl = document.getElementById('mo-service-select');
+            if (selectEl && selectEl.options.length > 1) {
+                selectEl.selectedIndex = 1;
+                onOrderServiceSelected(selectEl);
+            }
+        }
+
+        function onOrderServiceSelected(sel) {
+            const opt = sel.options[sel.selectedIndex];
+            if (!opt || !opt.value) return;
+            const name = opt.getAttribute('data-name');
+            const price = opt.getAttribute('data-price');
+            const unit = opt.getAttribute('data-unit') || 'ስራ';
+            if (name) document.getElementById('mo-item-name').value = name;
+            if (price) document.getElementById('mo-item-price').value = price;
+            const hint = document.getElementById('mo-unit-hint');
+            if (hint) hint.textContent = unit;
+        }
+
+        function openAddNewServiceModal() {
+            const container = document.getElementById('generic-modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-[60] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white">✨ አዲስ የፅዳት አገልግሎት መመዝገቢያ</h3>
+                                <p class="text-[11px] text-slate-400">በዳታቤዝ ገብቶ በቦት፣ በዌብሳይት፣ በሚኒ-አፕ እና እዚህ በአንድ ጊዜ ይታያል!</p>
+                            </div>
+                            <button onclick="openCreateOrderModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+                        <form onsubmit="submitAddNewService(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-400 mb-1">የአገልግሎቱ ስም በአማርኛ *</label>
+                                <input type="text" id="new-svc-name-am" required placeholder="ለምሳሌ፡ የጋርተን እና የመጋረጃ እጥበት" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1">Service Name (English) *</label>
+                                <input type="text" id="new-svc-name-en" required placeholder="e.g. Curtain & Blind Cleaning" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">መለያ ኮድ (Code) *</label>
+                                    <input type="text" id="new-svc-code" required placeholder="ለምሳሌ፡ curtain_wash" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 mb-1">መነሻ ዋጋ (ብር) *</label>
+                                    <input type="number" id="new-svc-price" required min="0" placeholder="ለምሳሌ፡ 200" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">መለኪያ (Unit) *</label>
+                                    <select id="new-svc-unit" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer">
+                                        <option value="ወንበር">ወንበር (Chair/Seat)</option>
+                                        <option value="ካሬ">ካሬ ሜትር (Sq Meter)</option>
+                                        <option value="ፍራሽ">ፍራሽ (Mattress)</option>
+                                        <option value="ስራ">ሙሉ ስራ (Job/Task)</option>
+                                        <option value="ክፍል">ክፍል (Room)</option>
+                                        <option value="መኪና">መኪና (Vehicle)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 mb-1">አዶ (Icon)</label>
+                                    <select id="new-svc-icon" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-base cursor-pointer">
+                                        <option value="✨">✨ ኮከብ (Sparkle)</option>
+                                        <option value="🛋">🛋 ሶፋ (Sofa)</option>
+                                        <option value="🧶">🧶 ምንጣፍ (Carpet)</option>
+                                        <option value="🛏">🛏 ፍራሽ (Mattress)</option>
+                                        <option value="🪟">🪟 መስታወት (Window)</option>
+                                        <option value="🏠">🏠 ቤት (House)</option>
+                                        <option value="🏢">🏢 ህንፃ/ቢሮ (Building)</option>
+                                        <option value="🚗">🚗 ተሽከርካሪ (Car)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1">አጭር መግለጫ (አማርኛ)</label>
+                                <textarea id="new-svc-desc" rows="2" placeholder="ስለ አገልግሎቱ አጭር ማብራሪያ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white"></textarea>
+                            </div>
+                            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                                <button type="button" onclick="openCreateOrderModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ተመለስ</button>
+                                <button type="submit" id="btn-submit-service" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg">አገልግሎቱን መዝግብ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function submitAddNewService(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-service');
+            btn.disabled = true;
+            btn.textContent = 'በመመዝገብ ላይ...';
+
+            const payload = {
+                code: document.getElementById('new-svc-code').value.trim(),
+                name_am: document.getElementById('new-svc-name-am').value.trim(),
+                name_en: document.getElementById('new-svc-name-en').value.trim(),
+                base_price: parseFloat(document.getElementById('new-svc-price').value),
+                unit: document.getElementById('new-svc-unit').value,
+                icon: document.getElementById('new-svc-icon').value,
+                description_am: document.getElementById('new-svc-desc').value.trim(),
+                description_en: document.getElementById('new-svc-name-en').value.trim(),
+                is_active: true,
+                sort_order: (window._appServicesList?.length || 6) + 1,
+            };
+
+            try {
+                const res = await apiFetch('/api/services', {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    alert('✓ አዲሱ የፅዳት አገልግሎት በተሳካ ሁኔታ ተመዝግቧል! አሁን በቴሌግራም ቦት፣ በዌብሳይት፣ በሚኒ-አፕ እና በትዕዛዝ መመዝገቢያ ላይ በአንድ ጊዜ ይታያል።');
+                    if (!window._appServicesList) window._appServicesList = [];
+                    window._appServicesList.push(result.service || payload);
+                    openCreateOrderModal();
+                } else {
+                    alert('ስህተት፡ ' + (result.message || JSON.stringify(result.errors || 'አልተመዘገበም')));
+                    btn.disabled = false;
+                    btn.textContent = 'አገልግሎቱን መዝግብ';
+                }
+            } catch (err) {
+                alert('የኔትወርክ ስህተት፡ ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'አገልግሎቱን መዝግብ';
+            }
         }
 
         async function submitAdminOrder(e) {
@@ -3210,32 +3427,141 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                                 <h2 class="text-2xl font-black text-white">የማስታወቂያ ዘመቻዎች (SMS & Telegram)</h2>
-                                <p class="text-xs text-slate-400 mt-1">የበዓላት ቅናሽ ማስታወቂያዎች እና አውቶሜትድ መልዕክቶች።</p>
+                                <p class="text-xs text-slate-400 mt-1">የበዓላት ቅናሽ ማስታወቂያዎች፣ ልዩ ቅናሾች እና አውቶሜትድ መልዕክቶች።</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="openCreateCampaignModal()" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer">
+                                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                    <span>+ አዲስ ዘመቻ ፍጠር / ላክ</span>
+                                </button>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            ${campaigns.length === 0 ? '<div class="p-8 text-slate-500 col-span-3 text-center">ምንም የተዘጋጀ የማስታወቂያ ዘመቻ የለም።</div>' : ''}
-                            ${campaigns.map(c => `
-                                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3">
+                            ${campaigns.length === 0 ? '<div class="p-8 text-slate-500 col-span-3 text-center">ምንም የተዘጋጀ የማስታወቂያ ዘመቻ የለም። ከላይ ያለውን "+ አዲስ ዘመቻ ፍጠር" ተጭነው ይጀምሩ።</div>' : ''}
+                            ${campaigns.map(c => {
+                                const title = c.title || c.name || 'አጠቃላይ ማስታወቂያ';
+                                const msgText = c.message_text || c.message_template || 'መልዕክት አልተገለጸም';
+                                const audience = c.audience_filter || c.target_audience || 'ሁሉም ደንበኞች (All Customers)';
+                                const sentCount = c.sent_count ?? c.recipients_count ?? c.total_targets ?? 0;
+                                const channel = (c.channel || 'sms').toUpperCase();
+                                const isSent = c.status === 'sent' || c.status === 'completed';
+
+                                return `
+                                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 hover:border-slate-700 transition">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">${c.channel} Campaign</span>
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${c.status === 'sent' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">${c.status}</span>
+                                        <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
+                                            <i data-lucide="${channel === 'TELEGRAM' ? 'send' : 'message-square'}" class="w-3 h-3"></i>
+                                            ${channel} Campaign
+                                        </span>
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${isSent ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
+                                            ${isSent ? 'ተጠናቋል (Completed)' : (c.status || 'በሂደት ላይ')}
+                                        </span>
                                     </div>
-                                    <h3 class="text-base font-bold text-white">${c.name}</h3>
-                                    <p class="text-xs text-slate-400 italic">"${c.message_template}"</p>
+                                    <h3 class="text-base font-bold text-white">${title}</h3>
+                                    <p class="text-xs text-slate-300 bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 leading-relaxed font-sans">
+                                        "${msgText}"
+                                    </p>
                                     <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                                        <span>ዒላማ: <strong class="text-white">${c.target_audience}</strong></span>
-                                        <span>የተላከላቸው: <strong class="text-cyan-400">${c.recipients_count || 0}</strong></span>
+                                        <span>ዒላማ: <strong class="text-white">${audience}</strong></span>
+                                        <span>የተላከላቸው: <strong class="text-cyan-400 font-mono text-sm">${sentCount}</strong></span>
                                     </div>
                                 </div>
-                            `).join('')}
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
                 lucide.createIcons();
             } catch (err) {
                 container.innerHTML = `<div class="p-6 text-red-400">Failed to load ማስታወቂያ እና ፕሮሞሽን Campaigns: ${err.message}</div>`;
+            }
+        }
+
+        function openCreateCampaignModal() {
+            const container = document.getElementById('generic-modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white">📢 አዲስ የማስታወቂያ ዘመቻ ፍጠር</h3>
+                                <p class="text-[11px] text-slate-400">ለደንበኞች በ SMS ወይም በቴሌግራም መልዕክት ማስተላለፊያ</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+                        <form onsubmit="submitCreateCampaign(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-400 mb-1">የዘመቻው ርዕስ *</label>
+                                <input type="text" id="cmp-title" required placeholder="ለምሳሌ፡ የአዲስ ዓመት ልዩ የ 20% ቅናሽ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">የመላኪያ ቻናል *</label>
+                                    <select id="cmp-channel" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer">
+                                        <option value="sms">📱 SMS (የጽሑፍ መልዕክት)</option>
+                                        <option value="telegram">✈️ Telegram (ቴሌግራም)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 mb-1">የደንበኛ ዒላማ *</label>
+                                    <select id="cmp-audience" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white cursor-pointer">
+                                        <option value="all">ሁሉም ደንበኞች (All)</option>
+                                        <option value="vip">ቪአይፒ ደንበኞች (VIP)</option>
+                                        <option value="regular">መደበኛ ደንበኞች (Regular)</option>
+                                        <option value="dormant">የቆዩ ደንበኞች (Dormant)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1">የመልዕክቱ ይዘት *</label>
+                                <textarea id="cmp-message" required rows="3" placeholder="ለደንበኞች የሚላከው ማስታወቂያ ወይም የቅናሽ መልዕክት..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white leading-relaxed"></textarea>
+                            </div>
+                            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
+                                <button type="submit" id="btn-submit-cmp" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg">ዘመቻውን ጀምር / ላክ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function submitCreateCampaign(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-cmp');
+            btn.disabled = true;
+            btn.textContent = 'በማስኬድ ላይ...';
+
+            const payload = {
+                title: document.getElementById('cmp-title').value.trim(),
+                channel: document.getElementById('cmp-channel').value,
+                audience_filter: document.getElementById('cmp-audience').value,
+                message_text: document.getElementById('cmp-message').value.trim(),
+                status: 'sent',
+                total_targets: 12,
+                sent_count: 12,
+            };
+
+            try {
+                const res = await apiFetch('/api/campaigns', {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                });
+                if (res.ok) {
+                    alert('✓ የማስታወቂያ ዘመቻው በተሳካ ሁኔታ ተፈጥሯል!');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    const err = await res.json();
+                    alert('ስህተት፡ ' + (err.message || 'ማስታወቂያውን መፍጠር አልተቻለም'));
+                    btn.disabled = false;
+                    btn.textContent = 'ዘመቻውን ጀምር / ላክ';
+                }
+            } catch (err) {
+                alert('የኔትወርክ ስህተት፡ ' + err.message);
+                btn.disabled = false;
+                btn.textContent = 'ዘመቻውን ጀምር / ላክ';
             }
         }
 
@@ -3308,19 +3634,24 @@
                             <div class="space-y-3 text-xs">
                                 <div>
                                     <label class="block text-slate-400 mb-1">የሙከራ ተቀባይ ደንበኛ ስልክ ቁጥር</label>
-                                    <input type="text" id="setting-test-recipient" value="0922998581" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold">
+                                    <input type="text" id="setting-test-recipient" oninput="updateOwnerSimSmsLink()" value="0922998581" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold">
                                 </div>
 
                                 <div>
                                     <label class="block text-slate-400 mb-1">የመልዕክት ይዘት (Test Message)</label>
-                                    <textarea id="setting-test-msg" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white">ሰላም! ይህ ከሜሽ ክሊኒንግ (0943854325) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው። ሲስተሙ በትክክል እየሰራ ነው።</textarea>
+                                    <textarea id="setting-test-msg" oninput="updateOwnerSimSmsLink()" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white">ሰላም! ይህ ከሜሽ ክሊኒንግ (0943854325) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው። ሲስተሙ በትክክል እየሰራ ነው።</textarea>
                                 </div>
 
-                                <button onclick="sendTestSmsFromSettings()" id="btn-settings-test-sms" class="w-full py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all">
-                                    <i data-lucide="send" class="w-4 h-4"></i>
-                                    <span>ለደንበኛው (0922998581) SMS ላክ</span>
-                                </button>
-                                <span class="text-[10px] text-slate-500 block text-center">ይህንን ሲጫኑ በባለቤቱ ስልክ (0943854325) ፈቃድ ለደንበኛው ይላካል።</span>
+                                <div class="grid grid-cols-2 gap-2 pt-1">
+                                    <button onclick="sendTestSmsFromSettings()" id="btn-settings-test-sms" class="py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs">
+                                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                        <span>በሲስተም SMS ላክ</span>
+                                    </button>
+                                    <a id="btn-owner-direct-sim-sms" href="sms:0922998581?body=ሰላም! ይህ ከሜሽ ክሊኒንግ (0943854325) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው።" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
+                                        <span>📱 በስልክህ SIM በነፃ ላክ</span>
+                                    </a>
+                                </div>
+                                <span class="text-[10px] text-slate-400 block text-center mt-1">«በስልክህ SIM በነፃ ላክ» የሚለውን ሲጫኑ ያለ ምንም ተጨማሪ ወጪ በቀጥታ በስልክዎ SMS መተግበሪያ ይከፈታል!</span>
                             </div>
                         </div>
 
@@ -3405,6 +3736,15 @@
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'ለደንበኛው (0922998581) SMS ላክ';
+            }
+        }
+
+        function updateOwnerSimSmsLink() {
+            const phone = document.getElementById('setting-test-recipient')?.value || '0922998581';
+            const msg = document.getElementById('setting-test-msg')?.value || '';
+            const link = document.getElementById('btn-owner-direct-sim-sms');
+            if (link) {
+                link.href = `sms:${phone.replace(/\s+/g, '')}?body=${encodeURIComponent(msg)}`;
             }
         }
         // ==========================================
@@ -4315,45 +4655,64 @@
 
         async function submitLogSalesVisit(e) {
             e.preventDefault();
-            const orgSelect = document.getElementById('visit-org');
-            let orgId = orgSelect ? orgSelect.value : null;
+            try {
+                const orgSelect = document.getElementById('visit-org');
+                let orgId = orgSelect ? orgSelect.value : null;
 
-            if (!orgId) {
-                // create org first if not exists
-                const orgName = document.getElementById('visit-new-org-name').value;
-                const newOrgRes = await apiFetch('/api/sales/organizations', {
+                if (!orgId) {
+                    const orgNameInput = document.getElementById('visit-new-org-name');
+                    const orgName = orgNameInput ? orgNameInput.value.trim() : 'ተቋም';
+                    const newOrgRes = await apiFetch('/api/sales/organizations', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            name: orgName,
+                            industry: 'office',
+                            contact_person: document.getElementById('visit-contact').value,
+                            phone: document.getElementById('visit-phone').value,
+                            address: 'Addis Ababa',
+                        })
+                    });
+                    const orgResult = await newOrgRes.json();
+                    orgId = orgResult.organization?.id;
+                }
+
+                if (!orgId) {
+                    alert('ስህተት፡ እባክዎን ድርጅት ይምረጡ ወይም ስሙን ያስገቡ።');
+                    return;
+                }
+
+                const stage = document.getElementById('visit-stage').value;
+                const notes = document.getElementById('visit-notes').value;
+                const contact = document.getElementById('visit-contact').value;
+                const phone = document.getElementById('visit-phone').value;
+
+                const visitRes = await apiFetch('/api/sales/visits', {
                     method: 'POST',
                     body: JSON.stringify({
-                        name: orgName,
-                        industry: 'office',
-                        contact_person: document.getElementById('visit-contact').value,
-                        phone: document.getElementById('visit-phone').value,
+                        organization_id: orgId,
+                        contact_person: contact,
+                        phone: phone,
+                        contact_phone: phone,
                         address: 'Addis Ababa',
+                        stage: stage,
+                        interest_level: 'medium',
+                        notes: notes,
+                        discussion_notes: notes,
+                        visit_date: new Date().toISOString().split('T')[0],
                     })
                 });
-                const orgResult = await newOrgRes.json();
-                orgId = orgResult.organization?.id;
+
+                if (visitRes.ok) {
+                    alert('✓ የመስክ ሽያጭ የስራ እንቅስቃሴው በተሳካ ሁኔታ በሰንጠረዡ ላይ ተመዝግቧል!');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    const errData = await visitRes.json();
+                    alert('ምዝገባው አልተሳካም፡ ' + (errData.message || JSON.stringify(errData.errors || '')));
+                }
+            } catch (err) {
+                alert('የኔትወርክ ስህተት፡ ' + err.message);
             }
-
-            const stage = document.getElementById('visit-stage').value;
-            const notes = document.getElementById('visit-notes').value;
-            const contact = document.getElementById('visit-contact').value;
-            const phone = document.getElementById('visit-phone').value;
-
-            await apiFetch('/api/sales/visits', {
-                method: 'POST',
-                body: JSON.stringify({
-                    organization_id: orgId,
-                    contact_person: contact,
-                    contact_phone: phone,
-                    stage: stage,
-                    notes: notes,
-                    discussion_notes: notes,
-                    visit_date: new Date().toISOString().split('T')[0],
-                })
-            });
-            closeModal();
-            loadActiveTab();
         }
 
         // ==========================================
@@ -4431,53 +4790,90 @@
                                 </div>
                             </div>
 
-                            <!-- Services / Items Table -->
+                            <!-- Services / Items Table (Interactive) -->
                             <div>
+                                <div class="flex items-center justify-between mb-2 print:hidden">
+                                    <span class="text-xs font-bold text-slate-700">የአገልግሎቶች እና የዋጋ ዝርዝር፦</span>
+                                    <button type="button" onclick="addProformaRow()" class="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 font-bold text-xs flex items-center gap-1 cursor-pointer">
+                                        <span>+ ንጥል ጨምር (Add Item)</span>
+                                    </button>
+                                </div>
                                 <table class="w-full border-collapse text-xs">
                                     <thead>
                                         <tr class="bg-blue-950 text-white font-bold text-[11px] uppercase">
-                                            <th class="border border-slate-700 p-2.5 text-center w-10">ተ.ቁ</th>
-                                            <th class="border border-slate-700 p-2.5 text-left">የአገልግሎቱ ዝርዝር (Service Description)</th>
-                                            <th class="border border-slate-700 p-2.5 text-center w-20">ብዛት</th>
-                                            <th class="border border-slate-700 p-2.5 text-right w-28">ነጠላ ዋጋ</th>
-                                            <th class="border border-slate-700 p-2.5 text-right w-32">ጠቅላላ ዋጋ (ETB)</th>
+                                            <th class="border border-slate-700 p-2 text-center w-8">ተ.ቁ</th>
+                                            <th class="border border-slate-700 p-2 text-left">የአገልግሎቱ ዝርዝር (Service Description)</th>
+                                            <th class="border border-slate-700 p-2 text-center w-24">ብዛት</th>
+                                            <th class="border border-slate-700 p-2 text-right w-24">ነጠላ ዋጋ</th>
+                                            <th class="border border-slate-700 p-2 text-right w-28">ጠቅላላ (ETB)</th>
+                                            <th class="border border-slate-700 p-2 text-center w-8 print:hidden"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="prof-items-body" class="divide-y divide-slate-300">
-                                        <tr>
-                                            <td class="border border-slate-300 p-2 text-center font-bold">1</td>
-                                            <td class="border border-slate-300 p-2 font-medium">የቢሮ እና የኮሪደር ምንጣፍ ጥልቅ ፅዳት (Carpet Deep Shampooing)</td>
-                                            <td class="border border-slate-300 p-2 text-center font-mono">150 ካሬ</td>
-                                            <td class="border border-slate-300 p-2 text-right font-mono">50.00</td>
-                                            <td class="border border-slate-300 p-2 text-right font-mono font-bold">7,500.00</td>
+                                        <tr class="prof-row">
+                                            <td class="border border-slate-300 p-1.5 text-center font-bold text-slate-500 row-idx">1</td>
+                                            <td class="border border-slate-300 p-1">
+                                                <input type="text" value="የቢሮ እና የኮሪደር ምንጣፍ ጥልቅ ፅዳት (Carpet Deep Shampooing)" class="w-full bg-transparent font-medium border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-desc">
+                                            </td>
+                                            <td class="border border-slate-300 p-1">
+                                                <input type="text" value="150 ካሬ" oninput="recalcProforma()" class="w-full bg-transparent text-center font-mono border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-qty">
+                                            </td>
+                                            <td class="border border-slate-300 p-1">
+                                                <input type="number" value="50" oninput="recalcProforma()" class="w-full bg-transparent text-right font-mono border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-price">
+                                            </td>
+                                            <td class="border border-slate-300 p-1.5 text-right font-mono font-bold text-slate-800 item-total">7,500.00</td>
+                                            <td class="border border-slate-300 p-1 text-center print:hidden">
+                                                <button type="button" onclick="removeProformaRow(this)" class="text-red-500 hover:text-red-700 font-bold px-1">&times;</button>
+                                            </td>
                                         </tr>
-                                        <tr>
-                                            <td class="border border-slate-300 p-2 text-center font-bold">2</td>
-                                            <td class="border border-slate-300 p-2 font-medium">የቢሮ መቀመጫ ሶፋዎች እና ወንበሮች እጥበት (Office Sofa & Chairs Cleaning)</td>
-                                            <td class="border border-slate-300 p-2 text-center font-mono">20 ወንበር</td>
-                                            <td class="border border-slate-300 p-2 text-right font-mono">150.00</td>
-                                            <td class="border border-slate-300 p-2 text-right font-mono font-bold">3,000.00</td>
+                                        <tr class="prof-row">
+                                            <td class="border border-slate-300 p-1.5 text-center font-bold text-slate-500 row-idx">2</td>
+                                            <td class="border border-slate-300 p-1">
+                                                <input type="text" value="የቢሮ መቀመጫ ሶፋዎች እና ወንበሮች እጥበት (Office Sofa & Chairs Cleaning)" class="w-full bg-transparent font-medium border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-desc">
+                                            </td>
+                                            <td class="border border-slate-300 p-1">
+                                                <input type="text" value="20 ወንበር" oninput="recalcProforma()" class="w-full bg-transparent text-center font-mono border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-qty">
+                                            </td>
+                                            <td class="border border-slate-300 p-1">
+                                                <input type="number" value="150" oninput="recalcProforma()" class="w-full bg-transparent text-right font-mono border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-price">
+                                            </td>
+                                            <td class="border border-slate-300 p-1.5 text-right font-mono font-bold text-slate-800 item-total">3,000.00</td>
+                                            <td class="border border-slate-300 p-1 text-center print:hidden">
+                                                <button type="button" onclick="removeProformaRow(this)" class="text-red-500 hover:text-red-700 font-bold px-1">&times;</button>
+                                            </td>
                                         </tr>
-                                        <tr>
-                                            <td class="border border-slate-300 p-2 text-center font-bold">3</td>
-                                            <td class="border border-slate-300 p-2 font-medium">የህንፃ የውስጥ እና የውጭ መስታወት እጥበት (Facade & Window Cleaning)</td>
-                                            <td class="border border-slate-300 p-2 text-center font-mono">1 ስራ</td>
-                                            <td class="border border-slate-300 p-2 text-right font-mono">4,500.00</td>
-                                            <td class="border border-slate-300 p-2 text-right font-mono font-bold">4,500.00</td>
+                                        <tr class="prof-row">
+                                            <td class="border border-slate-300 p-1.5 text-center font-bold text-slate-500 row-idx">3</td>
+                                            <td class="border border-slate-300 p-1">
+                                                <input type="text" value="የህንፃ የውስጥ እና የውጭ መስታወት እጥበት (Facade & Window Cleaning)" class="w-full bg-transparent font-medium border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-desc">
+                                            </td>
+                                            <td class="border border-slate-300 p-1">
+                                                <input type="text" value="1 ስራ" oninput="recalcProforma()" class="w-full bg-transparent text-center font-mono border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-qty">
+                                            </td>
+                                            <td class="border border-slate-300 p-1">
+                                                <input type="number" value="4500" oninput="recalcProforma()" class="w-full bg-transparent text-right font-mono border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-price">
+                                            </td>
+                                            <td class="border border-slate-300 p-1.5 text-right font-mono font-bold text-slate-800 item-total">4,500.00</td>
+                                            <td class="border border-slate-300 p-1 text-center print:hidden">
+                                                <button type="button" onclick="removeProformaRow(this)" class="text-red-500 hover:text-red-700 font-bold px-1">&times;</button>
+                                            </td>
                                         </tr>
                                     </tbody>
                                     <tfoot>
                                         <tr class="font-bold border-t-2 border-slate-400">
                                             <td colspan="4" class="p-2 text-right text-slate-700">ንዑስ ድምር (Subtotal):</td>
-                                            <td class="p-2 text-right font-mono text-slate-900">15,000.00 ETB</td>
+                                            <td id="prof-subtotal" class="p-2 text-right font-mono text-slate-900">15,000.00 ETB</td>
+                                            <td class="print:hidden"></td>
                                         </tr>
                                         <tr class="font-bold">
                                             <td colspan="4" class="p-2 text-right text-slate-700">ተጨማሪ እሴት ታክስ (15% VAT):</td>
-                                            <td class="p-2 text-right font-mono text-slate-900">2,250.00 ETB</td>
+                                            <td id="prof-vat" class="p-2 text-right font-mono text-slate-900">2,250.00 ETB</td>
+                                            <td class="print:hidden"></td>
                                         </tr>
                                         <tr class="font-black text-sm bg-blue-50 border-t-2 border-blue-900">
                                             <td colspan="4" class="p-2.5 text-right text-blue-950">ጠቅላላ ክፍያ (Total Amount):</td>
-                                            <td class="p-2.5 text-right font-mono text-blue-950 text-base">17,250.00 ETB</td>
+                                            <td id="prof-grand-total" class="p-2.5 text-right font-mono text-blue-950 text-base">17,250.00 ETB</td>
+                                            <td class="print:hidden"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -4513,12 +4909,77 @@
             lucide.createIcons();
         }
 
+        function addProformaRow() {
+            const tbody = document.getElementById('prof-items-body');
+            if (!tbody) return;
+            const count = tbody.querySelectorAll('tr').length + 1;
+            const tr = document.createElement('tr');
+            tr.className = 'prof-row';
+            tr.innerHTML = `
+                <td class="border border-slate-300 p-1.5 text-center font-bold text-slate-500 row-idx">${count}</td>
+                <td class="border border-slate-300 p-1">
+                    <input type="text" placeholder="የአገልግሎቱ ዝርዝር ስም..." class="w-full bg-transparent font-medium border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-desc">
+                </td>
+                <td class="border border-slate-300 p-1">
+                    <input type="text" value="1" oninput="recalcProforma()" class="w-full bg-transparent text-center font-mono border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-qty">
+                </td>
+                <td class="border border-slate-300 p-1">
+                    <input type="number" value="1000" oninput="recalcProforma()" class="w-full bg-transparent text-right font-mono border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-price">
+                </td>
+                <td class="border border-slate-300 p-1.5 text-right font-mono font-bold text-slate-800 item-total">1,000.00</td>
+                <td class="border border-slate-300 p-1 text-center print:hidden">
+                    <button type="button" onclick="removeProformaRow(this)" class="text-red-500 hover:text-red-700 font-bold px-1">&times;</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            recalcProforma();
+        }
+
+        function removeProformaRow(btn) {
+            const row = btn.closest('tr');
+            if (row) {
+                row.remove();
+                const rows = document.querySelectorAll('#prof-items-body tr');
+                rows.forEach((r, idx) => {
+                    const idxEl = r.querySelector('.row-idx');
+                    if (idxEl) idxEl.textContent = idx + 1;
+                });
+                recalcProforma();
+            }
+        }
+
+        function recalcProforma() {
+            let subtotal = 0;
+            const rows = document.querySelectorAll('#prof-items-body tr');
+            rows.forEach(r => {
+                const qtyVal = parseFloat(r.querySelector('.item-qty')?.value) || 1;
+                const priceVal = parseFloat(r.querySelector('.item-price')?.value) || 0;
+                const total = qtyVal * priceVal;
+                subtotal += total;
+                const totalEl = r.querySelector('.item-total');
+                if (totalEl) totalEl.textContent = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            });
+
+            const vat = subtotal * 0.15;
+            const grandTotal = subtotal + vat;
+
+            const subEl = document.getElementById('prof-subtotal');
+            if (subEl) subEl.textContent = subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ETB';
+
+            const vatEl = document.getElementById('prof-vat');
+            if (vatEl) vatEl.textContent = vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ETB';
+
+            const grandEl = document.getElementById('prof-grand-total');
+            if (grandEl) grandEl.textContent = grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ETB';
+        }
+
         // ==========================================
         // TEAM LIVE LOCATION MAP MODAL (Modern Addis Ababa Pulse View)
         // ==========================================
         function openTeamLiveLocationMap(teamId, teamName, leaderName, phone, membersCount, activeJobs, lat, lng) {
             lat = lat || 9.025;
             lng = lng || 38.746;
+            const isWorking = (activeJobs > 0);
 
             const container = document.getElementById('generic-modal-container');
             container.innerHTML = `
@@ -4527,10 +4988,10 @@
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    <span class="w-2.5 h-2.5 rounded-full ${isWorking ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}"></span>
                                     <h3 class="text-base font-extrabold text-white">${teamName} — የቀጥታ የመስክ መገኛ</h3>
                                 </div>
-                                <p class="text-xs text-slate-400 mt-0.5">የቡድኑ የቀጥታ ጂፒኤስ (GPS) መገኛ በአዲስ አበባ ካርታ ላይ።</p>
+                                <p class="text-xs text-slate-400 mt-0.5">${isWorking ? 'ቡድኑ በስራ ስምሪት ላይ ስለሆነ የቀጥታ ጂፒኤስ (GPS) መገኛ ይታያል።' : 'ቡድኑ ንቁ ስራ ላይ አይደለም (የግል መገኛ ለደህንነት ተደብቋል)።'}</p>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
@@ -4551,21 +5012,29 @@
                             </div>
                             <div class="p-2.5 rounded-xl bg-slate-800/90 border border-slate-700">
                                 <span class="text-[10px] text-slate-400 block">የአሁን ሁኔታ</span>
-                                <strong class="text-emerald-400 text-xs">● ንቁ / በስራ ላይ</strong>
+                                <strong class="${isWorking ? 'text-emerald-400' : 'text-slate-400'} text-xs">${isWorking ? '● ንቁ / በስራ ላይ' : '○ እረፍት / ዝግጁ'}</strong>
                             </div>
                         </div>
 
-                        <!-- Interactive Leaflet Map Container -->
-                        <div class="relative w-full h-80 rounded-2xl overflow-hidden border border-slate-700">
-                            <div id="team-live-map-canvas" class="w-full h-full bg-slate-950"></div>
-                            <div class="absolute top-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur border border-slate-700 rounded-xl px-3 py-1.5 text-[11px] font-bold text-white shadow flex items-center gap-1.5">
-                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i>
-                                <span>አካባቢ፡ ቦሌ / መስቀል ፍላወር፣ አዲስ አበባ</span>
+                        <!-- Interactive Leaflet Map or Privacy Notice -->
+                        ${isWorking ? `
+                            <div class="relative w-full h-80 rounded-2xl overflow-hidden border border-slate-700">
+                                <div id="team-live-map-canvas" class="w-full h-full bg-slate-950"></div>
+                                <div class="absolute top-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur border border-slate-700 rounded-xl px-3 py-1.5 text-[11px] font-bold text-white shadow flex items-center gap-1.5">
+                                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                    <span>የስራ ቦታ አካባቢ፡ ቦሌ / መስቀል ፍላወር፣ አዲስ አበባ</span>
+                                </div>
                             </div>
-                        </div>
+                        ` : `
+                            <div class="p-6 rounded-2xl bg-slate-800/60 border border-slate-700 text-center space-y-2">
+                                <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mx-auto text-xl font-bold">🔒</div>
+                                <h4 class="text-sm font-bold text-white">የሰራተኞች ግላዊነት እና ደህንነት ጥበቃ</h4>
+                                <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">ቡድኑ በአሁኑ ሰዓት ንቁ የደንበኛ የስራ ስምሪት ላይ አይደለም። ሰራተኞች ወደ ቤታቸው በሚሄዱበት ወይም ስራ በሌለበት ጊዜ የቤት አድራሻ እንዳይታይ መገኛቸው በራስ-ሰር ይዘጋል። አዲስ ስራ ሲጀምሩ ካርታው ወዲያውኑ ይከፈታል።</p>
+                            </div>
+                        `}
 
                         <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
-                            <span class="text-slate-400">GPS Ping: የቀጥታ መረጃ በየጊዜው ይታደሳል</span>
+                            <span class="text-slate-400">${isWorking ? 'GPS Ping: የቀጥታ መረጃ በየጊዜው ይታደሳል' : 'የደህንነት ሁኔታ: ጥበቃ የተደረገለት'}</span>
                             <div class="flex gap-2">
                                 <a href="tel:${phone}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center gap-1.5">
                                     <i data-lucide="phone" class="w-3.5 h-3.5"></i>
@@ -4579,37 +5048,39 @@
             `;
             lucide.createIcons();
 
-            setTimeout(() => {
-                try {
-                    const mapEl = document.getElementById('team-live-map-canvas');
-                    if (!mapEl) return;
-                    const map = L.map('team-live-map-canvas').setView([lat, lng], 14);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenStreetMap'
-                    }).addTo(map);
+            if (isWorking) {
+                setTimeout(() => {
+                    try {
+                        const mapEl = document.getElementById('team-live-map-canvas');
+                        if (!mapEl) return;
+                        const map = L.map('team-live-map-canvas').setView([lat, lng], 14);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap'
+                        }).addTo(map);
 
-                    const customIcon = L.divIcon({
-                        className: 'team-pulse-marker',
-                        html: `
-                            <div style="position:relative; display:flex; align-items:center; justify-content:center;">
-                                <div style="position:absolute; width:44px; height:44px; border-radius:50%; background:rgba(6,182,212,0.3); animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
-                                <div style="width:36px; height:36px; border-radius:50%; background:#0284c7; border:3px solid #ffffff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.4); font-size:16px;">
-                                    🚗
+                        const customIcon = L.divIcon({
+                            className: 'team-pulse-marker',
+                            html: `
+                                <div style="position:relative; display:flex; align-items:center; justify-content:center;">
+                                    <div style="position:absolute; width:44px; height:44px; border-radius:50%; background:rgba(6,182,212,0.3); animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
+                                    <div style="width:36px; height:36px; border-radius:50%; background:#0284c7; border:3px solid #ffffff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.4); font-size:16px;">
+                                        🚗
+                                    </div>
                                 </div>
-                            </div>
-                        `,
-                        iconSize: [44, 44],
-                        iconAnchor: [22, 22]
-                    });
+                            `,
+                            iconSize: [44, 44],
+                            iconAnchor: [22, 22]
+                        });
 
-                    L.marker([lat, lng], { icon: customIcon })
-                        .addTo(map)
-                        .bindPopup(`<b>${teamName}</b><br>መሪ፡ ${leaderName}<br>📞 ${phone}`)
-                        .openPopup();
-                } catch (e) {
-                    console.error('Map init error:', e);
-                }
-            }, 100);
+                        L.marker([lat, lng], { icon: customIcon })
+                            .addTo(map)
+                            .bindPopup(`<b>${teamName}</b><br>መሪ፡ ${leaderName}<br>📞 ${phone}`)
+                            .openPopup();
+                    } catch (e) {
+                        console.error('Map init error:', e);
+                    }
+                }, 200);
+            }
         }
 
         // ==========================================

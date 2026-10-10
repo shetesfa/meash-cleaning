@@ -106,6 +106,21 @@ class OutdoorSalesController extends Controller
 
     public function storeVisit(Request $request): JsonResponse
     {
+        if (!$request->has('phone') && $request->has('contact_phone')) {
+            $request->merge(['phone' => $request->input('contact_phone')]);
+        }
+
+        $org = Organization::find($request->input('organization_id'));
+        if (!$request->has('address') && $org) {
+            $request->merge(['address' => $org->address ?: 'Addis Ababa']);
+        }
+        if (!$request->has('phone') && $org) {
+            $request->merge(['phone' => $org->phone ?: '0911000000']);
+        }
+        if (!$request->has('interest_level')) {
+            $request->merge(['interest_level' => 'medium']);
+        }
+
         $validated = $request->validate([
             'organization_id' => 'required|exists:organizations,id',
             'contact_person' => 'required|string|max:255',
@@ -114,7 +129,7 @@ class OutdoorSalesController extends Controller
             'address' => 'required|string',
             'services_introduced' => 'nullable|string',
             'visit_purpose' => 'nullable|string',
-            'interest_level' => 'required|string|in:low,medium,high',
+            'interest_level' => 'nullable|string|in:low,medium,high',
             'visit_date' => 'required|date',
             'notes' => 'nullable|string',
             'next_followup_date' => 'nullable|date',
@@ -123,6 +138,7 @@ class OutdoorSalesController extends Controller
 
         $validated['visit_code'] = SalesVisit::generateNextCode();
         $validated['salesperson_user_id'] = $request->user()->id;
+        $validated['interest_level'] = $validated['interest_level'] ?? 'medium';
         $validated['stage'] = $validated['stage'] ?? 'visited';
 
         $visit = SalesVisit::create($validated);

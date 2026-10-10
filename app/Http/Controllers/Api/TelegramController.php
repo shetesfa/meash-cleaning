@@ -1268,28 +1268,30 @@ class TelegramController extends Controller
             "<i>(Step 1/5: Choose Cleaning Service)</i>\n\n" .
             "እባክዎን ከታች ካሉት አገልግሎቶች አንዱን ይጫኑ:";
 
-        $buttons = [
-            [
-                ['text' => '🛋 የሶፋ ጥልቅ ፅዳት (350 ብር/ወንበር)', 'callback_data' => 'book_svc:sofa'],
-            ],
-            [
-                ['text' => '🧶 የምንጣፍ እጥበት (80 ብር/ካሬ)', 'callback_data' => 'book_svc:carpet'],
-            ],
-            [
-                ['text' => '🛏 የፍራሽ ሳኒታይዜሽን (600 ብር/ፍራሽ)', 'callback_data' => 'book_svc:mattress'],
-            ],
-            [
-                ['text' => '🪟 የመስታወት እና ህንፃ ፅዳት (70 ብር/ካሬ)', 'callback_data' => 'book_svc:glass'],
-            ],
-            [
-                ['text' => '🏠 የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት (ከ 2,500 ብር)', 'callback_data' => 'book_svc:home'],
-            ],
-            [
-                ['text' => '🏢 የቢሮ እና ተቋማት ፅዳት', 'callback_data' => 'book_svc:office'],
-            ],
-            [
-                ['text' => '❌ ሰርዝ | Cancel', 'callback_data' => 'book_cancel'],
-            ],
+        $dbServices = Service::where('is_active', true)->orderBy('sort_order')->get();
+        $buttons = [];
+        if ($dbServices->isNotEmpty()) {
+            foreach ($dbServices as $s) {
+                $icon = $s->icon ?: '🧹';
+                $name = $s->name_am ?: $s->name_en;
+                $price = number_format((float)$s->base_price);
+                $unit = $s->unit ?: 'ስራ';
+                $buttons[] = [
+                    ['text' => "{$icon} {$name} ({$price} ብር/{$unit})", 'callback_data' => 'book_svc:' . $s->code],
+                ];
+            }
+        } else {
+            $buttons = [
+                [['text' => '🛋 የሶፋ ጥልቅ ፅዳት (350 ብር/ወንበር)', 'callback_data' => 'book_svc:sofa']],
+                [['text' => '🧶 የምንጣፍ እጥበት (80 ብር/ካሬ)', 'callback_data' => 'book_svc:carpet']],
+                [['text' => '🛏 የፍራሽ ሳኒታይዜሽን (600 ብር/ፍራሽ)', 'callback_data' => 'book_svc:mattress']],
+                [['text' => '🪟 የመስታወት እና ህንፃ ፅዳት (70 ብር/ካሬ)', 'callback_data' => 'book_svc:glass']],
+                [['text' => '🏠 የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት (ከ 2,500 ብር)', 'callback_data' => 'book_svc:home']],
+                [['text' => '🏢 የቢሮ እና ተቋማት ፅዳት', 'callback_data' => 'book_svc:office']],
+            ];
+        }
+        $buttons[] = [
+            ['text' => '❌ ሰርዝ | Cancel', 'callback_data' => 'book_cancel'],
         ];
 
         $this->telegramApi('sendMessage', [

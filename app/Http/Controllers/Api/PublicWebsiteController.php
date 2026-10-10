@@ -214,8 +214,10 @@ class PublicWebsiteController extends Controller
 
         $eth = EthiopianCalendarService::toEthiopian($order->appointment_date);
 
+        $isCompletedOrCancelled = in_array($order->order_status, ['completed', 'cancelled']);
+
         $teamLocation = null;
-        if ($order->assignedTeam) {
+        if ($order->assignedTeam && !$isCompletedOrCancelled) {
             $teamLocation = [
                 'team_name' => $order->assignedTeam->team_name,
                 'phone' => $order->assignedTeam->phone,
@@ -255,6 +257,8 @@ class PublicWebsiteController extends Controller
                 'team_location' => $teamLocation,
                 'customer_location' => $customerLocation,
                 'items' => $order->items,
+                'is_tracking_expired' => $isCompletedOrCancelled,
+                'expired_message' => $isCompletedOrCancelled ? 'የዚህ ትዕዛዝ የፅዳት ስራ ተጠናቋል! ለሰራተኞች ደህንነት እና ግላዊነት ጥበቃ የቀጥታ መገኛ መከታተያ ተዘግቷል። (Link expired for privacy)' : null,
             ],
         ]);
     }
