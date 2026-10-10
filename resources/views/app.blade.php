@@ -695,6 +695,7 @@
                 { id: 'customers', label_en: 'Customer CRM', label_am: 'የደንበኞች መረጃ', icon: 'users' },
                 { id: 'care', label_en: 'Follow-up & ክፍት ቅሬታዎች', label_am: 'ክትትል እና ቅሬታዎች', icon: 'phone-call' },
                 { id: 'finance', label_en: 'Payments & Revenue', label_am: 'ክፍያዎች እና ገቢ', icon: 'credit-card' },
+                { id: 'settings', label_en: 'System Settings', label_am: 'የሲስተም ቅንብሮች (SMS)', icon: 'settings' },
             ],
             cleaner: [
                 { id: 'cleaner_jobs', label_en: "የዛሬ ስራዎች", label_am: 'የዛሬ ስራዎች', icon: 'check-square' },
@@ -2130,9 +2131,23 @@
                                 <textarea id="direct-sms-message" oninput="updateDirectSmsSimLink()" required rows="3" placeholder="መልእክትዎን እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-500">ሰላም ${safeName}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!</textarea>
                             </div>
 
+                            <!-- Mobile QR Scanner for Laptop/Desktop users -->
+                            <div class="p-3 bg-slate-800/80 rounded-2xl border border-slate-700/80 flex items-center gap-3">
+                                <div class="w-20 h-20 bg-white p-1 rounded-xl shrink-0 flex items-center justify-center shadow-md">
+                                    <img id="direct-sms-qr" src="" alt="SMS QR" class="w-full h-full object-contain">
+                                </div>
+                                <div class="text-[11px] text-slate-300 space-y-1">
+                                    <p class="font-bold text-white flex items-center gap-1">
+                                        <i data-lucide="qr-code" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                        <span>በባለቤቱ iPhone ካሜራ ስካን ያድርጉ</span>
+                                    </p>
+                                    <p class="text-slate-400 text-[10px] leading-tight">ላፕቶፕ ላይ ሲሆኑ ባለቤቱ በስልኩ ካሜራ ይህን QR ስካን ሲያደርግ ወዲያውኑ በስልኩ መልዕክቱ ይከፈታል።</p>
+                                </div>
+                            </div>
+
                             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
                                 <a id="btn-direct-sim-sms" href="sms:${cleanPhone || '0922998581'}?body=ሰላም ${encodeURIComponent(safeName)}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
-                                    <span>📱 በስልክህ SIM በነፃ ላክ</span>
+                                    <span>📱 በ iPhone SIM ላክ</span>
                                 </a>
                                 <div class="flex items-center gap-2">
                                     <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700">ሰርዝ</button>
@@ -2153,9 +2168,14 @@
         function updateDirectSmsSimLink() {
             const phone = document.getElementById('direct-sms-phone')?.value || '0922998581';
             const msg = document.getElementById('direct-sms-message')?.value || '';
+            const cleanP = phone.replace(/\D+/g, '');
             const link = document.getElementById('btn-direct-sim-sms');
             if (link) {
-                link.href = `sms:${phone.replace(/\s+/g, '')}?body=${encodeURIComponent(msg)}`;
+                link.href = `sms:${cleanP}?&body=${encodeURIComponent(msg)}`;
+            }
+            const qr = document.getElementById('direct-sms-qr');
+            if (qr) {
+                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`SMSTO:${cleanP}:${msg}`)}`;
             }
         }
 
@@ -2700,8 +2720,56 @@
 
             // Enqueue via offline engine (optimistic save + sync)
             await window.meashOffline.enqueue('order', 'create', payload);
-            closeModal();
             loadActiveTab();
+            showOrderCreatedSuccessModal(payload);
+        }
+
+        function showOrderCreatedSuccessModal(payload) {
+            const container = document.getElementById('generic-modal-container');
+            const custName = payload.customer_name || 'ደንበኛ';
+            const custPhone = (payload.customer_phone || '').replace(/\D+/g, '');
+            const cleanPhone = custPhone;
+            const slotAm = payload.appointment_time_slot === 'morning' ? 'ጥዋት' : 'ከሰዓት';
+            const msg = `ሰላም ${custName}፣ የሜሽ ክሊኒንግ የፅዳት ቀጠሮዎ በትክክል ተመዝግቧል። ቀን፡ ${EC.formatEth(payload.appointment_date)} (${slotAm})። በሰዓቱ እንገኛለን! ስልክ፡ 0943854325`;
+            const qrData = encodeURIComponent(`SMSTO:${cleanPhone}:${msg}`);
+
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl text-center space-y-4">
+                        <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-black">
+                            ✓
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-white">ትዕዛዙ በተሳካ ሁኔታ ተመዝግቧል!</h3>
+                            <p class="text-xs text-slate-400 mt-1">ለደንበኛው (${custName} - ${payload.customer_phone}) የማረጋገጫ SMS ይላኩ</p>
+                        </div>
+
+                        <!-- Laptop-to-iPhone SMS QR Scanner -->
+                        <div class="p-4 bg-slate-800/90 rounded-2xl border border-slate-700 flex flex-col items-center gap-3">
+                            <div class="w-48 h-48 bg-white p-2.5 rounded-2xl shrink-0 flex items-center justify-center shadow-2xl ring-4 ring-emerald-500/20">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${qrData}" alt="Order SMS QR" class="w-full h-full object-contain">
+                            </div>
+                            <div class="text-xs text-slate-300">
+                                <p class="font-bold text-white flex items-center justify-center gap-1.5 text-sm">
+                                    <i data-lucide="smartphone" class="w-4 h-4 text-emerald-400"></i>
+                                    <span>በባለቤቱ iPhone ካሜራ ስካን ያድርጉ</span>
+                                </p>
+                                <p class="text-slate-400 text-[11px] mt-1">ላፕቶፕ ላይ ሲሆኑ ባለቤቱ በስልኩ ካሜራ ስካን በማድረግ በስልኩ Messages በቀጥታ በነፃ ይልካል።</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-1">
+                            <button onclick="closeModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl cursor-pointer">
+                                አሁን ዝጋ
+                            </button>
+                            <a href="sms:${cleanPhone}?&body=${encodeURIComponent(msg)}" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer">
+                                <span>📱 በ iPhone SIM ላክ</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
         }
 
         function openRecordExpenseModal() {
@@ -4894,18 +4962,37 @@
                 <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
                     <div class="bg-white text-slate-900 rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl space-y-6 my-auto max-h-[92vh] overflow-y-auto border border-slate-300">
                         <!-- Top Controls: Print and Close -->
-                        <div class="flex items-center justify-between pb-4 border-b border-slate-200 print:hidden">
+                        <div class="flex flex-wrap items-center justify-between pb-4 border-b border-slate-200 print:hidden gap-3">
                             <div class="flex items-center gap-2">
                                 <span class="px-3 py-1 bg-blue-100 text-blue-900 font-extrabold text-xs rounded-full">📄 ይፋዊ ፕሮፎርማ ሰነድ</span>
-                                <span class="text-xs text-slate-500 font-mono">Ref: ${profNum}</span>
+                                <span id="prof-ref-badge" class="text-xs text-slate-500 font-mono">Ref: ${profNum}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button onclick="window.print()" class="px-5 py-2.5 bg-gradient-to-r from-blue-700 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
+                                <button onclick="window.print()" class="px-4 py-2 bg-gradient-to-r from-blue-700 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
                                     <i data-lucide="printer" class="w-4 h-4"></i>
-                                    <span>🖨️ አትም / በ PDF አውርድ</span>
+                                    <span>🖨️ አትም / PDF</span>
                                 </button>
-                                <button onclick="closeModal()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl">ዝጋ</button>
+                                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl">ዝጋ</button>
                             </div>
+                        </div>
+
+                        <!-- Laptop-to-iPhone Owner Instant SMS QR Banner -->
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 print:hidden">
+                            <div class="flex items-center gap-3">
+                                <div class="w-16 h-16 bg-white p-1 rounded-xl shrink-0 flex items-center justify-center shadow-md border border-emerald-200">
+                                    <img id="prof-sms-qr" src="" alt="Proforma SMS QR" class="w-full h-full object-contain">
+                                </div>
+                                <div class="text-xs text-slate-700">
+                                    <p class="font-extrabold text-emerald-950 flex items-center gap-1 text-[11px]">
+                                        <i data-lucide="smartphone" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                        <span>በባለቤቱ iPhone ካሜራ ስካን ያድርጉ</span>
+                                    </p>
+                                    <p class="text-[10px] text-slate-600 mt-0.5">ላፕቶፕ ላይ ሲሆኑ ባለቤቱ በስልኩ ካሜራ ስካን በማድረግ የፕሮፎርማውን መረጃ ለደንበኛው በነፃ SMS ይልካል።</p>
+                                </div>
+                            </div>
+                            <a id="prof-sms-link" href="#" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-xl shadow shrink-0 text-center">
+                                📱 በስልክ በቀጥታ ላክ
+                            </a>
                         </div>
 
                         <!-- OFFICIAL PRINTABLE PROFORMA SHEET -->
@@ -4942,12 +5029,12 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
                                 <div>
                                     <span class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">የደንበኛው / የድርጅቱ መረጃ፦</span>
-                                    <input type="text" id="prof-org-name" value="${defaultOrg || 'አቢሲንያ ሆቴል'}" placeholder="የድርጅቱ ስም" class="w-full font-bold text-sm bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 mb-1.5">
+                                    <input type="text" id="prof-org-name" oninput="updateProformaSmsQr()" value="${defaultOrg || 'አቢሲንያ ሆቴል'}" placeholder="የድርጅቱ ስም" class="w-full font-bold text-sm bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 mb-1.5">
                                     <input type="text" id="prof-contact" value="${defaultContact || 'አቶ ብርሃኑ አሰፋ (ማናጀር)'}" placeholder="ያነጋገሩት ኃላፊ" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 mb-1.5 text-xs">
                                 </div>
                                 <div>
                                     <span class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">አድራሻ እና ስልክ፦</span>
-                                    <input type="tel" id="prof-phone" value="${defaultPhone || '0912121212'}" placeholder="ስልክ ቁጥር" class="w-full font-mono bg-white border border-slate-300 rounded-lg px-2.5 py-1 mb-1.5 text-xs">
+                                    <input type="tel" id="prof-phone" oninput="updateProformaSmsQr()" value="${defaultPhone || '0912121212'}" placeholder="ስልክ ቁጥር" class="w-full font-mono bg-white border border-slate-300 rounded-lg px-2.5 py-1 mb-1.5 text-xs">
                                     <input type="text" id="prof-address" value="${defaultAddress || 'አዲስ አበባ፣ ሃያት'}" placeholder="አድራሻ / ቦታ" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs">
                                 </div>
                             </div>
@@ -5069,6 +5156,7 @@
                 </div>
             `;
             lucide.createIcons();
+            recalcProforma();
         }
 
         function addProformaRow() {
@@ -5133,6 +5221,26 @@
 
             const grandEl = document.getElementById('prof-grand-total');
             if (grandEl) grandEl.textContent = grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ETB';
+
+            updateProformaSmsQr();
+        }
+
+        function updateProformaSmsQr() {
+            const profNum = document.getElementById('prof-ref-badge')?.innerText?.replace('Ref: ', '').trim() || 'MSH-PRF-1000';
+            const phone = document.getElementById('prof-phone')?.value || '0912121212';
+            const org = document.getElementById('prof-org-name')?.value || 'ደንበኛ';
+            const grand = document.getElementById('prof-grand-total')?.innerText || '';
+            const cleanP = phone.replace(/\D+/g, '');
+            const msg = `ሰላም ${org}፣ የሜሽ ክሊኒንግ ፕሮፎርማ (${profNum}) ተዘጋጅቷል። ጠቅላላ ክፍያ፡ ${grand}። ለበለጠ መረጃ፡ 0943854325`;
+
+            const qr = document.getElementById('prof-sms-qr');
+            if (qr) {
+                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`SMSTO:${cleanP}:${msg}`)}`;
+            }
+            const link = document.getElementById('prof-sms-link');
+            if (link) {
+                link.href = `sms:${cleanP}?&body=${encodeURIComponent(msg)}`;
+            }
         }
 
         // ==========================================
