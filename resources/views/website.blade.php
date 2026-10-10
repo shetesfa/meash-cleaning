@@ -1140,7 +1140,7 @@
         }
 
         let mapHtml = '';
-        if (ord.customer_location) {
+        if (ord.customer_location && ord.customer_location.latitude && ord.customer_location.longitude) {
           mapHtml = `
             <div class="mt-4 pt-4 border-t border-navy/10">
               <div class="flex items-center justify-between mb-2">
@@ -1150,6 +1150,17 @@
                 <span class="text-[11px] font-bold text-teal-dark">${ord.team_assigned || 'ቡድን በመመደብ ላይ'}</span>
               </div>
               <div id="live-tracking-map" class="w-full h-64 rounded-xl border border-navy/15 shadow-inner"></div>
+            </div>`;
+        } else {
+          mapHtml = `
+            <div class="mt-4 pt-4 border-t border-navy/10">
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-teal/15 text-teal-dark flex items-center justify-center shrink-0 text-base">📍</div>
+                <div>
+                  <p class="font-bold text-navy">አድራሻ (ካርታ አልተመረጠም):</p>
+                  <p class="text-[11px] text-slate-500">${ord.address || 'አዲስ አበባ'} ${ord.subcity ? '(' + ord.subcity + ')' : ''} — ደንበኛው የቀጥታ GPS ካርታ ስላልላከ አድራሻው በጽሁፍ ብቻ ተመዝግቧል።</p>
+                </div>
+              </div>
             </div>`;
         }
 
@@ -1212,8 +1223,8 @@
 
         if (window.lucide) lucide.createIcons();
 
-        // Initialize Leaflet map if customer location exists
-        if (ord.customer_location && window.L) {
+        // Initialize Leaflet map only if customer location exists
+        if (ord.customer_location && ord.customer_location.latitude && ord.customer_location.longitude && window.L) {
           setTimeout(() => {
             const mapContainer = document.getElementById('live-tracking-map');
             if (!mapContainer) return;
@@ -1222,8 +1233,8 @@
               liveTrackMap = null;
             }
 
-            const cLat = ord.customer_location.latitude || 9.0108;
-            const cLng = ord.customer_location.longitude || 38.7616;
+            const cLat = ord.customer_location.latitude;
+            const cLng = ord.customer_location.longitude;
 
             liveTrackMap = L.map('live-tracking-map').setView([cLat, cLng], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

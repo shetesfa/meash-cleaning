@@ -1384,12 +1384,44 @@ class TelegramController extends Controller
             return true;
         }
 
-        // Subcity chosen via button (for users not at home)
+        // Subcity chosen via button (for users not at home or picking location)
         if (str_starts_with($data, 'book_subcity:')) {
             $subcity = substr($data, 13);
             $payload = $tgUser ? ($tgUser->payload_cache ?? []) : [];
             $payload['subcity'] = $subcity;
+            unset($payload['latitude'], $payload['longitude']);
+
+            if ($tgUser) {
+                $tgUser->bot_state = 'booking_detail_address';
+                $tgUser->payload_cache = $payload;
+                $tgUser->save();
+            }
+
+            $msg = "🏢 <b>የተመረጠ ክፍለ ከተማ፡ {$subcity}</b>\n\n" .
+                "እባክዎን የሰፈር ስም፣ ልዩ መለያ ቦታ ወይም የቤት ቁጥር ጽፈው ይላኩልን:\n" .
+                "<i>(ምሳሌ፡ ቦሌ ሚካኤል፣ ታክሲ ተራ አካባቢ ወይም ህንፃ ቁጥር)</i>\n\n" .
+                "👉 ተጨማሪ ዝርዝር መጻፍ ካልፈለጉ ከስር ያለውን <b>'⏩ እንደዚሁ ይለፍ'</b> የሚለውን ቁልፍ ይጫኑ:";
+
+            $this->telegramApi('sendMessage', [
+                'chat_id' => $chatId,
+                'text' => $msg,
+                'parse_mode' => 'HTML',
+                'reply_markup' => json_encode([
+                    'inline_keyboard' => [
+                        [['text' => '⏩ እንደዚሁ ይለፍ (Skip Detail)', 'callback_data' => 'book_skip_detail_address']],
+                        [['text' => '❌ ሰርዝ | Cancel', 'callback_data' => 'book_cancel']],
+                    ]
+                ]),
+            ]);
+            return true;
+        }
+
+        // Skip detail address after subcity selection
+        if ($data === 'book_skip_detail_address') {
+            $payload = $tgUser ? ($tgUser->payload_cache ?? []) : [];
+            $subcity = $payload['subcity'] ?? 'አዲስ አበባ';
             $payload['address'] = "{$subcity} ክፍለ ከተማ";
+            unset($payload['latitude'], $payload['longitude']);
 
             if ($tgUser) {
                 $tgUser->bot_state = 'booking_date';
@@ -1527,13 +1559,36 @@ class TelegramController extends Controller
                     $tgUser->save();
                     $this->promptForDate($chatId, $payload);
                     return true;
-                } elseif (!empty($text) && $text !== '✍ አድራሻዬን እጽፋለሁ (Type Manually)') {
+                } elseif (!empty($text)) {
+                    if ($text === '✍ አድራሻዬን እጽፋለሁ (Type Manually)') {
+                        $this->telegramApi('sendMessage', [
+                            'chat_id' => $chatId,
+                            'text' => "✍ <b>እባክዎን አድራሻዎን ጽፈው ይላኩልን:</b>\n\n(ምሳሌ፡ <i>ቦሌ ሚካኤል፣ ታክሲ ተራ አካባቢ፣ የቤት ቁ. 412</i>)",
+                            'parse_mode' => 'HTML',
+                        ]);
+                        return true;
+                    }
+
                     // Manual address typed
+                    unset($payload['latitude'], $payload['longitude']);
                     $payload['address'] = $text;
                     $subcity = $this->detectSubcity($text);
                     if ($subcity) {
                         $payload['subcity'] = $subcity;
                     }
+                    $tgUser->payload_cache = $payload;
+                    $tgUser->bot_state = 'booking_date';
+                    $tgUser->save();
+                    $this->promptForDate($chatId, $payload);
+                    return true;
+                }
+                return true;
+
+            case 'booking_detail_address':
+                if (!empty($text)) {
+                    $subcity = $payload['subcity'] ?? 'አዲስ አበባ';
+                    $payload['address'] = "{$subcity}፣ {$text}";
+                    unset($payload['latitude'], $payload['longitude']);
                     $tgUser->payload_cache = $payload;
                     $tgUser->bot_state = 'booking_date';
                     $tgUser->save();
@@ -1650,7 +1705,10 @@ class TelegramController extends Controller
         $lat = $payload['latitude'] ?? null;
         $lng = $payload['longitude'] ?? null;
 
-        $locText = $address . ($subcity ? " ({$subcity})" : "");
+        $locText = $address;
+        if ($subcity && !str_contains($address, $subcity)) {
+            $locText .= " ({$subcity})";
+        }
         if ($lat && $lng) {
             $locText .= " (📍 GPS: <a href=\"https://www.google.com/maps?q={$lat},{$lng}\">ካርታ ክፈት</a>)";
         }
@@ -1805,9 +1863,14 @@ class TelegramController extends Controller
 
         $ethDate = EthiopianCalendarService::toEthiopian(\Carbon\Carbon::parse($apptDate));
 
-        $locLine = "📍 <b>አድራሻ:</b> {$address}" . ($subcity ? " ({$subcity})" : "");
+        $locLine = "📍 <b>አድራሻ:</b> {$address}";
+        if ($subcity && !str_contains($address, $subcity)) {
+            $locLine .= " ({$subcity})";
+        }
         if ($lat && $lng) {
             $locLine .= "\n🗺 <b>የቀጥታ GPS ካርታ:</b> ተያይዟል ✅ (<a href=\"https://www.google.com/maps?q={$lat},{$lng}\">Google Maps</a>)";
+        } else {
+            $locLine .= "\n🗺 <b>ካርታ:</b> አልተመረጠም (የጽሁፍ አድራሻ ብቻ)";
         }
 
         $msg = "📋 <b>የትዕዛዝዎ ማጠቃለያ (Booking Summary):</b>\n\n" .

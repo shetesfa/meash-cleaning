@@ -87,6 +87,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // F. Cleaning Teams & Cleaner Mobile View
     Route::get('/teams', [TeamController::class, 'index']);
+    Route::post('/teams', [TeamController::class, 'store'])->middleware('role:owner,reception');
+    Route::get('/employees', [TeamController::class, 'getEmployees'])->middleware('role:owner,reception');
+    Route::post('/employees', [TeamController::class, 'storeEmployee'])->middleware('role:owner');
     Route::get('/teams/my-jobs', [TeamController::class, 'myJobs']);
     Route::post('/teams/jobs/{order}/action', [TeamController::class, 'handleJobAction']);
     Route::post('/teams/location', [TeamController::class, 'updateLocation']);

@@ -215,4 +215,88 @@ class TeamController extends Controller
             ]
         ]);
     }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'team_name' => 'required|string|max:128',
+            'team_leader_id' => 'nullable|exists:users,id',
+            'phone' => 'nullable|string|max:32',
+            'vehicle_plate' => 'nullable|string|max:64',
+            'status' => 'nullable|string|in:active,on_job,off_duty',
+            'notes' => 'nullable|string',
+            'member_ids' => 'nullable|array',
+            'member_ids.*' => 'exists:users,id',
+        ]);
+
+        $team = CleaningTeam::create([
+            'team_name' => $validated['team_name'],
+            'team_leader_id' => $validated['team_leader_id'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'vehicle_plate' => $validated['vehicle_plate'] ?? null,
+            'status' => $validated['status'] ?? 'active',
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        if (!empty($validated['member_ids'])) {
+            foreach ($validated['member_ids'] as $uid) {
+                TeamMember::firstOrCreate([
+                    'cleaning_team_id' => $team->id,
+                    'user_id' => $uid,
+                ], [
+                    'role_in_team' => ($uid == ($validated['team_leader_id'] ?? null)) ? 'leader' : 'cleaner',
+                ]);
+            }
+        } elseif (!empty($validated['team_leader_id'])) {
+            TeamMember::firstOrCreate([
+                'cleaning_team_id' => $team->id,
+                'user_id' => $validated['team_leader_id'],
+            ], [
+                'role_in_team' => 'leader',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'የፅዳት ቡድኑ በተሳካ ሁኔታ ተፈጥሯል::',
+            'team' => $team->load(['leader:id,name,phone', 'members.user:id,name,phone']),
+        ], 201);
+    }
+
+    public function getEmployees(Request $request): JsonResponse
+    {
+        $role = $request->query('role');
+        $query = \App\Models\User::query()->select('id', 'name', 'email', 'phone', 'role', 'is_active', 'created_at');
+        if ($role) {
+            $query->where('role', $role);
+        }
+        $employees = $query->orderBy('name')->get();
+        return response()->json($employees);
+    }
+
+    public function storeEmployee(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'phone' => 'nullable|string|max:32',
+            'role' => 'required|string|in:owner,reception,cleaner,sales,finance',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $user = \App\Models\User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'role' => $validated['role'],
+            'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'አዲሱ ሰራተኛ በተሳካ ሁኔታ ተመዝግቧል::',
+            'employee' => $user,
+        ], 201);
+    }
 }

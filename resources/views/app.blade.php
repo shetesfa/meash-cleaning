@@ -1343,10 +1343,17 @@
                                             <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-400"></i>
                                             <span>ደውል</span>
                                         </a>
-                                        <button onclick="openInAppLiveRideMap(${job.id}, ${job.latitude || 9.010}, ${job.longitude || 38.761}, '${(job.customer?.full_name || 'ውድ ደንበኛ').replace(/'/g, "\\'")}', '${(job.customer?.phone || '').replace(/'/g, "\\'")}', '${(job.address || job.customer?.address || 'Addis Ababa').replace(/'/g, "\\'")}', 'Team Alpha')" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors">
-                                            <i data-lucide="navigation-2" class="w-3.5 h-3.5 text-cyan-400"></i>
-                                            <span>የቀጥታ ካርታ</span>
-                                        </button>
+                                        ${(job.latitude && job.longitude) ? `
+                                            <button onclick="openInAppLiveRideMap(${job.id}, ${job.latitude}, ${job.longitude}, '${(job.customer?.full_name || 'ውድ ደንበኛ').replace(/'/g, "\\'")}', '${(job.customer?.phone || '').replace(/'/g, "\\'")}', '${(job.address || job.customer?.address || 'Addis Ababa').replace(/'/g, "\\'")}', 'Team Alpha')" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors">
+                                                <i data-lucide="navigation-2" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                                <span>የቀጥታ ካርታ</span>
+                                            </button>
+                                        ` : `
+                                            <div class="py-2.5 rounded-xl bg-slate-800/40 text-slate-400 border border-slate-700/50 text-[11px] font-medium flex items-center justify-center gap-1 text-center" title="ደንበኛው ካርታ አልመረጠም">
+                                                <i data-lucide="map-pin-off" class="w-3.5 h-3.5 text-slate-500"></i>
+                                                <span>ካርታ የለውም</span>
+                                            </div>
+                                        `}
 
                                         ${(job.order_status === 'new' || job.order_status === 'assigned') ? `
                                             <button onclick="cleanerStartJourney(${job.id})" class="py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg col-span-2">
@@ -1585,9 +1592,10 @@
                                                         ${o.order_status}
                                                     </span>
                                                 </td>
-                                                <td class="p-4 text-right space-x-1.5">
+                                                <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
+                                                    <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ቡድን መድብ">🚐 ቡድን መድብ</button>
                                                     <button onclick="openDirectSmsModal('${o.customer?.phone || ''}', '${o.customer?.full_name || ''}')" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">📩 SMS</button>
-                                                    <button onclick="openOrderDetailsModal(${o.id})" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር እይ</button>
+                                                    <button onclick="openOrderDetailsModal(${o.id})" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር</button>
                                                 </td>
                                             </tr>
                                         `).join('')}
@@ -2124,56 +2132,370 @@
         }
 
         // ==========================================
-        // 8. TEAMS & DISPATCH MODULE
+        // ==========================================
+        // 8. TEAMS & DISPATCH MODULE (Cleaners & Staff Directory)
         // ==========================================
         async function renderTeamsModule(container) {
             try {
-                const res = await apiFetch('/api/teams');
-                const data = await res.json();
-                const teams = data.data || [];
+                const [teamsRes, empRes] = await Promise.all([
+                    apiFetch('/api/teams'),
+                    apiFetch('/api/employees')
+                ]);
+                const teamsData = await teamsRes.json();
+                const empData = await empRes.json();
+                
+                const teams = Array.isArray(teamsData) ? teamsData : (teamsData.data || []);
+                const employees = Array.isArray(empData) ? empData : (empData.data || []);
+
+                const roleBadges = {
+                    owner: 'bg-purple-950/80 text-purple-300 border-purple-800',
+                    reception: 'bg-blue-950/80 text-blue-300 border-blue-800',
+                    cleaner: 'bg-emerald-950/80 text-emerald-300 border-emerald-800',
+                    sales: 'bg-amber-950/80 text-amber-300 border-amber-800',
+                    finance: 'bg-cyan-950/80 text-cyan-300 border-cyan-800'
+                };
+
+                const roleLabels = {
+                    owner: 'ዋና ስራ አስኪያጅ',
+                    reception: 'ሪሴፕሽን & ሽያጭ',
+                    cleaner: 'የፅዳት ባለሙያ',
+                    sales: 'የውጭ ሽያጭ',
+                    finance: 'ፋይናንስ'
+                };
 
                 container.innerHTML = `
-                    <div class="max-w-7xl mx-auto space-y-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="max-w-7xl mx-auto space-y-8">
+                        <!-- Top Header with Actions -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-slate-900 border border-slate-800">
                             <div>
-                                <h2 class="text-2xl font-black text-white">የፅዳት ቡድኖች እና ስምሪት</h2>
-                                <p class="text-xs text-slate-400 mt-1">የመስክ ቡድኖች፣ አባላት፣ የመኪና ስምሪት እና የስራ ጫና ማስተዳደሪያ።</p>
+                                <h2 class="text-2xl font-black text-white flex items-center gap-2.5">
+                                    <i data-lucide="truck" class="w-6 h-6 text-cyan-400"></i>
+                                    <span>የፅዳት ቡድኖች እና የሰራተኞች አስተዳደር</span>
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-1">የመስክ ቡድኖች፣ የሰራተኞች መዝገብ፣ አዳዲስ ቅጥር እና የመኪና ስምሪት ማስተዳደሪያ።</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <button onclick="openAddEmployeeModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer">
+                                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                    <span>+ አዲስ ሰራተኛ መዝግብ</span>
+                                </button>
+                                <button onclick="openCreateTeamModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-cyan-950/50 transition-all cursor-pointer">
+                                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                    <span>+ አዲስ የፅዳት ቡድን ፍጠር</span>
+                                </button>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            ${teams.map(t => `
-                                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">${t.team_code}</span>
-                                            <h3 class="text-lg font-bold text-white">${t.team_name}</h3>
-                                        </div>
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${t.is_active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'}">
-                                            ${t.is_active ? 'ንቁ ስራዎች' : 'Inactive'}
-                                        </span>
-                                    </div>
-                                    <div class="space-y-1.5 text-xs text-slate-400">
-                                        <p>👤 የቡድን መሪ: <strong class="text-white">${t.leader?.name || 'Assigned'}</strong></p>
-                                        <p>📞 Phone: <span class="text-slate-200">${t.leader?.phone || '0911000003'}</span></p>
-                                        <p>🚐 የመኪና ታርጋ: <span class="text-slate-200 font-semibold">${t.vehicle_plate || 'N/A'}</span></p>
-                                        <p>👥 የቡድን አባላት: <span class="text-cyan-400 font-bold">${t.members?.length || 2} አባላት</span></p>
-                                    </div>
-                                    <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
-                                        <span class="text-slate-400 font-semibold">${t.today_orders_count || 0} የዛሬ ስራዎች</span>
-                                        <button onclick="openInAppLiveRideMap(null, 9.015, 38.752, 'የቅርብ ደንበኛ መዳረሻ', '', 'Addis Ababa', '${t.team_name}', ${t.current_latitude || 9.025}, ${t.current_longitude || 38.746})" class="px-2.5 py-1 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-bold flex items-center gap-1 transition-colors">
-                                            <i data-lucide="navigation-2" class="w-3.5 h-3.5 text-cyan-400"></i>
-                                            <span>የቀጥታ ካርታ</span>
-                                        </button>
-                                    </div>
+                        <!-- 1. Cleaning Teams Grid -->
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+                                    <span>የመስክ የፅዳት ቡድኖች (Cleaning Teams)</span>
+                                    <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-950 text-cyan-400 border border-cyan-800">${teams.length} ቡድኖች</span>
+                                </h3>
+                            </div>
+
+                            ${teams.length === 0 ? `
+                                <div class="p-8 rounded-3xl bg-slate-900 border border-slate-800 text-center space-y-3">
+                                    <div class="w-12 h-12 rounded-2xl bg-slate-800 text-cyan-400 flex items-center justify-center mx-auto text-xl">🚐</div>
+                                    <p class="text-sm font-bold text-white">እስካሁን የተፈጠረ የፅዳት ቡድን የለም</p>
+                                    <p class="text-xs text-slate-400 max-w-sm mx-auto">ከላይ ያለውን "+ አዲስ የፅዳት ቡድን ፍጠር" የሚለውን ቁልፍ በመጫን የመጀመሪያውን ቡድን ይመዝግቡ።</p>
+                                    <button onclick="openCreateTeamModal()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs">ቡድን ፍጠር</button>
                                 </div>
-                            `).join('')}
+                            ` : `
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                    ${teams.map(t => `
+                                        <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-cyan-500/40 transition-all space-y-4 shadow-xl">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <span class="text-[10px] font-mono font-bold text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800 uppercase tracking-wider">${t.team_name}</span>
+                                                    <h4 class="text-lg font-extrabold text-white mt-1">${t.team_name}</h4>
+                                                </div>
+                                                <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border ${t.status === 'active' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'}">
+                                                    ${t.status === 'active' ? '● ዝግጁ / ንቁ' : t.status}
+                                                </span>
+                                            </div>
+                                            <div class="space-y-2 text-xs text-slate-400 bg-slate-950/50 p-3.5 rounded-2xl border border-slate-800/80">
+                                                <div class="flex items-center justify-between">
+                                                    <span>👤 የቡድን መሪ:</span>
+                                                    <strong class="text-white">${t.leader?.name || 'አልተመደበም'}</strong>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <span>📞 ስልክ:</span>
+                                                    <span class="text-cyan-300 font-mono">${t.phone || t.leader?.phone || '—'}</span>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <span>🚐 መኪና / ታርጋ:</span>
+                                                    <span class="text-white font-semibold font-mono">${t.vehicle_plate || 'ታርጋ የለውም'}</span>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <span>👥 አባላት:</span>
+                                                    <span class="text-cyan-400 font-bold">${t.members?.length || 1} አባላት</span>
+                                                </div>
+                                            </div>
+                                            <div class="pt-2 flex items-center justify-between text-xs">
+                                                <span class="text-slate-400 font-semibold flex items-center gap-1">
+                                                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                                    <span>${t.active_jobs_count || 0} ንቁ ስራዎች</span>
+                                                </span>
+                                                <button onclick="openInAppLiveRideMap(null, ${t.current_latitude || 9.025}, ${t.current_longitude || 38.746}, '${t.team_name}', '${t.phone || ''}', 'Addis Ababa', '${t.team_name}', ${t.current_latitude || 9.025}, ${t.current_longitude || 38.746})" class="px-3 py-1.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 font-bold flex items-center gap-1.5 transition-colors cursor-pointer">
+                                                    <i data-lucide="navigation-2" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                                    <span>የቀጥታ ካርታ</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `}
+                        </div>
+
+                        <!-- 2. Staff Directory Table -->
+                        <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                                <div>
+                                    <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+                                        <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+                                        <span>የሰራተኞች እና የፅዳት ባለሙያዎች መዝገብ (Staff Directory)</span>
+                                    </h3>
+                                    <p class="text-xs text-slate-400 mt-0.5">በሜሽ ክሊኒንግ ሲስተም ውስጥ የተመዘገቡ ሁሉም ሰራተኞች እና የስራ ድርሻቸው።</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 w-fit">
+                                    ጠቅላላ፡ ${employees.length} ሰራተኞች
+                                </span>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead>
+                                        <tr class="text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider">
+                                            <th class="py-3 px-3">ሰራተኛ</th>
+                                            <th class="py-3 px-3">የስራ ድርሻ (Role)</th>
+                                            <th class="py-3 px-3">ስልክ</th>
+                                            <th class="py-3 px-3">ኢሜይል</th>
+                                            <th class="py-3 px-3">ሁኔታ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800/60">
+                                        ${employees.map(e => `
+                                            <tr class="hover:bg-slate-800/40 transition-colors">
+                                                <td class="py-3 px-3 font-bold text-white flex items-center gap-2.5">
+                                                    <div class="w-7 h-7 rounded-lg bg-slate-800 text-cyan-400 font-extrabold flex items-center justify-center text-[11px]">
+                                                        ${(e.name || 'S').slice(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <span>${e.name}</span>
+                                                </td>
+                                                <td class="py-3 px-3">
+                                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold border uppercase ${roleBadges[e.role] || 'bg-slate-800 text-slate-300 border-slate-700'}">
+                                                        ${roleLabels[e.role] || e.role}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 px-3 font-mono text-slate-300">${e.phone || '—'}</td>
+                                                <td class="py-3 px-3 font-mono text-slate-400">${e.email}</td>
+                                                <td class="py-3 px-3">
+                                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                                        <span>ንቁ (Active)</span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 `;
                 lucide.createIcons();
             } catch (err) {
                 container.innerHTML = `<div class="p-6 text-red-400">Failed to load cleaning teams: ${err.message}</div>`;
+            }
+        }
+
+        // ==========================================
+        // ADD EMPLOYEE MODAL & SUBMIT
+        // ==========================================
+        function openAddEmployeeModal() {
+            const container = document.getElementById('generic-modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="user-plus" class="w-4 h-4 text-emerald-400"></i>
+                                    <span>አዲስ ሰራተኛ መዝግብ</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400">ወደ ሜሽ ክሊኒንግ ሲስተም አዲስ ሰራተኛ ያስገቡ።</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+                        <form onsubmit="submitNewEmployee(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ሙሉ ስም *</label>
+                                <input type="text" id="new-emp-name" required placeholder="ለምሳሌ፡ ዮናስ አበበ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ኢሜይል (ለመግቢያ የሚያገለግል) *</label>
+                                <input type="email" id="new-emp-email" required placeholder="yonas@meash.com" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ስልክ ቁጥር *</label>
+                                <input type="tel" id="new-emp-phone" required placeholder="0911223344" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የስራ ድርሻ (Role) *</label>
+                                <select id="new-emp-role" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
+                                    <option value="cleaner">🧹 የፅዳት ባለሙያ (Cleaner)</option>
+                                    <option value="reception">📞 ሪሴፕሽን & ሽያጭ (Reception)</option>
+                                    <option value="sales">💼 የውጭ ሽያጭ (Outdoor Sales)</option>
+                                    <option value="finance">💰 ፋይናንስ & ሂሳብ (Finance)</option>
+                                    <option value="owner">👑 ዋና ስራ አስኪያጅ (Owner)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የይለፍ ቃል (Password) *</label>
+                                <input type="password" id="new-emp-password" required minlength="6" placeholder="ቢያንስ 6 ፊደላት" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
+                            </div>
+                            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
+                                <button type="submit" id="btn-save-emp" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center gap-1.5">
+                                    <span>መዝግብ</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function submitNewEmployee(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-emp');
+            btn.disabled = true;
+            btn.innerText = 'በመመዝገብ ላይ...';
+
+            const payload = {
+                name: document.getElementById('new-emp-name').value.trim(),
+                email: document.getElementById('new-emp-email').value.trim(),
+                phone: document.getElementById('new-emp-phone').value.trim(),
+                role: document.getElementById('new-emp-role').value,
+                password: document.getElementById('new-emp-password').value,
+            };
+
+            try {
+                const res = await apiFetch('/api/employees', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert('✅ አዲሱ ሰራተኛ በተሳካ ሁኔታ ተመዝግቧል!');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት: ' + (data.message || 'ሰራተኛውን መመዝገብ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'መዝግብ';
+            }
+        }
+
+        // ==========================================
+        // CREATE CLEANING TEAM MODAL & SUBMIT
+        // ==========================================
+        async function openCreateTeamModal() {
+            const container = document.getElementById('generic-modal-container');
+            const empRes = await apiFetch('/api/employees?role=cleaner');
+            const empData = await empRes.json();
+            const cleaners = Array.isArray(empData) ? empData : (empData.data || []);
+
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="plus-circle" class="w-4 h-4 text-cyan-400"></i>
+                                    <span>አዲስ የፅዳት ቡድን ፍጠር</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400">አዲስ የመስክ ቡድን፣ መሪ እና መኪና ይመድቡ።</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+                        <form onsubmit="submitNewTeam(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የቡድን ስም *</label>
+                                <input type="text" id="new-team-name" required placeholder="ለምሳሌ፡ Team Delta" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የቡድን መሪ (Team Leader)</label>
+                                <select id="new-team-leader" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
+                                    <option value="">-- መሪ ይምረጡ (አማራጭ) --</option>
+                                    ${cleaners.map(c => `<option value="${c.id}">${c.name} (${c.phone || c.email})</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የቡድኑ ስልክ</label>
+                                <input type="tel" id="new-team-phone" placeholder="0911000004" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የመኪና ታርጋ ቁጥር</label>
+                                <input type="text" id="new-team-plate" placeholder="3-B12345 AA" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ተጨማሪ ማስታወሻ</label>
+                                <textarea id="new-team-notes" rows="2" placeholder="የቡድኑ ዞን ወይም ተጨማሪ መረጃ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white"></textarea>
+                            </div>
+                            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
+                                <button type="submit" id="btn-save-team" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl flex items-center gap-1.5">
+                                    <span>ፍጠር</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function submitNewTeam(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-team');
+            btn.disabled = true;
+            btn.innerText = 'በመፍጠር ላይ...';
+
+            const leaderId = document.getElementById('new-team-leader').value;
+            const payload = {
+                team_name: document.getElementById('new-team-name').value.trim(),
+                team_leader_id: leaderId ? parseInt(leaderId) : null,
+                phone: document.getElementById('new-team-phone').value.trim() || null,
+                vehicle_plate: document.getElementById('new-team-plate').value.trim() || null,
+                notes: document.getElementById('new-team-notes').value.trim() || null,
+            };
+
+            try {
+                const res = await apiFetch('/api/teams', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert('✅ የፅዳት ቡድኑ በተሳካ ሁኔታ ተፈጥሯል!');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት: ' + (data.message || 'ቡድኑን መፍጠር አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'ፍጠር';
             }
         }
 
@@ -2508,10 +2830,17 @@
                                         <span class="text-slate-400 block text-[11px]">Schedule & መገኛ</span>
                                         <strong class="text-white">${o.eth_appointment_date || o.appointment_date} (${o.appointment_time_slot})</strong>
                                         <p class="text-slate-400 text-[11px]">📍 ${o.address || o.customer?.address}</p>
-                                        <button onclick="closeModal(); openInAppLiveRideMap(${o.id}, ${o.latitude || 9.010}, ${o.longitude || 38.761}, '${(o.customer?.full_name || 'ውድ ደንበኛ').replace(/'/g, "\\'")}', '${(o.customer?.phone || '').replace(/'/g, "\\'")}', '${(o.address || o.customer?.address || 'Addis Ababa').replace(/'/g, "\\'")}', '${(o.assigned_team?.team_name || 'የፅዳት ቡድን').replace(/'/g, "\\'")}', ${o.assigned_team?.current_latitude || 9.025}, ${o.assigned_team?.current_longitude || 38.746});" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/90 border border-cyan-500/40 text-cyan-300 font-bold text-xs hover:bg-cyan-900 transition-colors">
-                                            <i data-lucide="navigation-2" class="w-3.5 h-3.5 text-cyan-400"></i>
-                                            <span>የቀጥታ ካርታ እይ (In-App Ride Map)</span>
-                                        </button>
+                                        ${(o.latitude && o.longitude) ? `
+                                            <button onclick="closeModal(); openInAppLiveRideMap(${o.id}, ${o.latitude}, ${o.longitude}, '${(o.customer?.full_name || 'ውድ ደንበኛ').replace(/'/g, "\\'")}', '${(o.customer?.phone || '').replace(/'/g, "\\'")}', '${(o.address || o.customer?.address || 'Addis Ababa').replace(/'/g, "\\'")}', '${(o.assigned_team?.team_name || 'የፅዳት ቡድን').replace(/'/g, "\\'")}', ${o.assigned_team?.current_latitude || 9.025}, ${o.assigned_team?.current_longitude || 38.746});" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/90 border border-cyan-500/40 text-cyan-300 font-bold text-xs hover:bg-cyan-900 transition-colors">
+                                                <i data-lucide="navigation-2" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                                <span>የቀጥታ ካርታ እይ (In-App Ride Map)</span>
+                                            </button>
+                                        ` : `
+                                            <div class="mt-2 text-slate-400 text-[11px] flex items-center gap-1">
+                                                <i data-lucide="map-pin-off" class="w-3.5 h-3.5 text-slate-500"></i>
+                                                <span>ካርታ አልመረጠም (የጽሁፍ አድራሻ ብቻ)</span>
+                                            </div>
+                                        `}
                                     </div>
                                 </div>
 
@@ -2539,6 +2868,10 @@
 
                             <div class="flex justify-end gap-2 pt-4 border-t border-slate-800 mt-4">
                                 ${o.order_status !== 'completed' && o.order_status !== 'cancelled' ? `
+                                    <button onclick="closeModal(); confirmAndAssignOrder(${o.id});" class="px-4 py-2 bg-blue-950/80 hover:bg-blue-900 border border-blue-500/40 text-blue-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
+                                        <i data-lucide="truck" class="w-4 h-4 text-blue-400"></i>
+                                        <span>🚐 ቡድን መድብ (Assign Team)</span>
+                                    </button>
                                     <button onclick="closeModal(); openPostponeOrderModal(${o.id}, '${o.order_number}', '${o.customer?.full_name}');" class="px-4 py-2 bg-amber-950/70 hover:bg-amber-900 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
                                         <i data-lucide="calendar-clock" class="w-4 h-4 text-amber-400"></i>
                                         <span>📅 ቀጠሮ አስተላልፍ (Postpone)</span>
@@ -2562,10 +2895,14 @@
         let activeInAppMap = null;
 
         function openInAppLiveRideMap(orderId, custLat, custLng, custName, custPhone, address, teamName = 'Team Alpha', teamLat = 9.025, teamLng = 38.746) {
+            if (!custLat || !custLng || isNaN(parseFloat(custLat)) || isNaN(parseFloat(custLng))) {
+                alert('ይህ ደንበኛ የቀጥታ GPS ካርታ አልመረጠም፤ አድራሻው በጽሁፍ ብቻ ነው::');
+                return;
+            }
             const container = document.getElementById('generic-modal-container');
             
-            custLat = parseFloat(custLat) || 9.010;
-            custLng = parseFloat(custLng) || 38.761;
+            custLat = parseFloat(custLat);
+            custLng = parseFloat(custLng);
             teamLat = parseFloat(teamLat) || 9.025;
             teamLng = parseFloat(teamLng) || 38.746;
 
@@ -2767,25 +3104,43 @@
             const container = document.getElementById('generic-modal-container');
             const res = await apiFetch('/api/teams');
             const data = await res.json();
-            const teams = data.data || [];
+            const teams = Array.isArray(data) ? data : (data.data || []);
 
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-6 shadow-2xl">
-                        <h3 class="text-base font-bold text-white mb-4">የፅዳት ቡድን መድብ</h3>
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                <i data-lucide="truck" class="w-4 h-4 text-cyan-400"></i>
+                                <span>የፅዳት ቡድን መድብ</span>
+                            </h3>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white font-bold">&times;</button>
+                        </div>
                         <div class="space-y-3">
-                            <label class="block text-xs text-slate-400">የመስክ ቡድን ይምረጡ</label>
-                            <select id="assign-team-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                                ${teams.map(t => `<option value="${t.id}">${t.team_name} (${t.leader?.name || 'Leader'})</option>`).join('')}
-                            </select>
-                            <div class="flex justify-end gap-2 pt-3">
-                                <button onclick="closeModal()" class="px-3 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">ሰርዝ</button>
-                                <button onclick="submitTeamAssignment(${orderId})" class="px-4 py-2 bg-cyan-600 text-white text-xs font-bold rounded-xl">አረጋግጥ እና ስምሪት ስጥ</button>
-                            </div>
+                            <label class="block text-xs text-slate-400 font-semibold">የመስክ ቡድን ይምረጡ</label>
+                            ${teams.length === 0 ? `
+                                <div class="p-3 rounded-xl bg-amber-950/50 border border-amber-500/30 text-amber-300 text-xs">
+                                    እስካሁን ምንም የተመዘገበ ቡድን የለም።
+                                </div>
+                                <button onclick="closeModal(); openCreateTeamModal();" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl">
+                                    + አዲስ ቡድን ፍጠር
+                                </button>
+                            ` : `
+                                <select id="assign-team-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                                    ${teams.map(t => `<option value="${t.id}">${t.team_name} (${t.leader?.name || 'Leader'} - 📞 ${t.phone || t.leader?.phone || 'N/A'})</option>`).join('')}
+                                </select>
+                                <div class="flex justify-end gap-2 pt-3">
+                                    <button onclick="closeModal()" class="px-3.5 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">ሰርዝ</button>
+                                    <button onclick="submitTeamAssignment(${orderId})" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5">
+                                        <span>አረጋግጥ እና ስምሪት ስጥ</span>
+                                    </button>
+                                </div>
+                            `}
                         </div>
                     </div>
                 </div>
             `;
+            lucide.createIcons();
         }
 
         async function submitTeamAssignment(orderId) {

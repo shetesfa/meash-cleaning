@@ -227,8 +227,13 @@ class PublicWebsiteController extends Controller
             ];
         }
 
-        $custLat = $order->latitude ? (float)$order->latitude : ($order->customer?->latitude ? (float)$order->customer->latitude : 9.0108);
-        $custLng = $order->longitude ? (float)$order->longitude : ($order->customer?->longitude ? (float)$order->customer->longitude : 38.7616);
+        $custLat = $order->latitude !== null ? (float)$order->latitude : null;
+        $custLng = $order->longitude !== null ? (float)$order->longitude : null;
+
+        $customerLocation = ($custLat !== null && $custLng !== null) ? [
+            'latitude' => $custLat,
+            'longitude' => $custLng,
+        ] : null;
 
         return response()->json([
             'success' => true,
@@ -236,6 +241,7 @@ class PublicWebsiteController extends Controller
             'order' => [
                 'order_number' => $order->order_number,
                 'customer_name' => $order->customer->full_name,
+                'address' => $order->address,
                 'subcity' => $order->subcity,
                 'status' => $order->order_status,
                 'payment_status' => $order->payment_status,
@@ -247,10 +253,7 @@ class PublicWebsiteController extends Controller
                 'total' => (float) $order->total,
                 'team_assigned' => $order->assignedTeam ? $order->assignedTeam->team_name : 'Pending Assignment',
                 'team_location' => $teamLocation,
-                'customer_location' => [
-                    'latitude' => $custLat,
-                    'longitude' => $custLng,
-                ],
+                'customer_location' => $customerLocation,
                 'items' => $order->items,
             ],
         ]);
