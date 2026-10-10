@@ -78,8 +78,20 @@ class OutdoorSalesController extends Controller
 
         $visits = $query->latest('visit_date')->paginate($request->input('per_page', 25));
 
-        $visits->getCollection()->transform(function ($visit) {
+        $daysAm = [
+            0 => 'እሁድ',
+            1 => 'ሰኞ',
+            2 => 'ማክሰኞ',
+            3 => 'ረቡዕ',
+            4 => 'ሐሙስ',
+            5 => 'አርብ',
+            6 => 'ቅዳሜ',
+        ];
+
+        $visits->getCollection()->transform(function ($visit) use ($daysAm) {
+            $carbonDate = Carbon::parse($visit->visit_date);
             $eth = EthiopianCalendarService::toEthiopian($visit->visit_date);
+            $visit->day_of_week_am = $daysAm[$carbonDate->dayOfWeek] ?? '';
             $visit->eth_visit_date = $eth['formatted_am'];
             $visit->eth_visit_en = $eth['formatted_en'];
             if ($visit->next_followup_date) {

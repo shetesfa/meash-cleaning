@@ -148,7 +148,7 @@ class FinanceController extends Controller
 
     public function profitReport(Request $request): JsonResponse
     {
-        $period = $request->input('period', 'this_month'); // today, this_week, this_month, this_year, all_time
+        $period = $request->input('period', 'all_time'); // all_time, this_month, this_week, today, this_year
 
         $orderQuery = Order::query();
         $paymentQuery = Payment::query();
@@ -170,6 +170,13 @@ class FinanceController extends Controller
         } elseif ($period === 'this_month') {
             $start = Carbon::now()->startOfMonth();
             $end = Carbon::now()->endOfMonth();
+            $orderQuery->whereBetween('appointment_date', [$start, $end]);
+            $paymentQuery->whereBetween('payment_date', [$start, $end]);
+            $expenseQuery->whereBetween('date', [$start, $end]);
+            $customerQuery->whereBetween('created_at', [$start, $end]);
+        } elseif ($period === 'this_year') {
+            $start = Carbon::now()->startOfYear();
+            $end = Carbon::now()->endOfYear();
             $orderQuery->whereBetween('appointment_date', [$start, $end]);
             $paymentQuery->whereBetween('payment_date', [$start, $end]);
             $expenseQuery->whereBetween('date', [$start, $end]);

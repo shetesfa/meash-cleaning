@@ -16,6 +16,21 @@ class CustomerCareController extends Controller
 {
     public function followups(Request $request): JsonResponse
     {
+        // Auto-create pending followups for completed orders that don't have one yet
+        $completedOrdersWithoutFollowup = \App\Models\Order::where('order_status', 'completed')
+            ->whereDoesntHave('followups')
+            ->get();
+        
+        foreach ($completedOrdersWithoutFollowup as $cOrder) {
+            Followup::create([
+                'order_id' => $cOrder->id,
+                'customer_id' => $cOrder->customer_id,
+                'due_date' => Carbon::today(),
+                'status' => 'pending',
+                'notes' => 'Post-service follow-up call',
+            ]);
+        }
+
         $query = Followup::with([
             'order:id,order_number,total,appointment_date',
             'order.items.service:id,name_en,name_am',
@@ -26,8 +41,11 @@ class CustomerCareController extends Controller
         if ($request->input('filter') === 'due_today') {
             $query->whereDate('due_date', '<=', Carbon::today())
                   ->where('status', 'pending');
-        } elseif ($status = $request->input('status')) {
-            $query->where('status', $status);
+        } elseif ($request->has('status') && $request->input('status') !== 'all') {
+            $query->where('status', $request->input('status'));
+        } elseif (!$request->has('status') && !$request->has('filter')) {
+            // Default to pending follow-up queue only so completed ones leave the queue!
+            $query->where('status', 'pending');
         }
 
         $followups = $query->latest('due_date')->paginate(20);
@@ -43,42 +61,48 @@ class CustomerCareController extends Controller
 
     public function updateFollowup(Request $request, Followup $followup): JsonResponse
     {
-        $validated = $request->validate([
-            'status' => 'required|string|in:pending,contacted,no_answer,completed',
-            'outcome' => 'nullable|string|in:satisfied,dissatisfied,complaint,requested_service',
-            'notes' => 'nullable|string',
-        ]);
-
-        $validated['handled_by_user_id'] = $request->user()->id;
-        if ($validated['status'] === 'completed') {
-            $validated['completed_at'] = now();
+        $status = $request->input('status', 'completed');
+        $rating = $request->input('rating') ?? $request->input('satisfaction_score') ?? 5;
+        $notes = $request->input('notes') ?? $request->input('feedback_notes');
+        
+        $outcome = $request->input('outcome');
+        if (!$outcome) {
+            $outcome = ($rating >= 4) ? 'satisfied' : (($rating <= 2) ? 'complaint' : 'satisfied');
         }
 
-        $followup->update($validated);
+        $followup->update([
+            'status' => 'completed',
+            'outcome' => $outcome,
+            'notes' => $notes,
+            'handled_by_user_id' => $request->user()?->id,
+            'completed_at' => now(),
+        ]);
 
-        // If customer expressed satisfaction, record a 5-star feedback
-        if ($validated['outcome'] === 'satisfied') {
-            Feedback::create([
-                'order_id' => $followup->order_id,
-                'customer_id' => $followup->customer_id,
-                'rating' => 5,
-                'comment' => $validated['notes'] ?? 'Customer expressed complete satisfaction during follow-up call.',
-                'source' => 'phone',
-            ]);
-        } elseif ($validated['outcome'] === 'complaint') {
+        // Record feedback into customer's profile history
+        Feedback::create([
+            'order_id' => $followup->order_id,
+            'customer_id' => $followup->customer_id,
+            'rating' => (int) $rating,
+            'comment' => $notes ?: 'Customer feedback recorded via post-service follow-up call.',
+            'source' => 'phone',
+            'is_approved' => true,
+        ]);
+
+        if ($outcome === 'complaint' || $rating <= 2) {
             Complaint::create([
                 'complaint_number' => Complaint::generateNextNumber(),
                 'order_id' => $followup->order_id,
                 'customer_id' => $followup->customer_id,
                 'category' => 'followup_escalation',
-                'description' => $validated['notes'] ?? 'Customer raised concern during follow-up call.',
+                'description' => $notes ?: 'Customer raised concern during follow-up call.',
                 'priority' => 'high',
                 'status' => 'new',
             ]);
         }
 
         return response()->json([
-            'message' => 'Follow-up recorded successfully',
+            'success' => true,
+            'message' => 'የክትትል ጥሪው እና የደንበኛው አስተያየት በተሳካ ሁኔታ ተመዝግቧል!',
             'followup' => $followup->fresh(['customer', 'order']),
         ]);
     }
