@@ -2101,6 +2101,7 @@ class TelegramController extends Controller
         $customer = Customer::where('phone', $phone)->first();
         if (!$customer) {
             $customer = Customer::create([
+                'customer_code' => Customer::generateNextCode(),
                 'phone' => $phone,
                 'full_name' => $customerName,
                 'address' => $address,

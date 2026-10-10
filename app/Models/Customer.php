@@ -37,6 +37,15 @@ class Customer extends Model
         'consent_timestamp' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function ($customer) {
+            if (empty($customer->customer_code)) {
+                $customer->customer_code = static::generateNextCode();
+            }
+        });
+    }
+
     public function getGoogleMapsUrlAttribute(): ?string
     {
         if ($this->latitude && $this->longitude) {
