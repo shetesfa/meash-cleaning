@@ -75,23 +75,30 @@ class TeamController extends Controller
 
         $today = Carbon::today();
 
+        // 1. Active / Today & Immediate Assigned Jobs for this team
         $todayJobs = (clone $jobsQuery)
-            ->whereDate('appointment_date', $today)
-            ->whereIn('order_status', ['assigned', 'on_the_way', 'cleaning'])
+            ->where(function ($q) use ($today) {
+                $q->whereDate('appointment_date', '<=', $today)
+                  ->orWhereNull('appointment_date');
+            })
+            ->whereIn('order_status', ['assigned', 'on_the_way', 'cleaning', 'confirmed', 'new', 'pending_confirmation'])
+            ->orderBy('appointment_date')
             ->orderBy('appointment_time_slot')
             ->get();
 
+        // 2. Completed jobs today
         $completedToday = (clone $jobsQuery)
             ->whereDate('appointment_date', $today)
             ->where('order_status', 'completed')
             ->latest('completed_at')
             ->get();
 
+        // 3. Upcoming future appointments for this team
         $upcomingJobs = (clone $jobsQuery)
             ->whereDate('appointment_date', '>', $today)
-            ->whereIn('order_status', ['confirmed', 'assigned'])
+            ->whereIn('order_status', ['confirmed', 'assigned', 'new'])
             ->orderBy('appointment_date')
-            ->limit(10)
+            ->limit(20)
             ->get();
 
         $formatJob = function ($order) {

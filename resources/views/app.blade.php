@@ -1396,7 +1396,10 @@
                     const teamParam = activeCleaningTeamId ? `?team_id=${activeCleaningTeamId}` : '';
                     const res = await apiFetch('/api/teams/my-jobs' + teamParam);
                     const data = await res.json();
-                    jobs = data.today_jobs || [];
+                    const todayList = data.today_jobs || [];
+                    const upcomingList = data.upcoming_jobs || [];
+                    // Merge so that all assigned jobs for this team are immediately visible
+                    jobs = [...todayList, ...upcomingList.filter(u => !todayList.some(t => t.id === u.id))];
                     currentTeam = data.team;
                     teamsList = data.teams_list || [];
 
@@ -1910,7 +1913,7 @@
                                                         ${formatTimeSlot(o.appointment_time_slot)}
                                                     </span>
                                                 </td>
-                                                <td class="p-4 text-slate-300 font-semibold">${o.assigned_team?.team_name || '<span class="text-red-400">ሰራተኛ አልተመደበም</span>'}</td>
+                                                <td class="p-4 text-slate-300 font-semibold">${(o.assigned_team?.team_name || o.assignedTeam?.team_name) ? `<span class="px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-bold text-xs inline-flex items-center gap-1 shadow-sm">🧹 ${(o.assigned_team?.team_name || o.assignedTeam?.team_name).split('(')[0]}</span>` : '<span class="px-2.5 py-1 rounded-xl bg-amber-950/60 text-amber-400 border border-amber-900/60 text-[11px] font-bold">ቡድን አልተመደበም</span>'}</td>
                                                 <td class="p-4 font-extrabold text-white">${parseFloat(o.total).toLocaleString()} ETB</td>
                                                 <td class="p-4">
                                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${o.order_status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}">
@@ -2519,6 +2522,18 @@
                                 </div>
                             </div>
 
+                            <!-- Assign Cleaning Team directly upon creation -->
+                            <div class="p-3 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-1">
+                                <label class="block text-xs font-semibold text-emerald-400 mb-1">👥 የፅዳት ቡድን መድብ (Assign Cleaning Team)</label>
+                                <select id="mo-team-id" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-bold cursor-pointer">
+                                    <option value="">-- በኋላ መድብ (Unassigned) --</option>
+                                    <option value="1">Team Alpha (Solomon Kebede - Upholstery & Carpet)</option>
+                                    <option value="2">Team Bravo (Rotary Scrub & Mattress)</option>
+                                    <option value="3">Team Delta (Facade & Post-Construction)</option>
+                                    <option value="4">team 1 (Company Shared Car)</option>
+                                </select>
+                            </div>
+
                             <div class="flex justify-end gap-2 pt-2">
                                 <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">ሰርዝ</button>
                                 <button type="submit" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg">ትዕዛዝ መዝግብ</button>
@@ -2666,6 +2681,7 @@
 
         async function submitAdminOrder(e) {
             e.preventDefault();
+            const teamVal = document.getElementById('mo-team-id')?.value;
             const payload = {
                 customer_name: document.getElementById('mo-cust-name').value,
                 customer_phone: document.getElementById('mo-cust-phone').value,
@@ -2673,6 +2689,7 @@
                 address: document.getElementById('mo-address').value,
                 appointment_date: document.getElementById('mo-date').value,
                 appointment_time_slot: document.getElementById('mo-slot').value,
+                assigned_team_id: teamVal ? parseInt(teamVal) : null,
                 items: [
                     {
                         item_name: document.getElementById('mo-item-name').value,

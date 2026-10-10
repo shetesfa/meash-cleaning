@@ -58,12 +58,16 @@ class SyncController extends Controller
                     // Create Order
                     DB::transaction(function () use ($payload, $uuid, $request, &$synced) {
                         $orderNumber = Order::generateNextNumber();
+                        $assignedTeam = !empty($payload['assigned_team_id']) ? $payload['assigned_team_id'] : null;
+                        $orderStatus = $assignedTeam ? 'assigned' : ($payload['order_status'] ?? 'new');
+
                         $order = Order::create([
                             'order_number' => $orderNumber,
                             'customer_id' => $payload['customer_id'],
                             'created_by_user_id' => $request->user()?->id,
+                            'assigned_team_id' => $assignedTeam,
                             'source' => $payload['source'] ?? 'phone',
-                            'order_status' => $payload['order_status'] ?? 'new',
+                            'order_status' => $orderStatus,
                             'payment_status' => 'unpaid',
                             'appointment_date' => $payload['appointment_date'],
                             'appointment_time_slot' => $payload['appointment_time_slot'] ?? 'morning',

@@ -29,13 +29,17 @@ class OrderController extends Controller
             'items.service:id,name_en,name_am,code',
         ]);
 
-        // Cleaners only see their assigned team's jobs
+        // Cleaners or explicit team inspection
         $user = $request->user();
-        if ($user && $user->isCleaner()) {
+        if ($teamId = $request->input('team_id')) {
+            $query->where('assigned_team_id', $teamId);
+        } elseif ($user && $user->isCleaner()) {
             $teamIds = DB::table('team_members')
                 ->where('user_id', $user->id)
                 ->pluck('cleaning_team_id');
-            $query->whereIn('assigned_team_id', $teamIds);
+            if ($teamIds->isNotEmpty()) {
+                $query->whereIn('assigned_team_id', $teamIds);
+            }
         }
 
         // Search
