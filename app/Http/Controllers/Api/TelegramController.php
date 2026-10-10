@@ -136,7 +136,7 @@ class TelegramController extends Controller
                     "6️⃣ 🏢 <b>የቢሮ እና የተቋማት ፅዳት:</b> በኮንትራት ወይም በፕሮፎርማ\n\n" .
                     "📱 <b>ማህበራዊ ሚዲያ (Social Media):</b>\n" .
                     "• 📢 ቴሌግራም ቻናል: @meashdeepcleaning\n" .
-                    "• 📱 TikTok: @meashdeepcleaning\n" .
+                    "• 📱 TikTok: @meashcleaningsolition\n" .
                     "• 👥 Facebook: facebook.com/meashclean\n" .
                     "• 📸 Instagram: @meashdeepcleaning\n\n" .
                     "📞 <b>የሪሴፕሽን ስልክ:</b> 0970075509\n" .
@@ -149,7 +149,7 @@ class TelegramController extends Controller
                     ],
                     [
                         ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashdeepcleaning'],
+                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
                     ],
                     [
                         ['text' => '👥 Facebook', 'url' => 'https://facebook.com/meashclean'],
@@ -195,7 +195,7 @@ class TelegramController extends Controller
                     ],
                     [
                         ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashdeepcleaning'],
+                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
                     ],
                 ],
                 'keywords' => ['services', 'pricing', 'rates', 'አገልግሎቶች', 'ዋጋ', 'ዝርዝር', 'ስንት', 'ምን'],
@@ -211,7 +211,7 @@ class TelegramController extends Controller
                     "<i>(Meash Cleaning Solution Social Channels & Contacts)</i>\n\n" .
                     "የስራዎቻችንን ቪዲዮዎች፣ ቅናሾችና ጠቃሚ የፅዳት ምክሮችን ለማግኘት ይከተሉን:\n\n" .
                     "• 📢 <b>ቴሌግራም ቻናል:</b> https://t.me/meashdeepcleaning\n" .
-                    "• 📱 <b>TikTok:</b> https://tiktok.com/@meashdeepcleaning\n" .
+                    "• 📱 <b>TikTok:</b> https://tiktok.com/@meashcleaningsolition\n" .
                     "• 👥 <b>Facebook:</b> https://facebook.com/meashclean\n" .
                     "• 📸 <b>Instagram:</b> https://instagram.com/@meashdeepcleaning\n\n" .
                     "📞 <b>የሪሴፕሽን ስልክ መስመሮች:</b>\n" .
@@ -222,7 +222,7 @@ class TelegramController extends Controller
                 'buttons' => [
                     [
                         ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashdeepcleaning'],
+                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
                     ],
                     [
                         ['text' => '👥 Facebook', 'url' => 'https://facebook.com/meashclean'],
@@ -586,7 +586,7 @@ class TelegramController extends Controller
                     ],
                     [
                         ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashdeepcleaning'],
+                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
                     ],
                     [
                         ['text' => '👥 Facebook', 'url' => 'https://facebook.com/meashclean'],
@@ -988,7 +988,7 @@ class TelegramController extends Controller
                     [['text' => '📅 ቦታ ያስይዙ | Book Now', 'callback_data' => 'menu_book']],
                     [
                         ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashdeepcleaning'],
+                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
                     ]
                 ]
             ]),

@@ -608,7 +608,7 @@
       <p class="mb-1.5"><a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="hover:text-teal flex items-center gap-1.5"><i data-lucide="bot" class="w-3.5 h-3.5"></i> Telegram Bot</a></p>
       <p class="mb-1.5"><span class="hover:text-teal">Instagram</span></p>
       <p class="mb-1.5"><span class="hover:text-teal">Facebook</span></p>
-      <p><span class="hover:text-teal">TikTok</span></p>
+      <p><a href="https://www.tiktok.com/@meashcleaningsolition" target="_blank" class="hover:text-teal flex items-center gap-1.5"><i data-lucide="video" class="w-3.5 h-3.5"></i> TikTok (@meashcleaningsolition)</a></p>
     </div>
   </div>
   <div class="max-w-6xl mx-auto px-6 mt-10 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-white/40">
