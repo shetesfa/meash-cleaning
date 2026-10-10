@@ -2107,11 +2107,11 @@
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-slate-400 font-bold mb-1">የላኪ ስልክ (የባለቤቱ / የድርጅቱ)</label>
-                                    <input type="text" id="direct-sms-sender" value="0943854325" readonly class="w-full bg-slate-800/60 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-cyan-400 font-mono font-bold cursor-not-allowed">
+                                    <input type="text" id="direct-sms-sender" value="0970075509" readonly class="w-full bg-slate-800/60 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-cyan-400 font-mono font-bold cursor-not-allowed">
                                 </div>
                                 <div>
                                     <label class="block text-slate-300 font-bold mb-1">የተቀባይ ደንበኛ ስልክ *</label>
-                                    <input type="text" id="direct-sms-phone" required value="${cleanPhone || '0922998581'}" placeholder="0922998581" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono focus:border-cyan-500 focus:outline-none">
+                                    <input type="text" id="direct-sms-phone" required value="${cleanPhone || '0970075509'}" placeholder="0970075509" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono focus:border-cyan-500 focus:outline-none">
                                 </div>
                             </div>
 
@@ -2146,7 +2146,7 @@
                             </div>
 
                             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
-                                <a id="btn-direct-sim-sms" href="sms:${cleanPhone || '0922998581'}?body=ሰላም ${encodeURIComponent(safeName)}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
+                                <a id="btn-direct-sim-sms" href="sms:${cleanPhone || '0970075509'}?body=ሰላም ${encodeURIComponent(safeName)}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
                                     <span>📱 በ iPhone SIM ላክ</span>
                                 </a>
                                 <div class="flex items-center gap-2">
@@ -2166,7 +2166,7 @@
         }
 
         function updateDirectSmsSimLink() {
-            const phone = document.getElementById('direct-sms-phone')?.value || '0922998581';
+            const phone = document.getElementById('direct-sms-phone')?.value || '0970075509';
             const msg = document.getElementById('direct-sms-message')?.value || '';
             const cleanP = phone.replace(/\D+/g, '');
             const link = document.getElementById('btn-direct-sim-sms');
@@ -2730,7 +2730,7 @@
             const custPhone = (payload.customer_phone || '').replace(/\D+/g, '');
             const cleanPhone = custPhone;
             const slotAm = payload.appointment_time_slot === 'morning' ? 'ጥዋት' : 'ከሰዓት';
-            const msg = `ሰላም ${custName}፣ የሜሽ ክሊኒንግ የፅዳት ቀጠሮዎ በትክክል ተመዝግቧል። ቀን፡ ${EC.formatEth(payload.appointment_date)} (${slotAm})። በሰዓቱ እንገኛለን! ስልክ፡ 0943854325`;
+            const msg = `ሰላም ${custName}፣ የሜሽ ክሊኒንግ የፅዳት ቀጠሮዎ በትክክል ተመዝግቧል። ቀን፡ ${EC.formatEth(payload.appointment_date)} (${slotAm})። በሰዓቱ እንገኛለን! ስልክ፡ 0970075509`;
             const qrData = encodeURIComponent(`SMSTO:${cleanPhone}:${msg}`);
 
             container.innerHTML = `
@@ -3803,7 +3803,7 @@
                                 <div>
                                     <label class="block text-slate-400 mb-1">የባለቤቱ ስልክ ቁጥር (ይፋዊ መላኪያ)</label>
                                     <div class="flex items-center gap-2">
-                                        <input type="text" id="setting-owner-phone" value="0943854325" class="w-full bg-slate-800 border border-cyan-500/50 rounded-xl px-3 py-2 text-cyan-300 font-mono font-bold">
+                                        <input type="text" id="setting-owner-phone" value="0970075509" class="w-full bg-slate-800 border border-cyan-500/50 rounded-xl px-3 py-2 text-cyan-300 font-mono font-bold">
                                         <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-[10px] whitespace-nowrap">✓ ተረጋግጧል</span>
                                     </div>
                                 </div>
@@ -3811,17 +3811,6 @@
                                 <div>
                                     <label class="block text-slate-400 mb-1">የድርጅት ስም</label>
                                     <input type="text" value="Meash Cleaning Solution (ሜሽ የፅዳት አገልግሎት)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold" readonly>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-slate-400 mb-1">TIN ቁጥር</label>
-                                        <input type="text" value="0098765432" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-300 font-mono" readonly>
-                                    </div>
-                                    <div>
-                                        <label class="block text-slate-400 mb-1">አድራሻ</label>
-                                        <input type="text" value="ቦሌ፣ አዲስ አበባ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-slate-300" readonly>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3843,12 +3832,12 @@
                             <div class="space-y-3 text-xs">
                                 <div>
                                     <label class="block text-slate-400 mb-1">የሙከራ ተቀባይ ስልክ ቁጥሮች (ለቡድን በኮማ ይለዩ)</label>
-                                    <input type="text" id="setting-test-recipient" oninput="updateOwnerSimSmsLink()" value="0943854325, 0922998581" placeholder="0943854325, 0922998581" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold">
+                                    <input type="text" id="setting-test-recipient" oninput="updateOwnerSimSmsLink()" value="0970075509" placeholder="0970075509" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold">
                                 </div>
 
                                 <div>
                                     <label class="block text-slate-400 mb-1">የመልዕክት ይዘት (Test Message)</label>
-                                    <textarea id="setting-test-msg" oninput="updateOwnerSimSmsLink()" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white">ሰላም! ይህ ከሜሽ ክሊኒንግ (0943854325) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው። ሲስተሙ በትክክል እየሰራ ነው።</textarea>
+                                    <textarea id="setting-test-msg" oninput="updateOwnerSimSmsLink()" rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white">ሰላም! ይህ ከሜሽ ክሊኒንግ (0970075509) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው። ሲስተሙ በትክክል እየሰራ ነው።</textarea>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-2 pt-1">
@@ -3856,7 +3845,7 @@
                                         <i data-lucide="send" class="w-3.5 h-3.5"></i>
                                         <span>በሲስተም SMS ላክ</span>
                                     </button>
-                                    <a id="btn-owner-direct-sim-sms" href="sms:0943854325,0922998581?&body=ሰላም! ይህ ከሜሽ ክሊኒንግ (0943854325) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው።" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
+                                    <a id="btn-owner-direct-sim-sms" href="sms:0970075509?&body=ሰላም! ይህ ከሜሽ ክሊኒንግ (0970075509) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው።" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
                                         <span>📱 በ iPhone SIM ላክ</span>
                                     </a>
                                 </div>
@@ -3864,7 +3853,7 @@
                                 <!-- Large High-Resolution Mobile QR Code Scanner -->
                                 <div class="mt-3 p-4 rounded-2xl bg-slate-800/90 border border-slate-700 flex flex-col items-center gap-3 text-center">
                                     <div class="w-52 h-52 sm:w-60 sm:h-60 bg-white p-3 rounded-2xl shrink-0 flex items-center justify-center shadow-2xl ring-4 ring-emerald-500/20">
-                                        <img id="qr-sim-sms" src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=SMSTO:0943854325,0922998581:ሰላም!%20ይህ%20ከሜሽ%20ክሊኒንግ%20(0943854325)%20የተላከ%20ይፋዊ%20የሙከራ%20ኤስኤምኤስ%20ነው።" alt="SMS QR" class="w-full h-full object-contain">
+                                        <img id="qr-sim-sms" src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=SMSTO:0970075509:ሰላም!%20ይህ%20ከሜሽ%20ክሊኒንግ%20(0970075509)%20የተላከ%20ይፋዊ%20የሙከራ%20ኤስኤምኤስ%20ነው።" alt="SMS QR" class="w-full h-full object-contain">
                                     </div>
                                     <div class="text-xs text-slate-300">
                                         <p class="font-bold text-white flex items-center justify-center gap-1.5 text-sm">
@@ -3963,7 +3952,7 @@
         }
 
         function updateOwnerSimSmsLink() {
-            const rawPhones = document.getElementById('setting-test-recipient')?.value || '0943854325, 0922998581';
+            const rawPhones = document.getElementById('setting-test-recipient')?.value || '0970075509';
             const msg = document.getElementById('setting-test-msg')?.value || '';
             const phoneList = rawPhones.split(/[,;\s]+/).map(p => p.trim().replace(/\D+/g, '')).filter(p => p.length >= 9);
             const joinedPhones = phoneList.join(',');
@@ -5010,10 +4999,8 @@
                                         </div>
                                     </div>
                                     <div class="text-[11px] text-slate-600 mt-2 space-y-0.5">
-                                        <p>📍 አድራሻ፡ ቦሌ ክፍለ ከተማ፣ አዲስ አበባ፣ ኢትዮጵያ</p>
-                                        <p>📞 ስልክ፡ <strong>0943854325</strong> / 0911000003</p>
-                                        <p>🌐 ድረ-ገጽ፡ https://meash-cleaning.et | Email: info@meash.et</p>
-                                        <p>🆔 የግብር ከፋይ መለያ (TIN): <strong>0098765432</strong></p>
+                                        <p>📞 ስልክ፡ <strong>0970075509</strong></p>
+                                        <p>🌐 ቴሌግራም ቻናል፡ <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashdeepcleaning</a></p>
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -5143,7 +5130,6 @@
                                             <span class="text-[9px] font-black uppercase tracking-wider">MEASH CLEANING</span>
                                             <span class="text-[8px] font-bold">★ OFFICIAL STAMP ★</span>
                                             <span class="text-[14px] font-black text-blue-800 my-0.5">ሜሽ</span>
-                                            <span class="text-[7px] font-mono font-bold">TIN: 0098765432</span>
                                             <span class="text-[8px] font-extrabold uppercase">APPROVED</span>
                                         </div>
                                     </div>
@@ -5227,11 +5213,11 @@
 
         function updateProformaSmsQr() {
             const profNum = document.getElementById('prof-ref-badge')?.innerText?.replace('Ref: ', '').trim() || 'MSH-PRF-1000';
-            const phone = document.getElementById('prof-phone')?.value || '0912121212';
+            const phone = document.getElementById('prof-phone')?.value || '0970075509';
             const org = document.getElementById('prof-org-name')?.value || 'ደንበኛ';
             const grand = document.getElementById('prof-grand-total')?.innerText || '';
             const cleanP = phone.replace(/\D+/g, '');
-            const msg = `ሰላም ${org}፣ የሜሽ ክሊኒንግ ፕሮፎርማ (${profNum}) ተዘጋጅቷል። ጠቅላላ ክፍያ፡ ${grand}። ለበለጠ መረጃ፡ 0943854325`;
+            const msg = `ሰላም ${org}፣ የሜሽ ክሊኒንግ ፕሮፎርማ (${profNum}) ተዘጋጅቷል። ጠቅላላ ክፍያ፡ ${grand}። ለበለጠ መረጃ፡ 0970075509`;
 
             const qr = document.getElementById('prof-sms-qr');
             if (qr) {

@@ -53,7 +53,7 @@ class TelegramController extends Controller
 
             $update = $request->all();
 
-            // 1. Handle Inline Query (@meash_cleaning_solution_bot <query>)
+            // 1. Handle Inline Query (@meashdeepcleaning_solution_bot <query>)
             if (isset($update['inline_query'])) {
                 $this->handleInlineQuery($update['inline_query']);
                 return response()->json(['status' => 'inline_handled']);
@@ -84,7 +84,7 @@ class TelegramController extends Controller
     }
 
     /**
-     * Handles Telegram Inline Mode query (@meash_cleaning_solution_bot <query>)
+     * Handles Telegram Inline Mode query (@meashdeepcleaning_solution_bot <query>)
      */
     public function handleInlineQuery(array $inlineQuery): void
     {
@@ -121,7 +121,7 @@ class TelegramController extends Controller
             [
                 'id' => 'meash_all_in_one',
                 'title' => '🌟 ሜሽ የፅዳት አገልግሎት | Meash Cleaning Solution',
-                'description' => '🛋 6ቱ አገልግሎቶች | 📅 ቦታ ማስያዣ | 📱 ሶሻል ሚዲያ | 📞 0900103183',
+                'description' => '🛋 6ቱ አገልግሎቶች | 📅 ቦታ ማስያዣ | 📱 ሶሻል ሚዲያ | 📞 0970075509',
                 'thumbnail_url' => 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=240&h=240&fit=crop',
                 'message_text' => "✨ <b>ሜሽ የፅዳት አገልግሎት | MEASH CLEANING SOLUTION</b>\n" .
                     "💎 <b>ጥራት ያለው ፅዳት:: ንፁህ:: አስተማማኝ::</b>\n" .
@@ -135,11 +135,11 @@ class TelegramController extends Controller
                     "5️⃣ 🏠 <b>የመኖሪያ ቤት ጥልቅ ፅዳት:</b> ከ 2,500 ብር ጀምሮ\n" .
                     "6️⃣ 🏢 <b>የቢሮ እና የተቋማት ፅዳት:</b> በኮንትራት ወይም በፕሮፎርማ\n\n" .
                     "📱 <b>ማህበራዊ ሚዲያ (Social Media):</b>\n" .
-                    "• 📢 ቴሌግራም ቻናል: @meash_cleaning\n" .
-                    "• 📱 TikTok: @meash_cleaning\n" .
+                    "• 📢 ቴሌግራም ቻናል: @meashdeepcleaning\n" .
+                    "• 📱 TikTok: @meashdeepcleaning\n" .
                     "• 👥 Facebook: facebook.com/meashclean\n" .
-                    "• 📸 Instagram: @meash_cleaning\n\n" .
-                    "📞 <b>የሪሴፕሽን ስልክ:</b> 0900103183 / 0970075550\n" .
+                    "• 📸 Instagram: @meashdeepcleaning\n\n" .
+                    "📞 <b>የሪሴፕሽን ስልክ:</b> 0970075509\n" .
                     "📍 <b>አድራሻ:</b> አዲስ አበባ፣ ሃያት አደባባይ ተስፉ ሞል ፊትለፊት\n\n" .
                     "ቦታ ለማስያዝ ወይም ለመደወል ከታች ያሉትን አማራጮች ይጫኑ 👇",
                 'buttons' => [
@@ -148,15 +148,15 @@ class TelegramController extends Controller
                         ['text' => '🧹 አገልግሎቶች | Services', 'switch_inline_query_current_chat' => 'አገልግሎቶች'],
                     ],
                     [
-                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meash_cleaning'],
-                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meash_cleaning'],
+                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashdeepcleaning'],
                     ],
                     [
                         ['text' => '👥 Facebook', 'url' => 'https://facebook.com/meashclean'],
-                        ['text' => '📸 Instagram', 'url' => 'https://instagram.com/meash_cleaning'],
+                        ['text' => '📸 Instagram', 'url' => 'https://instagram.com/@meashdeepcleaning'],
                     ],
                     [
-                        ['text' => '📞 ሪሴፕሽን ደውሉ (0900103183)', 'url' => "https://t.me/{$this->botUsername}?start=contact"],
+                        ['text' => '📞 ሪሴፕሽን ደውሉ (0970075509)', 'url' => "https://t.me/{$this->botUsername}?start=contact"],
                     ],
                 ],
                 'keywords' => ['all', 'official', 'about', 'meash', 'ሜሽ', 'ፅዳት', 'አዲስ አበባ', 'ዋጋ', 'ስልክ', 'ሶሻል', 'social', 'booking'],
@@ -187,15 +187,15 @@ class TelegramController extends Controller
                     "   • ከግንባታ በኋላ፣ የኩሽና ቅባት፣ ሽንት ቤት ሳኒታይዜሽንና ወለል ፖሊሽ\n\n" .
                     "6️⃣ 🏢 <b>የቢሮ እና የተቋማት ፅዳት</b>\n" .
                     "   • በስምምነት እና በወርሃዊ ኮንትራት (ከህጋዊ ደረሰኝ ጋር)\n\n" .
-                    "📞 <b>የሪሴፕሽን ስልክ:</b> 0900103183 / 0970075550",
+                    "📞 <b>የሪሴፕሽን ስልክ:</b> 0970075509",
                 'buttons' => [
                     [
                         $bookingButton,
                         ['text' => '📞 ሪሴፕሽን ደውሉ', 'url' => "https://t.me/{$this->botUsername}?start=contact"],
                     ],
                     [
-                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meash_cleaning'],
-                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meash_cleaning'],
+                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashdeepcleaning'],
                     ],
                 ],
                 'keywords' => ['services', 'pricing', 'rates', 'አገልግሎቶች', 'ዋጋ', 'ዝርዝር', 'ስንት', 'ምን'],
@@ -205,31 +205,31 @@ class TelegramController extends Controller
             [
                 'id' => 'meash_social_media',
                 'title' => '📱 ሶሻል ሚዲያ እና የሪሴፕሽን አድራሻ | Social Media & Hotline',
-                'description' => 'ቴሌግራም ቻናል | TikTok | Facebook | Instagram | ስልክ 0900103183',
+                'description' => 'ቴሌግራም ቻናል | TikTok | Facebook | Instagram | ስልክ 0970075509',
                 'thumbnail_url' => 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=240&h=240&fit=crop',
                 'message_text' => "📱 <b>የሜሽ የፅዳት አገልግሎት ማህበራዊ ሚዲያ እና የመገናኛ አድራሻዎች</b>\n" .
                     "<i>(Meash Cleaning Solution Social Channels & Contacts)</i>\n\n" .
                     "የስራዎቻችንን ቪዲዮዎች፣ ቅናሾችና ጠቃሚ የፅዳት ምክሮችን ለማግኘት ይከተሉን:\n\n" .
-                    "• 📢 <b>ቴሌግራም ቻናል:</b> https://t.me/meash_cleaning\n" .
-                    "• 📱 <b>TikTok:</b> https://tiktok.com/@meash_cleaning\n" .
+                    "• 📢 <b>ቴሌግራም ቻናል:</b> https://t.me/meashdeepcleaning\n" .
+                    "• 📱 <b>TikTok:</b> https://tiktok.com/@meashdeepcleaning\n" .
                     "• 👥 <b>Facebook:</b> https://facebook.com/meashclean\n" .
-                    "• 📸 <b>Instagram:</b> https://instagram.com/meash_cleaning\n\n" .
+                    "• 📸 <b>Instagram:</b> https://instagram.com/@meashdeepcleaning\n\n" .
                     "📞 <b>የሪሴፕሽን ስልክ መስመሮች:</b>\n" .
-                    "• ዋና ስልክ: <b>0900103183</b>\n" .
-                    "• ተጨማሪ ስልክ: <b>0970075550</b>\n\n" .
+                    "• ዋና ስልክ: <b>0970075509</b>\n" .
+                    "• ተጨማሪ ስልክ: <b>0970075509</b>\n\n" .
                     "🕒 <b>የስራ ሰዓት:</b>ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00\n" .
                     "📍 <b>አድራሻ:</b> አዲስ አበባ፣ ሃያት አደባባይ ተስፉ ሞል ፊትለፊት",
                 'buttons' => [
                     [
-                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meash_cleaning'],
-                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meash_cleaning'],
+                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashdeepcleaning'],
                     ],
                     [
                         ['text' => '👥 Facebook', 'url' => 'https://facebook.com/meashclean'],
-                        ['text' => '📸 Instagram', 'url' => 'https://instagram.com/meash_cleaning'],
+                        ['text' => '📸 Instagram', 'url' => 'https://instagram.com/@meashdeepcleaning'],
                     ],
                     [
-                        ['text' => '📞 ሪሴፕሽን: 0900103183', 'url' => "https://t.me/{$this->botUsername}?start=contact"],
+                        ['text' => '📞 ሪሴፕሽን: 0970075509', 'url' => "https://t.me/{$this->botUsername}?start=contact"],
                         $bookingButton,
                     ],
                 ],
@@ -251,13 +251,13 @@ class TelegramController extends Controller
                     "4. 🪟 የመስታወት ፅዳት\n" .
                     "5. 🏠 የመኖሪያ ቤት ጥልቅ ፅዳት\n" .
                     "6. 🏢 የቢሮ እና የተቋማት ፅዳት\n\n" .
-                    "ወዲያውኑ ቦታ ለማስያዝ ከታች ያለውን ቁልፍ ይጫኑ ወይም በ 0900103183 ይደውሉ::",
+                    "ወዲያውኑ ቦታ ለማስያዝ ከታች ያለውን ቁልፍ ይጫኑ ወይም በ 0970075509 ይደውሉ::",
                 'buttons' => [
                     [
                         $bookingButton,
                     ],
                     [
-                        ['text' => '📞 በስልክ ለማዘዝ (0900103183)', 'url' => "https://t.me/{$this->botUsername}?start=contact"],
+                        ['text' => '📞 በስልክ ለማዘዝ (0970075509)', 'url' => "https://t.me/{$this->botUsername}?start=contact"],
                         ['text' => '🧹 አገልግሎቶች', 'switch_inline_query_current_chat' => 'አገልግሎቶች'],
                     ],
                 ],
@@ -279,8 +279,8 @@ class TelegramController extends Controller
                     "4. በባለሁለት ሞተር ማሽን የቆሸሸውን ውሃ ሙሉ በሙሉ መምጠጥ\n\n" .
                     "💰 <b>ዋጋ:</b> 350 ብር / በአንድ መቀመጫ ወንበር\n" .
                     "✨ ለቆዳ (Leather)፣ ለቬልቬት፣ ለጨርቅና ለተለያዩ ሶፋዎች ፍቱን::\n\n" .
-                    "📞 <b>ስልክ:</b> 0900103183\n" .
-                    "🤖 <b>ቦት:</b> @meash_cleaning_solution_bot",
+                    "📞 <b>ስልክ:</b> 0970075509\n" .
+                    "🤖 <b>ቦት:</b> @meashdeepcleaning_solution_bot",
                 'buttons' => [
                     [
                         $bookingButton,
@@ -303,8 +303,8 @@ class TelegramController extends Controller
                     "• ደስ የሚል መዓዛ ያላቸው የተፈጥሮ ማጽጃዎች\n" .
                     "• በቦታው ላይ የማጠብ ወይም ወስደን አድርቀን የማምጣት አማራጭ\n\n" .
                     "💰 <b>ዋጋ:</b> 80 ብር / በአንድ ካሬ ሜትር\n\n" .
-                    "📞 <b>ስልክ:</b> 0900103183\n" .
-                    "🤖 <b>ቦት:</b> @meash_cleaning_solution_bot",
+                    "📞 <b>ስልክ:</b> 0970075509\n" .
+                    "🤖 <b>ቦት:</b> @meashdeepcleaning_solution_bot",
                 'buttons' => [
                     [
                         $bookingButton,
@@ -327,8 +327,8 @@ class TelegramController extends Controller
                     "• የላብ፣ የውሃ እና የቆሻሻ ምልክቶችን ያስለቅቃል\n" .
                     "• የሆስፒታል ደረጃውን የጠበቀ ፀረ-ባክቴሪያ ሳኒታይዜሽን\n\n" .
                     "💰 <b>ዋጋ:</b> 600 ብር / በአንድ ፍራሽ (ኪንግ፤ ኩዊን፤ ነጠላ)\n\n" .
-                    "📞 <b>ስልክ:</b> 0900103183\n" .
-                    "🤖 <b>ቦት:</b> @meash_cleaning_solution_bot",
+                    "📞 <b>ስልክ:</b> 0970075509\n" .
+                    "🤖 <b>ቦት:</b> @meashdeepcleaning_solution_bot",
                 'buttons' => [
                     [
                         $bookingButton,
@@ -351,8 +351,8 @@ class TelegramController extends Controller
                     "• የረንዳ መስታወት፣ የሻወር ካቢኔ እና የበር መስታወት\n" .
                     "• ለከፍተኛ ህንፃዎች ደህንነታቸው የተጠበቀ ዘመናዊ መወጣጫዎች\n\n" .
                     "💰 <b>ዋጋ:</b> 70 ብር / በአንድ ካሬ ሜትር\n\n" .
-                    "📞 <b>ስልክ:</b> 0900103183\n" .
-                    "🤖 <b>ቦት:</b> @meash_cleaning_solution_bot",
+                    "📞 <b>ስልክ:</b> 0970075509\n" .
+                    "🤖 <b>ቦት:</b> @meashdeepcleaning_solution_bot",
                 'buttons' => [
                     [
                         $bookingButton,
@@ -376,8 +376,8 @@ class TelegramController extends Controller
                     "• የመታጠቢያ ቤትና ሽንት ቤት ፀረ-ጀርም ሳኒታይዜሽን\n" .
                     "• የወለል ማሽነሪ ፖሊሽ እና አጠቃላይ ንፅህና\n\n" .
                     "💰 <b>ዋጋ:</b> ከ 2,500 ብር ጀምሮ\n\n" .
-                    "📞 <b>ስልክ:</b> 0900103183\n" .
-                    "🤖 <b>ቦት:</b> @meash_cleaning_solution_bot",
+                    "📞 <b>ስልክ:</b> 0970075509\n" .
+                    "🤖 <b>ቦት:</b> @meashdeepcleaning_solution_bot",
                 'buttons' => [
                     [
                         $bookingButton,
@@ -399,11 +399,11 @@ class TelegramController extends Controller
                     "• ሳምንታዊ እና ወርሃዊ መደበኛ የኮንትራት ስምምነቶች\n" .
                     "• የደንብ ልብስ የለበሱ የታመኑና የሰለጠኑ ቋሚ ሰራተኞች\n" .
                     "• ህጋዊ ደረሰኝ (VAT/TOT) እና የክፍያ ስምምነት ሰነዶች\n\n" .
-                    "📞 <b>ስልክ:</b> 0900103183 / 0970075550\n" .
-                    "🤖 <b>ቦት:</b> @meash_cleaning_solution_bot",
+                    "📞 <b>ስልክ:</b> 0970075509\n" .
+                    "🤖 <b>ቦት:</b> @meashdeepcleaning_solution_bot",
                 'buttons' => [
                     [
-                        ['text' => '📞 ፕሮፎርማ ይጠይቁ (0900103183)', 'url' => "https://t.me/{$this->botUsername}?start=contact"],
+                        ['text' => '📞 ፕሮፎርማ ይጠይቁ (0970075509)', 'url' => "https://t.me/{$this->botUsername}?start=contact"],
                     ],
                 ],
                 'keywords' => ['office', 'commercial', 'corporate', 'hotel', 'bank', 'ቢሮ', 'ተቋም', 'ድርጅት'],
@@ -421,13 +421,13 @@ class TelegramController extends Controller
                     "• <code>/services</code> - የ 6ቱ አገልግሎቶችና የዋጋ ዝርዝር\n" .
                     "• <code>/book</code> - በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዣ\n" .
                     "• <code>/status ORD-...</code> - የትዕዛዝ ሁኔታ መከታተያ\n" .
-                    "• <code>/contact</code> - የሪሴፕሽን ስልክ አድራሻ (0900103183)\n" .
+                    "• <code>/contact</code> - የሪሴፕሽን ስልክ አድራሻ (0970075509)\n" .
                     "• <code>/help</code> - ይህንን መመሪያ ያሳያል\n\n" .
-                    "በተጨማሪም በማንኛውም ቻት ውስጥ <code>@meash_cleaning_solution_bot</code> ብለው በመጻፍ አገልግሎቶችን ለወዳጅዎ ማጋራት ይችላሉ!",
+                    "በተጨማሪም በማንኛውም ቻት ውስጥ <code>@meashdeepcleaning_solution_bot</code> ብለው በመጻፍ አገልግሎቶችን ለወዳጅዎ ማጋራት ይችላሉ!",
                 'buttons' => [
                     [
                         ['text' => '🚀 ቦቱን ክፈት | Open Bot', 'url' => "https://t.me/{$this->botUsername}?start=help"],
-                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meash_cleaning'],
+                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
                     ],
                 ],
                 'keywords' => ['help', 'commands', 'guide', 'መመሪያ', 'ትዕዛዝ', 'እርዳታ'],
@@ -585,12 +585,12 @@ class TelegramController extends Controller
                         ['text' => '⭐ አስተያየት ይስጡ | Feedback', 'callback_data' => 'menu_feedback'],
                     ],
                     [
-                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meash_cleaning'],
-                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meash_cleaning'],
+                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashdeepcleaning'],
                     ],
                     [
                         ['text' => '👥 Facebook', 'url' => 'https://facebook.com/meashclean'],
-                        ['text' => '📸 Instagram', 'url' => 'https://instagram.com/meash_cleaning'],
+                        ['text' => '📸 Instagram', 'url' => 'https://instagram.com/@meashdeepcleaning'],
                     ],
                     [
                         ['text' => '📲 ለሌሎች አጋራ | Share', 'switch_inline_query_current_chat' => ''],
@@ -624,7 +624,7 @@ class TelegramController extends Controller
             // General guidance
             $this->telegramApi('sendMessage', [
                 'chat_id' => $chatId,
-                'text' => "ጤና ይስጥልኝ! ሜሽ የፅዳት አገልግሎት ነው::\n\nቀጠሮ ለመያዝ፣ አገልግሎቶችን ለማየት ወይም ሪሴፕሽን ለማነጋገር /start ብለው ይላኩ::\n\nለበለጠ መረጃ: 0900103183 / 0970075550\nቦት: @meash_cleaning_solution_bot",
+                'text' => "ጤና ይስጥልኝ! ሜሽ የፅዳት አገልግሎት ነው::\n\nቀጠሮ ለመያዝ፣ አገልግሎቶችን ለማየት ወይም ሪሴፕሽን ለማነጋገር /start ብለው ይላኩ::\n\nለበለጠ መረጃ: 0970075509\nቦት: @meashdeepcleaning_solution_bot",
                 'parse_mode' => 'HTML',
                 'reply_markup' => json_encode([
                     'inline_keyboard' => [
@@ -794,7 +794,7 @@ class TelegramController extends Controller
             "📅 <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$ethAppt['formatted_am']}) ጠዋት 2:00\n" .
             "💰 <b>የተገመተ ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
             "📩 <b>የማረጋገጫ ኤስኤምኤስ (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
-            "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0900103183) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! 🙏";
+            "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! 🙏";
 
         $this->telegramApi('sendMessage', [
             'chat_id' => $chatId,
@@ -804,10 +804,10 @@ class TelegramController extends Controller
                 'inline_keyboard' => [
                     [
                         ['text' => '📋 የትዕዛዝ ሁኔታ | Status', 'callback_data' => 'menu_status'],
-                        ['text' => '📞 ሪሴፕሽን (0900103183)', 'callback_data' => 'menu_contact'],
+                        ['text' => '📞 ሪሴፕሽን (0970075509)', 'callback_data' => 'menu_contact'],
                     ],
                     [
-                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meash_cleaning'],
+                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
                     ]
                 ]
             ]),
@@ -870,13 +870,13 @@ class TelegramController extends Controller
         } elseif ($data === 'menu_feedback') {
             $this->telegramApi('sendMessage', [
                 'chat_id' => $chatId,
-                'text' => "⭐ <b>የደንበኞች አስተያየት እና ደረጃ:</b>\n\nየተሰጠዎት የፅዳት አገልግሎት እንዴት ነበር? አስተያየትዎን ወይም ደረጃዎን ከ 1 እስከ 5 ኮከብ በ 0900103183 ይንገሩን:: የእርስዎ እርካታ የኩባንያችን ዋና አላማ ነው!",
+                'text' => "⭐ <b>የደንበኞች አስተያየት እና ደረጃ:</b>\n\nየተሰጠዎት የፅዳት አገልግሎት እንዴት ነበር? አስተያየትዎን ወይም ደረጃዎን ከ 1 እስከ 5 ኮከብ በ 0970075509 ይንገሩን:: የእርስዎ እርካታ የኩባንያችን ዋና አላማ ነው!",
                 'parse_mode' => 'HTML',
             ]);
         } elseif ($data === 'menu_complaint') {
             $this->telegramApi('sendMessage', [
                 'chat_id' => $chatId,
-                'text' => "⚠ <b>ቅሬታ ማሳወቂያ እና አስቸኳይ ክትትል:</b>\n\nበተሰጠው አገልግሎት ላይ ያልተሟላ ነገር ካለ ወይም ቅሬታ ካለዎት ወዲያውኑ በ 0900103183 ይደውሉልን:: የቡድን መሪያችን በ 24 ሰዓት ውስጥ መጥቶ ያለምንም ተጨማሪ ክፍያ ዳግም እንዲፀዳ ይደረጋል!",
+                'text' => "⚠ <b>ቅሬታ ማሳወቂያ እና አስቸኳይ ክትትል:</b>\n\nበተሰጠው አገልግሎት ላይ ያልተሟላ ነገር ካለ ወይም ቅሬታ ካለዎት ወዲያውኑ በ 0970075509 ይደውሉልን:: የቡድን መሪያችን በ 24 ሰዓት ውስጥ መጥቶ ያለምንም ተጨማሪ ክፍያ ዳግም እንዲፀዳ ይደረጋል!",
                 'parse_mode' => 'HTML',
             ]);
         } elseif ($data === 'menu_start') {
@@ -902,7 +902,7 @@ class TelegramController extends Controller
         }
 
         $buttons[] = [
-            ['text' => '📞 በስልክ ለማዘዝ (0900103183)', 'callback_data' => 'menu_contact'],
+            ['text' => '📞 በስልክ ለማዘዝ (0970075509)', 'callback_data' => 'menu_contact'],
             ['text' => '🛋 አገልግሎቶች ዝርዝር', 'callback_data' => 'menu_services'],
         ];
 
@@ -913,7 +913,7 @@ class TelegramController extends Controller
             "2️⃣ 📱 <b>በቴሌግራም ሚኒ አፕ (Telegram Mini App):</b>\n" .
             "   ቀጥታ በስማርት ፎርም እቃዎችን መርጠው ዋጋውን እያዩ ማዘዝ ይችላሉ::\n\n" .
             "3️⃣ 📞 <b>በስልክ በቀጥታ ለማዘዝ:</b>\n" .
-            "   • 0900103183 ወይም 0970075550\n\n" .
+            "   • 0970075509 ወይም 0970075509\n\n" .
             "አሁኑኑ ለመጀመር ከታች ያለውን <b>'⚡ በቦቱ ቀጠሮ ያስይዙ'</b> የሚለውን ቁልፍ ይጫኑ 👇";
 
         $this->telegramApi('sendMessage', [
@@ -972,11 +972,11 @@ class TelegramController extends Controller
     {
         $msg = "📞 <b>የሜሽ የሪሴፕሽን ስልክ አድራሻ</b>\n" .
             "<i>(Customer Reception & Support Desk)</i>\n\n" .
-            "📱 <b>ዋና ስልክ:</b> 0900103183\n" .
-            "📱 <b>ተጨማሪ ስልክ:</b> 0970075550\n" .
+            "📱 <b>ዋና ስልክ:</b> 0970075509\n" .
+            "📱 <b>ተጨማሪ ስልክ:</b> 0970075509\n" .
             "🕒 <b>የስራ ሰዓት:</b>ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00\n" .
             "📍 <b>አድራሻ:</b> አዲስ አበባ፣ ሃያት አደባባይ ተስፉ ሞል ፊትለፊት\n\n" .
-            "🤖 <b>ኦፊሴላዊ ቦት:</b> @meash_cleaning_solution_bot\n" .
+            "🤖 <b>ኦፊሴላዊ ቦት:</b> @meashdeepcleaning_solution_bot\n" .
             "ጥያቄ፣ አስተያየት ወይም የቀጠሮ ማስተካከያ ካለዎት በማንኛውም ጊዜ ይደውሉልን!";
 
         $this->telegramApi('sendMessage', [
@@ -987,8 +987,8 @@ class TelegramController extends Controller
                 'inline_keyboard' => [
                     [['text' => '📅 ቦታ ያስይዙ | Book Now', 'callback_data' => 'menu_book']],
                     [
-                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meash_cleaning'],
-                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meash_cleaning'],
+                        ['text' => '📢 ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+                        ['text' => '📱 TikTok', 'url' => 'https://tiktok.com/@meashdeepcleaning'],
                     ]
                 ]
             ]),
@@ -1010,7 +1010,7 @@ class TelegramController extends Controller
         if (!$order) {
             $this->telegramApi('sendMessage', [
                 'chat_id' => $chatId,
-                'text' => "❌ ይቅርታ፣ በትዕዛዝ ቁጥር <code>{$orderCode}</code> የተመዘገበ መረጃ አልተገኘም:: እባክዎን ቁጥሩን አስተካክለው ይሞክሩ ወይም በ 0900103183 ይደውሉ::",
+                'text' => "❌ ይቅርታ፣ በትዕዛዝ ቁጥር <code>{$orderCode}</code> የተመዘገበ መረጃ አልተገኘም:: እባክዎን ቁጥሩን አስተካክለው ይሞክሩ ወይም በ 0970075509 ይደውሉ::",
                 'parse_mode' => 'HTML',
             ]);
             return;
@@ -1034,7 +1034,7 @@ class TelegramController extends Controller
             "🔄 <b>የትዕዛዝ ሁኔታ:</b> <b>{$statusAm}</b>\n" .
             "🚐 <b>የተመደበው ቡድን:</b> {$teamName}\n" .
             "💰 <b>ጠቅላላ ዋጋ:</b> " . number_format($order->total_amount, 2) . " ብር\n\n" .
-            "ማንኛውም ጥያቄ ካለዎት በ 0900103183 ይደውሉልን::";
+            "ማንኛውም ጥያቄ ካለዎት በ 0970075509 ይደውሉልን::";
 
         $this->telegramApi('sendMessage', [
             'chat_id' => $chatId,
@@ -1051,9 +1051,9 @@ class TelegramController extends Controller
             "• <code>/services</code> - የአገልግሎቶች እና የዋጋ ዝርዝር\n" .
             "• <code>/book</code> - በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዣ\n" .
             "• <code>/status ORD-...</code> - የትዕዛዝ ሁኔታ መከታተያ\n" .
-            "• <code>/contact</code> - የሪሴፕሽን ስልክ አድራሻ (0900103183)\n" .
+            "• <code>/contact</code> - የሪሴፕሽን ስልክ አድራሻ (0970075509)\n" .
             "• <code>/help</code> - ይህንን መመሪያ ያሳያል\n\n" .
-            "እንዲሁም በማንኛውም የቴሌግራም ቻት ውስጥ <code>@meash_cleaning_solution_bot</code> ብለው በመጻፍ አገልግሎቶችን ለወዳጅዎ ማጋራት ይችላሉ!";
+            "እንዲሁም በማንኛውም የቴሌግራም ቻት ውስጥ <code>@meashdeepcleaning_solution_bot</code> ብለው በመጻፍ አገልግሎቶችን ለወዳጅዎ ማጋራት ይችላሉ!";
 
         $this->telegramApi('sendMessage', [
             'chat_id' => $chatId,
@@ -1199,7 +1199,7 @@ class TelegramController extends Controller
                     "📅 <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$order->appointment_time_slot}){$planTxt}\n" .
                     "📍 <b>አድራሻ:</b> {$order->address}\n" .
                     "💰 <b>የተገመተ ጠቅላላ ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
-                    "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0900103183) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! 🙏",
+                    "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! 🙏",
                 'parse_mode' => 'HTML',
             ]);
         }
@@ -2023,7 +2023,7 @@ class TelegramController extends Controller
             "📅 <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$ethAppt['formatted_am']}) {$timeSlotAm}\n" .
             "💰 <b>የተገመተ ጠቅላላ ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
             "📩 <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
-            "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0900103183) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! 🙏";
+            "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! 🙏";
 
         $actionButtons = [];
         if ($lat && $lng) {
@@ -2031,7 +2031,7 @@ class TelegramController extends Controller
         }
         $actionButtons[] = [
             ['text' => '📋 የትዕዛዝ ሁኔታ | Status', 'callback_data' => 'menu_status'],
-            ['text' => '📞 ሪሴፕሽን (0900103183)', 'callback_data' => 'menu_contact'],
+            ['text' => '📞 ሪሴፕሽን (0970075509)', 'callback_data' => 'menu_contact'],
         ];
         $actionButtons[] = [
             ['text' => '🚀 ዋና ማውጫ | Main Menu', 'callback_data' => 'menu_start'],
@@ -2209,7 +2209,7 @@ class TelegramController extends Controller
             "📅 <b>የቀጠሮ ቀን:</b> " . (is_string($order->appointment_date) ? $order->appointment_date : $order->appointment_date->format('Y-m-d')) . " ({$ethAppt['formatted_am']}) {$timeSlot}\n" .
             "💰 <b>የተገመተ ጠቅላላ ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
             "📩 <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
-            "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0900103183) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! 🙏";
+            "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! 🙏";
 
         $actionButtons = [];
         if ($lat && $lng) {
@@ -2217,7 +2217,7 @@ class TelegramController extends Controller
         }
         $actionButtons[] = [
             ['text' => '📋 የትዕዛዝ ሁኔታ | Status', 'callback_data' => 'menu_status'],
-            ['text' => '📞 ሪሴፕሽን (0900103183)', 'callback_data' => 'menu_contact'],
+            ['text' => '📞 ሪሴፕሽን (0970075509)', 'callback_data' => 'menu_contact'],
         ];
         $actionButtons[] = [
             ['text' => '🚀 ዋና ማውጫ | Main Menu', 'callback_data' => 'menu_start'],
@@ -2281,7 +2281,7 @@ class TelegramController extends Controller
             "⏰ <b>ሰዓት:</b> {$timeSlotAm}\n" .
             "━━━━━━━━━━━━━━━━━━━━\n" .
             "ለተፈጠረው መስተጓጎል ከልብ ይቅርታ እንጠይቃለን! የሜሽ የፅዳት ቡድን በተጠቀሰው አዲስ ሰዓት የሚገኝ ይሆናል::\n\n" .
-            "📞 <b>ለማንኛውም ጥያቄ ወይም ሰዓት ለማስተካከል:</b> 0900103183 / 0970075550";
+            "📞 <b>ለማንኛውም ጥያቄ ወይም ሰዓት ለማስተካከል:</b> 0970075509";
 
         $resp = $this->telegramApi('sendMessage', [
             'chat_id' => $chatId,
@@ -2291,7 +2291,7 @@ class TelegramController extends Controller
                 'inline_keyboard' => [
                     [
                         ['text' => '📋 የትዕዛዝ ሁኔታ | Status', 'callback_data' => "track_{$orderNo}"],
-                        ['text' => '📞 ሪሴፕሽን (0900103183)', 'callback_data' => 'menu_contact'],
+                        ['text' => '📞 ሪሴፕሽን (0970075509)', 'callback_data' => 'menu_contact'],
                     ],
                     [
                         ['text' => '🚀 ዋና ማውጫ | Main Menu', 'callback_data' => 'menu_start'],

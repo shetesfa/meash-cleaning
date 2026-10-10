@@ -193,7 +193,7 @@
         </div>
 
         <p class="text-center text-[11px] text-slate-500 pt-3 border-t border-slate-800/80">
-            ኦፊሴላዊ ቦት: <span class="text-cyan-400 font-bold">@meash_cleaning_solution_bot</span> | ስልክ: <a href="tel:0900103183" class="text-slate-300 font-bold hover:underline">0900103183</a>
+            ኦፊሴላዊ ቦት: <span class="text-cyan-400 font-bold">@meash_cleaning_solution_bot</span> | ቻናል: <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-cyan-400 font-bold hover:underline">@meashdeepcleaning</a> | ስልክ: <a href="tel:0970075509" class="text-slate-300 font-bold hover:underline">0970075509</a>
         </p>
     </div>
 

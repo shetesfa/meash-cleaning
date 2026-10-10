@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>Meash Cleaning Solution | ሜሽ ክሊኒንግ ሶሉሽን</title>
-<meta name="description" content="Meash Cleaning Solution — professional sofa, carpet, mattress & glass steam cleaning in Addis Ababa. Call 0900103183">
+<meta name="description" content="Meash Cleaning Solution — professional sofa, carpet, mattress & glass steam cleaning in Addis Ababa. Call 0970075509">
 <meta name="theme-color" content="#0B1220">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
@@ -133,8 +133,8 @@
           <span data-lang-block="am">ዋጋ ይመልከቱና ይያዙ</span><span data-lang-block="en">See Price &amp; Book</span>
           <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
         </a>
-        <a href="tel:0900103183" class="font-bold text-sm text-navy flex items-center gap-2 border-b-2 border-transparent hover:border-navy pb-0.5">
-          <i data-lucide="phone" class="w-4 h-4"></i> 0900 10 31 83
+        <a href="tel:0970075509" class="font-bold text-sm text-navy flex items-center gap-2 border-b-2 border-transparent hover:border-navy pb-0.5">
+          <i data-lucide="phone" class="w-4 h-4"></i> 0970 07 55 09
         </a>
       </div>
       <div class="mt-14 grid grid-cols-3 gap-6 border-t border-navy/10 pt-7 max-w-md">
@@ -492,7 +492,7 @@
         <div id="step-4" class="wizard-step hidden">
           <p class="font-semibold mb-3 text-sm"><span data-lang-block="am">የእርስዎ መረጃ</span><span data-lang-block="en">Your details</span></p>
           <input id="book-name" type="text" placeholder="Full name / ሙሉ ስም" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
-          <input id="book-phone" type="tel" value="0900103183" placeholder="Phone / ስልክ ቁጥር" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
+          <input id="book-phone" type="tel" placeholder="Phone / ስልክ ቁጥር (09...)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
 
           <!-- Recurring Subscription Plan Selector -->
           <div class="mb-4 p-3.5 rounded-xl bg-teal-light/50 border border-teal/20">
@@ -594,7 +594,7 @@
       <p class="text-white font-semibold mb-3">Company</p>
       <p class="mb-1.5"><a href="#process" class="hover:text-teal">About</a></p>
       <p class="mb-1.5"><a href="#reviews" class="hover:text-teal">Reviews</a></p>
-      <p class="mb-3"><a href="tel:0900103183" class="hover:text-teal">Contact</a></p>
+      <p class="mb-3"><a href="tel:0970075509" class="hover:text-teal">Contact (0970 07 55 09)</a></p>
       <!-- Staff & Admin Secure Access Button (Only in Footer) -->
       <button type="button" onclick="openStaffModal()" class="inline-flex items-center gap-1.5 text-xs text-teal hover:text-white transition cursor-pointer py-1 border-b border-teal/40 hover:border-white">
         <i data-lucide="lock" class="w-3.5 h-3.5 text-teal"></i>
@@ -604,7 +604,8 @@
     </div>
     <div>
       <p class="text-white font-semibold mb-3">Follow</p>
-      <p class="mb-1.5"><a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="hover:text-teal flex items-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram Bot</a></p>
+      <p class="mb-1.5"><a href="https://t.me/meashdeepcleaning" target="_blank" class="hover:text-teal flex items-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram Channel (@meashdeepcleaning)</a></p>
+      <p class="mb-1.5"><a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="hover:text-teal flex items-center gap-1.5"><i data-lucide="bot" class="w-3.5 h-3.5"></i> Telegram Bot</a></p>
       <p class="mb-1.5"><span class="hover:text-teal">Instagram</span></p>
       <p class="mb-1.5"><span class="hover:text-teal">Facebook</span></p>
       <p><span class="hover:text-teal">TikTok</span></p>
@@ -1055,7 +1056,7 @@
       feedback.className = 'mb-3 p-3 rounded-md bg-teal-light text-teal-dark text-xs font-bold';
       feedback.innerText = 'Location captured (±' + Math.round(pos.coords.accuracy) + 'm)';
     }, () => {
-      alert('Could not get location. Please type your address, or call 0900103183.');
+      alert('Could not get location. Please type your address, or call 0970075509.');
     }, { enableHighAccuracy: true, timeout: 10000 });
   }
 
@@ -1098,10 +1099,10 @@
         document.getElementById('success-booking-id').innerText = data.order_number || data.booking_id;
         if (window.lucide) lucide.createIcons();
       } else {
-        alert('Error: ' + (data.message || 'Could not create booking. Please call 0900103183.'));
+        alert('Error: ' + (data.message || 'Could not create booking. Please call 0970075509.'));
       }
     } catch (err) {
-      alert('Connection error: ' + err.message + ' — please call 0900103183 directly.');
+      alert('Connection error: ' + err.message + ' — please call 0970075509 directly.');
     } finally {
       btn.disabled = false;
     }
@@ -1109,7 +1110,7 @@
 
   function resetWizard(){
     document.getElementById('booking-form').reset();
-    document.getElementById('book-phone').value = '0900103183';
+    document.getElementById('book-phone').value = '';
     document.getElementById('step-success').classList.add('hidden');
     showWizardStep(1);
   }
@@ -1280,7 +1281,7 @@
         </div>`;
       }
     } catch (err) {
-      box.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-xs">የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ በ 0900103183 በቀጥታ ይደውሉ።</div>';
+      box.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-xs">የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ በ 0970075509 በቀጥታ ይደውሉ።</div>';
     }
   }
 
