@@ -169,8 +169,8 @@
                 <i data-lucide="chevron-down" id="role-chevron" class="w-3.5 h-3.5 text-slate-400 transition-transform"></i>
             </button>
 
-            <!-- Floating Role Menu -->
-            <div id="role-dropdown-menu" class="hidden absolute left-1/2 -translate-x-1/2 mt-2 w-56 sm:w-60 bg-slate-900 border border-slate-700 rounded-2xl p-1.5 shadow-2xl z-50 space-y-1">
+            <!-- Floating Role Menu with Cleaning Groups by Name -->
+            <div id="role-dropdown-menu" class="hidden absolute left-1/2 -translate-x-1/2 mt-2 w-64 sm:w-72 bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-2xl z-50 space-y-1 max-h-[85vh] overflow-y-auto">
                 <div class="px-3 py-1.5 border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     የስራ ዘርፍ ይቀይሩ (Switch Role)
                 </div>
@@ -184,17 +184,45 @@
                 <button type="button" onclick="switchRoleAccount('Bethlehem Tadesse', 'reception'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
                     <span class="flex items-center gap-2">
                         <span class="text-base">📞</span>
-                        <span>2. ሪሴፕሽን</span>
+                        <span>2. ሪሴፕሽን & ሽያጭ</span>
                     </span>
                     <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-900">reception</span>
                 </button>
-                <button type="button" onclick="switchRoleAccount('Solomon Kebede', 'cleaner'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
-                    <span class="flex items-center gap-2">
-                        <span class="text-base">🧹</span>
-                        <span>3. ጽዳት ሰራተኛ</span>
-                    </span>
-                    <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-900">cleaner</span>
-                </button>
+
+                <!-- Cleaning Groups Section by Name -->
+                <div class="px-3 pt-2.5 pb-1 border-t border-slate-800 flex items-center justify-between text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                    <span>🧹 የፅዳት ቡድኖች (Cleaning Groups)</span>
+                </div>
+                <div id="role-cleaning-teams-list" class="space-y-1">
+                    <button type="button" onclick="switchCleaningTeam(1, 'Team Alpha (Upholstery & Carpet)'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
+                        <span class="flex items-center gap-2 truncate">
+                            <span class="text-base shrink-0">🧹</span>
+                            <span class="truncate">Team Alpha (Solomon)</span>
+                        </span>
+                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800 shrink-0">Alpha</span>
+                    </button>
+                    <button type="button" onclick="switchCleaningTeam(2, 'Team Bravo (Rotary Scrub & Mattress)'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
+                        <span class="flex items-center gap-2 truncate">
+                            <span class="text-base shrink-0">🧹</span>
+                            <span class="truncate">Team Bravo (Rotary/Mattress)</span>
+                        </span>
+                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800 shrink-0">Bravo</span>
+                    </button>
+                    <button type="button" onclick="switchCleaningTeam(3, 'Team Delta (Facade & Post-Construction)'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
+                        <span class="flex items-center gap-2 truncate">
+                            <span class="text-base shrink-0">🧹</span>
+                            <span class="truncate">Team Delta (Post-Construction)</span>
+                        </span>
+                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800 shrink-0">Delta</span>
+                    </button>
+                    <button type="button" onclick="switchCleaningTeam(4, 'team 1'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
+                        <span class="flex items-center gap-2 truncate">
+                            <span class="text-base shrink-0">🧹</span>
+                            <span class="truncate">team 1</span>
+                        </span>
+                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800 shrink-0">Team 1</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -470,6 +498,8 @@
         let activeTab = 'dashboard';
         let deferredPwaPrompt = null;
         let activeConflict = null;
+        let activeCleaningTeamId = localStorage.getItem('meash_active_team_id') || 1;
+        let activeCleaningTeamName = localStorage.getItem('meash_active_team_name') || 'Team Alpha (Upholstery & Carpet)';
 
         function togglePasswordVisibility(id) {
             const input = document.getElementById(id);
@@ -773,6 +803,35 @@
             }
         });
 
+        async function switchCleaningTeam(teamId, teamName) {
+            activeCleaningTeamId = teamId;
+            activeCleaningTeamName = teamName;
+            localStorage.setItem('meash_active_team_id', teamId);
+            localStorage.setItem('meash_active_team_name', teamName);
+
+            currentUser.role = 'cleaner';
+            currentUser.name = teamName;
+            activeTab = 'cleaner_jobs';
+
+            // Update header badge text with selected team name
+            const badge = document.getElementById('header-role-badge');
+            if (badge) {
+                const shortName = teamName.split('(')[0].trim();
+                badge.innerText = `🧹 ${shortName}`;
+            }
+
+            const nameEl = document.getElementById('user-display-name');
+            if (nameEl) nameEl.innerText = currentUser.name;
+            const roleEl = document.getElementById('user-display-role');
+            if (roleEl) roleEl.innerText = 'CLEANER GROUP';
+            const avatarEl = document.getElementById('user-avatar-text');
+            if (avatarEl) avatarEl.innerText = '🧹';
+
+            renderNavigation();
+            await getAuthToken();
+            loadActiveTab();
+        }
+
         async function switchRole(role) {
             currentUser.role = role;
             if (role === 'owner') {
@@ -782,7 +841,7 @@
                 currentUser.name = 'ቤተልሔም ታደሰ (ሪሴፕሽን)';
                 activeTab = 'reception_desk';
             } else if (role === 'cleaner') {
-                currentUser.name = 'ሰለሞን ከበደ (ቡድን አልፋ)';
+                currentUser.name = activeCleaningTeamName || 'Team Alpha (Upholstery & Carpet)';
                 activeTab = 'cleaner_jobs';
             } else if (role === 'sales') {
                 currentUser.name = 'ዳንኤል ግርማ (የውጭ ሽያጭ)';
@@ -792,10 +851,11 @@
             // Update header badge text
             const badge = document.getElementById('header-role-badge');
             if (badge) {
+                const cleanerLabel = activeCleaningTeamName ? `🧹 ${activeCleaningTeamName.split('(')[0].trim()}` : '🧹 የፅዳት ቡድን';
                 const roleLabels = {
                     owner: '👑 ዋና ስራ አስኪያጅ',
                     reception: '📞 ሪሴፕሽን & ሽያጭ',
-                    cleaner: '🧹 የፅዳት ቡድን',
+                    cleaner: cleanerLabel,
                     sales: '💼 የውጭ ሽያጭ'
                 };
                 badge.innerText = roleLabels[role] || role;
@@ -1325,14 +1385,26 @@
         async function renderCleanerView(container) {
             try {
                 let jobs = [];
+                let currentTeam = null;
+                let teamsList = [];
+
                 // Check offline cached jobs first if available
                 const cached = await window.meashOffline.getAllItems('my_jobs');
                 if (cached && cached.length > 0 && !window.meashOffline.isOnline) {
                     jobs = cached;
                 } else {
-                    const res = await apiFetch('/api/teams/my-jobs');
+                    const teamParam = activeCleaningTeamId ? `?team_id=${activeCleaningTeamId}` : '';
+                    const res = await apiFetch('/api/teams/my-jobs' + teamParam);
                     const data = await res.json();
                     jobs = data.today_jobs || [];
+                    currentTeam = data.team;
+                    teamsList = data.teams_list || [];
+
+                    if (currentTeam && currentTeam.team_name) {
+                        activeCleaningTeamName = currentTeam.team_name;
+                        activeCleaningTeamId = currentTeam.id;
+                    }
+
                     // Cache into IndexedDB for offline access
                     if (window.meashOffline.db) {
                         window.meashOffline.cacheItems('my_jobs', jobs);
@@ -1341,13 +1413,23 @@
 
                 container.innerHTML = `
                     <div class="max-w-2xl mx-auto space-y-6">
-                        <div class="p-4 rounded-2xl bg-gradient-to-r from-cyan-900/60 to-blue-900/60 border border-cyan-500/30 flex items-center justify-between">
+                        <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-cyan-900/70 to-blue-900/70 border border-cyan-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
                             <div>
                                 <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">የመስክ አጽጂ ቡድን መከታተያ</span>
                                 <h2 class="text-xl font-black text-white">የዛሬ የስራ ዝርዝሮች</h2>
-                                <p class="text-xs text-cyan-300 font-semibold mt-0.5">🗓 ${EC.formatEth(new Date())} • Team Alpha (Solomon Kebede)</p>
+                                <p class="text-xs text-cyan-300 font-semibold mt-0.5">🗓 ${EC.formatEth(new Date())} • ${currentTeam?.team_name || activeCleaningTeamName}</p>
                             </div>
-                            <span class="px-3 py-1 rounded-xl bg-cyan-500/20 text-cyan-400 text-xs font-black">${jobs.length} ንቁ ስራዎች</span>
+                            <div class="flex items-center gap-2 self-start sm:self-auto">
+                                <div class="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-2xl border border-cyan-500/50 shadow">
+                                    <label class="text-[10px] font-bold text-slate-300 pl-1 shrink-0">ቡድን ቀይር፡</label>
+                                    <select onchange="switchCleaningTeam(this.value, this.options[this.selectedIndex].text)" class="bg-slate-800 border border-slate-700 text-cyan-300 font-bold text-xs rounded-xl px-2 py-1 cursor-pointer focus:outline-none max-w-[140px] truncate">
+                                        ${teamsList.map(t => `
+                                            <option value="${t.id}" ${(t.id == activeCleaningTeamId || (currentTeam && t.id == currentTeam.id)) ? 'selected' : ''}>${t.team_name}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                                <span class="px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-400 text-xs font-black shrink-0">${jobs.length} ንቁ ስራዎች</span>
+                            </div>
                         </div>
 
                         ${jobs.length === 0 ? `

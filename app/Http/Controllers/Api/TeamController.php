@@ -32,22 +32,36 @@ class TeamController extends Controller
     {
         $user = $request->user();
 
-        // Find which team this cleaner belongs to
-        $member = TeamMember::where('user_id', $user->id)->first();
-        $leaderTeam = CleaningTeam::where('team_leader_id', $user->id)->first();
+        // Allow explicit team selection (e.g. from UI team dropdown or role switcher)
+        $explicitTeamId = $request->query('team_id');
+        if ($explicitTeamId && CleaningTeam::where('id', $explicitTeamId)->exists()) {
+            $teamId = $explicitTeamId;
+        } else {
+            // Find which team this cleaner belongs to
+            $member = TeamMember::where('user_id', $user->id)->first();
+            $leaderTeam = CleaningTeam::where('team_leader_id', $user->id)->first();
+            $teamId = $member?->cleaning_team_id ?? $leaderTeam?->id;
+        }
 
-        $teamId = $member?->cleaning_team_id ?? $leaderTeam?->id;
+        if (!$teamId && ($user->isOwner() || $user->isReception())) {
+            // Default to first cleaning team for owner/reception inspection
+            $firstTeam = CleaningTeam::first();
+            $teamId = $firstTeam?->id;
+        }
 
-        if (!$teamId && !$user->isOwner() && !$user->isReception()) {
+        $allTeams = CleaningTeam::all(['id', 'team_name', 'phone', 'status']);
+
+        if (!$teamId) {
             return response()->json([
                 'team' => null,
+                'teams_list' => $allTeams,
                 'today_jobs' => [],
                 'upcoming_jobs' => [],
                 'completed_today' => [],
             ]);
         }
 
-        $team = $teamId ? CleaningTeam::find($teamId) : null;
+        $team = CleaningTeam::with(['leader:id,name,phone', 'members.user:id,name,phone'])->find($teamId);
 
         $jobsQuery = Order::query()->with([
             'customer:id,customer_code,full_name,phone,alt_phone,address,subcity,landmark',
@@ -89,6 +103,7 @@ class TeamController extends Controller
 
         return response()->json([
             'team' => $team,
+            'teams_list' => $allTeams,
             'today_jobs' => $todayJobs->map($formatJob),
             'completed_today' => $completedToday->map($formatJob),
             'upcoming_jobs' => $upcomingJobs->map($formatJob),
