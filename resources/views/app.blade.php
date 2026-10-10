@@ -2128,7 +2128,6 @@
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">የመልእክቱ ይዘት (SMS Message) *</label>
                                 <textarea id="direct-sms-message" oninput="updateDirectSmsSimLink()" required rows="3" placeholder="መልእክትዎን እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-500">ሰላም ${safeName}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!</textarea>
-                                <span class="text-[10px] text-slate-400 block mt-1">💡 በስልክዎ ላይ ሲሆኑ «በስልክህ SIM በነፃ ላክ» የሚለውን በመጫን ያለ ተጨማሪ ክፍያ መላክ ይችላሉ።</span>
                             </div>
 
                             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
@@ -3775,8 +3774,8 @@
 
                             <div class="space-y-3 text-xs">
                                 <div>
-                                    <label class="block text-slate-400 mb-1">የሙከራ ተቀባይ ደንበኛ ስልክ ቁጥር</label>
-                                    <input type="text" id="setting-test-recipient" oninput="updateOwnerSimSmsLink()" value="0922998581" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold">
+                                    <label class="block text-slate-400 mb-1">የሙከራ ተቀባይ ስልክ ቁጥሮች (ለቡድን በኮማ ይለዩ)</label>
+                                    <input type="text" id="setting-test-recipient" oninput="updateOwnerSimSmsLink()" value="0943854325, 0922998581" placeholder="0943854325, 0922998581" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold">
                                 </div>
 
                                 <div>
@@ -3789,22 +3788,21 @@
                                         <i data-lucide="send" class="w-3.5 h-3.5"></i>
                                         <span>በሲስተም SMS ላክ</span>
                                     </button>
-                                    <a id="btn-owner-direct-sim-sms" href="sms:0922998581?body=ሰላም! ይህ ከሜሽ ክሊኒንግ (0943854325) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው።" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
-                                        <span>📱 በስልክህ SIM በነፃ ላክ</span>
+                                    <a id="btn-owner-direct-sim-sms" href="sms:0943854325,0922998581?&body=ሰላም! ይህ ከሜሽ ክሊኒንግ (0943854325) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው።" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
+                                        <span>📱 በ iPhone SIM ላክ</span>
                                     </a>
                                 </div>
 
                                 <!-- Large High-Resolution Mobile QR Code Scanner -->
                                 <div class="mt-3 p-4 rounded-2xl bg-slate-800/90 border border-slate-700 flex flex-col items-center gap-3 text-center">
                                     <div class="w-52 h-52 sm:w-60 sm:h-60 bg-white p-3 rounded-2xl shrink-0 flex items-center justify-center shadow-2xl ring-4 ring-emerald-500/20">
-                                        <img id="qr-sim-sms" src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=SMSTO:0922998581:ሰላም!%20ይህ%20ከሜሽ%20ክሊኒንግ%20(0943854325)%20የተላከ%20ይፋዊ%20የሙከራ%20ኤስኤምኤስ%20ነው።" alt="SMS QR" class="w-full h-full object-contain">
+                                        <img id="qr-sim-sms" src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=SMSTO:0943854325,0922998581:ሰላም!%20ይህ%20ከሜሽ%20ክሊኒንግ%20(0943854325)%20የተላከ%20ይፋዊ%20የሙከራ%20ኤስኤምኤስ%20ነው።" alt="SMS QR" class="w-full h-full object-contain">
                                     </div>
                                     <div class="text-xs text-slate-300">
                                         <p class="font-bold text-white flex items-center justify-center gap-1.5 text-sm">
                                             <i data-lucide="qr-code" class="w-4 h-4 text-emerald-400"></i>
-                                            <span>በባለቤቱ ስልክ ካሜራ ስካን ያድርጉ</span>
+                                            <span>በ iPhone ካሜራ ስካን ያድርጉ</span>
                                         </p>
-                                        <p class="text-slate-400 text-[11px] mt-1">በባለቤቱ ስልክ (0943854325) ካሜራ ይህንን QR ኮድ ሲያነቡ ወዲያውኑ መልዕክቱ ተዘጋጅቶ ይከፈታል።</p>
                                     </div>
                                 </div>
                             </div>
@@ -3864,38 +3862,51 @@
             btn.disabled = true;
             btn.innerText = 'በመላክ ላይ...';
 
-            const phone = document.getElementById('setting-test-recipient').value;
-            const message = document.getElementById('setting-test-msg').value;
+            const rawPhones = document.getElementById('setting-test-recipient').value || '';
+            const message = document.getElementById('setting-test-msg').value || '';
+            const phoneList = rawPhones.split(/[,;\s]+/).map(p => p.trim()).filter(p => p.length >= 9);
+
+            if (phoneList.length === 0) {
+                alert('እባክዎ ቢያንስ አንድ ትክክለኛ ስልክ ቁጥር ያስገቡ።');
+                btn.disabled = false;
+                btn.innerText = 'በሲስተም SMS ላክ';
+                return;
+            }
 
             try {
-                const res = await apiFetch('/api/notifications/send-direct-sms', {
-                    method: 'POST',
-                    body: JSON.stringify({ phone, message })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    alert('✅ ኤስኤምኤሱ በተሳካ ሁኔታ ለደንበኛው (' + phone + ') ተልኳል! በሲስተም መዝገብ ላይ ተመዝግቧል።');
-                } else {
-                    alert('ስህተት: ' + (data.message || 'መላክ አልተቻለም'));
+                let successCount = 0;
+                for (const phone of phoneList) {
+                    const res = await apiFetch('/api/notifications/send-direct-sms', {
+                        method: 'POST',
+                        body: JSON.stringify({ phone, message })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        successCount++;
+                    }
                 }
+                alert(`✅ የሙከራ ኤስኤምኤስ ለ ${successCount}/${phoneList.length} ቁጥሮች በሲስተም መዝገብ ላይ ተልኳል!`);
             } catch (e) {
                 alert('የግንኙነት ስህተት: ' + e.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'ለደንበኛው (0922998581) SMS ላክ';
+                btn.innerText = 'በሲስተም SMS ላክ';
             }
         }
 
         function updateOwnerSimSmsLink() {
-            const phone = document.getElementById('setting-test-recipient')?.value || '0922998581';
+            const rawPhones = document.getElementById('setting-test-recipient')?.value || '0943854325, 0922998581';
             const msg = document.getElementById('setting-test-msg')?.value || '';
+            const phoneList = rawPhones.split(/[,;\s]+/).map(p => p.trim().replace(/\D+/g, '')).filter(p => p.length >= 9);
+            const joinedPhones = phoneList.join(',');
+
             const link = document.getElementById('btn-owner-direct-sim-sms');
             if (link) {
-                link.href = `sms:${phone.replace(/\s+/g, '')}?body=${encodeURIComponent(msg)}`;
+                link.href = `sms:${joinedPhones}?&body=${encodeURIComponent(msg)}`;
             }
             const qr = document.getElementById('qr-sim-sms');
             if (qr) {
-                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=SMSTO:${phone.replace(/\s+/g, '')}:${encodeURIComponent(msg)}`;
+                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(`SMSTO:${joinedPhones}:${msg}`)}`;
             }
         }
         // ==========================================
