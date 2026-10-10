@@ -78,6 +78,51 @@ class FinanceController extends Controller
         ], 201);
     }
 
+    public function recordPayroll(Request $request): JsonResponse
+    {
+        if (!$request->has('employee_id') && $request->has('user_id')) {
+            $request->merge(['employee_id' => $request->input('user_id')]);
+        }
+
+        $validated = $request->validate([
+            'employee_id' => 'required|exists:users,id',
+            'amount' => 'required|numeric|min:1',
+            'payment_date' => 'required|date',
+            'month' => 'nullable|string',
+            'notes' => 'nullable|string',
+            'reference_number' => 'nullable|string',
+        ]);
+
+        $employee = \App\Models\User::findOrFail($validated['employee_id']);
+        $monthName = !empty($validated['month']) ? $validated['month'] : '';
+        $note = $validated['notes'] ?: ("የደመወዝ ክፍያ ለ" . $employee->name . ($monthName ? " ({$monthName})" : ""));
+
+        $expense = Expense::create([
+            'expense_number' => Expense::generateNextNumber(),
+            'category' => 'employee_payments',
+            'amount' => $validated['amount'],
+            'reference_number' => $validated['reference_number'] ?? ('PAY-' . date('Ymd')),
+            'description' => $note,
+            'date' => $validated['payment_date'],
+            'entered_by_user_id' => $request->user()->id,
+        ]);
+
+        AuditLog::logAction(
+            $request->user()->id,
+            'payroll_recorded',
+            Expense::class,
+            $expense->id,
+            null,
+            ['employee' => $employee->name, 'amount' => $validated['amount']]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "ለ{$employee->name} የተከፈለው " . number_format($validated['amount'], 2) . " ብር ደመወዝ በወጪ መዝገብ ላይ ተመዝግቧል::",
+            'expense' => $expense->load('enteredBy:id,name'),
+        ], 201);
+    }
+
     public function payments(Request $request): JsonResponse
     {
         $query = Payment::with([

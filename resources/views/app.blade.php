@@ -1167,7 +1167,7 @@
                                                 <p class="text-[10px] text-slate-500">${b.items?.map(i => i.item_name).join(', ')}</p>
                                             </div>
                                             <div class="flex items-center gap-2">
-                                                <button onclick="confirmAndAssignOrder(${b.id})" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold">አረጋግጥ እና ቡድን መድብ</button>
+                                                <button onclick="confirmAndAssignOrder(${b.id})" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold">አረጋግጥ እና ሰራተኛ መድብ</button>
                                                 <button onclick="openPostponeOrderModal(${b.id}, '${b.order_number}', '${b.customer?.full_name}')" class="px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-500/40 text-xs font-bold" title="ቀጠሮ አስተላልፍ">📅 አስተላልፍ</button>
                                             </div>
                                         </div>
@@ -1585,7 +1585,7 @@
                                                         ${formatTimeSlot(o.appointment_time_slot)}
                                                     </span>
                                                 </td>
-                                                <td class="p-4 text-slate-300 font-semibold">${o.assigned_team?.team_name || '<span class="text-red-400">ቡድን አልተመደበም</span>'}</td>
+                                                <td class="p-4 text-slate-300 font-semibold">${o.assigned_team?.team_name || '<span class="text-red-400">ሰራተኛ አልተመደበም</span>'}</td>
                                                 <td class="p-4 font-extrabold text-white">${parseFloat(o.total).toLocaleString()} ETB</td>
                                                 <td class="p-4">
                                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${o.order_status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}">
@@ -1593,7 +1593,7 @@
                                                     </span>
                                                 </td>
                                                 <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
-                                                    <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ቡድን መድብ">🚐 ቡድን መድብ</button>
+                                                    <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ሰራተኛ መድብ">👤 ሰራተኛ መድብ</button>
                                                     <button onclick="openDirectSmsModal('${o.customer?.phone || ''}', '${o.customer?.full_name || ''}')" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">📩 SMS</button>
                                                     <button onclick="openOrderDetailsModal(${o.id})" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር</button>
                                                 </td>
@@ -1905,18 +1905,39 @@
         // ==========================================
         async function renderFinanceModule(container) {
             try {
-                const res = await apiFetch('/api/finance/profit-report');
-                const data = await res.json();
+                const [reportRes, expRes] = await Promise.all([
+                    apiFetch('/api/finance/profit-report'),
+                    apiFetch('/api/finance/expenses?per_page=15')
+                ]);
+                const data = await reportRes.json();
+                const expData = await expRes.json();
+                const expensesList = expData.data || (Array.isArray(expData) ? expData : []);
+
+                const categoryLabels = {
+                    chemicals: 'ኬሚካሎች እና ሳሙናዎች',
+                    fuel: 'ነዳጅ / ትራንስፖርት',
+                    materials: 'የፅዳት መገልገያ እቃዎች',
+                    employee_payments: '💵 የሰራተኞች ደመወዝ / ክፍያ',
+                    equipment_repair: 'የማሽን ጥገና',
+                    rent: 'የቢሮ ኪራይ',
+                    marketing: 'ማስታወቂያ እና ፕሮሞሽን',
+                    utilities: 'መብራት / ውሃ / ኢንተርኔት',
+                    other: 'ሌሎች ወጪዎች'
+                };
 
                 container.innerHTML = `
                     <div class="max-w-7xl mx-auto space-y-6">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                                <h2 class="text-2xl font-black text-white">ፋይናንስ እና የተጣራ ትርፍ ትንተና</h2>
-                                <p class="text-xs text-slate-400 mt-1">የቀጥታ ገቢ፣ የተመደቡ ወጪዎች እና የተጣራ ትርፍ ስሌት።</p>
+                                <h2 class="text-2xl font-black text-white">ፋይናንስ፣ ወጪዎች እና የተጣራ ትርፍ</h2>
+                                <p class="text-xs text-slate-400 mt-1">የቀጥታ ገቢ፣ የሰራተኞች ደመወዝ፣ የስራ ማስኬጃ ወጪዎች እና የተጣራ ትርፍ ስሌት።</p>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <button onclick="openRecordExpenseModal()" class="px-4 py-2.5 bg-red-600/80 hover:bg-red-600 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button onclick="openPayrollModal()" class="px-4 py-2.5 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all shadow-amber-950/40">
+                                    <i data-lucide="banknote" class="w-4 h-4"></i>
+                                    <span>💵 ደመወዝ ክፈል (Payroll)</span>
+                                </button>
+                                <button onclick="openRecordExpenseModal()" class="px-4 py-2.5 bg-red-600/80 hover:bg-red-600 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
                                     <i data-lucide="minus-circle" class="w-4 h-4"></i>
                                     <span>- ወጪ መዝግብ</span>
                                 </button>
@@ -1926,15 +1947,15 @@
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                             <div class="p-6 rounded-3xl bg-emerald-950/30 border border-emerald-500/30">
                                 <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block">የተረጋገጠ ጠቅላላ ገቢ</span>
-                                <span class="text-3xl font-black text-white mt-2 block">${parseFloat(data.revenue).toLocaleString()} ETB</span>
+                                <span class="text-3xl font-black text-white mt-2 block">${parseFloat(data.revenue || 0).toLocaleString()} ETB</span>
                             </div>
                             <div class="p-6 rounded-3xl bg-red-950/30 border border-red-500/30">
-                                <span class="text-xs font-bold text-red-400 uppercase tracking-wider block">አጠቃላይ የስራ ማስኬጃ ወጪ</span>
-                                <span class="text-3xl font-black text-white mt-2 block">${parseFloat(data.expenses).toLocaleString()} ETB</span>
+                                <span class="text-xs font-bold text-red-400 uppercase tracking-wider block">አጠቃላይ ወጪ (ደመወዝን ጨምሮ)</span>
+                                <span class="text-3xl font-black text-white mt-2 block">${parseFloat(data.expenses || 0).toLocaleString()} ETB</span>
                             </div>
                             <div class="p-6 rounded-3xl bg-cyan-950/30 border border-cyan-500/30">
-                                <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider block">የተጣራ ትርፍ (${data.profit_margin}%)</span>
-                                <span class="text-3xl font-black text-cyan-300 mt-2 block">${parseFloat(data.net_profit).toLocaleString()} ETB</span>
+                                <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider block">የተጣራ ትርፍ (${data.profit_margin || 0}%)</span>
+                                <span class="text-3xl font-black text-cyan-300 mt-2 block">${parseFloat(data.net_profit || 0).toLocaleString()} ETB</span>
                             </div>
                         </div>
 
@@ -1943,11 +1964,70 @@
                             <h4 class="text-sm font-bold text-white mb-4">የወጪዎች ዝርዝር በየምድቡ</h4>
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 ${(data.expense_breakdown || []).map(b => `
-                                    <div class="p-3.5 rounded-2xl bg-slate-800 border border-slate-700">
-                                        <span class="text-xs text-slate-400 uppercase font-bold block">${b.category}</span>
+                                    <div class="p-3.5 rounded-2xl ${b.category === 'employee_payments' ? 'bg-amber-950/40 border border-amber-500/40' : 'bg-slate-800 border border-slate-700'}">
+                                        <span class="text-xs ${b.category === 'employee_payments' ? 'text-amber-300 font-extrabold' : 'text-slate-400 font-bold'} uppercase block">${categoryLabels[b.category] || b.category}</span>
                                         <span class="text-lg font-black text-white mt-1 block">${parseFloat(b.total_amount).toLocaleString()} ETB</span>
                                     </div>
                                 `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Recent Expenses & Payroll Table -->
+                        <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                <div>
+                                    <h4 class="text-base font-extrabold text-white flex items-center gap-2">
+                                        <i data-lucide="receipt" class="w-4 h-4 text-cyan-400"></i>
+                                        <span>የቅርብ ጊዜ የተመዘገቡ ወጪዎች እና የደመወዝ ክፍያዎች</span>
+                                    </h4>
+                                    <p class="text-xs text-slate-400 mt-0.5">የተከፈሉ ደመወዞች እና የስራ ማስኬጃ ወጪዎች የቀጥታ መዝገብ።</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                                    ${expensesList.length} ወጪዎች
+                                </span>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead>
+                                        <tr class="text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider">
+                                            <th class="py-3 px-3">ቀን</th>
+                                            <th class="py-3 px-3">የወጪ ምድብ</th>
+                                            <th class="py-3 px-3">ማብራሪያ / ሰራተኛ</th>
+                                            <th class="py-3 px-3">የመዘገበው</th>
+                                            <th class="py-3 px-3 text-right">የገንዘብ መጠን</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800/60">
+                                        ${expensesList.length === 0 ? `
+                                            <tr>
+                                                <td colspan="5" class="py-8 text-center text-slate-500 italic">እስካሁን የተመዘገበ ወጪ የለም።</td>
+                                            </tr>
+                                        ` : expensesList.map(exp => `
+                                            <tr class="hover:bg-slate-800/40 transition-colors">
+                                                <td class="py-3 px-3 font-mono text-slate-300">
+                                                    <span class="block font-bold text-white">${exp.eth_date || exp.date}</span>
+                                                    <span class="text-[10px] text-slate-500">${exp.date}</span>
+                                                </td>
+                                                <td class="py-3 px-3">
+                                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold border ${exp.category === 'employee_payments' ? 'bg-amber-950/80 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}">
+                                                        ${categoryLabels[exp.category] || exp.category}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 px-3 font-semibold text-white">
+                                                    ${exp.description || '—'}
+                                                    ${exp.reference_number ? `<span class="block text-[10px] font-mono text-slate-400 mt-0.5">Ref: ${exp.reference_number}</span>` : ''}
+                                                </td>
+                                                <td class="py-3 px-3 text-slate-400">
+                                                    ${exp.entered_by?.name || 'አድሚን'}
+                                                </td>
+                                                <td class="py-3 px-3 text-right font-black ${exp.category === 'employee_payments' ? 'text-amber-400' : 'text-red-400'} text-sm font-mono">
+                                                    -${parseFloat(exp.amount).toLocaleString()} ETB
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -2169,12 +2249,16 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-slate-900 border border-slate-800">
                             <div>
                                 <h2 class="text-2xl font-black text-white flex items-center gap-2.5">
-                                    <i data-lucide="truck" class="w-6 h-6 text-cyan-400"></i>
-                                    <span>የፅዳት ቡድኖች እና የሰራተኞች አስተዳደር</span>
+                                    <i data-lucide="users" class="w-6 h-6 text-cyan-400"></i>
+                                    <span>የሰራተኞች እና የፅዳት ባለሙያዎች አስተዳደር</span>
                                 </h2>
-                                <p class="text-xs text-slate-400 mt-1">የመስክ ቡድኖች፣ የሰራተኞች መዝገብ፣ አዳዲስ ቅጥር እና የመኪና ስምሪት ማስተዳደሪያ።</p>
+                                <p class="text-xs text-slate-400 mt-1">የሰራተኞች ምዝገባ፣ የደመወዝ ክፍያ (Payroll) እና የመስክ ስራ ስምሪት ማስተዳደሪያ።</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-2.5">
+                                <button onclick="openPayrollModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-950/50 transition-all cursor-pointer">
+                                    <i data-lucide="banknote" class="w-4 h-4"></i>
+                                    <span>+ 💵 ደመወዝ ክፈል (Payroll)</span>
+                                </button>
                                 <button onclick="openAddEmployeeModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer">
                                     <i data-lucide="user-plus" class="w-4 h-4"></i>
                                     <span>+ አዲስ ሰራተኛ መዝግብ</span>
@@ -2197,9 +2281,9 @@
 
                             ${teams.length === 0 ? `
                                 <div class="p-8 rounded-3xl bg-slate-900 border border-slate-800 text-center space-y-3">
-                                    <div class="w-12 h-12 rounded-2xl bg-slate-800 text-cyan-400 flex items-center justify-center mx-auto text-xl">🚐</div>
+                                    <div class="w-12 h-12 rounded-2xl bg-slate-800 text-cyan-400 flex items-center justify-center mx-auto text-xl">👥</div>
                                     <p class="text-sm font-bold text-white">እስካሁን የተፈጠረ የፅዳት ቡድን የለም</p>
-                                    <p class="text-xs text-slate-400 max-w-sm mx-auto">ከላይ ያለውን "+ አዲስ የፅዳት ቡድን ፍጠር" የሚለውን ቁልፍ በመጫን የመጀመሪያውን ቡድን ይመዝግቡ።</p>
+                                    <p class="text-xs text-slate-400 max-w-sm mx-auto">ከላይ ያለውን "+ አዲስ የፅዳት ቡድን ፍጠር" የሚለውን በመጫን ቡድን መፍጠር ይችላሉ፤ ወይም ሰራተኞችን በቀጥታ ለትዕዛዞች መመደብ ይችላሉ።</p>
                                     <button onclick="openCreateTeamModal()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs">ቡድን ፍጠር</button>
                                 </div>
                             ` : `
@@ -2223,10 +2307,6 @@
                                                 <div class="flex items-center justify-between">
                                                     <span>📞 ስልክ:</span>
                                                     <span class="text-cyan-300 font-mono">${t.phone || t.leader?.phone || '—'}</span>
-                                                </div>
-                                                <div class="flex items-center justify-between">
-                                                    <span>🚐 መኪና / ታርጋ:</span>
-                                                    <span class="text-white font-semibold font-mono">${t.vehicle_plate || 'ታርጋ የለውም'}</span>
                                                 </div>
                                                 <div class="flex items-center justify-between">
                                                     <span>👥 አባላት:</span>
@@ -2257,7 +2337,7 @@
                                         <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
                                         <span>የሰራተኞች እና የፅዳት ባለሙያዎች መዝገብ (Staff Directory)</span>
                                     </h3>
-                                    <p class="text-xs text-slate-400 mt-0.5">በሜሽ ክሊኒንግ ሲስተም ውስጥ የተመዘገቡ ሁሉም ሰራተኞች እና የስራ ድርሻቸው።</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">በሜሽ ክሊኒንግ ሲስተም ውስጥ የተመዘገቡ ሁሉም ሰራተኞች፣ የስራ ድርሻቸው እና የደመወዝ ክፍያ።</p>
                                 </div>
                                 <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 w-fit">
                                     ጠቅላላ፡ ${employees.length} ሰራተኞች
@@ -2273,6 +2353,7 @@
                                             <th class="py-3 px-3">ስልክ</th>
                                             <th class="py-3 px-3">ኢሜይል</th>
                                             <th class="py-3 px-3">ሁኔታ</th>
+                                            <th class="py-3 px-3 text-right">ክፍያ / Payroll</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-800/60">
@@ -2296,6 +2377,12 @@
                                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                                                         <span>ንቁ (Active)</span>
                                                     </span>
+                                                </td>
+                                                <td class="py-3 px-3 text-right">
+                                                    <button onclick="openPayrollModal(${e.id}, '${e.name.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-sm">
+                                                        <i data-lucide="banknote" class="w-3.5 h-3.5 text-amber-400"></i>
+                                                        <span>💵 ደመወዝ ክፈል</span>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         `).join('')}
@@ -2422,7 +2509,7 @@
                                     <i data-lucide="plus-circle" class="w-4 h-4 text-cyan-400"></i>
                                     <span>አዲስ የፅዳት ቡድን ፍጠር</span>
                                 </h3>
-                                <p class="text-[11px] text-slate-400">አዲስ የመስክ ቡድን፣ መሪ እና መኪና ይመድቡ።</p>
+                                <p class="text-[11px] text-slate-400">አዲስ የመስክ የፅዳት ቡድን እና መሪ ይመድቡ።</p>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
@@ -2441,10 +2528,6 @@
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">የቡድኑ ስልክ</label>
                                 <input type="tel" id="new-team-phone" placeholder="0911000004" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono">
-                            </div>
-                            <div>
-                                <label class="block text-slate-300 font-bold mb-1">የመኪና ታርጋ ቁጥር</label>
-                                <input type="text" id="new-team-plate" placeholder="3-B12345 AA" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono">
                             </div>
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">ተጨማሪ ማስታወሻ</label>
@@ -2474,7 +2557,7 @@
                 team_name: document.getElementById('new-team-name').value.trim(),
                 team_leader_id: leaderId ? parseInt(leaderId) : null,
                 phone: document.getElementById('new-team-phone').value.trim() || null,
-                vehicle_plate: document.getElementById('new-team-plate').value.trim() || null,
+                vehicle_plate: 'Company Shared Car',
                 notes: document.getElementById('new-team-notes').value.trim() || null,
             };
 
@@ -2498,6 +2581,122 @@
                 btn.innerText = 'ፍጠር';
             }
         }
+
+        // ==========================================
+        // PAYROLL / SALARY PAYMENT MODAL & SUBMIT
+        // ==========================================
+        async function openPayrollModal(preselectedEmployeeId = null, preselectedEmployeeName = '') {
+            const container = document.getElementById('generic-modal-container');
+            const res = await apiFetch('/api/employees');
+            const data = await res.json();
+            const employees = Array.isArray(data) ? data : (data.data || []);
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            const months = [
+                'መስከረም', 'ጥቅምት', 'ህዳር', 'ታህሳስ', 'ጥር', 'የካቲት',
+                'መጋቢት', 'ሚያዝያ', 'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜ'
+            ];
+
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="banknote" class="w-5 h-5 text-amber-400"></i>
+                                    <span>የደመወዝ ክፍያ መመዝገቢያ (Pay Salary)</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400">ለሰራተኛ የተከፈለ ደመወዝ ይመዝግቡ (በራስ-ሰር የወጪ መዝገብ ላይ ይገባል)።</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+                        <form onsubmit="submitPayroll(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ሰራተኛ ይምረጡ *</label>
+                                <select id="payroll-employee-id" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
+                                    <option value="">-- ሰራተኛ ይምረጡ --</option>
+                                    ${employees.map(e => `
+                                        <option value="${e.id}" ${preselectedEmployeeId && e.id == preselectedEmployeeId ? 'selected' : ''}>
+                                            ${e.name} (${e.role === 'cleaner' ? 'የፅዳት ባለሙያ' : e.role}) - ${e.phone || e.email}
+                                        </option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የተከፈለ ደመወዝ መጠን (ETB) *</label>
+                                <input type="number" id="payroll-amount" required min="1" step="any" placeholder="ለምሳሌ፡ 7500" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono text-sm">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">ክፍያው የሚመለከተው ወር *</label>
+                                    <select id="payroll-month" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                                        ${months.map((m, idx) => `<option value="${m}" ${idx === 0 ? 'selected' : ''}>${m}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">የተከፈለበት ቀን *</label>
+                                    <input type="date" id="payroll-date" required value="${todayStr}" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ተጨማሪ ማስታወሻ / ደረሰኝ ቁጥር</label>
+                                <textarea id="payroll-notes" rows="2" placeholder="የባንክ ማመሳከሪያ ወይም ተጨማሪ ማስታወሻ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white"></textarea>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-amber-300 text-[11px] flex items-start gap-2">
+                                <i data-lucide="info" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
+                                <span>ይህ የተከፈለ ገንዘብ በራስ-ሰር በአድሚኑ የወጪ ገጽ (Expense Page) ላይ እንደ «የሰራተኞች ክፍያ» ወጪ ሆኖ ይመዘገባል።</span>
+                            </div>
+                            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
+                                <button type="submit" id="btn-save-payroll" class="px-5 py-2 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-lg shadow-amber-950/50">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                    <span>ክፍያውን መዝግብ</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function submitPayroll(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-payroll');
+            btn.disabled = true;
+            btn.innerText = 'በመመዝገብ ላይ...';
+
+            const empId = document.getElementById('payroll-employee-id').value;
+            const payload = {
+                employee_id: empId,
+                user_id: empId,
+                amount: parseFloat(document.getElementById('payroll-amount').value),
+                month: document.getElementById('payroll-month').value,
+                payment_date: document.getElementById('payroll-date').value,
+                notes: document.getElementById('payroll-notes').value.trim() || null,
+            };
+
+            try {
+                const res = await apiFetch('/api/finance/payroll', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert('✅ የደመወዝ ክፍያ በተሳካ ሁኔታ ተመዝግቧል! በአድሚኑ የወጪ ገጽ ላይ ታክሏል።');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('❌ ስህተት: ' + (data.message || 'ክፍያውን መመዝገብ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'ክፍያውን መዝግብ';
+            }
+        }
+
 
         // ==========================================
         // 9. CUSTOMER CARE & COMPLAINTS
@@ -2862,15 +3061,15 @@
 
                                 <div class="flex items-center justify-between p-3 bg-slate-800 rounded-xl">
                                     <span>የክፍያ ሁኔታ: <strong class="uppercase ${o.payment_status === 'paid' ? 'text-emerald-400' : 'text-amber-400'}">${o.payment_status}</strong></span>
-                                    <span>የተመደበ ቡድን: <strong class="text-cyan-300">${o.assigned_team?.team_name || 'ቡድን አልተመደበም'}</strong></span>
+                                    <span>የተመደበ ሰራተኛ/ቡድን: <strong class="text-cyan-300">${o.assigned_team?.team_name || 'አልተመደበም'}</strong></span>
                                 </div>
                             </div>
 
                             <div class="flex justify-end gap-2 pt-4 border-t border-slate-800 mt-4">
                                 ${o.order_status !== 'completed' && o.order_status !== 'cancelled' ? `
                                     <button onclick="closeModal(); confirmAndAssignOrder(${o.id});" class="px-4 py-2 bg-blue-950/80 hover:bg-blue-900 border border-blue-500/40 text-blue-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
-                                        <i data-lucide="truck" class="w-4 h-4 text-blue-400"></i>
-                                        <span>🚐 ቡድን መድብ (Assign Team)</span>
+                                        <i data-lucide="user-check" class="w-4 h-4 text-blue-400"></i>
+                                        <span>👤 ሰራተኛ መድብ (Assign Worker)</span>
                                     </button>
                                     <button onclick="closeModal(); openPostponeOrderModal(${o.id}, '${o.order_number}', '${o.customer?.full_name}');" class="px-4 py-2 bg-amber-950/70 hover:bg-amber-900 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
                                         <i data-lucide="calendar-clock" class="w-4 h-4 text-amber-400"></i>
@@ -3102,40 +3301,71 @@
 
         async function confirmAndAssignOrder(orderId) {
             const container = document.getElementById('generic-modal-container');
-            const res = await apiFetch('/api/teams');
-            const data = await res.json();
-            const teams = Array.isArray(data) ? data : (data.data || []);
+            const [cleanersRes, teamsRes] = await Promise.all([
+                apiFetch('/api/employees?role=cleaner'),
+                apiFetch('/api/teams')
+            ]);
+            const cleanersData = await cleanersRes.json();
+            const teamsData = await teamsRes.json();
+            const cleaners = Array.isArray(cleanersData) ? cleanersData : (cleanersData.data || []);
+            const teams = Array.isArray(teamsData) ? teamsData : (teamsData.data || []);
 
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-6 shadow-2xl">
-                        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-                            <h3 class="text-base font-bold text-white flex items-center gap-2">
-                                <i data-lucide="truck" class="w-4 h-4 text-cyan-400"></i>
-                                <span>የፅዳት ቡድን መድብ</span>
-                            </h3>
-                            <button onclick="closeModal()" class="text-slate-400 hover:text-white font-bold">&times;</button>
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="user-check" class="w-5 h-5 text-cyan-400"></i>
+                                    <span>ለትዕዛዙ ሰራተኛ / ቡድን መድብ</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400">ለትዕዛዙ የፅዳት ሰራተኛ በቀጥታ ይምረጡ ወይም የመስክ ቡድን ይመድቡ።</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
                         </div>
-                        <div class="space-y-3">
-                            <label class="block text-xs text-slate-400 font-semibold">የመስክ ቡድን ይምረጡ</label>
-                            ${teams.length === 0 ? `
-                                <div class="p-3 rounded-xl bg-amber-950/50 border border-amber-500/30 text-amber-300 text-xs">
-                                    እስካሁን ምንም የተመዘገበ ቡድን የለም።
+                        
+                        <div class="space-y-4 text-xs">
+                            <!-- 1. Direct Employee Assignment (Primary) -->
+                            <div class="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <label class="block font-bold text-cyan-300">👤 የፅዳት ሰራተኛ በቀጥታ መድብ (Cleaners)</label>
+                                    <span class="text-[10px] bg-cyan-950 text-cyan-400 border border-cyan-800 px-2 py-0.5 rounded-full font-bold">${cleaners.length} ሰራተኞች</span>
                                 </div>
-                                <button onclick="closeModal(); openCreateTeamModal();" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl">
-                                    + አዲስ ቡድን ፍጠር
-                                </button>
-                            ` : `
-                                <select id="assign-team-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white">
-                                    ${teams.map(t => `<option value="${t.id}">${t.team_name} (${t.leader?.name || 'Leader'} - 📞 ${t.phone || t.leader?.phone || 'N/A'})</option>`).join('')}
-                                </select>
-                                <div class="flex justify-end gap-2 pt-3">
-                                    <button onclick="closeModal()" class="px-3.5 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">ሰርዝ</button>
-                                    <button onclick="submitTeamAssignment(${orderId})" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5">
-                                        <span>አረጋግጥ እና ስምሪት ስጥ</span>
+                                ${cleaners.length === 0 ? `
+                                    <p class="text-slate-500 italic text-[11px]">እስካሁን የተመዘገበ የፅዳት ሰራተኛ የለም።</p>
+                                    <button onclick="closeModal(); openAddEmployeeModal();" class="text-cyan-400 hover:underline text-[11px] font-bold">+ አዲስ ሰራተኛ መዝግብ</button>
+                                ` : `
+                                    <select id="assign-worker-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
+                                        <option value="">-- የፅዳት ሰራተኛ ይምረጡ --</option>
+                                        ${cleaners.map(c => `<option value="${c.id}">${c.name} (📞 ${c.phone || c.email})</option>`).join('')}
+                                    </select>
+                                    <button onclick="submitWorkerAssignment(${orderId})" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold flex items-center justify-center gap-1.5 shadow-md shadow-cyan-950/40">
+                                        <i data-lucide="check" class="w-4 h-4"></i>
+                                        <span>የተመረጠውን ሰራተኛ መድብ</span>
+                                    </button>
+                                `}
+                            </div>
+
+                            <!-- 2. Or Assign Cleaning Team if available -->
+                            ${teams.length > 0 ? `
+                                <div class="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
+                                    <div class="flex items-center justify-between">
+                                        <label class="block font-bold text-slate-300">👥 ወይም የተደራጀ ቡድን መድብ (Teams)</label>
+                                        <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">${teams.length} ቡድኖች</span>
+                                    </div>
+                                    <select id="assign-team-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white">
+                                        <option value="">-- ቡድን ይምረጡ --</option>
+                                        ${teams.map(t => `<option value="${t.id}">${t.team_name} (${t.leader?.name || 'መሪ የለውም'})</option>`).join('')}
+                                    </select>
+                                    <button onclick="submitTeamAssignment(${orderId})" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold flex items-center justify-center gap-1.5">
+                                        <span>ይህን ቡድን መድብ</span>
                                     </button>
                                 </div>
-                            `}
+                            ` : ''}
+
+                            <div class="flex justify-end pt-2 border-t border-slate-800">
+                                <button onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl">ዝጋ</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3143,14 +3373,54 @@
             lucide.createIcons();
         }
 
+        async function submitWorkerAssignment(orderId) {
+            const selectEl = document.getElementById('assign-worker-select');
+            if (!selectEl || !selectEl.value) {
+                alert('እባክዎ መጀመሪያ የፅዳት ሰራተኛ ይምረጡ!');
+                return;
+            }
+            const workerId = selectEl.value;
+            try {
+                const res = await apiFetch(`/api/orders/${orderId}/assign-team`, {
+                    method: 'POST',
+                    body: JSON.stringify({ worker_id: parseInt(workerId) })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert('✅ ' + (data.message || 'ሰራተኛው ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል!'));
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት: ' + (data.message || 'ሰራተኛውን መመደብ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+            }
+        }
+
         async function submitTeamAssignment(orderId) {
-            const teamId = document.getElementById('assign-team-select').value;
-            await apiFetch(`/api/orders/${orderId}/assign-team`, {
-                method: 'POST',
-                body: JSON.stringify({ team_id: teamId })
-            });
-            closeModal();
-            loadActiveTab();
+            const selectEl = document.getElementById('assign-team-select');
+            if (!selectEl || !selectEl.value) {
+                alert('እባክዎ ቡድን ይምረጡ!');
+                return;
+            }
+            const teamId = selectEl.value;
+            try {
+                const res = await apiFetch(`/api/orders/${orderId}/assign-team`, {
+                    method: 'POST',
+                    body: JSON.stringify({ team_id: parseInt(teamId) })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert('✅ ' + (data.message || 'ቡድኑ ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል!'));
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት: ' + (data.message || 'ቡድኑን መመደብ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+            }
         }
 
         function openFollowupCallModal(followupId, name, phone) {

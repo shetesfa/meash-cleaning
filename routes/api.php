@@ -120,6 +120,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('finance')->group(function () {
         Route::get('/expenses', [FinanceController::class, 'expenses']);
         Route::post('/expenses', [FinanceController::class, 'storeExpense']);
+        Route::post('/payroll', [FinanceController::class, 'recordPayroll'])->middleware('role:owner,finance');
         Route::get('/payments', [FinanceController::class, 'payments'])->middleware('role:owner,reception');
         Route::get('/profit-report', [FinanceController::class, 'profitReport'])->middleware('role:owner');
     });

@@ -332,14 +332,43 @@ class OrderController extends Controller
     public function assignTeam(Request $request, Order $order): JsonResponse
     {
         $validated = $request->validate([
-            'assigned_team_id' => 'required|exists:cleaning_teams,id',
+            'assigned_team_id' => 'nullable',
+            'team_id' => 'nullable',
+            'worker_id' => 'nullable|exists:users,id',
             'appointment_date' => 'nullable|date',
             'appointment_time_slot' => 'nullable|string',
         ]);
 
+        $teamId = $validated['assigned_team_id'] ?? $validated['team_id'] ?? null;
+        $workerId = $validated['worker_id'] ?? null;
+
+        // If a specific worker was selected directly
+        if ($workerId && !$teamId) {
+            $member = \App\Models\TeamMember::where('user_id', $workerId)->first();
+            $leaderTeam = \App\Models\CleaningTeam::where('team_leader_id', $workerId)->first();
+            $teamId = $member?->cleaning_team_id ?? $leaderTeam?->id;
+
+            if (!$teamId) {
+                $worker = \App\Models\User::find($workerId);
+                $team = \App\Models\CleaningTeam::create([
+                    'team_name' => $worker ? $worker->name : "ሰራተኛ #{$workerId}",
+                    'team_leader_id' => $workerId,
+                    'phone' => $worker?->phone,
+                    'status' => 'active',
+                ]);
+                \App\Models\TeamMember::firstOrCreate([
+                    'cleaning_team_id' => $team->id,
+                    'user_id' => $workerId,
+                ], [
+                    'role_in_team' => 'cleaner',
+                ]);
+                $teamId = $team->id;
+            }
+        }
+
         $old = $order->toArray();
 
-        $order->assigned_team_id = $validated['assigned_team_id'];
+        $order->assigned_team_id = $teamId;
         if (!empty($validated['appointment_date'])) {
             $order->appointment_date = $validated['appointment_date'];
         }
@@ -355,15 +384,17 @@ class OrderController extends Controller
         $order->save();
 
         // Update or create appointment
-        Appointment::updateOrCreate(
-            ['order_id' => $order->id],
-            [
-                'customer_id' => $order->customer_id,
-                'cleaning_team_id' => $order->assigned_team_id,
-                'appointment_date' => $order->appointment_date,
-                'status' => 'scheduled',
-            ]
-        );
+        if ($order->assigned_team_id) {
+            Appointment::updateOrCreate(
+                ['order_id' => $order->id],
+                [
+                    'customer_id' => $order->customer_id,
+                    'cleaning_team_id' => $order->assigned_team_id,
+                    'appointment_date' => $order->appointment_date,
+                    'status' => 'scheduled',
+                ]
+            );
+        }
 
         AuditLog::logAction(
             $request->user()?->id,
@@ -375,7 +406,8 @@ class OrderController extends Controller
         );
 
         return response()->json([
-            'message' => 'Team assigned successfully',
+            'success' => true,
+            'message' => 'ሰራተኛው/ቡድኑ ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል::',
             'order' => $order->fresh(['customer', 'assignedTeam', 'items']),
         ]);
     }
