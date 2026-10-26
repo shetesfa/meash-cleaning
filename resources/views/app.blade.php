@@ -3839,7 +3839,7 @@
                             <div class="space-y-2.5 text-xs text-slate-300">
                                 <div class="flex justify-between items-center p-2 rounded-xl bg-slate-800/80">
                                     <span class="text-slate-400">የቦት ቶከን (Token):</span>
-                                    <span class="font-mono text-cyan-300 font-bold text-[11px]">8964703337:AAGT...oiWA3U</span>
+                                    <span class="font-mono text-cyan-300 font-bold text-[11px]">8797114776:AAGk...vOLM</span>
                                 </div>
                                 <div class="flex justify-between items-center p-2 rounded-xl bg-slate-800/80">
                                     <span class="text-slate-400">የቦት ሁኔታ:</span>

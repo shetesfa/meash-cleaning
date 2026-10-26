@@ -4,6 +4,9 @@ cd /d "%~dp0"
 title MEASH CLEANING SOLUTION - LAUNCH ALL
 color 0e
 
+:: Auto-detect and add XAMPP PHP & MySQL to PATH
+if exist "C:\xampp\php" set "PATH=C:\xampp\php;C:\xampp\mysql\bin;%PATH%"
+
 echo =====================================================================
 echo       STARTING MEASH CLEANING SOLUTION - COMPLETE ECOSYSTEM         
 echo =====================================================================
