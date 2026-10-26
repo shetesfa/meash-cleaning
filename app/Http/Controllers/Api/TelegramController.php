@@ -1637,22 +1637,25 @@ class TelegramController extends Controller
         $name = $payload['customer_name'] ?? 'ደንበኛ';
         $phone = $payload['customer_phone'] ?? '';
 
-        $msg = "📍 <b>ደረጃ 4/5፡ አድራሻ እና የካርታ መገኛ (Location & Map):</b>\n" .
-            "<i>(Step 4/5: Send Live GPS Pin or Type Address)</i>\n\n" .
+        $msg = "📍 <b>ደረጃ 4/5፡ አድራሻዎን ይምረጡ ወይም ይጻፉ (Address):</b>\n\n" .
             "👤 ደንበኛ: <b>{$name}</b> (📱 {$phone})\n\n" .
-            "ፅዳቱ የሚከናወንበትን ቦታ ይምረጡ:\n\n" .
-            "1️⃣ <b>አሁን በቤትዎ ከሆኑ (ወይም ፅዳቱ ባለበት ቦታ):</b>\n" .
-            "ከስር ያለውን <b>'📍 የቀጥታ ካርታ / GPS ላክ'</b> የሚለውን ቁልፍ ይጫኑ:: የቀጥታ GPS መገኛዎ ለፅዳት ቡድናችን ይደርሳል!\n\n" .
-            "2️⃣ <b>አሁን በቤትዎ ካልሆኑ (ወይም ፅዳቱ የሚደረግበት ቦታ ሌላ ከሆነ):</b>\n" .
-            "ከታች ካሉት ክፍለ ከተሞች አንዱን ይምረጡ ወይም አድራሻዎን ጽፈው ይላኩልን (ለምሳሌ፡ <i>ለሚኩራ ጎሮ 412</i> ወይም <i>ቦሌ ሚካኤል</i>)::";
+            "ፅዳቱ የሚከናወንበትን ክፍለ ከተማ ከስር ካሉት ቁልፎች ይምረጡ ወይም የሰፈር/ጎዳና አድራሻዎን ጽፈው ይላኩልን (ለምሳሌ፡ <i>ቦሌ መድኃኔዓለም፣ ህንጻ ቁጥር 3</i>)::";
 
         $replyKeyboard = [
             'keyboard' => [
                 [
-                    ['text' => '📍 አሁን ያለሁበትን የቀጥታ ካርታ (GPS) ላክ', 'request_location' => true],
+                    ['text' => '🏢 ቦሌ (Bole)'],
+                    ['text' => '🏢 ቂርቆስ (Kirkos)'],
                 ],
                 [
-                    ['text' => '✍ አድራሻዬን እጽፋለሁ (Type Manually)'],
+                    ['text' => '🏢 የካ (Yeka)'],
+                    ['text' => '🏢 ለሚኩራ (Lemi Kura)'],
+                ],
+                [
+                    ['text' => '🏢 ንፋስ ስልክ (Nifas Silk)'],
+                    ['text' => '🏢 አራዳ (Arada)'],
+                ],
+                [
                     ['text' => '❌ ሰርዝ (Cancel)'],
                 ],
             ],
@@ -1712,7 +1715,7 @@ class TelegramController extends Controller
             $locText .= " ({$subcity})";
         }
         if ($lat && $lng) {
-            $locText .= " (📍 GPS: <a href=\"https://www.google.com/maps?q={$lat},{$lng}\">ካርታ ክፈት</a>)";
+            // GPS link removed for clean text address
         }
 
         $this->telegramApi('sendMessage', [
@@ -1870,7 +1873,7 @@ class TelegramController extends Controller
             $locLine .= " ({$subcity})";
         }
         if ($lat && $lng) {
-            $locLine .= "\n🗺 <b>የቀጥታ GPS ካርታ:</b> ተያይዟል ✅ (<a href=\"https://www.google.com/maps?q={$lat},{$lng}\">Google Maps</a>)";
+            // GPS line removed
         } else {
             $locLine .= "\n🗺 <b>ካርታ:</b> አልተመረጠም (የጽሁፍ አድራሻ ብቻ)";
         }
@@ -2027,7 +2030,7 @@ class TelegramController extends Controller
 
         $actionButtons = [];
         if ($lat && $lng) {
-            $actionButtons[] = [['text' => '🗺 በጉግል ካርታ ይመልከቱ (Google Maps)', 'url' => "https://www.google.com/maps?q={$lat},{$lng}"]];
+            // Google maps button removed
         }
         $actionButtons[] = [
             ['text' => '📋 የትዕዛዝ ሁኔታ | Status', 'callback_data' => 'menu_status'],
@@ -2214,7 +2217,7 @@ class TelegramController extends Controller
 
         $actionButtons = [];
         if ($lat && $lng) {
-            $actionButtons[] = [['text' => '🗺 በጉግል ካርታ ይመልከቱ (Google Maps)', 'url' => "https://www.google.com/maps?q={$lat},{$lng}"]];
+            // Google maps button removed
         }
         $actionButtons[] = [
             ['text' => '📋 የትዕዛዝ ሁኔታ | Status', 'callback_data' => 'menu_status'],

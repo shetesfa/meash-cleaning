@@ -87,15 +87,7 @@
             <div>
                 <div class="flex items-center justify-between mb-1.5">
                     <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider" id="lbl-step2">2. አድራሻ በአዲስ አበባ (Location)</label>
-                    <button type="button" onclick="detectTmaLocation()" id="btn-tma-gps" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 font-bold text-[10px] flex items-center gap-1 transition-all">
-                        <i data-lucide="map-pin" class="w-3 h-3 text-cyan-400"></i>
-                        <span id="btn-tma-gps-txt">📍 የቀጥታ GPS ያዝ</span>
-                    </button>
-                </div>
-                <div id="tma-gps-alert" class="hidden mb-2 p-2 rounded-xl bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-[11px] flex items-center justify-between">
-                    <span id="tma-gps-status">📍 GPS ተመዝግቧል</span>
-                    <a id="tma-gps-link" href="#" target="_blank" class="text-cyan-300 underline font-bold text-[10px]">ካርታ እይ</a>
-                </div>
+                    </div>
                 <input type="hidden" id="tma-lat" value="">
                 <input type="hidden" id="tma-lng" value="">
                 <select id="tma-subcity" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 mb-2">

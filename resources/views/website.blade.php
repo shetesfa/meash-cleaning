@@ -21,8 +21,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Leaflet map removed for zero-error stability -->
+
 <script>
   // Immediate dark mode theme initialization to avoid flash
   if (localStorage.getItem('meash_theme') === 'dark' || (!localStorage.getItem('meash_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -343,10 +343,7 @@
           <input id="book-address" type="text" placeholder="Street, house no. / ጎዳና፣ የቤት ቁጥር" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
           <input id="book-landmark" type="text" placeholder="Landmark / መለያ ቦታ (ምሳሌ፡ ሆቴል አጠገብ)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm">
           <input type="hidden" id="book-latitude"><input type="hidden" id="book-longitude">
-          <button type="button" id="btn-gps" onclick="getWebGps()" class="w-full mb-4 border border-navy/15 text-navy font-semibold text-sm py-3 rounded-md flex items-center justify-center gap-2 cursor-pointer hover:bg-fog">
-            <i data-lucide="map-pin" class="w-4 h-4 text-teal-dark"></i> <span data-lang-block="am">ካርታዬን ያዝ</span><span data-lang-block="en">Use my GPS location</span>
-          </button>
-          <div id="web-gps-feedback" class="hidden mb-3"></div>
+          <!-- Direct clear text address - map removed -->
           <div class="flex gap-3">
             <button type="button" onclick="showWizardStep(1)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
             <button type="button" onclick="showWizardStep(3)" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
@@ -1140,41 +1137,49 @@
           </div>`;
         }
 
-        let mapHtml = '';
-        if (isCompleted || ord.is_tracking_expired) {
-          mapHtml = `
-            <div class="mt-4 pt-4 border-t border-navy/10">
-              <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-700 flex items-center justify-center shrink-0 text-xl font-bold">🔒</div>
+                let mapHtml = `
+          <div class="mt-4 pt-4 border-t border-navy/10 space-y-3">
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-teal/15 text-teal-dark flex items-center justify-center shrink-0 font-bold text-base">📍</div>
+              <div class="flex-1">
+                <p class="font-bold text-navy text-xs">የአገልግሎት አድራሻ (Service Address):</p>
+                <p class="text-[11px] text-slate-600 font-semibold mt-0.5">${ord.address || 'አዲስ አበባ'} ${ord.subcity ? '(' + ord.subcity + ')' : ''}</p>
+              </div>
+            </div>
+            ${isCompleted ? `
+              <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-base">✓</div>
                 <div>
-                  <p class="font-extrabold text-emerald-950 text-sm">ስራዎ በተሳካ ሁኔታ ተጠናቋል! (Job Completed)</p>
-                  <p class="text-[11px] text-emerald-800 mt-0.5">የሰራተኞችን ግላዊነት እና ደህንነት ለመጠበቅ የቀጥታ መገኛ መከታተያ ካርታው ተዘግቷል (Link expired for privacy protection)። ስለመረጡን እናመሰግናለን!</p>
+                  <p class="font-extrabold text-emerald-950 text-xs">ስራው በተሳካ ሁኔታ ተጠናቋል! (Completed)</p>
+                  <p class="text-[10px] text-emerald-800 mt-0.5">የሜሽ ጥልቅ ጽዳት አገልግሎትን ስለመረጡ ከልብ እናመሰግናለን!</p>
                 </div>
               </div>
-            </div>`;
-        } else if (ord.customer_location && ord.customer_location.latitude && ord.customer_location.longitude) {
-          mapHtml = `
-            <div class="mt-4 pt-4 border-t border-navy/10">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-extrabold text-navy uppercase tracking-wider flex items-center gap-1.5">
-                  <i data-lucide="map-pin" class="w-4 h-4 text-teal"></i> የቀጥታ ካርታ እና የቡድን መገኛ
-                </span>
-                <span class="text-[11px] font-bold text-teal-dark">${ord.team_assigned || 'ቡድን በመመደብ ላይ'}</span>
-              </div>
-              <div id="live-tracking-map" class="w-full h-64 rounded-xl border border-navy/15 shadow-inner"></div>
-            </div>`;
-        } else {
-          mapHtml = `
-            <div class="mt-4 pt-4 border-t border-navy/10">
-              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-teal/15 text-teal-dark flex items-center justify-center shrink-0 text-base">📍</div>
+            ` : (isEnRoute ? `
+              <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 font-bold text-base">🚗</div>
                 <div>
-                  <p class="font-bold text-navy">አድራሻ (ካርታ አልተመረጠም):</p>
-                  <p class="text-[11px] text-slate-500">${ord.address || 'አዲስ አበባ'} ${ord.subcity ? '(' + ord.subcity + ')' : ''} — ደንበኛው የቀጥታ GPS ካርታ ስላልላከ አድራሻው በጽሁፍ ብቻ ተመዝግቧል።</p>
+                  <p class="font-extrabold text-amber-950 text-xs">የፅዳት ቡድኑ ወደ እርሶ በመጓዝ ላይ ይገኛል! (En Route)</p>
+                  <p class="text-[10px] text-amber-800 mt-0.5">በሰዓቱ ደርሰን አገልግሎቱን እንጀምራለን። ጥያቄ ካለዎት በ 0970075509 ይደውሉልን።</p>
                 </div>
               </div>
-            </div>`;
-        }
+            ` : (isCleaning ? `
+              <div class="p-3.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-900 text-xs flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-teal/20 text-teal-dark flex items-center justify-center shrink-0 font-bold text-base">🧹</div>
+                <div>
+                  <p class="font-extrabold text-teal-950 text-xs">የፅዳት ስራው በመከናወን ላይ ነው! (In Progress)</p>
+                  <p class="text-[10px] text-teal-800 mt-0.5">ቡድናችን ከፍተኛ ጥራት ያለው ጥልቅ ጽዳት እያከናወነ ይገኛል።</p>
+                </div>
+              </div>
+            ` : `
+              <div class="p-3.5 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-900 text-xs flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-700 flex items-center justify-center shrink-0 font-bold text-base">📅</div>
+                <div>
+                  <p class="font-extrabold text-cyan-950 text-xs">ትዕዛዝዎ በትክክል ተመዝግቧል! (Confirmed)</p>
+                  <p class="text-[10px] text-cyan-800 mt-0.5">የተመደበው ቡድን በተያዘው የቀጠሮ ቀንና ሰዓት ይደርሳል።</p>
+                </div>
+              </div>
+            `))}
+          </div>`;
 
         let teamInfoHtml = '';
         if (ord.team_location) {
@@ -1235,45 +1240,7 @@
 
         if (window.lucide) lucide.createIcons();
 
-        // Initialize Leaflet map only if active order and customer location exists
-        if (!isCompleted && !ord.is_tracking_expired && ord.customer_location && ord.customer_location.latitude && ord.customer_location.longitude && window.L) {
-          setTimeout(() => {
-            const mapContainer = document.getElementById('live-tracking-map');
-            if (!mapContainer) return;
-            if (liveTrackMap) {
-              liveTrackMap.remove();
-              liveTrackMap = null;
-            }
-
-            const cLat = ord.customer_location.latitude;
-            const cLng = ord.customer_location.longitude;
-
-            liveTrackMap = L.map('live-tracking-map').setView([cLat, cLng], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '© OpenStreetMap'
-            }).addTo(liveTrackMap);
-
-            // Customer marker
-            L.marker([cLat, cLng])
-              .addTo(liveTrackMap)
-              .bindPopup(`<b>📍 የእርስዎ አድራሻ</b><br>${ord.customer_name}`)
-              .openPopup();
-
-            // Cleaner team marker if GPS is active
-            if (ord.team_location && ord.team_location.latitude && ord.team_location.longitude) {
-              const tLat = ord.team_location.latitude;
-              const tLng = ord.team_location.longitude;
-              L.marker([tLat, tLng])
-                .addTo(liveTrackMap)
-                .bindPopup(`<b>🚚 የሜሽ ጽዳት ቡድን</b><br>${ord.team_location.team_name}<br>ሁኔታ: በመጓዝ ላይ`)
-                .openPopup();
-
-              // Fit bounds to see both customer and cleaner
-              const bounds = L.latLngBounds([[cLat, cLng], [tLat, tLng]]);
-              liveTrackMap.fitBounds(bounds, { padding: [30, 30] });
-            }
-          }, 200);
-        }
+        // Map removed for 100% stability
 
       } else {
         box.innerHTML = `<div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">

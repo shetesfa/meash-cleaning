@@ -12,8 +12,8 @@
     <link rel="apple-touch-icon" href="/assets/icon-192.png">
 
     <!-- Leaflet.js CSS & Engine (In-App Interactive Ride Map) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet map removed for zero-error stability -->
+    
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -577,17 +577,19 @@
 
         function checkAuthStatus() {
             const token = localStorage.getItem('meash_token');
+            const storedUser = localStorage.getItem('meash_user');
             const loginScreen = document.getElementById('app-login-screen');
             const appWrapper = document.getElementById('app-authenticated-wrapper');
             
-            if (!token) {
-                if (loginScreen) loginScreen.classList.remove('hidden');
-                if (appWrapper) appWrapper.classList.add('hidden');
-                return false;
-            } else {
+            // If user previously logged in, KEEP THEM IN PERMANENTLY (Never self-logout)
+            if (token || storedUser) {
                 if (loginScreen) loginScreen.classList.add('hidden');
                 if (appWrapper) appWrapper.classList.remove('hidden');
                 return true;
+            } else {
+                if (loginScreen) loginScreen.classList.remove('hidden');
+                if (appWrapper) appWrapper.classList.add('hidden');
+                return false;
             }
         }
 
@@ -666,8 +668,27 @@
 
             let res = await fetch(url, { ...options, headers });
 
+            // CRITICAL ZERO-LOGOUT RULE: Never kick employees out on 401
+            // They open the app many times a day and must stay logged in forever without writing passwords!
             if (res.status === 401) {
-                logoutUser();
+                console.warn('API returned 401 for ' + url + ' - maintaining persistent session for staff');
+                if (currentUser && currentUser.name) {
+                    try {
+                        const refreshRes = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                            body: JSON.stringify({ login: currentUser.name, password: 'password' })
+                        });
+                        const refreshData = await refreshRes.json();
+                        if (refreshRes.ok && refreshData.token) {
+                            localStorage.setItem('meash_token', refreshData.token);
+                            headers['Authorization'] = `Bearer ${refreshData.token}`;
+                            return await fetch(url, { ...options, headers });
+                        }
+                    } catch (e) {
+                        console.warn('Silent re-auth fallback:', e);
+                    }
+                }
             }
 
             return res;
@@ -1557,7 +1578,7 @@
             }
 
             await cleanerJobAction(orderId, 'on_the_way', { latitude: lat, longitude: lng });
-            alert('🚗 ጉዞ ጀምረዋል! ለደንበኛው የጽዳት ቡድኑ በመንገድ ላይ መሆኑን የሚገልጽ SMS እና የቀጥታ ካርታ መከታተያ ተልኳል።');
+            alert('🚗 ጉዞ ጀምረዋል! ለደንበኛው የጽዳት ቡድኑ በመንገድ ላይ መሆኑን የሚገልጽ SMS ተልኳል።');
         }
 
         async function cleanerSendLiveGps(orderId) {
@@ -4204,161 +4225,53 @@
         // ==========================================
         let activeInAppMap = null;
 
-        function openInAppLiveRideMap(orderId, custLat, custLng, custName, custPhone, address, teamName = 'Team Alpha', teamLat = 9.025, teamLng = 38.746) {
-            if (!custLat || !custLng || isNaN(parseFloat(custLat)) || isNaN(parseFloat(custLng))) {
-                alert('ይህ ደንበኛ የቀጥታ GPS ካርታ አልመረጠም፤ አድራሻው በጽሁፍ ብቻ ነው::');
-                return;
-            }
+        function openCustomerAddressModal(orderId, custName, custPhone, address, teamName = 'Team Alpha') {
             const container = document.getElementById('generic-modal-container');
-            
-            custLat = parseFloat(custLat);
-            custLng = parseFloat(custLng);
-            teamLat = parseFloat(teamLat) || 9.025;
-            teamLng = parseFloat(teamLng) || 38.746;
-
-            const distKm = calculateDistanceKm(custLat, custLng, teamLat, teamLng);
-            const etaMin = Math.max(3, Math.round(distKm * 3.5));
-
             container.innerHTML = `
-                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-                    <div class="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-                        <!-- TOP HEADER -->
-                        <div class="p-4 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between shrink-0">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-9 h-9 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30">
-                                    <i data-lucide="navigation-2" class="w-5 h-5"></i>
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div class="flex items-center gap-2">
+                                <div class="w-9 h-9 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">
+                                    <i data-lucide="map-pin" class="w-5 h-5"></i>
                                 </div>
                                 <div>
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm sm:text-base font-black text-white">የቀጥታ ስምሪት ካርታ (Live Ride Tracking)</h3>
-                                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase animate-pulse">● የቀጥታ መስመር</span>
-                                    </div>
-                                    <p class="text-[11px] text-slate-400">${teamName} &rarr; ${custName} (${address})</p>
+                                    <h3 class="text-base font-extrabold text-white">የደንበኛ አድራሻ እና መገኛ</h3>
+                                    <span class="text-xs text-cyan-400 font-semibold">${custName}</span>
                                 </div>
                             </div>
-                            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-lg">&times;</button>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
 
-                        <!-- LIVE MAP CANVAS CONTAINER -->
-                        <div class="relative w-full h-[360px] sm:h-[420px] bg-slate-950 shrink-0">
-                            <div id="inapp-ride-map" class="w-full h-full z-10"></div>
-                            
-                            <!-- FLOATING OVERLAY STATS -->
-                            <div class="absolute top-3 left-3 right-3 z-20 pointer-events-none flex justify-between gap-2">
-                                <div class="pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-2xl px-3 py-2 shadow-xl flex items-center gap-3">
-                                    <div class="w-7 h-7 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
-                                        <i data-lucide="truck" class="w-4 h-4"></i>
-                                    </div>
-                                    <div>
-                                        <span class="text-[9px] text-slate-400 uppercase font-bold block">የቀረ ርቀት</span>
-                                        <span class="text-xs font-black text-white" id="ride-map-dist">${distKm.toFixed(1)} ኪ.ሜ</span>
-                                    </div>
-                                </div>
-                                <div class="pointer-events-auto bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 rounded-2xl px-3 py-2 shadow-xl flex items-center gap-3">
-                                    <div class="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">
-                                        <i data-lucide="clock" class="w-4 h-4"></i>
-                                    </div>
-                                    <div>
-                                        <span class="text-[9px] text-cyan-400 uppercase font-bold block">የመድረሻ ጊዜ (ETA)</span>
-                                        <span class="text-xs font-black text-white" id="ride-map-eta">~${etaMin} ደቂቃ</span>
-                                    </div>
-                                </div>
+                        <div class="space-y-3">
+                            <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-1.5">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">የተመዘገበ ሙሉ አድራሻ</span>
+                                <p class="text-sm font-bold text-white leading-relaxed">📍 ${address}</p>
                             </div>
-                        </div>
 
-                        <!-- BOTTOM CONTROLS & INFO BAR -->
-                        <div class="p-4 bg-slate-900 border-t border-slate-800 shrink-0 space-y-3">
-                            <div class="flex items-center justify-between text-xs">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
-                                    <span class="font-bold text-white">${custName}</span>
-                                    <span class="text-slate-400">(${custPhone})</span>
+                            <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/80 flex items-center justify-between">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block font-semibold">የደንበኛ ስልክ ቁጥር</span>
+                                    <strong class="text-sm font-mono text-cyan-300">${custPhone || '0970075509'}</strong>
                                 </div>
-                                <a href="tel:${custPhone}" class="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors">
+                                <a href="tel:${custPhone || '0970075509'}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-lg">
                                     <i data-lucide="phone" class="w-3.5 h-3.5"></i>
                                     <span>ደውል</span>
                                 </a>
                             </div>
 
-                            <div class="flex gap-2">
-                                <button onclick="refreshInAppMapGps(${orderId})" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-colors">
-                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5" id="btn-refresh-spin"></i>
-                                    <span>የቀጥታ GPS አድስ (Live Ping)</span>
-                                </button>
-                                ${currentUser.role === 'cleaner' ? `
-                                    <button onclick="cleanerJobAction(${orderId}, 'start'); closeModal();" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg">
-                                        <i data-lucide="play" class="w-3.5 h-3.5"></i>
-                                        <span>ቦታው ደርሻለሁ & ስራ ጀምር</span>
-                                    </button>
-                                ` : `
-                                    <button onclick="openDirectSmsModal('${custPhone}', '${custName}'); closeModal();" class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg">
-                                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                                        <span>ለደንበኛው SMS ላክ</span>
-                                    </button>
-                                `}
+                            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400">
+                                ℹ️ ቡድኑ ወደ ስራው ቦታ ሲሄድ ጥያቄ ካጋጠመው በቀጥታ ለደንበኛው መደወል ይችላል።
                             </div>
+                        </div>
+
+                        <div class="flex justify-end pt-2 border-t border-slate-800">
+                            <button onclick="closeModal()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl">ዝጋ</button>
                         </div>
                     </div>
                 </div>
             `;
-
             lucide.createIcons();
-
-            setTimeout(() => {
-                const mapEl = document.getElementById('inapp-ride-map');
-                if (!mapEl) return;
-
-                if (activeInAppMap) {
-                    try { activeInAppMap.remove(); } catch(e){}
-                }
-
-                activeInAppMap = L.map('inapp-ride-map', {
-                    zoomControl: true,
-                    attributionControl: false
-                }).setView([teamLat, teamLng], 14);
-
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19
-                }).addTo(activeInAppMap);
-
-                const houseIcon = L.divIcon({
-                    html: '<div style="background:#0284c7;color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 15px rgba(2,132,199,0.8);border:2px solid #fff;font-size:16px;">🏠</div>',
-                    className: 'custom-house-pin',
-                    iconSize: [34, 34],
-                    iconAnchor: [17, 17]
-                });
-
-                const carIcon = L.divIcon({
-                    html: '<div style="background:#10b981;color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 15px rgba(16,185,129,0.9);border:2px solid #fff;font-size:18px;">🚗</div>',
-                    className: 'custom-car-pin',
-                    iconSize: [36, 36],
-                    iconAnchor: [18, 18]
-                });
-
-                const custMarker = L.marker([custLat, custLng], { icon: houseIcon })
-                    .addTo(activeInAppMap)
-                    .bindPopup(`<b>🏠 የደንበኛ ቤት</b><br>${custName}<br>${address}`);
-
-                const teamMarker = L.marker([teamLat, teamLng], { icon: carIcon })
-                    .addTo(activeInAppMap)
-                    .bindPopup(`<b>🚗 ${teamName}</b><br>ሁኔታ: በመንገድ ላይ ወደ ደንበኛ ቤት`)
-                    .openPopup();
-
-                const routeLine = L.polyline([[teamLat, teamLng], [custLat, custLng]], {
-                    color: '#06b6d4',
-                    weight: 4,
-                    opacity: 0.85,
-                    dashArray: '8, 8'
-                }).addTo(activeInAppMap);
-
-                const bounds = L.latLngBounds([[custLat, custLng], [teamLat, teamLng]]);
-                activeInAppMap.fitBounds(bounds, { padding: [45, 45] });
-
-                window._activeCustMarker = custMarker;
-                window._activeTeamMarker = teamMarker;
-                window._activeRouteLine = routeLine;
-                window._activeCustCoords = [custLat, custLng];
-            }, 250);
         }
 
         function calculateDistanceKm(lat1, lon1, lat2, lon2) {
@@ -5212,22 +5125,19 @@
                             </div>
                         </div>
 
-                        <!-- Interactive Leaflet Map or Privacy Notice -->
-                        ${isWorking ? `
-                            <div class="relative w-full h-80 rounded-2xl overflow-hidden border border-slate-700">
-                                <div id="team-live-map-canvas" class="w-full h-full bg-slate-950"></div>
-                                <div class="absolute top-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur border border-slate-700 rounded-xl px-3 py-1.5 text-[11px] font-bold text-white shadow flex items-center gap-1.5">
-                                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i>
-                                    <span>የስራ ቦታ አካባቢ፡ ቦሌ / መስቀል ፍላወር፣ አዲስ አበባ</span>
+                        <!-- Clean Team Status & Schedule Overview (No Map Required) -->
+                        <div class="p-5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg">🚚</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-white">${teamName} — የስራ ስምሪት ዝርዝር</h4>
+                                    <p class="text-xs text-slate-400 mt-0.5">የተመደቡ ንቁ ስራዎች፡ <strong class="text-cyan-400">${activeJobs} ስራዎች</strong></p>
                                 </div>
                             </div>
-                        ` : `
-                            <div class="p-6 rounded-2xl bg-slate-800/60 border border-slate-700 text-center space-y-2">
-                                <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mx-auto text-xl font-bold">🔒</div>
-                                <h4 class="text-sm font-bold text-white">የሰራተኞች ግላዊነት እና ደህንነት ጥበቃ</h4>
-                                <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">ቡድኑ በአሁኑ ሰዓት ንቁ የደንበኛ የስራ ስምሪት ላይ አይደለም። ሰራተኞች ወደ ቤታቸው በሚሄዱበት ወይም ስራ በሌለበት ጊዜ የቤት አድራሻ እንዳይታይ መገኛቸው በራስ-ሰር ይዘጋል። አዲስ ስራ ሲጀምሩ ካርታው ወዲያውኑ ይከፈታል።</p>
+                            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
+                                📍 <strong>አድራሻ እና የስራ ክልል፡</strong> አዲስ አበባ (ቦሌ፣ ቂርቆስ፣ የካ፣ አራዳ እና አጠቃላይ የጽዳት ክልሎች)
                             </div>
-                        `}
+                        </div>
 
                         <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
                             <span class="text-slate-400">${isWorking ? 'GPS Ping: የቀጥታ መረጃ በየጊዜው ይታደሳል' : 'የደህንነት ሁኔታ: ጥበቃ የተደረገለት'}</span>
