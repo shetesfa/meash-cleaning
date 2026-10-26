@@ -1114,6 +1114,95 @@
 
   let liveTrackMap = null;
 
+  
+  function openWebRescheduleModal(orderNumber) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+    const modalHtml = `
+      <div id="web-reschedule-backdrop" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-navy/10">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">📅</span>
+              <h3 class="font-bold text-navy text-sm">ቀጠሮ ቀን ማስተላለፊያ (Reschedule)</h3>
+            </div>
+            <button onclick="document.getElementById('web-reschedule-backdrop').remove()" class="text-navy/40 hover:text-navy text-lg font-bold">&times;</button>
+          </div>
+          <form onsubmit="submitWebReschedule(event, '${orderNumber}')" class="space-y-3 text-xs">
+            <div>
+              <label class="block font-bold text-navy mb-1">የትዕዛዝ ቁጥር:</label>
+              <input type="text" value="${orderNumber}" readonly class="w-full bg-slate-100 border border-navy/15 rounded-lg px-3 py-2 font-mono font-bold text-navy">
+            </div>
+            <div>
+              <label class="block font-bold text-navy mb-1">በትዕዛዙ የተጠቀሙት ስልክ ቁጥር *:</label>
+              <input type="tel" id="resched-phone" required placeholder="09... / 07..." class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy focus:border-teal-dark focus:outline-none">
+            </div>
+            <div>
+              <label class="block font-bold text-navy mb-1">አዲሱ የቀጠሮ ቀን (New Date) *:</label>
+              <input type="date" id="resched-date" required min="${tomorrowStr}" value="${tomorrowStr}" class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy focus:border-teal-dark focus:outline-none">
+            </div>
+            <div>
+              <label class="block font-bold text-navy mb-1">የቀጠሮ ሰዓት (Time Slot) *:</label>
+              <select id="resched-slot" class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy focus:border-teal-dark focus:outline-none">
+                <option value="morning">🌅 ጥዋት (2:00 - 6:00 ጠዋቱ ETH • Morning 8am-12pm)</option>
+                <option value="afternoon">☀️ ከሰዓት (7:00 - 11:00 ከሰዓቱ ETH • Afternoon 1pm-5pm)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-navy mb-1">ምክንያት (Reason):</label>
+              <input type="text" id="resched-reason" placeholder="ምክንያቱን በአጭሩ ይጻፉ..." value="በደንበኛው ጥያቄ" class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy focus:border-teal-dark focus:outline-none">
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-navy/10">
+              <button type="button" onclick="document.getElementById('web-reschedule-backdrop').remove()" class="px-4 py-2 border border-navy/20 rounded-lg text-navy font-bold">ሰርዝ</button>
+              <button type="submit" id="btn-submit-resched" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold rounded-lg shadow">ቀጠሮ አስተላልፍ</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  }
+
+  async function submitWebReschedule(e, orderNumber) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit-resched');
+    btn.disabled = true;
+    btn.innerText = 'በማስተላለፍ ላይ...';
+
+    const payload = {
+      order_number: orderNumber,
+      phone: document.getElementById('resched-phone').value.trim(),
+      new_appointment_date: document.getElementById('resched-date').value,
+      new_time_slot: document.getElementById('resched-slot').value,
+      reason: document.getElementById('resched-reason').value.trim(),
+    };
+
+    try {
+      const res = await fetch('/api/public/reschedule-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert('✅ ' + data.message);
+        document.getElementById('web-reschedule-backdrop')?.remove();
+        // re-run track
+        document.getElementById('track-input').value = orderNumber;
+        document.getElementById('track-form').dispatchEvent(new Event('submit'));
+      } else {
+        alert('❌ ስህተት: ' + (data.message || 'ቀጠሮውን ማስተላለፍ አልተቻለም::'));
+      }
+    } catch (err) {
+      alert('❌ የኔትወርክ ስህተት: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerText = 'ቀጠሮ አስተላልፍ';
+    }
+  }
+
   async function trackOrder(e){
     e.preventDefault();
     const q = document.getElementById('track-input').value.trim();
@@ -1196,8 +1285,32 @@
             </div>`;
         }
 
+        let postponeAlertHtml = '';
+        if (ord.is_postponed) {
+          postponeAlertHtml = `
+            <div class="mb-3 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 font-bold text-lg">⏰</div>
+              <div>
+                <p class="font-black text-amber-950 text-xs">ማሳሰቢያ፡ የዚህ ትዕዛዝ ቀጠሮ ተላልፏል! (Rescheduled)</p>
+                <p class="text-[11px] text-amber-800 mt-0.5">አዲሱ የቀጠሮ ቀን፡ <strong>${ord.eth_appointment_date || ord.appointment_date}</strong> (${ord.appointment_time_slot === 'morning' ? 'ጠዋት' : 'ከሰዓት'})</p>
+              </div>
+            </div>`;
+        }
+
+        let rescheduleBtnHtml = '';
+        if (!isCompleted) {
+          rescheduleBtnHtml = `
+            <div class="mt-4 pt-3 border-t border-navy/10 flex flex-wrap items-center justify-between gap-2">
+              <span class="text-[11px] text-navy/60 font-semibold">ቀጠሮዎን መቀየር ወይም ማራዘም ይፈልጋሉ?</span>
+              <button type="button" onclick="openWebRescheduleModal('${ord.order_number}')" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition flex items-center gap-1 cursor-pointer">
+                <span>📅 ቀጠሮ ቀን አስተላልፍ</span>
+              </button>
+            </div>`;
+        }
+
         box.innerHTML = `
           <div class="bg-white rounded-2xl p-6 border border-navy/10 shadow-lg">
+            ${postponeAlertHtml}
             <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
               <div>
                 <span class="text-xs text-navy/40 font-bold uppercase block">የትዕዛዝ ቁጥር</span>
@@ -1236,6 +1349,7 @@
             ${subBadge}
             ${teamInfoHtml}
             ${mapHtml}
+            ${rescheduleBtnHtml}
           </div>`;
 
         if (window.lucide) lucide.createIcons();

@@ -29,7 +29,7 @@ class TelegramPollCommand extends Command
         $this->info('Connecting to Telegram Bot API...');
 
         // Verify token with getMe
-        $getMe = Http::get("https://api.telegram.org/bot{$token}/getMe")->json();
+        $getMe = Http::withOptions(['verify' => false, 'timeout' => 10])->get("https://api.telegram.org/bot{$token}/getMe")->json();
         if (!($getMe['ok'] ?? false)) {
             $this->error('Failed to authenticate with Telegram. Please check your bot token.');
             $this->line(json_encode($getMe));
@@ -40,11 +40,11 @@ class TelegramPollCommand extends Command
         $this->info("Successfully connected as @{$botUser}!");
 
         // If webhook is active, clear it so local getUpdates doesn't conflict
-        $info = Http::get("https://api.telegram.org/bot{$token}/getWebhookInfo")->json();
+        $info = Http::withOptions(['verify' => false, 'timeout' => 10])->get("https://api.telegram.org/bot{$token}/getWebhookInfo")->json();
         if (!empty($info['result']['url'] ?? '')) {
             $this->warn("Active webhook detected ({$info['result']['url']}).");
             $this->info("Switching to Local Polling mode (clearing webhook)...");
-            Http::get("https://api.telegram.org/bot{$token}/deleteWebhook");
+            Http::withOptions(['verify' => false, 'timeout' => 10])->get("https://api.telegram.org/bot{$token}/deleteWebhook");
         }
 
         $this->info("Listening for Telegram messages & Inline Queries (@{$botUser} ...)");
@@ -55,9 +55,9 @@ class TelegramPollCommand extends Command
 
         while (true) {
             try {
-                $response = Http::timeout(35)->get("https://api.telegram.org/bot{$token}/getUpdates", [
+                $response = Http::withOptions(['verify' => false])->timeout(35)->get("https://api.telegram.org/bot{$token}/getUpdates", [
                     'offset' => $offset,
-                    'timeout' => 25,
+                    'timeout' => 20,
                 ]);
 
                 if ($response->ok()) {

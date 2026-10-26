@@ -276,6 +276,8 @@ class PublicWebsiteController extends Controller
                     'team_location' => $teamLocation,
                     'customer_location' => $customerLocation,
                     'items' => $order->items,
+                    'is_postponed' => (str_contains((string)$order->notes, 'ቀጠሮ ተላልፏል') || $order->order_status === 'rescheduled'),
+                    'postpone_notes' => (str_contains((string)$order->notes, 'ቀጠሮ ተላልፏል') || $order->order_status === 'rescheduled') ? $order->notes : null,
                     'is_tracking_expired' => $isCompletedOrCancelled,
                     'expired_message' => $isCompletedOrCancelled ? 'የዚህ ትዕዛዝ የፅዳት ስራ ተጠናቋል! ለሰራተኞች ደህንነት እና ግላዊነት ጥበቃ የቀጥታ መገኛ መከታተያ ተዘግቷል። (Link expired for privacy)' : null,
                 ],
@@ -299,5 +301,75 @@ class PublicWebsiteController extends Controller
             ->get();
 
         return response()->json($feedbacks);
+    }
+
+    /**
+     * Customer Self-Reschedule / Postpone Request from Website or Bot
+     */
+    public function rescheduleOrder(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'order_number' => 'required|string',
+            'phone' => 'required|string',
+            'new_appointment_date' => 'required|date|after_or_equal:today',
+            'new_time_slot' => 'nullable|string',
+            'reason' => 'nullable|string',
+        ]);
+
+        $order = Order::with('customer')->where('order_number', trim($validated['order_number']))->first();
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'በትዕዛዝ ቁጥር ' . $validated['order_number'] . ' የተመዘገበ ትዕዛዝ አልተገኘም::'], 404);
+        }
+
+        $cleanPhone = preg_replace('/\D+/', '', $validated['phone']);
+        $custPhone = preg_replace('/\D+/', '', $order->customer?->phone ?? '');
+        if (!empty($cleanPhone) && !empty($custPhone)) {
+            if (!str_ends_with($custPhone, substr($cleanPhone, -8)) && !str_ends_with($cleanPhone, substr($custPhone, -8))) {
+                return response()->json(['success' => false, 'message' => 'የስልክ ቁጥሩ ከትዕዛዙ መዝገብ ጋር አይዛመድም:: እባክዎ በትዕዛዙ ጊዜ የተጠቀሙትን ስልክ ያስገቡ::'], 403);
+            }
+        }
+
+        $oldDate = $order->appointment_date ? (is_string($order->appointment_date) ? $order->appointment_date : $order->appointment_date->format('Y-m-d')) : 'ያልተገለጸ';
+        $newDate = $validated['new_appointment_date'];
+        $newSlot = $validated['new_time_slot'] ?? $order->appointment_time_slot ?? 'morning';
+        $reason = $validated['reason'] ?? 'በደንበኛው ጥያቄ መሰረት';
+
+        $order->appointment_date = $newDate;
+        $order->appointment_time_slot = $newSlot;
+        $order->order_status = 'rescheduled';
+        $note = "ቀጠሮ ተላልፏል (Customer Reschedule): ከ {$oldDate} ወደ {$newDate} ({$newSlot}) | ምክንያት: {$reason}";
+        $order->notes = ($order->notes ? $order->notes . "\n" : '') . $note;
+        $order->save();
+
+        \App\Models\Appointment::updateOrCreate(
+            ['order_id' => $order->id],
+            [
+                'customer_id' => $order->customer_id,
+                'cleaning_team_id' => $order->assigned_team_id,
+                'appointment_date' => $newDate,
+                'status' => 'rescheduled',
+                'notes' => $note,
+            ]
+        );
+
+        \App\Models\Notification::create([
+            'title' => "ደንበኛ ቀጠሮ አስተላልፏል (#{$order->order_number})",
+            'body' => "ደንበኛ {$order->customer?->full_name} ቀጠሮውን ወደ {$newDate} አስተላልፏል::",
+            'type' => 'order_rescheduled',
+            'data' => [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'new_date' => $newDate,
+            ]
+        ]);
+
+        $eth = EthiopianCalendarService::toEthiopian($newDate);
+
+        return response()->json([
+            'success' => true,
+            'message' => "ቀጠሮዎ በተሳካ ሁኔታ ወደ {$newDate} ({$eth['formatted_am']}) ተላልፏል:: የፅዳት ቡድናችን በተያዘው ቀን በሰዓቱ ይደርሳል!",
+            'new_appointment_date' => $newDate,
+            'eth_appointment_date' => $eth['formatted_am'],
+        ]);
     }
 }

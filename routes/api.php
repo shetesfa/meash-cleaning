@@ -37,6 +37,7 @@ Route::prefix('public')->group(function () {
     Route::get('/services', [PublicWebsiteController::class, 'services']);
     Route::post('/book', [PublicWebsiteController::class, 'book']);
     Route::get('/track-order', [PublicWebsiteController::class, 'trackOrder']);
+    Route::post('/reschedule-order', [PublicWebsiteController::class, 'rescheduleOrder']);
     Route::get('/reviews', [PublicWebsiteController::class, 'publicReviews']);
 });
 

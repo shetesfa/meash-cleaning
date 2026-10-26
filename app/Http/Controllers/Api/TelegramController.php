@@ -610,7 +610,11 @@ class TelegramController extends Controller
             $this->startInteractiveBooking($tgUser, $chatId);
         } elseif (str_starts_with($text, '/contact') || $text === 'ስልክ' || $text === 'ሪሴፕሽን') {
             $this->sendContactInfo($chatId);
-        } elseif (str_starts_with($text, '/status') || str_starts_with($text, 'ORD-')) {
+        } elseif (str_starts_with($text, '/status') || str_starts_with($text, '/track') || str_starts_with($text, 'ORD-') || str_starts_with($text, 'MEASH-')) {
+            $orderCode = strtoupper(trim(str_replace(['/status', '/track'], '', $text)));
+            $this->checkOrderStatus($chatId, $orderCode);
+            return;
+        } elseif (false) {
             $orderCode = strtoupper(trim(str_replace('/status', '', $text)));
             $this->checkOrderStatus($chatId, $orderCode);
         } elseif (str_starts_with($text, '/help') || $text === 'እርዳታ') {
@@ -855,6 +859,30 @@ class TelegramController extends Controller
             }
         }
 
+                if (str_starts_with($data, 'resched_')) {
+            $orderNo = trim(str_replace('resched_', '', $data));
+            $this->telegramApi('sendMessage', [
+                'chat_id' => $chatId,
+                'text' => "📅 <b>ቀጠሮዎን ለማራዘም ወይም አዲስ ቀን ለመቀየር:</b>\n\nየትዕዛዝ ቁጥር: <code>{$orderNo}</code>\n\nእባክዎ የሚፈልጉትን አዲስ ቀን በ 0970075509 ደውለው ወይም በ @meashdeepcleaning መልዕክት ይንገሩን:: ሪሴፕሽናችን ወዲያውኑ ያስተካክላል::",
+                'parse_mode' => 'HTML',
+                'reply_markup' => json_encode([
+                    'inline_keyboard' => [
+                        [['text' => '📞 ሪሴፕሽን ደውል (0970075509)', 'callback_data' => 'menu_contact']],
+                        [['text' => '📋 የትዕዛዝ ሁኔታ | Status', 'callback_data' => "track_{$orderNo}"]],
+                    ]
+                ])
+            ]);
+            $this->telegramApi('answerCallbackQuery', ['callback_query_id' => $id]);
+            return;
+        }
+
+        if (str_starts_with($data, 'track_')) {
+            $orderNo = trim(str_replace('track_', '', $data));
+            $this->checkOrderStatus($chatId, $orderNo);
+            $this->telegramApi('answerCallbackQuery', ['callback_query_id' => $id]);
+            return;
+        }
+
         if ($data === 'menu_services') {
             $this->sendServicesMenu($chatId);
         } elseif ($data === 'menu_book') {
@@ -1016,30 +1044,56 @@ class TelegramController extends Controller
             return;
         }
 
+        $isPostponed = str_contains((string)$order->notes, 'ቀጠሮ ተላልፏል') || $order->order_status === 'rescheduled';
+
         $statusAm = match ($order->order_status) {
             'new' => 'አዲስ ተመዝግቧል (New)',
             'confirmed' => 'ተረጋግጧል (Confirmed)',
             'in_progress' => 'በስራ ላይ (In Progress)',
             'completed' => 'ተጠናቋል (Completed)',
             'cancelled' => 'ተሰርዟል (Cancelled)',
+            'rescheduled' => '⏰ ቀጠሮ ተላልፏል (Rescheduled)',
             default => $order->order_status,
         };
 
-        $teamName = $order->assignedTeam ? $order->assignedTeam->name : 'በመመደብ ላይ';
+        $teamName = $order->assignedTeam ? ($order->assignedTeam->team_name ?? $order->assignedTeam->name) : 'በመመደብ ላይ';
+        $apptDateStr = $order->appointment_date ? (is_object($order->appointment_date) ? $order->appointment_date->format('Y-m-d') : substr((string)$order->appointment_date, 0, 10)) : 'ቀን አልተወሰነም';
+
+        $eth = \App\Services\EthiopianCalendarService::toEthiopian($apptDateStr);
+        $ethDateStr = $eth['formatted_am'] ?? $apptDateStr;
+
+        $postponeBanner = '';
+        if ($isPostponed) {
+            $postponeBanner = "⚠️ <b>ማሳሰቢያ፡ የዚህ ትዕዛዝ ቀጠሮ ተላልፏል! (Rescheduled)</b>\n" .
+                "🗓 <b>አዲሱ የቀጠሮ ቀን:</b> <b>{$apptDateStr} ({$ethDateStr})</b>\n\n";
+        }
 
         $msg = "📋 <b>የትዕዛዝ መረጃ - {$order->order_number}</b>\n\n" .
-            "👤 <b>ደንበኛ:</b> {$order->customer->full_name}\n" .
+            $postponeBanner .
+            "👤 <b>ደንበኛ:</b> " . ($order->customer?->full_name ?? 'ውድ ደንበኛችን') . "\n" .
             "📍 <b>አድራሻ:</b> {$order->address} ({$order->subcity})\n" .
-            "📅 <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$order->appointment_time_slot})\n" .
+            "📅 <b>የቀጠሮ ቀን:</b> <b>{$apptDateStr}</b> ({$ethDateStr})\n" .
+            "⏰ <b>ሰዓት:</b> {$order->appointment_time_slot}\n" .
             "🔄 <b>የትዕዛዝ ሁኔታ:</b> <b>{$statusAm}</b>\n" .
             "🚐 <b>የተመደበው ቡድን:</b> {$teamName}\n" .
-            "💰 <b>ጠቅላላ ዋጋ:</b> " . number_format($order->total_amount, 2) . " ብር\n\n" .
-            "ማንኛውም ጥያቄ ካለዎት በ 0970075509 ይደውሉልን::";
+            "💰 <b>ጠቅላላ ክፍያ:</b> " . number_format((float)($order->total ?? $order->total_amount ?? 0), 2) . " ብር\n\n" .
+            "ቀጠሮዎን መቀየር ወይም ማራዘም ከፈለጉ ከስር ያለውን ቁልፍ ይጫኑ ወይም በ 0970075509 ይደውሉ::";
+
+        $buttons = [
+            [
+                ['text' => '📅 ቀጠሮ ቀን አስተላልፍ (Change Date)', 'callback_data' => "resched_{$order->order_number}"],
+                ['text' => '📞 ሪሴፕሽን (0970075509)', 'callback_data' => 'menu_contact'],
+            ],
+            [
+                ['text' => '🚀 ዋና ማውጫ | Main Menu', 'callback_data' => 'menu_start'],
+            ]
+        ];
 
         $this->telegramApi('sendMessage', [
             'chat_id' => $chatId,
             'text' => $msg,
             'parse_mode' => 'HTML',
+            'reply_markup' => json_encode(['inline_keyboard' => $buttons]),
         ]);
     }
 

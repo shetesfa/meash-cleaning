@@ -8,15 +8,15 @@ echo =====================================================================
 echo    MEASH CLEANING SOLUTION - TELEGRAM BOT CONTROLLER (@meash)   
 echo =====================================================================
 echo.
-echo [1] ቦቱን በ Render ክላውድ ላይ 24/7 ማገናኘት (Cloud Webhook - ኮምፒውተር ባይበራም ይሰራል)
-echo [2] ቦቱን በ Local ኮምፒውተር ላይ በቀጥታ ማስኬድ (Local Polling)
-echo [3] የቦቱን ወቅታዊ ሁኔታ ማየት (Check Bot Status)
+echo [1] ቦቱን በ Local ኮምፒውተር ላይ በቀጥታ ማስኬድ (Local Polling - ነባሪ)
+echo [2] የቦቱን ወቅታዊ ሁኔታ ማየት (Check Bot Status)
+echo [3] ቦቱን ወደ Cloud Webhook ማገናኘት
 echo.
 set /p choice="ምርጫዎን ያስገቡ [1, 2 ወይም 3] (ነባሪ = 1): "
 
-if "%choice%"=="2" goto LOCAL_POLL
-if "%choice%"=="3" goto CHECK_STATUS
-goto SET_RENDER
+if "%choice%"=="2" goto CHECK_STATUS
+if "%choice%"=="3" goto SET_RENDER
+goto LOCAL_POLL
 
 :SET_RENDER
 echo.
