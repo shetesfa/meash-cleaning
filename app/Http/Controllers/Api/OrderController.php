@@ -29,17 +29,19 @@ class OrderController extends Controller
             'items.service:id,name_en,name_am,code',
         ]);
 
-        // Cleaners or explicit team inspection
+        // Cleaners: Strict access limit to ONLY their own team's jobs
         $user = $request->user();
-        if ($teamId = $request->input('team_id')) {
-            $query->where('assigned_team_id', $teamId);
-        } elseif ($user && $user->isCleaner()) {
-            $teamIds = DB::table('team_members')
-                ->where('user_id', $user->id)
-                ->pluck('cleaning_team_id');
-            if ($teamIds->isNotEmpty()) {
+        if ($user && $user->isCleaner()) {
+            $teamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
+                ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
+                ->unique();
+            if ($teamIds->isEmpty()) {
+                $query->whereRaw('1 = 0');
+            } else {
                 $query->whereIn('assigned_team_id', $teamIds);
             }
+        } elseif ($teamId = $request->input('team_id')) {
+            $query->where('assigned_team_id', $teamId);
         }
 
         // Search
@@ -91,8 +93,18 @@ class OrderController extends Controller
         return response()->json($orders);
     }
 
-    public function show(Order $order): JsonResponse
+    public function show(Request $request, Order $order): JsonResponse
     {
+        $user = $request->user();
+        if ($user && $user->isCleaner()) {
+            $teamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
+                ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
+                ->unique();
+            if (!$order->assigned_team_id || !$teamIds->contains($order->assigned_team_id)) {
+                return response()->json(['message' => 'Unauthorized. You can only view jobs assigned to your team.'], 403);
+            }
+        }
+
         $order->load([
             'customer',
             'creator:id,name,role',

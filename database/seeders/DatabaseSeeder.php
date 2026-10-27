@@ -31,6 +31,34 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $isLocal = app()->environment('local');
+
+        if (! $isLocal) {
+            $this->command->info('Running DatabaseSeeder in production mode (demo data disabled).');
+            $ownerEmail = env('MEASH_OWNER_EMAIL', env('OWNER_EMAIL', 'owner@meash.com'));
+            $ownerPassword = env('MEASH_OWNER_PASSWORD', env('OWNER_PASSWORD'));
+
+            if (empty($ownerPassword)) {
+                $this->command->warn('MEASH_OWNER_PASSWORD is not set in .env. Skipping production owner creation.');
+            } elseif (! User::where('role', 'owner')->exists()) {
+                User::create([
+                    'name' => env('MEASH_OWNER_NAME', 'Meash General Manager'),
+                    'email' => $ownerEmail,
+                    'phone' => env('MEASH_OWNER_PHONE', '0911000001'),
+                    'role' => 'owner',
+                    'password' => Hash::make($ownerPassword),
+                    'is_active' => true,
+                ]);
+                $this->command->info("Created production owner account ({$ownerEmail}) securely from .env.");
+            }
+
+            // In production, seed essential services if none exist
+            if (Service::count() === 0) {
+                $this->seedEssentialServices();
+            }
+            return;
+        }
+
         if (User::where('email', 'owner@meash.com')->exists()) {
             $this->command->info('Database is already seeded. Skipping seeder to prevent duplicate entries.');
             return;
@@ -952,5 +980,84 @@ class DatabaseSeeder extends Seeder
             'language_code' => 'am',
             'last_interaction_at' => now(),
         ]);
+    }
+
+    protected function seedEssentialServices(): void
+    {
+        $servicesData = [
+            [
+                'code' => 'SVC-SOFA',
+                'name_en' => 'Sofa Deep Cleaning & Shampooing',
+                'name_am' => 'የሶፋ ጥልቅ እጥበትና ሻምፑ',
+                'description_en' => 'Professional injection-extraction deep washing removing deep stains and odor.',
+                'description_am' => 'የቆሸሹ ሶፋዎችን በከፍተኛ ቴክኖሎጂ ማጠብ፣ ማድረቅና ማጽዳት።',
+                'category' => 'upholstery',
+                'pricing_type' => 'fixed',
+                'unit' => 'seat',
+                'base_price' => 350,
+                'min_quantity' => 1,
+                'duration_minutes' => 60,
+                'icon' => 'sofa',
+                'color' => '#06B6D4',
+                'is_active' => true,
+                'sort_order' => 1,
+            ],
+            [
+                'code' => 'SVC-CARPET',
+                'name_en' => 'Carpet Washing & Steam Disinfection',
+                'name_am' => 'የምንጣፍ ማጠብና ስቲም ፀረ-ተባይ',
+                'description_en' => 'Commercial extraction equipment with specialized textile shampoo and antibacterial steaming.',
+                'description_am' => 'ምንጣፎችን ከነቆሻሻቸውና ጠረናቸው ሙሉ በሙሉ ማጽዳት።',
+                'category' => 'carpet',
+                'pricing_type' => 'area_sqm',
+                'unit' => 'sqm',
+                'base_price' => 80,
+                'min_quantity' => 10,
+                'duration_minutes' => 90,
+                'icon' => 'grid',
+                'color' => '#10B981',
+                'is_active' => true,
+                'sort_order' => 2,
+            ],
+            [
+                'code' => 'SVC-MATTRESS',
+                'name_en' => 'Mattress Sanitization & UV Dust-Mite Removal',
+                'name_am' => 'የፍራሽ ጥልቅ እጥበትና ፀረ-አቧራ',
+                'description_en' => 'Hospital-grade sanitization targeting dust mites, allergens, body fluids, and sweat marks.',
+                'description_am' => 'ፍራሽ ላይ ያሉ ጀርሞችንና አቧራዎችን በከፍተኛ ቫኪዩም ማጽዳት።',
+                'category' => 'mattress',
+                'pricing_type' => 'fixed',
+                'unit' => 'item',
+                'base_price' => 800,
+                'min_quantity' => 1,
+                'duration_minutes' => 45,
+                'icon' => 'bed',
+                'color' => '#8B5CF6',
+                'is_active' => true,
+                'sort_order' => 3,
+            ],
+            [
+                'code' => 'SVC-MOVEIN',
+                'name_en' => 'Post-Construction & Move-in Deep Cleaning',
+                'name_am' => 'ከግንባታ በኋላ እና የአዲስ ቤት ጥልቅ ጽዳት',
+                'description_en' => 'Paint scraping, cement haze removal, tile buffing, deep kitchen degreasing, and bathrooms.',
+                'description_am' => 'አዲስ ለተገነባ ወይም ለተቀየረ ቤት የሚደረግ የተሟላ ጽዳት።',
+                'category' => 'deep_cleaning',
+                'pricing_type' => 'quote',
+                'unit' => 'house',
+                'base_price' => 5000,
+                'min_quantity' => 1,
+                'duration_minutes' => 360,
+                'icon' => 'home',
+                'color' => '#F59E0B',
+                'is_active' => true,
+                'sort_order' => 4,
+            ]
+        ];
+
+        foreach ($servicesData as $s) {
+            Service::create($s);
+        }
+        $this->command->info('Seeded essential services for production.');
     }
 }

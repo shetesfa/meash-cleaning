@@ -25,7 +25,7 @@ class TelegramController extends Controller
 
     public function __construct()
     {
-        $this->botToken = (string)(config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN', '8797114776:AAGktaX0ElouAdFW5IefnRzVdg5Zm2PvOLM'));
+        $this->botToken = (string)(config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN'));
         $this->botUsername = (string)(config('services.telegram.bot_username') ?: env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'));
     }
 
@@ -47,7 +47,8 @@ class TelegramController extends Controller
     {
         try {
             $secretToken = config('services.telegram.webhook_secret') ?: env('TELEGRAM_WEBHOOK_SECRET');
-            if (!empty($secretToken) && $request->header('X-Telegram-Bot-Api-Secret-Token') !== $secretToken) {
+            if (empty($secretToken) || $request->header('X-Telegram-Bot-Api-Secret-Token') !== $secretToken) {
+                Log::warning('Telegram webhook request rejected: Invalid or missing secret token.');
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
@@ -73,13 +74,15 @@ class TelegramController extends Controller
 
             return response()->json(['status' => 'ignored']);
         } catch (\Throwable $e) {
-            Log::error("Telegram webhook error: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+            Log::error('Telegram webhook error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'status' => 'error',
-                'message' => $e->getMessage(),
-                'file' => basename($e->getFile()),
-                'line' => $e->getLine(),
-            ], 200); // Return 200 to prevent Telegram from looping failed webhooks, while returning diagnostic details
+                'message' => 'An error occurred while processing the webhook request.',
+            ], 200);
         }
     }
 

@@ -5,12 +5,14 @@ set -e
 echo "Running migrations..."
 php artisan migrate --force
 
-# Seed database if users are empty
-php artisan db:seed --force || true
+# Seed database only in local environment
+if [ "$APP_ENV" = "local" ]; then
+    echo "Seeding local database..."
+    php artisan db:seed --force
+fi
 
-# Cache Laravel configurations
-echo "Caching config & routes..."
-php artisan storage:link || true
+# Link storage
+php artisan storage:link
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache

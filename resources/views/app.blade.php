@@ -95,42 +95,7 @@
                     </div>
                 </div>
 
-                <!-- 3 Core Roles hint badge -->
-                <div class="pt-2 pb-1">
-                    <p class="text-[11px] text-slate-400 mb-1.5 font-bold uppercase tracking-wider text-center">3ቱ የስርዓቱ ዋና የስራ ድርሻዎች (Core Roles)፦</p>
-                    <div class="grid grid-cols-3 gap-1.5 text-[10px] text-slate-300 font-semibold">
-                        <button type="button" onclick="fillTestAccount('Meash General Manager')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg p-1.5 text-center cursor-pointer transition">
-                            <span class="block text-cyan-400 text-xs">👑</span>
-                            <span class="block truncate">owner</span>
-                            <span class="block text-[8px] text-slate-400">ስራ አስኪያጅ</span>
-                        </button>
-                        <button type="button" onclick="fillTestAccount('Bethlehem Tadesse')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg p-1.5 text-center cursor-pointer transition">
-                            <span class="block text-cyan-400 text-xs">📞</span>
-                            <span class="block truncate">reception</span>
-                            <span class="block text-[8px] text-slate-400">ሪሴፕሽን</span>
-                        </button>
-                        <button type="button" onclick="fillTestAccount('Solomon Kebede')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg p-1.5 text-center cursor-pointer transition">
-                            <span class="block text-cyan-400 text-xs">🧹</span>
-                            <span class="block truncate">cleaner</span>
-                            <span class="block text-[8px] text-slate-400">ጽዳት ሰራተኛ</span>
-                        </button>
-                    </div>
-                    <p class="text-[10px] text-slate-400 mt-2 text-center">↑ ስምዎን ወይም የስራ ድርሻዎን ያስገቡ • የይለፍ ቃል፦ password</p>
-                </div>
-
-                <button type="submit" id="btn-app-login" class="w-full mt-3 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all">
-                    <i data-lucide="log-in" class="w-4 h-4"></i>
-                    <span id="btn-app-login-text">ወደ ሲስተም ግባ (Login to Mesh OS)</span>
-                </button>
-            </form>
-
-            <div class="mt-6 pt-4 border-t border-slate-800 text-center">
-                <a href="/" class="text-xs text-slate-400 hover:text-cyan-400 font-semibold flex items-center justify-center gap-1">
-                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-                    <span>ወደ ደንበኞች ድረ-ገጽ ተመለስ</span>
-                </a>
-            </div>
-        </div>
+                
     </div>
 
     <!-- MAIN AUTHENTICATED SYSTEM WRAPPER -->
@@ -165,59 +130,18 @@
             </button>
 
             <!-- Floating Role Menu with Cleaning Groups by Name -->
-            <div id="role-dropdown-menu" class="hidden absolute left-1/2 -translate-x-1/2 mt-2 w-64 sm:w-72 bg-slate-900 border border-slate-700 rounded-2xl p-2 shadow-2xl z-50 space-y-1 max-h-[85vh] overflow-y-auto">
-                <div class="px-3 py-1.5 border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    የስራ ዘርፍ ይቀይሩ (Switch Role)
+            <div id="role-dropdown-menu" class="hidden absolute left-1/2 -translate-x-1/2 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-2xl p-3 shadow-2xl z-50 space-y-2">
+                <div class="px-2 py-1 border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    የተጠቃሚ መረጃ (Current Profile)
                 </div>
-                <button type="button" onclick="switchRoleAccount('Meash General Manager', 'owner'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
-                    <span class="flex items-center gap-2">
-                        <span class="text-base">👑</span>
-                        <span>1. ዋና ስራ አስኪያጅ</span>
-                    </span>
-                    <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-900">owner</span>
+                <div class="px-2 py-1.5 bg-slate-800/60 rounded-xl">
+                    <p class="text-xs font-bold text-white" id="dropdown-user-name">ተጠቃሚ</p>
+                    <p class="text-[10px] text-cyan-400 font-mono mt-0.5" id="dropdown-user-role">role</p>
+                </div>
+                <button type="button" onclick="logoutUser(); closeRoleDropdown();" class="w-full flex items-center gap-2 p-2.5 rounded-xl hover:bg-red-950/60 text-xs font-bold text-red-400 hover:text-red-300 transition text-left cursor-pointer border border-red-900/40">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span>ከሲስተም ውጣ (Logout)</span>
                 </button>
-                <button type="button" onclick="switchRoleAccount('Bethlehem Tadesse', 'reception'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
-                    <span class="flex items-center gap-2">
-                        <span class="text-base">📞</span>
-                        <span>2. ሪሴፕሽን & ሽያጭ</span>
-                    </span>
-                    <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-900">reception</span>
-                </button>
-
-                <!-- Cleaning Groups Section by Name -->
-                <div class="px-3 pt-2.5 pb-1 border-t border-slate-800 flex items-center justify-between text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
-                    <span>🧹 የፅዳት ቡድኖች (Cleaning Groups)</span>
-                </div>
-                <div id="role-cleaning-teams-list" class="space-y-1">
-                    <button type="button" onclick="switchCleaningTeam(1, 'Team Alpha (Upholstery & Carpet)'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
-                        <span class="flex items-center gap-2 truncate">
-                            <span class="text-base shrink-0">🧹</span>
-                            <span class="truncate">Team Alpha (Solomon)</span>
-                        </span>
-                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800 shrink-0">Alpha</span>
-                    </button>
-                    <button type="button" onclick="switchCleaningTeam(2, 'Team Bravo (Rotary Scrub & Mattress)'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
-                        <span class="flex items-center gap-2 truncate">
-                            <span class="text-base shrink-0">🧹</span>
-                            <span class="truncate">Team Bravo (Rotary/Mattress)</span>
-                        </span>
-                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800 shrink-0">Bravo</span>
-                    </button>
-                    <button type="button" onclick="switchCleaningTeam(3, 'Team Delta (Facade & Post-Construction)'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
-                        <span class="flex items-center gap-2 truncate">
-                            <span class="text-base shrink-0">🧹</span>
-                            <span class="truncate">Team Delta (Post-Construction)</span>
-                        </span>
-                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800 shrink-0">Delta</span>
-                    </button>
-                    <button type="button" onclick="switchCleaningTeam(4, 'team 1'); closeRoleDropdown();" class="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-800 text-xs font-bold text-slate-200 hover:text-white transition group text-left cursor-pointer">
-                        <span class="flex items-center gap-2 truncate">
-                            <span class="text-base shrink-0">🧹</span>
-                            <span class="truncate">team 1</span>
-                        </span>
-                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800 shrink-0">Team 1</span>
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -503,73 +427,6 @@
             }
         }
 
-        function fillTestAccount(email) {
-            const loginInput = document.getElementById('app-login-input');
-            const pwdInput = document.getElementById('app-password-input');
-            if (loginInput) loginInput.value = email;
-            if (pwdInput) {
-                pwdInput.value = 'password';
-                pwdInput.focus();
-            }
-        }
-
-        async function autoLoginAs(email, role) {
-            const loginInput = document.getElementById('app-login-input');
-            const pwdInput = document.getElementById('app-password-input');
-            if (loginInput) loginInput.value = email;
-            if (pwdInput) pwdInput.value = 'password';
-            
-            const btn = document.getElementById('btn-app-login');
-            const btnText = document.getElementById('btn-app-login-text');
-            const errBanner = document.getElementById('login-error-banner');
-            if (errBanner) errBanner.classList.add('hidden');
-            if (btnText) btnText.innerText = 'በማረጋገጥ ላይ...';
-
-            try {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify({ login: email, password: 'password' })
-                });
-                const data = await res.json();
-                if (res.ok && data.token) {
-                    localStorage.setItem('meash_token', data.token);
-                    localStorage.setItem('meash_user', JSON.stringify(data.user));
-                    currentUser = Object.assign(currentUser, data.user);
-                    checkAuthStatus();
-                    await initApp();
-                } else {
-                    alert('መግባት አልተቻለም: ' + ((data && data.message) ? data.message : 'የተሳሳተ መረጃ'));
-                }
-            } catch (err) {
-                console.error(err);
-                alert('የሰርቨር ግንኙነት ችግር አጋጥሟል::');
-            } finally {
-                if (btnText) btnText.innerText = 'ወደ ሲስተም ግባ (Login to Mesh OS)';
-            }
-        }
-
-        async function switchRoleAccount(email, role) {
-            try {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify({ login: email, password: 'password' })
-                });
-                const data = await res.json();
-                if (res.ok && data.token) {
-                    localStorage.setItem('meash_token', data.token);
-                    localStorage.setItem('meash_user', JSON.stringify(data.user));
-                    currentUser = Object.assign(currentUser, data.user);
-                }
-            } catch (e) {
-                console.warn('Seamless role switch fallback:', e);
-            }
-            
-            currentUser.role = role || currentUser.role;
-            await switchRole(currentUser.role);
-        }
-
         function checkAuthStatus() {
             const token = localStorage.getItem('meash_token');
             const storedUser = localStorage.getItem('meash_user');
@@ -666,26 +523,11 @@
             // CRITICAL ZERO-LOGOUT RULE: Never kick employees out on 401
             // They open the app many times a day and must stay logged in forever without writing passwords!
             if (res.status === 401) {
-                console.warn('API returned 401 for ' + url + ' - maintaining persistent session for staff');
-                if (currentUser && currentUser.name) {
-                    try {
-                        const refreshRes = await fetch('/api/auth/login', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                            body: JSON.stringify({ login: currentUser.name, password: 'password' })
-                        });
-                        const refreshData = await refreshRes.json();
-                        if (refreshRes.ok && refreshData.token) {
-                            localStorage.setItem('meash_token', refreshData.token);
-                            headers['Authorization'] = `Bearer ${refreshData.token}`;
-                            return await fetch(url, { ...options, headers });
-                        }
-                    } catch (e) {
-                        console.warn('Silent re-auth fallback:', e);
-                    }
-                }
+                console.warn('API 401 Unauthorized for ' + url + ' - session expired');
+                localStorage.removeItem('meash_token');
+                currentUser = null;
+                showLoginScreen('የሴሽን ጊዜዎ አልቋል፤ እባክዎ እንደገና ይግቡ (Session expired. Please login again.)');
             }
-
             return res;
         }
 
@@ -3814,7 +3656,7 @@
                             <div class="space-y-2.5 text-xs text-slate-300">
                                 <div class="flex justify-between items-center p-2 rounded-xl bg-slate-800/80">
                                     <span class="text-slate-400">የቦት ቶከን (Token):</span>
-                                    <span class="font-mono text-cyan-300 font-bold text-[11px]">8797114776:AAGk...vOLM</span>
+                                    <span class="font-mono text-cyan-300 font-bold text-[11px]">ተዋቅሯል (.env)</span>
                                 </div>
                                 <div class="flex justify-between items-center p-2 rounded-xl bg-slate-800/80">
                                     <span class="text-slate-400">የቦት ሁኔታ:</span>

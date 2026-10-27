@@ -114,7 +114,7 @@ class NotificationMarketingController extends Controller
         $campaign->save();
 
         $sent = 0;
-        $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN') ?: '8797114776:AAGktaX0ElouAdFW5IefnRzVdg5Zm2PvOLM';
+        $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
 
         if ($campaign->channel === 'telegram') {
             // Dispatch via Telegram Bot

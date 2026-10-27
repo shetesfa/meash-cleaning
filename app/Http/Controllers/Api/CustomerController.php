@@ -13,6 +13,11 @@ class CustomerController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && $user->isCleaner()) {
+            return response()->json(['message' => 'Unauthorized. Cleaners cannot access customer records.'], 403);
+        }
+
         $query = Customer::query()->withCount('orders');
 
         if ($search = $request->input('search')) {
@@ -34,8 +39,13 @@ class CustomerController extends Controller
         return response()->json($customers);
     }
 
-    public function show(Customer $customer): JsonResponse
+    public function show(Request $request, Customer $customer): JsonResponse
     {
+        $user = $request->user();
+        if ($user && $user->isCleaner()) {
+            return response()->json(['message' => 'Unauthorized. Cleaners cannot access customer records.'], 403);
+        }
+
         $customer->load([
             'orders.items.service',
             'orders.payments',
