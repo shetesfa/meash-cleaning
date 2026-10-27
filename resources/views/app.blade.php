@@ -5474,7 +5474,6 @@
                         <div class="flex flex-wrap items-center justify-between pb-4 border-b border-slate-200 print:hidden gap-3">
                             <div class="flex items-center gap-2">
                                 <span class="px-3 py-1 bg-blue-100 text-blue-900 font-extrabold text-xs rounded-full">ይፋዊ ፕሮፎርማ ሰነድ</span>
-                                <span id="prof-ref-badge" class="text-xs text-slate-500 font-mono">Ref: ${profNum}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button onclick="window.print()" class="px-4 py-2 bg-gradient-to-r from-blue-700 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
@@ -5491,23 +5490,21 @@
                             <div class="flex items-start justify-between border-b-2 border-blue-900 pb-5">
                                 <div>
                                     <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-700 flex items-center justify-center text-white font-black text-2xl shadow-md">
-                                            M
-                                        </div>
+                                        <img src="/logo.jpg" alt="Meash Cleaning Solution" class="w-14 h-14 rounded-2xl object-cover shadow-md border border-slate-300">
                                         <div>
                                             <h1 class="text-xl sm:text-2xl font-black text-blue-950 tracking-tight">MEASH CLEANING SOLUTION</h1>
                                             <p class="text-xs font-bold text-blue-800">ሜሽ የፅዳት እና የህንፃ አያያዝ አገልግሎት</p>
                                         </div>
                                     </div>
                                     <div class="text-[11px] text-slate-600 mt-2 space-y-0.5">
+                                        <p>አድራሻ፡ <strong>አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ</strong></p>
                                         <p>ስልክ፡ <strong>0970075509 / 0998142190</strong></p>
                                         <p>ቴሌግራም ቻናል፡ <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashdeepcleaning</a></p>
                                     </div>
                                 </div>
                                 <div class="text-right">
                                     <div class="inline-block bg-blue-50 border border-blue-200 rounded-xl p-3 text-right">
-                                        <span class="block text-[10px] uppercase font-bold text-blue-700 tracking-wider">የዋጋ ማቅረቢያ (PROFORMA)</span>
-                                        <span class="block text-base font-black text-blue-950 font-mono mt-0.5">${profNum}</span>
+                                        <span class="block text-xs uppercase font-black text-blue-950 tracking-wider">የዋጋ ማቅረቢያ (PROFORMA)</span>
                                         <span class="block text-xs font-bold text-slate-700 mt-1">ቀን፡ ${dateStr} ዓ.ም</span>
                                     </div>
                                 </div>
@@ -5531,8 +5528,9 @@
                             <div>
                                 <div class="flex items-center justify-between mb-2 print:hidden">
                                     <span class="text-xs font-bold text-slate-700">የአገልግሎቶች እና የዋጋ ዝርዝር፦</span>
-                                    <button type="button" onclick="addProformaRow()" class="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 font-bold text-xs flex items-center gap-1 cursor-pointer">
-                                        <span>+ ንጥል ጨምር (Add Item)</span>
+                                    <button type="button" onclick="addProformaRow()" class="px-3.5 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm">
+                                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                        <span>Add Item</span>
                                     </button>
                                 </div>
                                 <table class="w-full border-collapse text-xs">

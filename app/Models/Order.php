@@ -83,6 +83,16 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function orderItems(): HasMany
+    {
+        return $this->items();
+    }
+
+    public function getTotalAmountAttribute()
+    {
+        return $this->total;
+    }
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
