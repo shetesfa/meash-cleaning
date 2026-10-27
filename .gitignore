@@ -24,6 +24,7 @@ Homestead.yaml
 Thumbs.db
 *.zip
 *.sql
+!database/meash_db_backup.sql
 *.sqlite
 /database/*.sqlite
 /database/*.db

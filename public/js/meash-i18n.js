@@ -148,7 +148,7 @@ const meashTranslations = {
         reviews: 'የደንበኞች ምስክርነት',
         contact: 'ያግኙን',
         online: 'መስመር ላይ (ኦንላይን)',
-        offline: 'ከመስመር ውጭ (ኦፍላይን)',
+        offline: 'Offline',
         syncing: 'በማመሳሰል ላይ...',
         saved_locally: 'ስልክዎ ላይ ተቀምጧል',
         sync_success: 'በተሳካ ሁኔታ ተመሳስሏል',

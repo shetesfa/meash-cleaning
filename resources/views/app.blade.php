@@ -1457,15 +1457,15 @@
                         alert(action === 'on_the_way' ? '🚗 ጉዞ ጀምረዋል! (Sent)' : '✅ የስራ ሁኔታ ተቀይሮ ተልኳል (Sent)');
                     } else {
                         await window.meashOffline.enqueue('order', 'job_action', payload);
-                        alert('📡 ከመስመር ውጭ ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
+                        alert('📡 Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
                     }
                 } catch (e) {
                     await window.meashOffline.enqueue('order', 'job_action', payload);
-                    alert('📡 ከመስመር ውጭ ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
+                    alert('📡 Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
                 }
             } else {
                 await window.meashOffline.enqueue('order', 'job_action', payload);
-                alert('📡 ከመስመር ውጭ ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
+                alert('📡 Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
             }
 
             // Reload UI immediately to reflect optimistic update
