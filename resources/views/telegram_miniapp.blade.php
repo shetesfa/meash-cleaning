@@ -4,13 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ሜሽ የፅዳት አገልግሎት | Telegram Mini App</title>
-    <!-- Telegram WebApp SDK -->
+        <!-- Telegram WebApp SDK (With Offline Safety) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // Offline safety if Telegram SDK is unreachable
+        if (typeof window.Telegram === 'undefined' || !window.Telegram.WebApp) {
+            window.Telegram = {
+                WebApp: {
+                    ready: function(){},
+                    expand: function(){},
+                    close: function(){},
+                    MainButton: { setText: function(){}, show: function(){}, hide: function(){}, onClick: function(){} },
+                    BackButton: { show: function(){}, hide: function(){}, onClick: function(){} },
+                    initDataUnsafe: {},
+                    colorScheme: 'dark',
+                    themeParams: { bg_color: '#0F172A', text_color: '#F8FAFC' }
+                }
+            };
+            console.warn('Telegram WebApp SDK not reachable (offline mode active)');
+        }
+    </script>
+
+    <!-- Fonts & Minified Compiled CSS -->
+    <link rel="stylesheet" href="/css/fonts.css">
+    <link rel="stylesheet" href="/css/meash.css">
+
+    <!-- Self-Hosted Vendor Libraries -->
+    <script src="/vendor/lucide.min.js"></script>
+
+    <!-- Safety Fallbacks -->
+    <script>
+        if (typeof lucide === 'undefined') {
+            window.lucide = { createIcons: function(){} };
+        }
+    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;600;700;800&display=swap');
         body {
             font-family: 'Noto Sans Ethiopic', 'Plus Jakarta Sans', sans-serif;
             background-color: var(--tg-theme-bg-color, #0F172A);
@@ -519,5 +547,17 @@
             }
         }
     </script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+        console.log('Meash MiniApp ServiceWorker registered:', reg.scope);
+      }).catch((err) => {
+        console.warn('Meash MiniApp ServiceWorker failed:', err);
+      });
+    });
+  }
+</script>
 </body>
 </html>

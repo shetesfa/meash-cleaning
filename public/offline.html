@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="am" class="h-full bg-slate-950 text-white">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ሜሽ የፅዳት አገልግሎት | ኢንተርኔት አልተገኘም (Offline)</title>
+    <link rel="stylesheet" href="/css/fonts.css">
+    <link rel="stylesheet" href="/css/meash.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', 'Noto Sans Ethiopic', sans-serif; }
+    </style>
+</head>
+<body class="h-full flex items-center justify-center p-6 bg-slate-950">
+    <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl">
+        <div class="w-16 h-16 rounded-2xl bg-cyan-950/80 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto mb-6 text-3xl">
+            📡
+        </div>
+        
+        <h1 class="text-xl font-extrabold text-white mb-2">ኢንተርኔት አልተገናኘም</h1>
+        <p class="text-sm font-semibold text-cyan-400 mb-4">No Internet Connection</p>
+        
+        <div class="space-y-3 text-xs text-slate-400 mb-8 leading-relaxed">
+            <p>የተረጋጋ የኢንተርኔት ግንኙነት የለም። እባክዎ የዋይፋይ (WiFi) ወይም የሞባይል ዳታ ግንኙነትዎን ያረጋግጡ።</p>
+            <p class="text-slate-500">You are currently offline. Please check your network connection and try again.</p>
+        </div>
+
+        <div class="space-y-3">
+            <button onclick="window.location.reload()" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-sm transition-all shadow-lg shadow-cyan-900/30 flex items-center justify-center gap-2 cursor-pointer">
+                <span>🔄 እንደገና ሞክር (Retry)</span>
+            </button>
+            <a href="/app" class="block w-full py-3 px-6 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors border border-slate-700">
+                <span>ወደ ዋና ገጽ ተመለስ (Go to App)</span>
+            </a>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-slate-800 text-[11px] text-slate-500">
+            ሜሽ የፅዳት አገልግሎት • Meash Cleaning Solution
+        </div>
+    </div>
+</body>
+</html>

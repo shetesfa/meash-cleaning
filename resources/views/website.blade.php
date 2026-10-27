@@ -16,36 +16,21 @@
 <meta property="og:image" content="/logo.jpg">
 <meta property="og:type" content="website">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Fonts & Minified Compiled CSS -->
+    <link rel="stylesheet" href="/css/fonts.css">
+    <link rel="stylesheet" href="/css/meash.css">
 
-<script>
-  // Immediate dark mode theme initialization to avoid flash
-  if (localStorage.getItem('meash_theme') === 'dark' || (!localStorage.getItem('meash_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    document.documentElement.classList.add('dark');
-  }
-  tailwind.config = {
-    darkMode: 'class',
-    theme: {
-      extend: {
-        fontFamily: {
-          serif: ['Fraunces', 'Noto Sans Ethiopic', 'serif'],
-          sans: ['Inter', 'Noto Sans Ethiopic', 'sans-serif'],
-        },
-        colors: {
-          navy:  { DEFAULT: '#0B1220', 800: '#111B2E', 700: '#1B2A45' },
-          teal:  { DEFAULT: '#0E7C7B', dark: '#0A5F5E', light: '#E3F3F2' },
-          gold:  { DEFAULT: '#B8912F', light: '#F6EFDD' },
-          fog:   '#F6F7F9',
-        },
-      }
-    }
-  }
-</script>
-<style>
+    <!-- Self-Hosted Vendor Libraries -->
+    <script src="/vendor/lucide.min.js"></script>
+
+    <!-- Safety Fallbacks -->
+    <script>
+        if (typeof lucide === 'undefined') {
+            window.lucide = { createIcons: function(){} };
+            console.warn('Lucide icon library not loaded; using fallback');
+        }
+    </script>
+    <style>
   body { font-family: 'Inter', 'Noto Sans Ethiopic', sans-serif; background:#FFFFFF; color:#0B1220; transition: background-color 0.3s ease, color 0.3s ease; }
   .font-serif { font-family: 'Fraunces', 'Noto Sans Ethiopic', serif; }
   ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background:#D7DCE2; border-radius:8px; }
@@ -1522,6 +1507,18 @@
     loadServicePrices();
     initEthDatePicker();
   });
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+        console.log('Meash Website ServiceWorker registered:', reg.scope);
+      }).catch((err) => {
+        console.warn('Meash Website ServiceWorker failed:', err);
+      });
+    });
+  }
 </script>
 </body>
 </html>

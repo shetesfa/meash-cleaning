@@ -11,38 +11,33 @@
     <meta name="apple-mobile-web-app-title" content="Mesh OS">
     <link rel="apple-touch-icon" href="/assets/icon-192.png">
 
-    <!-- Leaflet.js CSS & Engine (In-App Interactive Ride Map) -->
-    <!-- Leaflet map removed for zero-error stability -->
-    
+        <!-- Fonts & Minified Compiled CSS -->
+    <link rel="stylesheet" href="/css/fonts.css">
+    <link rel="stylesheet" href="/css/meash.css">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Self-Hosted Vendor Libraries -->
+    <script src="/vendor/lucide.min.js"></script>
+    <script src="/vendor/chart.umd.js"></script>
+    <script src="/vendor/leaflet/leaflet.js"></script>
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+
+    <!-- Safety Fallbacks -->
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        meash: {
-                            navy: '#0F172A',
-                            card: '#1E293B',
-                            cyan: '#06B6D4',
-                            blue: '#0284C7',
-                            emerald: '#10B981',
-                        }
-                    }
-                }
-            }
+        if (typeof lucide === 'undefined') {
+            window.lucide = { createIcons: function(){} };
+            console.warn('Lucide icon library not loaded; using fallback');
+        }
+        if (typeof Chart === 'undefined') {
+            window.Chart = function() { console.warn('Chart.js not loaded'); return { destroy: function(){}, update: function(){} }; };
+        }
+        if (typeof L === 'undefined') {
+            window.L = { map: function(){}, tileLayer: function(){}, marker: function(){} };
         }
     </script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Engines -->
     <script src="/js/meash-i18n.js"></script>
     <script src="/js/meash-offline.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;600;700&display=swap');
         :root {
             --sat: env(safe-area-inset-top, 0px);
             --sab: env(safe-area-inset-bottom, 0px);
