@@ -26,5 +26,8 @@ Thumbs.db
 *.sql
 !database/meash_db_backup.sql
 *.sqlite
+!database/database.sqlite
 /database/*.sqlite
+!database/database.sqlite
 /database/*.db
+cloudflared.exe

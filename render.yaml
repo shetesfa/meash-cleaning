@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: meash-cleaning
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    envVars:
+      - key: APP_NAME
+        value: "Meash Cleaning Solution"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/www/html/database/database.sqlite
+      - key: TELEGRAM_BOT_TOKEN
+        value: "8797114776:AAGktaX0ElouAdFW5IefnRzVdg5Zm2PvOLM"
+      - key: TELEGRAM_BOT_USERNAME
+        value: "meash_cleaning_solution_bot"
+      - key: TELEGRAM_WEBHOOK_SECRET
+        generateValue: true
+      - key: TELEGRAM_MINIAPP_URL
+        value: "https://shetesfa.github.io/meash-mini-app/"
+      - key: MEASH_OWNER_EMAIL
+        value: "owner@meash.com"
+      - key: MEASH_OWNER_PHONE
+        value: "0911000001"
