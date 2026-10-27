@@ -241,13 +241,13 @@
         <div class="bg-white/95 text-navy backdrop-blur rounded-xl p-4 shadow-xl border border-white/20">
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-bold text-teal-dark flex items-center gap-1.5">
-              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> ዛሬ የተጠናቀቀ ስራ
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> በቅርቡ የተጠናቀቀ አገልግሎት
             </span>
-            <span class="text-[11px] text-navy/50">ቦሌ መድኃኔዓለም</span>
+            <span class="text-[11px] text-navy/50">ቦሌ፣ አዲስ አበባ</span>
           </div>
           <p class="text-xs text-navy/80 font-medium">
-            የ 7 መቀመጫ ሶፋ + የሳሎን ምንጣፍ ጥልቅ እጥበት<br>
-            <span class="text-emerald-700 font-bold">100% ቆሻሻ እና ጠረን ተወግዷል</span>
+            የቢሮ እና የመኖሪያ ቤት ጥልቅ የጽዳት ስራ<br>
+            <span class="text-emerald-700 font-bold">ሙሉ በሙሉ የጸዳ እና ደህንነቱ የተረጋገጠ</span>
           </p>
         </div>
       </div>
@@ -258,11 +258,11 @@
 <!-- ================= LOGO/TRUST STRIP ================= -->
 <section class="border-y border-navy/10 bg-fog">
   <div class="max-w-7xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-navy/60 text-xs font-bold tracking-wide">
-    <span class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ህጋዊ የተመዘገበ ድርጅት</span><span data-lang-block="en">Licensed Company</span></span>
-    <span class="flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የሰለጠኑ ታማኝ ባለሙያዎች</span><span data-lang-block="en">Trained &amp; Vetted Crews</span></span>
-    <span class="flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">160°C የጀርመን ስቲም ማሽን</span><span data-lang-block="en">German 160°C Steam Tech</span></span>
-    <span class="flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">በሳምንት 7 ቀን አገልግሎት</span><span data-lang-block="en">7 Days a Week</span></span>
-    <span class="flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የኮርፖሬት ኮንትራት ውል</span><span data-lang-block="en">Corporate Contracts</span></span>
+    <span class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ህጋዊ ፈቃድ ያለው ድርጅት</span><span data-lang-block="en">Licensed &amp; Insured Facility Service</span></span>
+    <span class="flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የሰለጠኑ ቋሚ ባለሙያዎች</span><span data-lang-block="en">Vetted &amp; Certified Staff</span></span>
+    <span class="flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ደረጃቸውን የጠበቁ ማሽኖች</span><span data-lang-block="en">Hospital-Grade Equipment</span></span>
+    <span class="flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ተለዋዋጭ የስራ ሰዓት</span><span data-lang-block="en">Flexible Scheduling (7 Days)</span></span>
+    <span class="flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የተቋማት ዓመታዊ ኮንትራት</span><span data-lang-block="en">Corporate Facility Contracts</span></span>
   </div>
 </section>
 
@@ -295,29 +295,29 @@
         <div class="flex items-start gap-3">
           <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
           <div>
-            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">ዘመናዊ ስቲም ማሽን</span><span data-lang-block="en">Steam Sanitization</span></h4>
-            <p class="text-xs text-navy/60"><span data-lang-block="am">ጀርሞችንና አልጋ ቁንጫዎችን 100% ያስወግዳል</span><span data-lang-block="en">Eliminates bacteria, mites &amp; odors</span></p>
+            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">ከፍተኛ የሙቀት ስቲም እጥበት</span><span data-lang-block="en">Thermal Deep Sanitization</span></h4>
+            <p class="text-xs text-navy/60"><span data-lang-block="am">ባክቴሪያዎችንና አለርጂ የሚያስከትሉ ጀርሞችን በብቃት ያጸዳል</span><span data-lang-block="en">Neutralizes allergens, deep bacteria &amp; stubborn odors</span></p>
           </div>
         </div>
         <div class="flex items-start gap-3">
           <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
           <div>
-            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">የኢትዮጵያ ዘመን አቆጣጠር</span><span data-lang-block="en">Ethiopian Calendar</span></h4>
-            <p class="text-xs text-navy/60"><span data-lang-block="am">ቀጠሮዎን በኢትዮጵያ ቀን በቀላሉ ያስተካክሉ</span><span data-lang-block="en">Book seamlessly in Ge'ez calendar</span></p>
+            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">ቀላልና ተለዋዋጭ የቀጠሮ አያያዝ</span><span data-lang-block="en">Flexible Booking System</span></h4>
+            <p class="text-xs text-navy/60"><span data-lang-block="am">በኢትዮጵያም ሆነ በፈረንጆች ካላንደር ቀጠሮዎን ያስይዙ</span><span data-lang-block="en">Schedule effortlessly in Ethiopian or Gregorian calendar</span></p>
           </div>
         </div>
         <div class="flex items-start gap-3">
           <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
           <div>
-            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">ግልጽና ቋሚ ዋጋ</span><span data-lang-block="en">Upfront Honest Pricing</span></h4>
-            <p class="text-xs text-navy/60"><span data-lang-block="am">ምንም የተደበቀ ወጪ የሌለው ግልጽ ስሌት</span><span data-lang-block="en">Zero hidden fees or surprises</span></p>
+            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">ግልጽና ተመጣጣኝ የዋጋ ተመን</span><span data-lang-block="en">Transparent Pricing</span></h4>
+            <p class="text-xs text-navy/60"><span data-lang-block="am">ያለ ምንም ድብቅ ክፍያ አስቀድሞ የሚታወቅ ዋጋ</span><span data-lang-block="en">Clear upfront estimates with zero hidden costs</span></p>
           </div>
         </div>
         <div class="flex items-start gap-3">
           <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
           <div>
-            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">የድርጅት ፕሮፎርማ ውል</span><span data-lang-block="en">Corporate Contracts</span></h4>
-            <p class="text-xs text-navy/60"><span data-lang-block="am">ህጋዊ ደረሰኝ፣ ቫት እና የረጅም ጊዜ ኮንትራት</span><span data-lang-block="en">Official VAT receipt &amp; SLAs</span></p>
+            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">የተቋማትና የቢሮ ኮንትራት ውል</span><span data-lang-block="en">Commercial SLA Contracts</span></h4>
+            <p class="text-xs text-navy/60"><span data-lang-block="am">ህጋዊ የቫት ደረሰኝ፣ ፕሮፎርማ እና የረጅም ጊዜ ስምምነት</span><span data-lang-block="en">Official VAT invoicing, SLAs &amp; monthly retainers</span></p>
           </div>
         </div>
       </div>
@@ -592,7 +592,7 @@
   </div>
   <div id="price-fallback-warning" class="hidden my-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs flex items-center gap-2">
     <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
-    <span>⚠️ <span data-lang-block="am">የቀጥታ ዋጋዎች ሊዘገዩ ይችላሉ (Prices may be old)</span><span data-lang-block="en">Live prices could not be fetched; cached prices shown (Prices may be old)</span></span>
+    <span><span data-lang-block="am">ወቅታዊ መደበኛ የዋጋ ዝርዝር</span><span data-lang-block="en">Standard Rate Sheet</span></span>
   </div>
   <p class="text-xs text-navy/40 mt-4" data-lang-block="am">* ዋጋዎች በአካባቢና በብዛት ሊለያዩ ይችላሉ።</p>
   <p class="text-xs text-navy/40 mt-4" data-lang-block="en">* Prices shown are per unit and may vary by location or quantity.</p>
@@ -853,13 +853,13 @@
               <span data-lang-block="am">የቦታው / የንብረቱ አይነት</span><span data-lang-block="en">Property Type</span>
             </label>
             <select id="book-property-type" class="w-full rounded-lg border border-navy/15 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-navy font-semibold focus:border-teal cursor-pointer">
-              <option value="residential">🏠 Residential Home / Villa / Flat (የመኖሪያ ቤት / ቪላ)</option>
-              <option value="office">🏢 Corporate / Office Workspace (የድርጅት / ተቋም ቢሮ)</option>
-              <option value="hotel">🏨 Hotel / Guest House / Lodge (ሆቴል / ሎጅ)</option>
-              <option value="restaurant">☕ Restaurant / Café / Bar (ሬስቶራንት / ካፌ)</option>
-              <option value="hall">🪑 Event Hall / Church / Cinema (አዳራሽ / ሲኒማ)</option>
-              <option value="commercial_store">🏬 Commercial Store / Showroom (የንግድ ሱቅ)</option>
-              <option value="other">📌 Other Property (ሌላ)</option>
+              <option value="residential">Residential Property (የመኖሪያ ቤት ወይም ቪላ)</option>
+              <option value="office">Corporate & Commercial Office (የድርጅትና ቢሮ ህንፃ)</option>
+              <option value="hotel">Hospitality, Hotel & Guest House (ሆቴልና የእንግዳ ማረፊያ)</option>
+              <option value="restaurant">Restaurant, Café & Dining Lounge (ሬስቶራንትና ካፌ)</option>
+              <option value="hall">Auditorium, Event Hall & Center (አዳራሽና መሰብሰቢያ)</option>
+              <option value="commercial_store">Commercial Store & Retail Mall (የንግድ ማዕከል)</option>
+              <option value="other">Institutional & Other Facility (ሌሎች ተቋማት)</option>
             </select>
           </div>
 
@@ -940,10 +940,12 @@
           <!-- Calendar Mode Switcher (Ethiopian vs Gregorian) -->
           <div class="mb-4 p-1 bg-navy/5 rounded-xl flex gap-1 border border-navy/10">
             <button type="button" id="tab-cal-eth" onclick="switchCalendarMode('eth')" class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 bg-white text-navy shadow-sm cursor-pointer">
-              <span>🗓 በኢትዮጵያ ካላንደር (ዓ.ም)</span>
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-teal"></i>
+              <span>በኢትዮጵያ ካላንደር (ዓ.ም)</span>
             </button>
             <button type="button" id="tab-cal-greg" onclick="switchCalendarMode('greg')" class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-navy/60 hover:text-navy cursor-pointer">
-              <span>🌐 በፈረንጆች (Gregorian - GC)</span>
+              <i data-lucide="globe" class="w-3.5 h-3.5 text-navy/50"></i>
+              <span>በፈረንጆች (Gregorian - GC)</span>
             </button>
           </div>
 
@@ -992,8 +994,9 @@
 
             <!-- Converted Gregorian Display -->
             <div class="p-2.5 rounded-lg bg-white border border-teal/20 flex items-center justify-between text-xs">
-              <span class="text-navy/55 flex items-center gap-1 font-semibold">
-                <span>🌐 የተለወጠው የፈረንጆች ቀን (GC):</span>
+              <span class="text-navy/65 flex items-center gap-1.5 font-semibold">
+                <i data-lucide="globe" class="w-3.5 h-3.5 text-teal"></i>
+                <span>የፈረንጆች ቀን (GC):</span>
               </span>
               <span id="greg-display" class="font-bold text-teal-dark">—</span>
             </div>
@@ -1012,8 +1015,9 @@
 
             <!-- Converted Ethiopian Display -->
             <div class="p-2.5 rounded-lg bg-teal-light/40 border border-teal/30 flex items-center justify-between text-xs">
-              <span class="text-navy/70 flex items-center gap-1 font-semibold">
-                <span>🗓 የተለወጠው የኢትዮጵያ ቀን (ETH):</span>
+              <span class="text-navy/70 flex items-center gap-1.5 font-semibold">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-teal"></i>
+                <span>የኢትዮጵያ ቀን (ETH):</span>
               </span>
               <span id="eth-display-from-greg" class="font-bold text-teal-dark text-sm">— ዓ.ም</span>
             </div>
@@ -1025,17 +1029,22 @@
           <!-- Time Slot — Morning / Afternoon ONLY (NO EVENING) -->
           <div class="mb-4">
             <div class="flex items-center justify-between mb-2">
-              <p class="text-xs font-bold text-navy/80">🕐 የሰዓት ክፍለ ጊዜ ይምረጡ (ጠዋት ወይም ከሰዓት ብቻ)</p>
-              <span class="text-[10px] text-navy/50">ማታ የለም (No Evening)</span>
+              <p class="text-xs font-bold text-navy/80 flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-teal"></i>
+                <span>የቀጠሮ ክፍለ ጊዜ (ጠዋት ወይም ከሰዓት)</span>
+              </p>
+              <span class="text-[10px] text-navy/50">የቀን ክፍለ ጊዜ</span>
             </div>
             <div class="grid grid-cols-2 gap-2.5">
               <label class="relative cursor-pointer">
                 <input type="radio" name="time_slot_radio" value="morning" onchange="setTimeSlot(this.value)" class="sr-only peer" required>
                 <div class="p-3.5 rounded-xl border-2 border-navy/15 peer-checked:border-teal peer-checked:bg-teal-light/40 transition text-center shadow-sm hover:border-teal/50 bg-white">
-                  <div class="text-xl mb-1">🌅</div>
+                  <div class="w-8 h-8 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto mb-1">
+                    <i data-lucide="sun-medium" class="w-4 h-4"></i>
+                  </div>
                   <p class="font-extrabold text-xs text-navy peer-checked:text-teal-dark">ጥዋት (Morning)</p>
                   <div class="mt-1 pt-1 border-t border-navy/10 text-[10px] space-y-0.5 font-bold">
-                    <p class="text-teal-dark">2:00 – 6:00 ጠዋቱ <span class="font-normal text-navy/50">(የኢትዮጵያ ሰዓት)</span></p>
+                    <p class="text-teal-dark">2:00 – 6:00 ጠዋቱ <span class="font-normal text-navy/50">(ኢትዮጵያ)</span></p>
                     <p class="text-navy/50 font-normal">8:00 AM – 12:00 PM <span class="text-[9px]">(GC)</span></p>
                   </div>
                 </div>
@@ -1043,10 +1052,12 @@
               <label class="relative cursor-pointer">
                 <input type="radio" name="time_slot_radio" value="afternoon" onchange="setTimeSlot(this.value)" class="sr-only peer">
                 <div class="p-3.5 rounded-xl border-2 border-navy/15 peer-checked:border-teal peer-checked:bg-teal-light/40 transition text-center shadow-sm hover:border-teal/50 bg-white">
-                  <div class="text-xl mb-1">☀️</div>
+                  <div class="w-8 h-8 rounded-full bg-orange-500/10 text-orange-600 flex items-center justify-center mx-auto mb-1">
+                    <i data-lucide="sun" class="w-4 h-4"></i>
+                  </div>
                   <p class="font-extrabold text-xs text-navy peer-checked:text-teal-dark">ከሰዓት (Afternoon)</p>
                   <div class="mt-1 pt-1 border-t border-navy/10 text-[10px] space-y-0.5 font-bold">
-                    <p class="text-teal-dark">7:00 – 11:00 ከሰዓቱ <span class="font-normal text-navy/50">(የኢትዮጵያ ሰዓት)</span></p>
+                    <p class="text-teal-dark">7:00 – 11:00 ከሰዓቱ <span class="font-normal text-navy/50">(ኢትዮጵያ)</span></p>
                     <p class="text-navy/50 font-normal">1:00 PM – 5:00 PM <span class="text-[9px]">(GC)</span></p>
                   </div>
                 </div>
@@ -1073,42 +1084,44 @@
 
           <!-- Recurring Subscription Plan Selector -->
           <div class="mb-4 p-3.5 rounded-xl bg-teal-light/50 border border-teal/20">
-            <label class="block text-xs font-bold text-teal-dark uppercase tracking-wider mb-2">
-              <span data-lang-block="am">🔄 የፅዳት ድግግሞሽ እና የቅናሽ እቅድ (Subscription Plan)</span>
-              <span data-lang-block="en">🔄 Cleaning Frequency &amp; Discount Plan</span>
+            <label class="block text-xs font-bold text-teal-dark uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <i data-lucide="repeat" class="w-3.5 h-3.5 text-teal"></i>
+              <span data-lang-block="am">የአገልግሎት ድግግሞሽ እና የቅናሽ እቅድ (Contract Plan)</span>
+              <span data-lang-block="en">Service Frequency &amp; Contract Plan</span>
             </label>
             <div class="grid grid-cols-2 gap-2 text-xs">
               <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
                 <input type="radio" name="sub_plan" value="one_time" checked onchange="updateSubscriptionDiscount()" class="text-teal focus:ring-teal">
                 <div>
                   <span class="font-bold block text-navy text-[11px]"><span data-lang-block="am">የአንድ ጊዜ</span><span data-lang-block="en">One-time</span></span>
-                  <span class="text-[9px] text-navy/50"><span data-lang-block="am">መደበኛ ዋጋ</span><span data-lang-block="en">Standard</span></span>
+                  <span class="text-[9px] text-navy/50"><span data-lang-block="am">መደበኛ ዋጋ</span><span data-lang-block="en">Standard Rate</span></span>
                 </div>
               </label>
               <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
                 <input type="radio" name="sub_plan" value="weekly" onchange="updateSubscriptionDiscount()" class="text-teal focus:ring-teal">
                 <div>
                   <span class="font-bold block text-navy text-[11px]"><span data-lang-block="am">በየሳምንቱ</span><span data-lang-block="en">Weekly</span></span>
-                  <span class="text-[9px] font-extrabold text-teal-dark">15% ቅናሽ (OFF)</span>
+                  <span class="text-[9px] font-extrabold text-teal-dark">15% ቅናሽ (15% OFF)</span>
                 </div>
               </label>
               <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
                 <input type="radio" name="sub_plan" value="biweekly" onchange="updateSubscriptionDiscount()" class="text-teal focus:ring-teal">
                 <div>
-                  <span class="font-bold block text-navy text-[11px]"><span data-lang-block="am">በ2 ሳምንት</span><span data-lang-block="en">Bi-weekly</span></span>
-                  <span class="text-[9px] font-extrabold text-teal-dark">10% ቅናሽ (OFF)</span>
+                  <span class="font-bold block text-navy text-[11px]"><span data-lang-block="am">በየሁለት ሳምንቱ</span><span data-lang-block="en">Bi-weekly</span></span>
+                  <span class="text-[9px] font-extrabold text-teal-dark">10% ቅናሽ (10% OFF)</span>
                 </div>
               </label>
               <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
                 <input type="radio" name="sub_plan" value="monthly" onchange="updateSubscriptionDiscount()" class="text-teal focus:ring-teal">
                 <div>
                   <span class="font-bold block text-navy text-[11px]"><span data-lang-block="am">በየወሩ</span><span data-lang-block="en">Monthly</span></span>
-                  <span class="text-[9px] font-extrabold text-teal-dark">5% ቅናሽ (OFF)</span>
+                  <span class="text-[9px] font-extrabold text-teal-dark">5% ቅናሽ (5% OFF)</span>
                 </div>
               </label>
             </div>
-            <p id="sub-discount-hint" class="hidden text-[11px] font-semibold text-teal-dark mt-2 pt-1 border-t border-teal/20">
-              🎉 <span id="sub-discount-text"></span>
+            <p id="sub-discount-hint" class="hidden text-[11px] font-semibold text-teal-dark mt-2 pt-1 border-t border-teal/20 flex items-center gap-1.5">
+              <i data-lucide="tag" class="w-3.5 h-3.5 text-teal"></i>
+              <span id="sub-discount-text"></span>
             </p>
           </div>
 
@@ -1374,9 +1387,9 @@
         <div>
           <label class="block text-[11px] font-bold text-navy/70 mb-1">የስራ ዘርፍ / ሚና (Staff Role)</label>
           <select id="staff-role-select" class="w-full px-3 py-2.5 rounded-lg border border-navy/20 bg-fog text-navy text-xs font-semibold focus:outline-none focus:border-teal cursor-pointer">
-            <option value="owner@meash.com">👑 1. ዋና ስራ አስኪያጅ (Owner / General Manager)</option>
-            <option value="reception@meash.com">📞 2. ሪሴፕሽን እና ስራ ማስተናገጃ (Reception)</option>
-            <option value="cleaner1@meash.com">🧹 3. የፅዳት ሰራተኛ (Cleaner / Technician)</option>
+            <option value="owner@meash.com">1. ዋና ስራ አስኪያጅ (General Manager / Owner)</option>
+            <option value="reception@meash.com">2. ሪሴፕሽን እና ኦፕሬሽን (Operations &amp; Reception)</option>
+            <option value="cleaner1@meash.com">3. የቴክኒክና ፅዳት ባለሙያ (Cleaning Specialist)</option>
           </select>
         </div>
 
@@ -1388,7 +1401,7 @@
               <i id="staff-pwd-eye" data-lucide="eye" class="w-4 h-4"></i>
             </button>
           </div>
-          <p class="text-[10px] text-teal-dark font-medium mt-1">💡 ነባሪ የይለፍ ቃል፦ <code class="font-bold bg-teal-light px-1.5 py-0.5 rounded">password</code></p>
+          <p class="text-[10px] text-teal-dark font-medium mt-1">የመግቢያ የይለፍ ቃል፦ <code class="font-bold bg-teal-light px-1.5 py-0.5 rounded">password</code></p>
         </div>
 
         <div class="flex items-center gap-2 pt-2">
@@ -1886,8 +1899,8 @@
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-navy/10">
             <div class="flex items-center gap-2">
-              <span class="text-xl">📅</span>
-              <h3 class="font-bold text-navy text-sm">ቀጠሮ ቀን ማስተላለፊያ (Reschedule)</h3>
+              <i data-lucide="calendar-clock" class="w-5 h-5 text-teal"></i>
+              <h3 class="font-bold text-navy text-sm">ቀጠሮ ቀን ማስተላለፊያ (Reschedule Service)</h3>
             </div>
             <button onclick="document.getElementById('web-reschedule-backdrop').remove()" class="text-navy/40 hover:text-navy text-lg font-bold">&times;</button>
           </div>
@@ -1907,8 +1920,8 @@
             <div>
               <label class="block font-bold text-navy mb-1">የቀጠሮ ሰዓት (Time Slot) *:</label>
               <select id="resched-slot" class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy focus:border-teal-dark focus:outline-none">
-                <option value="morning">🌅 ጥዋት (2:00 - 6:00 ጠዋቱ ETH • Morning 8am-12pm)</option>
-                <option value="afternoon">☀️ ከሰዓት (7:00 - 11:00 ከሰዓቱ ETH • Afternoon 1pm-5pm)</option>
+                <option value="morning">ጥዋት (2:00 - 6:00 ጠዋቱ ETH • Morning 8am-12pm)</option>
+                <option value="afternoon">ከሰዓት (7:00 - 11:00 ከሰዓቱ ETH • Afternoon 1pm-5pm)</option>
               </select>
             </div>
             <div>
@@ -1924,6 +1937,7 @@
       </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+    if (window.lucide) lucide.createIcons();
   }
 
   async function submitWebReschedule(e, orderNumber) {
@@ -1948,16 +1962,16 @@
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        alert('✅ ' + data.message);
+        alert(data.message);
         document.getElementById('web-reschedule-backdrop')?.remove();
         // re-run track
         document.getElementById('track-input').value = orderNumber;
         document.getElementById('track-form').dispatchEvent(new Event('submit'));
       } else {
-        alert('❌ ስህተት: ' + (data.message || 'ቀጠሮውን ማስተላለፍ አልተቻለም::'));
+        alert('ስህተት: ' + (data.message || 'ቀጠሮውን ማስተላለፍ አልተቻለም::'));
       }
     } catch (err) {
-      alert('❌ የኔትወርክ ስህተት: ' + err.message);
+      alert('የኔትወርክ ስህተት: ' + err.message);
     } finally {
       btn.disabled = false;
       btn.innerText = 'ቀጠሮ አስተላልፍ';
@@ -1983,14 +1997,17 @@
         if (ord.subscription_plan && ord.subscription_plan !== 'one_time') {
           const pNames = { weekly: 'የሳምንት (Weekly - 15% OFF)', biweekly: 'የ2 ሳምንት (Bi-weekly - 10% OFF)', monthly: 'የወር (Monthly - 5% OFF)' };
           subBadge = `<div class="mt-2 text-xs font-bold text-teal-dark bg-teal-light px-3 py-1 rounded-lg inline-flex items-center gap-1.5">
-            🔄 ${pNames[ord.subscription_plan] || ord.subscription_plan}
+            <i data-lucide="repeat" class="w-3.5 h-3.5 text-teal"></i>
+            <span>${pNames[ord.subscription_plan] || ord.subscription_plan}</span>
           </div>`;
         }
 
-                let addressSummaryHtml = `
+        let addressSummaryHtml = `
           <div class="mt-4 pt-4 border-t border-navy/10 space-y-3">
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-teal/15 text-teal-dark flex items-center justify-center shrink-0 font-bold text-base">📍</div>
+              <div class="w-9 h-9 rounded-xl bg-teal/15 text-teal-dark flex items-center justify-center shrink-0">
+                <i data-lucide="map-pin" class="w-4 h-4"></i>
+              </div>
               <div class="flex-1">
                 <p class="font-bold text-navy text-xs">የአገልግሎት አድራሻ (Service Address):</p>
                 <p class="text-[11px] text-slate-600 font-semibold mt-0.5">${ord.address || 'አዲስ አበባ'} ${ord.subcity ? '(' + ord.subcity + ')' : ''}</p>
@@ -1998,33 +2015,41 @@
             </div>
             ${isCompleted ? `
               <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-base">✓</div>
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-700 flex items-center justify-center shrink-0">
+                  <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                </div>
                 <div>
-                  <p class="font-extrabold text-emerald-950 text-xs">ስራው በተሳካ ሁኔታ ተጠናቋል! (Completed)</p>
-                  <p class="text-[10px] text-emerald-800 mt-0.5">የሜሽ ጥልቅ ጽዳት አገልግሎትን ስለመረጡ ከልብ እናመሰግናለን!</p>
+                  <p class="font-extrabold text-emerald-950 text-xs">ስራው በተሳካ ሁኔታ ተጠናቋል! (Service Completed)</p>
+                  <p class="text-[10px] text-emerald-800 mt-0.5">የሜሽ ጥልቅ ጽዳት አገልግሎትን ስለመረጡ እናመሰግናለን!</p>
                 </div>
               </div>
             ` : (isEnRoute ? `
               <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 font-bold text-base">🚗</div>
+                <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0">
+                  <i data-lucide="navigation" class="w-4 h-4"></i>
+                </div>
                 <div>
-                  <p class="font-extrabold text-amber-950 text-xs">የፅዳት ቡድኑ ወደ እርሶ በመጓዝ ላይ ይገኛል! (En Route)</p>
-                  <p class="text-[10px] text-amber-800 mt-0.5">በሰዓቱ ደርሰን አገልግሎቱን እንጀምራለን። ጥያቄ ካለዎት በ 0970075509 ይደውሉልን።</p>
+                  <p class="font-extrabold text-amber-950 text-xs">የፅዳት ቡድኑ ወደ እርሶ በመጓዝ ላይ ይገኛል (Team En Route)</p>
+                  <p class="text-[10px] text-amber-800 mt-0.5">ቡድኑ በተያዘው ሰዓት ደርሶ አገልግሎቱን ይሰጣል። ጥያቄ ካለዎት በ 0970075509 ይደውሉ።</p>
                 </div>
               </div>
             ` : (isCleaning ? `
               <div class="p-3.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-900 text-xs flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-teal/20 text-teal-dark flex items-center justify-center shrink-0 font-bold text-base">🧹</div>
+                <div class="w-9 h-9 rounded-xl bg-teal/20 text-teal-dark flex items-center justify-center shrink-0">
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </div>
                 <div>
-                  <p class="font-extrabold text-teal-950 text-xs">የፅዳት ስራው በመከናወን ላይ ነው! (In Progress)</p>
-                  <p class="text-[10px] text-teal-800 mt-0.5">ቡድናችን ከፍተኛ ጥራት ያለው ጥልቅ ጽዳት እያከናወነ ይገኛል።</p>
+                  <p class="font-extrabold text-teal-950 text-xs">የፅዳት ስራው በመከናወን ላይ ይገኛል (Service In Progress)</p>
+                  <p class="text-[10px] text-teal-800 mt-0.5">ባለሙያዎቻችን ጥልቅ የጽዳት ስራዎችን እያከናወኑ ይገኛሉ።</p>
                 </div>
               </div>
             ` : `
               <div class="p-3.5 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-900 text-xs flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-700 flex items-center justify-center shrink-0 font-bold text-base">📅</div>
+                <div class="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-700 flex items-center justify-center shrink-0">
+                  <i data-lucide="calendar-check" class="w-4 h-4"></i>
+                </div>
                 <div>
-                  <p class="font-extrabold text-cyan-950 text-xs">ትዕዛዝዎ በትክክል ተመዝግቧል! (Confirmed)</p>
+                  <p class="font-extrabold text-cyan-950 text-xs">ትዕዛዝዎ ተቀባይነት አግኝቷል (Booking Confirmed)</p>
                   <p class="text-[10px] text-cyan-800 mt-0.5">የተመደበው ቡድን በተያዘው የቀጠሮ ቀንና ሰዓት ይደርሳል።</p>
                 </div>
               </div>
@@ -2036,13 +2061,15 @@
           teamInfoHtml = `
             <div class="mt-3 p-3.5 rounded-xl bg-slate-900 text-white text-xs flex items-center justify-between">
               <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-teal/20 text-teal flex items-center justify-center text-lg">🚚</div>
+                <div class="w-10 h-10 rounded-xl bg-teal/20 text-teal flex items-center justify-center">
+                  <i data-lucide="truck" class="w-5 h-5"></i>
+                </div>
                 <div>
                   <p class="font-extrabold text-white">${ord.team_location.team_name}</p>
                   <p class="text-[11px] text-teal-light font-semibold">${ord.team_location.vehicle_plate ? 'ታርጋ: ' + ord.team_location.vehicle_plate : 'የሜሽ ጽዳት መኪና'}</p>
                 </div>
               </div>
-              ${ord.team_location.phone ? `<a href="tel:${ord.team_location.phone}" class="px-3 py-1.5 rounded-lg bg-teal hover:bg-teal-dark text-white font-bold text-xs flex items-center gap-1">📞 ደውል</a>` : ''}
+              ${ord.team_location.phone ? `<a href="tel:${ord.team_location.phone}" class="px-3 py-1.5 rounded-lg bg-teal hover:bg-teal-dark text-white font-bold text-xs flex items-center gap-1.5"><i data-lucide="phone" class="w-3.5 h-3.5"></i> ደውል</a>` : ''}
             </div>`;
         }
 
@@ -2050,9 +2077,11 @@
         if (ord.is_postponed) {
           postponeAlertHtml = `
             <div class="mb-3 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 font-bold text-lg">⏰</div>
+              <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0">
+                <i data-lucide="clock" class="w-4 h-4"></i>
+              </div>
               <div>
-                <p class="font-black text-amber-950 text-xs">ማሳሰቢያ፡ የዚህ ትዕዛዝ ቀጠሮ ተላልፏል! (Rescheduled)</p>
+                <p class="font-black text-amber-950 text-xs">ማሳሰቢያ፡ የዚህ ትዕዛዝ ቀጠሮ ተላልፏል (Rescheduled)</p>
                 <p class="text-[11px] text-amber-800 mt-0.5">አዲሱ የቀጠሮ ቀን፡ <strong>${ord.eth_appointment_date || ord.appointment_date}</strong> (${ord.appointment_time_slot === 'morning' ? 'ጠዋት' : 'ከሰዓት'})</p>
               </div>
             </div>`;
@@ -2063,8 +2092,9 @@
           rescheduleBtnHtml = `
             <div class="mt-4 pt-3 border-t border-navy/10 flex flex-wrap items-center justify-between gap-2">
               <span class="text-[11px] text-navy/60 font-semibold">ቀጠሮዎን መቀየር ወይም ማራዘም ይፈልጋሉ?</span>
-              <button type="button" onclick="openWebRescheduleModal('${ord.order_number}')" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition flex items-center gap-1 cursor-pointer">
-                <span>📅 ቀጠሮ ቀን አስተላልፍ</span>
+              <button type="button" onclick="openWebRescheduleModal('${ord.order_number}')" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>
+                <span>ቀጠሮ ቀን አስተላልፍ</span>
               </button>
             </div>`;
         }
@@ -2078,7 +2108,7 @@
                 <span class="font-serif text-lg font-bold text-navy">${ord.order_number}</span>
               </div>
               <span class="text-xs font-extrabold px-3 py-1.5 rounded-full ${isCompleted ? 'bg-emerald-100 text-emerald-800' : (isEnRoute ? 'bg-amber-100 text-amber-800 animate-pulse' : 'bg-teal-light text-teal-dark')}">
-                ${isEnRoute ? '🚚 ቡድኑ በመጓዝ ላይ ነው (On The Way)' : (isCleaning ? '🧹 ፅዳት በመከናወን ላይ' : (isCompleted ? '✅ ተጠናቋል' : '📅 ተይዟል (' + ord.status + ')'))}
+                ${isEnRoute ? 'ቡድኑ በመጓዝ ላይ ይገኛል (On The Way)' : (isCleaning ? 'ፅዳት በመከናወን ላይ' : (isCompleted ? 'ተጠናቋል' : 'የተመዘገበ (' + ord.status + ')'))}
               </span>
             </div>
 
@@ -2088,17 +2118,24 @@
                 <span class="font-bold text-navy">${ord.customer_name} (${ord.subcity || ''})</span>
               </div>
               <div>
-                <span class="text-navy/50 block mb-0.5">🗓 የቀጠሮ ቀንና ሰዓት:</span>
+                <span class="text-navy/50 block mb-0.5">የቀጠሮ ቀንና ሰዓት:</span>
                 <div class="space-y-0.5">
                   <p class="font-extrabold text-teal-dark text-xs">${ord.eth_appointment_date || (ord.appointment_date ? EC.formatEth(EC.toEth(ord.appointment_date).year, EC.toEth(ord.appointment_date).month, EC.toEth(ord.appointment_date).day) : '—')}</p>
-                  <p class="text-[10px] text-navy/55 font-semibold">🌐 GC: ${ord.appointment_date || '—'}</p>
+                  <p class="text-[10px] text-navy/55 font-semibold">GC: ${ord.appointment_date || '—'}</p>
                   <p class="text-[11px] font-bold text-navy">
-                    ${ord.appointment_time_slot === 'morning' ? '🌅 ጥዋት (2:00–6:00 ጠዋቱ ETH • 8am–12pm)' : (ord.appointment_time_slot === 'afternoon' ? '☀️ ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm)' : (ord.appointment_time_slot || ''))}
+                    ${ord.appointment_time_slot === 'morning' ? 'ጥዋት (2:00–6:00 ጠዋቱ ETH • 8am–12pm GC)' : (ord.appointment_time_slot === 'afternoon' ? 'ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm GC)' : (ord.appointment_time_slot || ''))}
                   </p>
                 </div>
               </div>
               <div>
                 <span class="text-navy/50 block">ጠቅላላ ክፍያ:</span>
+                <span class="font-bold text-teal-dark text-sm">${ord.total.toLocaleString()} ETB</span>
+              </div>
+              <div>
+                <span class="text-navy/50 block">የክፍያ ሁኔታ:</span>
+                <span class="font-bold ${ord.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}">${ord.payment_status === 'paid' ? 'ተከፍሏል' : 'ያልተከፈለ'}</span>
+              </div>
+            </div>
                 <span class="font-bold text-teal-dark text-sm">${ord.total.toLocaleString()} ETB</span>
               </div>
               <div>
@@ -2248,13 +2285,14 @@
         document.body.insertAdjacentHTML('afterbegin', `
           <div id="quick-login-flash" class="fixed inset-0 z-[999] flex items-center justify-center bg-navy/90 backdrop-blur-sm">
             <div class="flex flex-col items-center gap-3 text-white">
-              <div class="w-12 h-12 rounded-2xl bg-teal/20 flex items-center justify-center animate-bounce text-2xl">
-                ${email.startsWith('owner') ? '👑' : email.startsWith('reception') ? '📞' : email.startsWith('cleaner') ? '🧹' : '💼'}
+              <div class="w-12 h-12 rounded-2xl bg-teal/20 flex items-center justify-center text-teal">
+                <i data-lucide="${email.startsWith('owner') ? 'shield-check' : (email.startsWith('reception') ? 'headphones' : 'sparkles')}" class="w-6 h-6"></i>
               </div>
               <p class="text-sm font-bold">ወደ ሲስተሙ እየገቡ ነው...</p>
               <div class="w-32 h-1 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-teal animate-pulse" style="width:70%"></div></div>
             </div>
           </div>`);
+        if (window.lucide) lucide.createIcons();
         setTimeout(() => { window.location.href = '/app'; }, 600);
       } else {
         if (errBox) { errBox.classList.remove('hidden'); errText.innerText = data.message || 'መግባት አልተቻለም!'; }

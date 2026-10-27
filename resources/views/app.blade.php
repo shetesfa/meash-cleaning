@@ -100,22 +100,22 @@
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">ፈጣን ምርጫ (Quick Access)፦</p>
                     <div class="grid grid-cols-3 gap-2 text-xs">
                         <button type="button" onclick="fillTestAccount('owner@meash.com')" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 rounded-xl p-2.5 text-center cursor-pointer transition">
-                            <span class="block text-base mb-0.5">👑</span>
+              <span class="block text-base mb-0.5"></span>
                             <span class="block font-bold text-cyan-400 text-xs">ዋና ስራ አስኪያጅ</span>
                             <span class="block text-[9px] text-slate-400">Owner</span>
                         </button>
                         <button type="button" onclick="fillTestAccount('reception@meash.com')" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 rounded-xl p-2.5 text-center cursor-pointer transition">
-                            <span class="block text-base mb-0.5">📞</span>
+              <span class="block text-base mb-0.5"></span>
                             <span class="block font-bold text-cyan-400 text-xs">ሪሴፕሽን</span>
                             <span class="block text-[9px] text-slate-400">Reception</span>
                         </button>
                         <button type="button" onclick="fillTestAccount('cleaner1@meash.com')" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 rounded-xl p-2.5 text-center cursor-pointer transition">
-                            <span class="block text-base mb-0.5">🧹</span>
+              <span class="block text-base mb-0.5"></span>
                             <span class="block font-bold text-cyan-400 text-xs">ፅዳት ሰራተኛ</span>
                             <span class="block text-[9px] text-slate-400">Cleaner</span>
                         </button>
                     </div>
-                    <p class="text-[10px] text-slate-400 mt-2 text-center">💡 የይለፍ ቃል፦ <code class="text-cyan-400 font-bold bg-slate-800 px-1.5 py-0.5 rounded">password</code></p>
+          <p class="text-[10px] text-slate-400 mt-2 text-center"> የይለፍ ቃል፦ <code class="text-cyan-400 font-bold bg-slate-800 px-1.5 py-0.5 rounded">password</code></p>
                 </div>
 
                 <button type="submit" id="btn-app-login" class="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
@@ -160,7 +160,7 @@
         <!-- 2. Center: Elegant Compact Role Switcher -->
         <div class="relative">
             <button type="button" onclick="toggleRoleDropdown(event)" id="role-dropdown-btn" class="flex items-center gap-1.5 px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-cyan-500 text-white font-bold text-xs shadow-sm transition cursor-pointer">
-                <span id="header-role-badge">👑 owner</span>
+        <span id="header-role-badge"> owner</span>
                 <i data-lucide="chevron-down" id="role-chevron" class="w-3.5 h-3.5 text-slate-400 transition-transform"></i>
             </button>
 
@@ -408,10 +408,10 @@
             if (!slot) return '—';
             const s = String(slot).toLowerCase();
             if (s.includes('morning') || s.includes('ጥዋት') || s.includes('ጠዋት')) {
-                return '🌅 ጥዋት (2:00–6:00 ጠዋቱ ETH • 8am–12pm GC)';
+        return ' ጥዋት (2:00–6:00 ጠዋቱ ETH • 8am–12pm GC)';
             }
             if (s.includes('afternoon') || s.includes('ከሰዓት')) {
-                return '☀️ ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm GC)';
+        return '️ ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm GC)';
             }
             return slot;
         }
@@ -429,9 +429,9 @@
             const ethTime = EC.toEthTime(now.getHours(), now.getMinutes());
             const gcTime = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
 
-            elMain.textContent = '🗓 ' + ethStr;
-            if (elSub) elSub.textContent = '🌐 GC: ' + gcStr;
-            if (elEthTime) elEthTime.textContent = '🕐 ' + ethTime;
+      elMain.textContent = ' ' + ethStr;
+      if (elSub) elSub.textContent = ' GC: ' + gcStr;
+      if (elEthTime) elEthTime.textContent = ' ' + ethTime;
             if (elGcTime) elGcTime.textContent = 'GC ' + gcTime;
         }
 
@@ -764,7 +764,7 @@
             const badge = document.getElementById('header-role-badge');
             if (badge) {
                 const shortName = teamName.split('(')[0].trim();
-                badge.innerText = `🧹 ${shortName}`;
+        badge.innerText = ` ${shortName}`;
             }
 
             const nameEl = document.getElementById('user-display-name');
@@ -772,7 +772,7 @@
             const roleEl = document.getElementById('user-display-role');
             if (roleEl) roleEl.innerText = 'CLEANER GROUP';
             const avatarEl = document.getElementById('user-avatar-text');
-            if (avatarEl) avatarEl.innerText = '🧹';
+      if (avatarEl) avatarEl.innerText = '';
 
             renderNavigation();
             await getAuthToken();
@@ -798,12 +798,12 @@
             // Update header badge text
             const badge = document.getElementById('header-role-badge');
             if (badge) {
-                const cleanerLabel = activeCleaningTeamName ? `🧹 ${activeCleaningTeamName.split('(')[0].trim()}` : '🧹 የፅዳት ቡድን';
+        const cleanerLabel = activeCleaningTeamName ? ` ${activeCleaningTeamName.split('(')[0].trim()}` : ' የፅዳት ቡድን';
                 const roleLabels = {
-                    owner: '👑 ዋና ስራ አስኪያጅ',
-                    reception: '📞 ሪሴፕሽን & ሽያጭ',
+          owner: ' ዋና ስራ አስኪያጅ',
+          reception: ' ሪሴፕሽን & ሽያጭ',
                     cleaner: cleanerLabel,
-                    sales: '💼 የውጭ ሽያጭ'
+          sales: ' የውጭ ሽያጭ'
                 };
                 badge.innerText = roleLabels[role] || role;
             }
@@ -1076,7 +1076,7 @@
                                         <span class="text-[10px] text-slate-400 font-medium block">የዛሬ ስራዎች</span>
                                         <span class="text-xl font-black text-white mt-0.5 block">${today.cleaning_jobs || 0}</span>
                                     </div>
-                                    <span class="text-lg">🧹</span>
+                  <span class="text-lg"></span>
                                 </div>
 
                                 <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
@@ -1092,7 +1092,7 @@
                                         <span class="text-[10px] text-slate-400 font-medium block">ቡድን ያልተመደቡ</span>
                                         <span class="text-xl font-black ${today.unassigned_jobs > 0 ? 'text-red-400' : 'text-slate-400'} mt-0.5 block">${today.unassigned_jobs || 0}</span>
                                     </div>
-                                    <span class="text-lg">👥</span>
+                  <span class="text-lg"></span>
                                 </div>
 
                                 <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
@@ -1100,7 +1100,7 @@
                                         <span class="text-[10px] text-slate-400 font-medium block">የዛሬ የተጣራ</span>
                                         <span class="text-base sm:text-lg font-black text-cyan-300 mt-0.5 block">${parseFloat(today.net_result || 0).toLocaleString()} <span class="text-[9px] font-mono">ETB</span></span>
                                     </div>
-                                    <span class="text-lg">💰</span>
+                  <span class="text-lg"></span>
                                 </div>
                             </div>
 
@@ -1203,7 +1203,7 @@
                             </div>
                             <button onclick="openCreateOrderModal()" class="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2">
                                 <i data-lucide="phone-incoming" class="w-4 h-4"></i>
-                                <span>📞 ፈጣን ጥሪ መቀበያ / አዲስ ትዕዛዝ</span>
+                <span> ፈጣን ጥሪ መቀበያ / አዲስ ትዕዛዝ</span>
                             </button>
                         </div>
 
@@ -1228,12 +1228,12 @@
                                                     <span class="text-xs font-bold text-cyan-400">${b.order_number}</span>
                                                     <span class="text-xs font-bold text-white">${b.customer?.full_name}</span>
                                                 </div>
-                                                <p class="text-[11px] text-slate-400 mt-0.5">📞 ${b.customer?.phone} | 📍 ${b.subcity || 'Addis Ababa'}</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5"> ${b.customer?.phone} | ${b.subcity || 'Addis Ababa'}</p>
                                                 <p class="text-[10px] text-slate-500">${b.items?.map(i => i.item_name).join(', ')}</p>
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <button onclick="confirmAndAssignOrder(${b.id})" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold">አረጋግጥ እና ሰራተኛ መድብ</button>
-                                                <button onclick="openPostponeOrderModal(${b.id}, '${b.order_number}', '${b.customer?.full_name}')" class="px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-500/40 text-xs font-bold" title="ቀጠሮ አስተላልፍ">📅 አስተላልፍ</button>
+                        <button onclick="openPostponeOrderModal(${b.id}, '${b.order_number}', '${b.customer?.full_name}')" class="px-2.5 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-500/40 text-xs font-bold" title="ቀጠሮ አስተላልፍ"> አስተላልፍ</button>
                                             </div>
                                         </div>
                                     `).join('')}
@@ -1264,7 +1264,7 @@
                                             <div class="flex items-center gap-2">
                                                 <span class="text-xs font-bold ${s.order_status === 'completed' ? 'text-emerald-400' : 'text-cyan-400'} uppercase">${s.order_status}</span>
                                                 ${s.order_status !== 'completed' ? `
-                                                    <button onclick="openPostponeOrderModal(${s.id}, '${s.order_number}', '${s.customer?.full_name}')" class="px-2 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 text-[10px] font-bold">📅 አስተላልፍ</button>
+                          <button onclick="openPostponeOrderModal(${s.id}, '${s.order_number}', '${s.customer?.full_name}')" class="px-2 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 text-[10px] font-bold"> አስተላልፍ</button>
                                                 ` : ''}
                                             </div>
                                         </div>
@@ -1288,7 +1288,7 @@
                                         <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between gap-3">
                                             <div>
                                                 <span class="text-xs font-bold text-white">${f.customer?.full_name}</span>
-                                                <p class="text-[11px] text-slate-400">Order: ${f.order?.order_number} | 📞 ${f.customer?.phone}</p>
+                        <p class="text-[11px] text-slate-400">Order: ${f.order?.order_number} | ${f.customer?.phone}</p>
                                             </div>
                                             <button onclick="openFollowupCallModal(${f.id}, '${f.customer?.full_name}', '${f.customer?.phone}')" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">ጥሪ መዝግብ</button>
                                         </div>
@@ -1369,7 +1369,7 @@
                             <div>
                                 <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">የመስክ አጽጂ ቡድን መከታተያ</span>
                                 <h2 class="text-xl font-black text-white">የዛሬ የስራ ዝርዝሮች</h2>
-                                <p class="text-xs text-cyan-300 font-semibold mt-0.5">🗓 ${EC.formatEth(new Date())} • ${currentTeam?.team_name || activeCleaningTeamName}</p>
+                <p class="text-xs text-cyan-300 font-semibold mt-0.5"> ${EC.formatEth(new Date())} • ${currentTeam?.team_name || activeCleaningTeamName}</p>
                             </div>
                             <div class="flex items-center gap-2 self-start sm:self-auto">
                                 <div class="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-2xl border border-cyan-500/50 shadow">
@@ -1438,7 +1438,7 @@
                                         ${(job.order_status === 'new' || job.order_status === 'assigned') ? `
                                             <button onclick="cleanerStartJourney(${job.id})" class="py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg col-span-2">
                                                 <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
-                                                <span>🚗 ወደ ደንበኛው ጉዞ ጀምር</span>
+                        <span> ወደ ደንበኛው ጉዞ ጀምር</span>
                                             </button>
                                         ` : (job.order_status === 'on_the_way' ? `
                                             <button onclick="cleanerJobAction(${job.id}, 'start')" class="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg">
@@ -1451,7 +1451,7 @@
                                                 <span>ስራ ጨርስ</span>
                                             </button>
                                         ` : `
-                                            <span class="py-2.5 text-center text-xs font-bold text-emerald-400 col-span-2">✅ ተጠናቋል</span>
+                      <span class="py-2.5 text-center text-xs font-bold text-emerald-400 col-span-2"> ተጠናቋል</span>
                                         `))}
 
                                         <button onclick="openProblemReportModal(${job.id})" class="py-2.5 rounded-xl bg-red-950/50 hover:bg-red-900/50 text-red-300 text-xs font-bold flex items-center justify-center gap-1.5 border border-red-500/30">
@@ -1460,7 +1460,7 @@
                                         </button>
                                         <button onclick="openPostponeOrderModal(${job.id}, '${job.order_number}', '${job.customer?.full_name}')" class="py-2.5 rounded-xl bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 border border-amber-500/30 ${job.order_status === 'new' || job.order_status === 'assigned' ? 'col-span-1' : 'col-span-2 sm:col-span-4'} transition-all">
                                             <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-amber-400"></i>
-                                            <span>📅 ቀጠሮ አስተላልፍ</span>
+                      <span> ቀጠሮ አስተላልፍ</span>
                                         </button>
                                     </div>
                                 </div>
@@ -1503,18 +1503,18 @@
                         body: JSON.stringify({ status: payload.order_status, ...extraPayload })
                     });
                     if (res && res.ok) {
-                        alert(action === 'on_the_way' ? '🚗 ጉዞ ጀምረዋል! (Sent)' : '✅ የስራ ሁኔታ ተቀይሮ ተልኳል (Sent)');
+            alert(action === 'on_the_way' ? ' ጉዞ ጀምረዋል! (Sent)' : ' የስራ ሁኔታ ተቀይሮ ተልኳል (Sent)');
                     } else {
                         await window.meashOffline.enqueue('order', 'job_action', payload);
-                        alert('📡 Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
+            alert(' Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
                     }
                 } catch (e) {
                     await window.meashOffline.enqueue('order', 'job_action', payload);
-                    alert('📡 Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
+          alert(' Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
                 }
             } else {
                 await window.meashOffline.enqueue('order', 'job_action', payload);
-                alert('📡 Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
+        alert(' Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
             }
 
             // Reload UI immediately to reflect optimistic update
@@ -1588,11 +1588,11 @@
                                 </button>
                                 <button onclick="openCreateProformaModal()" class="px-3.5 py-2.5 bg-amber-600/90 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer">
                                     <i data-lucide="file-text" class="w-4 h-4"></i>
-                                    <span>🖨️ ፕሮፎርማ አዘጋጅ</span>
+                  <span>️ ፕሮፎርማ አዘጋጅ</span>
                                 </button>
                                 <button onclick="exportSalesTableToExcel()" class="px-3.5 py-2.5 bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer">
                                     <i data-lucide="download" class="w-4 h-4"></i>
-                                    <span>📥 Excel አውርድ (.xls)</span>
+                  <span> Excel አውርድ (.xls)</span>
                                 </button>
                             </div>
                         </div>
@@ -1662,10 +1662,10 @@
                                                     <td class="border border-slate-300 py-2 px-3 text-slate-700 leading-snug">${notes}</td>
                                                     <td class="border border-slate-300 py-2 px-2 text-center whitespace-nowrap space-x-1">
                                                         <button onclick="openPrintProformaDirectModal('${(orgName).replace(/'/g, "\\'")}', '${(contactName).replace(/'/g, "\\'")}', '${(phone).replace(/'/g, "\\'")}', '${(address).replace(/'/g, "\\'")}')" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded text-[10px]" title="ፕሮፎርማ አትም">
-                                                            🖨️ Proforma
+                              ️ Proforma
                                                         </button>
                                                         <button onclick="advanceSalesStageDirect(${v.id}, '${v.stage}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded text-[10px]" title="ደረጃ ቀይር">
-                                                            ✏️ ደረጃ
+                              ️ ደረጃ
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -1832,13 +1832,13 @@
                                                     <span class="text-slate-400 text-[11px]">${o.customer?.phone}</span>
                                                 </td>
                                                 <td class="p-4">
-                                                    <span class="font-bold text-white block text-xs">🗓 ${o.eth_appointment_date || (o.appointment_date ? EC.formatEth(o.appointment_date) : '—')}</span>
-                                                    <span class="text-slate-400 text-[10px] block">🌐 ${o.appointment_date || '—'}</span>
+                          <span class="font-bold text-white block text-xs"> ${o.eth_appointment_date || (o.appointment_date ? EC.formatEth(o.appointment_date) : '—')}</span>
+                          <span class="text-slate-400 text-[10px] block"> ${o.appointment_date || '—'}</span>
                                                     <span class="text-[10px] font-semibold text-cyan-400 block mt-0.5">
                                                         ${formatTimeSlot(o.appointment_time_slot)}
                                                     </span>
                                                 </td>
-                                                <td class="p-4 text-slate-300 font-semibold">${(o.assigned_team?.team_name || o.assignedTeam?.team_name) ? `<span class="px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-bold text-xs inline-flex items-center gap-1 shadow-sm">🧹 ${(o.assigned_team?.team_name || o.assignedTeam?.team_name).split('(')[0]}</span>` : '<span class="px-2.5 py-1 rounded-xl bg-amber-950/60 text-amber-400 border border-amber-900/60 text-[11px] font-bold">ቡድን አልተመደበም</span>'}</td>
+                        <td class="p-4 text-slate-300 font-semibold">${(o.assigned_team?.team_name || o.assignedTeam?.team_name) ? `<span class="px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-bold text-xs inline-flex items-center gap-1 shadow-sm"> ${(o.assigned_team?.team_name || o.assignedTeam?.team_name).split('(')[0]}</span>` : '<span class="px-2.5 py-1 rounded-xl bg-amber-950/60 text-amber-400 border border-amber-900/60 text-[11px] font-bold">ቡድን አልተመደበም</span>'}</td>
                                                 <td class="p-4 font-extrabold text-white">${parseFloat(o.total).toLocaleString()} ETB</td>
                                                 <td class="p-4">
                                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${o.order_status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}">
@@ -1846,8 +1846,8 @@
                                                     </span>
                                                 </td>
                                                 <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
-                                                    <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ሰራተኛ መድብ">👤 ሰራተኛ መድብ</button>
-                                                    <button onclick="openDirectSmsModal('${o.customer?.phone || ''}', '${o.customer?.full_name || ''}')" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">📩 SMS</button>
+                          <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ሰራተኛ መድብ"> ሰራተኛ መድብ</button>
+                          <button onclick="openDirectSmsModal('${o.customer?.phone || ''}', '${o.customer?.full_name || ''}')" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30"> SMS</button>
                                                     <button onclick="openOrderDetailsModal(${o.id})" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር</button>
                                                 </td>
                                             </tr>
@@ -1887,7 +1887,7 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="px-3 py-1.5 rounded-xl bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 text-xs font-bold">
-                                    🔄 ${activeCount} ንቁ የደንበኝነት ተጠቃሚዎች
+                   ${activeCount} ንቁ የደንበኝነት ተጠቃሚዎች
                                 </span>
                             </div>
                         </div>
@@ -1942,12 +1942,12 @@
                                             <tr class="hover:bg-slate-800/40">
                                                 <td class="p-4">
                                                     <span class="font-bold text-white block">${s.customer?.full_name || 'N/A'}</span>
-                                                    <span class="text-slate-400 text-[11px]">📞 ${s.customer?.phone || ''}</span>
+                          <span class="text-slate-400 text-[11px]"> ${s.customer?.phone || ''}</span>
                                                 </td>
                                                 <td class="p-4 font-semibold text-slate-300">${s.service?.name_am || s.service?.name_en || 'መደበኛ ጽዳት'}</td>
                                                 <td class="p-4">
                                                     <span class="px-2.5 py-1 rounded-xl text-[10px] font-bold ${s.plan_type === 'weekly' ? 'bg-cyan-500/20 text-cyan-300' : (s.plan_type === 'biweekly' ? 'bg-blue-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300')}">
-                                                        ${s.plan_type === 'weekly' ? '📅 ሳምንታዊ (Weekly)' : (s.plan_type === 'biweekly' ? '📅 የሁለት ሳምንት' : '📅 ወርሃዊ (Monthly)')}
+                            ${s.plan_type === 'weekly' ? ' ሳምንታዊ (Weekly)' : (s.plan_type === 'biweekly' ? ' የሁለት ሳምንት' : ' ወርሃዊ (Monthly)')}
                                                     </span>
                                                 </td>
                                                 <td class="p-4 font-black text-emerald-400">${s.discount_percentage}% OFF</td>
@@ -1958,7 +1958,7 @@
                                                     </span>
                                                 </td>
                                                 <td class="p-4 text-right space-x-1.5">
-                                                    <button onclick="openDirectSmsModal('${s.customer?.phone || ''}', '${s.customer?.full_name || ''}')" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">📩 SMS</button>
+                          <button onclick="openDirectSmsModal('${s.customer?.phone || ''}', '${s.customer?.full_name || ''}')" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30"> SMS</button>
                                                     ${s.status === 'active' ? `
                                                         <button onclick="updateSubscriptionStatus(${s.id}, 'paused')" class="px-2.5 py-1 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-500/30">አቁም (Pause)</button>
                                                     ` : (s.status === 'paused' ? `
@@ -1993,10 +1993,10 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert('✅ ' + (data.message || 'የደንበኝነት እቅድ ሁኔታ ተዘምኗል!'));
+          alert(' ' + (data.message || 'የደንበኝነት እቅድ ሁኔታ ተዘምኗል!'));
                     loadActiveTab();
                 } else {
-                    alert('❌ ስህተት: ' + (data.message || 'ሁኔታውን ማዘመን አልተቻለም'));
+          alert(' ስህተት: ' + (data.message || 'ሁኔታውን ማዘመን አልተቻለም'));
                 }
             } catch (e) {
                 alert('የግንኙነት ስህተት: ' + e.message);
@@ -2043,10 +2043,10 @@
                                 <label class="block text-slate-300 font-bold mb-1">ፈጣን ዝግጁ አብነቶች (SMS Templates)</label>
                                 <select onchange="applySmsTemplate(this.value, '${safeName}')" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-slate-300 focus:outline-none focus:border-cyan-500">
                                     <option value="">-- ፈጣን አብነት ይምረጡ --</option>
-                                    <option value="confirm">✅ የቀጠሮ ማረጋገጫ (Appointment Confirmed)</option>
-                                    <option value="dispatched">🚗 የቡድን ስምሪት እና የቀጥታ ካርታ (Dispatched on the way)</option>
+                  <option value="confirm"> የቀጠሮ ማረጋገጫ (Appointment Confirmed)</option>
+                  <option value="dispatched"> የቡድን ስምሪት እና የቀጥታ ካርታ (Dispatched on the way)</option>
                                     <option value="feedback">⭐ የአስተያየት መቀበያ እና ምስጋና (Feedback & Thanks)</option>
-                                    <option value="subscription">🔄 የደንበኝነት አገልግሎት አስታዋሽ (Subscription Reminder)</option>
+                  <option value="subscription"> የደንበኝነት አገልግሎት አስታዋሽ (Subscription Reminder)</option>
                                 </select>
                             </div>
 
@@ -2057,7 +2057,7 @@
 
                             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
                                 <a id="btn-direct-sim-sms" href="sms:${cleanPhone || '0970075509'}?body=ሰላም ${encodeURIComponent(safeName)}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
-                                    <span>📱 በስልክ SIM ላክ</span>
+                  <span> በስልክ SIM ላክ</span>
                                 </a>
                                 <div class="flex items-center gap-2">
                                     <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700">ሰርዝ</button>
@@ -2121,9 +2121,9 @@
                 const data = await res.json();
                 if (res.ok && data.success) {
                     closeModal();
-                    alert('✅ ' + (data.message || 'ኤስኤምኤሱ በተሳካ ሁኔታ ተልኳል!'));
+          alert(' ' + (data.message || 'ኤስኤምኤሱ በተሳካ ሁኔታ ተልኳል!'));
                 } else {
-                    alert('❌ ስህተት: ' + (data.message || 'ኤስኤምኤስ መላክ አልተቻለም።'));
+          alert(' ስህተት: ' + (data.message || 'ኤስኤምኤስ መላክ አልተቻለም።'));
                 }
             } catch (err) {
                 alert('የግንኙነት ስህተት: ' + err.message);
@@ -2160,11 +2160,11 @@
                                         </div>
                                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-800 text-slate-300">${c.customer_type}</span>
                                     </div>
-                                    <p class="text-xs text-slate-400">📞 ${c.phone} | 📍 ${c.subcity || 'Addis Ababa'}</p>
+                  <p class="text-xs text-slate-400"> ${c.phone} | ${c.subcity || 'Addis Ababa'}</p>
                                     <div class="pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
                                         <button onclick="openDirectSmsModal('${c.phone}', '${c.full_name}')" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30 flex items-center gap-1">
                                             <i data-lucide="send" class="w-3 h-3"></i>
-                                            <span>📩 SMS</span>
+                      <span> SMS</span>
                                         </button>
                                         <button onclick="openCustomerProfileModal(${c.id})" class="text-cyan-400 font-bold hover:underline">የአገልግሎት ታሪክ እይ &rarr;</button>
                                     </div>
@@ -2197,7 +2197,7 @@
                     chemicals: 'ኬሚካሎች እና ሳሙናዎች',
                     fuel: 'ነዳጅ / ትራንስፖርት',
                     materials: 'የፅዳት መገልገያ እቃዎች',
-                    employee_payments: '💵 የሰራተኞች ደመወዝ / ክፍያ',
+          employee_payments: ' የሰራተኞች ደመወዝ / ክፍያ',
                     equipment_repair: 'የማሽን ጥገና',
                     rent: 'የቢሮ ኪራይ',
                     marketing: 'ማስታወቂያ እና ፕሮሞሽን',
@@ -2227,7 +2227,7 @@
                                 </div>
                                 <button onclick="openPayrollModal()" class="px-4 py-2.5 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all shadow-amber-950/40">
                                     <i data-lucide="banknote" class="w-4 h-4"></i>
-                                    <span>💵 ደመወዝ ክፈል (Payroll)</span>
+                  <span> ደመወዝ ክፈል (Payroll)</span>
                                 </button>
                                 <button onclick="openRecordExpenseModal()" class="px-4 py-2.5 bg-red-600/80 hover:bg-red-600 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
                                     <i data-lucide="minus-circle" class="w-4 h-4"></i>
@@ -2370,7 +2370,7 @@
                             ${!pricesLive ? `
                             <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
                                 <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
-                                <span>⚠️ የቀጥታ የዋጋ መረጃ አልተገኘም (Prices may be old)። ኢንተርኔት እስኪመጣ ድረስ አዲስ ትዕዛዝ መመዝገብ ተከልክሏል።</span>
+                <span>️ የቀጥታ የዋጋ መረጃ አልተገኘም (Prices may be old)። ኢንተርኔት እስኪመጣ ድረስ አዲስ ትዕዛዝ መመዝገብ ተከልክሏል።</span>
                             </div>
                             ` : ''}
                             <div class="grid grid-cols-2 gap-3">
@@ -2409,14 +2409,14 @@
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-400 mb-1">የቀጠሮ ቀን *</label>
-                                    <input type="date" id="mo-date" required onchange="document.getElementById('mo-eth-hint').textContent='🗓 ' + EC.formatEth(this.value);" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
-                                    <p id="mo-eth-hint" class="text-[10px] text-cyan-400 font-bold mt-1">🗓 — ዓ.ም</p>
+                  <input type="date" id="mo-date" required onchange="document.getElementById('mo-eth-hint').textContent=' ' + EC.formatEth(this.value);" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                  <p id="mo-eth-hint" class="text-[10px] text-cyan-400 font-bold mt-1"> — ዓ.ም</p>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-400 mb-1">የቀጠሮ ሰዓት (ጥዋት / ከሰዓት ብቻ) *</label>
                                     <select id="mo-slot" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer">
-                                        <option value="morning">🌅 ጥዋት (2:00–6:00 ጠዋቱ ETH • 8am–12pm)</option>
-                                        <option value="afternoon">☀️ ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm)</option>
+                    <option value="morning"> ጥዋት (2:00–6:00 ጠዋቱ ETH • 8am–12pm)</option>
+                    <option value="afternoon">️ ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm)</option>
                                     </select>
                                 </div>
                             </div>
@@ -2436,7 +2436,7 @@
                                             const sName = s.name_am || s.name_en;
                                             const sPrice = parseFloat(s.base_price || 0);
                                             const sUnit = s.unit || 'ስራ';
-                                            const sIcon = s.icon || '🧹';
+                      const sIcon = s.icon || '';
                                             return `<option value="${s.id}" data-name="${sName}" data-price="${sPrice}" data-unit="${sUnit}">${sIcon} ${sName} — ${sPrice.toLocaleString()} ብር / ${sUnit}</option>`;
                                         }).join('')}
                                     </select>
@@ -2459,7 +2459,7 @@
 
                             <!-- Assign Cleaning Team directly upon creation -->
                             <div class="p-3 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-1">
-                                <label class="block text-xs font-semibold text-emerald-400 mb-1">👥 የፅዳት ቡድን መድብ (Assign Cleaning Team)</label>
+                <label class="block text-xs font-semibold text-emerald-400 mb-1"> የፅዳት ቡድን መድብ (Assign Cleaning Team)</label>
                                 <select id="mo-team-id" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-bold cursor-pointer">
                                     <option value="">-- በኋላ መድብ (Unassigned) --</option>
                                     <option value="1">Team Alpha (Solomon Kebede - Upholstery & Carpet)</option>
@@ -2479,7 +2479,7 @@
             `;
             const todayIso = new Date().toISOString().split('T')[0];
             document.getElementById('mo-date').value = todayIso;
-            document.getElementById('mo-eth-hint').textContent = '🗓 ' + EC.formatEth(todayIso);
+      document.getElementById('mo-eth-hint').textContent = ' ' + EC.formatEth(todayIso);
 
             // Pre-select first service
             const selectEl = document.getElementById('mo-service-select');
@@ -2508,7 +2508,7 @@
                     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                             <div>
-                                <h3 class="text-base font-bold text-white">✨ አዲስ የፅዳት አገልግሎት መመዝገቢያ</h3>
+                <h3 class="text-base font-bold text-white"> አዲስ የፅዳት አገልግሎት መመዝገቢያ</h3>
                                 <p class="text-[11px] text-slate-400">በዳታቤዝ ገብቶ በቦት፣ በዌብሳይት፣ በሚኒ-አፕ እና እዚህ በአንድ ጊዜ ይታያል!</p>
                             </div>
                             <button onclick="openCreateOrderModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
@@ -2547,14 +2547,14 @@
                                 <div>
                                     <label class="block text-slate-400 mb-1">አዶ (Icon)</label>
                                     <select id="new-svc-icon" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-base cursor-pointer">
-                                        <option value="✨">✨ ኮከብ (Sparkle)</option>
-                                        <option value="🛋">🛋 ሶፋ (Sofa)</option>
-                                        <option value="🧶">🧶 ምንጣፍ (Carpet)</option>
-                                        <option value="🛏">🛏 ፍራሽ (Mattress)</option>
-                                        <option value="🪟">🪟 መስታወት (Window)</option>
-                                        <option value="🏠">🏠 ቤት (House)</option>
-                                        <option value="🏢">🏢 ህንፃ/ቢሮ (Building)</option>
-                                        <option value="🚗">🚗 ተሽከርካሪ (Car)</option>
+                    <option value=""> ኮከብ (Sparkle)</option>
+                    <option value=""> ሶፋ (Sofa)</option>
+                    <option value=""> ምንጣፍ (Carpet)</option>
+                    <option value=""> ፍራሽ (Mattress)</option>
+                    <option value=""> መስታወት (Window)</option>
+                    <option value=""> ቤት (House)</option>
+                    <option value=""> ህንፃ/ቢሮ (Building)</option>
+                    <option value=""> ተሽከርካሪ (Car)</option>
                                     </select>
                                 </div>
                             </div>
@@ -2598,7 +2598,7 @@
                 });
                 const result = await res.json();
                 if (res.ok) {
-                    alert('✓ አዲሱ የፅዳት አገልግሎት በተሳካ ሁኔታ ተመዝግቧል! አሁን በቴሌግራም ቦት፣ በዌብሳይት፣ በሚኒ-አፕ እና በትዕዛዝ መመዝገቢያ ላይ በአንድ ጊዜ ይታያል።');
+          alert(' አዲሱ የፅዳት አገልግሎት በተሳካ ሁኔታ ተመዝግቧል! አሁን በቴሌግራም ቦት፣ በዌብሳይት፣ በሚኒ-አፕ እና በትዕዛዝ መመዝገቢያ ላይ በአንድ ጊዜ ይታያል።');
                     if (!window._appServicesList) window._appServicesList = [];
                     window._appServicesList.push(result.service || payload);
                     openCreateOrderModal();
@@ -2653,7 +2653,7 @@
                 <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
                     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl text-center space-y-4">
                         <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-black">
-                            ✓
+              
                         </div>
                         <div>
                             <h3 class="text-base font-bold text-white">ትዕዛዙ በተሳካ ሁኔታ ተመዝግቧል!</h3>
@@ -2665,7 +2665,7 @@
                                 አሁን ዝጋ
                             </button>
                             <a href="sms:${cleanPhone}?&body=${encodeURIComponent(msg)}" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer">
-                                <span>📱 በስልክ SIM ላክ</span>
+                <span> በስልክ SIM ላክ</span>
                             </a>
                         </div>
                     </div>
@@ -2797,7 +2797,7 @@
                             <div class="flex flex-wrap items-center gap-2.5">
                                 <button onclick="openPayrollModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-950/50 transition-all cursor-pointer">
                                     <i data-lucide="banknote" class="w-4 h-4"></i>
-                                    <span>+ 💵 ደመወዝ ክፈል (Payroll)</span>
+                  <span>+ ደመወዝ ክፈል (Payroll)</span>
                                 </button>
                                 <button onclick="openAddEmployeeModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/50 transition-all cursor-pointer">
                                     <i data-lucide="user-plus" class="w-4 h-4"></i>
@@ -2821,7 +2821,7 @@
 
                             ${teams.length === 0 ? `
                                 <div class="p-8 rounded-3xl bg-slate-900 border border-slate-800 text-center space-y-3">
-                                    <div class="w-12 h-12 rounded-2xl bg-slate-800 text-cyan-400 flex items-center justify-center mx-auto text-xl">👥</div>
+                  <div class="w-12 h-12 rounded-2xl bg-slate-800 text-cyan-400 flex items-center justify-center mx-auto text-xl"></div>
                                     <p class="text-sm font-bold text-white">እስካሁን የተፈጠረ የፅዳት ቡድን የለም</p>
                                     <p class="text-xs text-slate-400 max-w-sm mx-auto">ከላይ ያለውን "+ አዲስ የፅዳት ቡድን ፍጠር" የሚለውን በመጫን ቡድን መፍጠር ይችላሉ፤ ወይም ሰራተኞችን በቀጥታ ለትዕዛዞች መመደብ ይችላሉ።</p>
                                     <button onclick="openCreateTeamModal()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs">ቡድን ፍጠር</button>
@@ -2841,15 +2841,15 @@
                                             </div>
                                             <div class="space-y-2 text-xs text-slate-400 bg-slate-950/50 p-3.5 rounded-2xl border border-slate-800/80">
                                                 <div class="flex items-center justify-between">
-                                                    <span>👤 የቡድን መሪ:</span>
+                          <span> የቡድን መሪ:</span>
                                                     <strong class="text-white">${t.leader?.name || 'አልተመደበም'}</strong>
                                                 </div>
                                                 <div class="flex items-center justify-between">
-                                                    <span>📞 ስልክ:</span>
+                          <span> ስልክ:</span>
                                                     <span class="text-cyan-300 font-mono">${t.phone || t.leader?.phone || '—'}</span>
                                                 </div>
                                                 <div class="flex items-center justify-between">
-                                                    <span>👥 አባላት:</span>
+                          <span> አባላት:</span>
                                                     <span class="text-cyan-400 font-bold">${t.members?.length || 1} አባላት</span>
                                                 </div>
                                             </div>
@@ -2921,7 +2921,7 @@
                                                 <td class="py-3 px-3 text-right">
                                                     <button onclick="openPayrollModal(${e.id}, '${e.name.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-sm">
                                                         <i data-lucide="banknote" class="w-3.5 h-3.5 text-amber-400"></i>
-                                                        <span>💵 ደመወዝ ክፈል</span>
+                            <span> ደመወዝ ክፈል</span>
                                                     </button>
                                                 </td>
                                             </tr>
@@ -2972,11 +2972,11 @@
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">የስራ ድርሻ (Role) *</label>
                                 <select id="new-emp-role" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
-                                    <option value="cleaner">🧹 የፅዳት ባለሙያ (Cleaner)</option>
-                                    <option value="reception">📞 ሪሴፕሽን & ሽያጭ (Reception)</option>
-                                    <option value="sales">💼 የውጭ ሽያጭ (Outdoor Sales)</option>
-                                    <option value="finance">💰 ፋይናንስ & ሂሳብ (Finance)</option>
-                                    <option value="owner">👑 ዋና ስራ አስኪያጅ (Owner)</option>
+                  <option value="cleaner"> የፅዳት ባለሙያ (Cleaner)</option>
+                  <option value="reception"> ሪሴፕሽን & ሽያጭ (Reception)</option>
+                  <option value="sales"> የውጭ ሽያጭ (Outdoor Sales)</option>
+                  <option value="finance"> ፋይናንስ & ሂሳብ (Finance)</option>
+                  <option value="owner"> ዋና ስራ አስኪያጅ (Owner)</option>
                                 </select>
                             </div>
                             <div>
@@ -3017,7 +3017,7 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    alert('✅ አዲሱ ሰራተኛ በተሳካ ሁኔታ ተመዝግቧል!');
+          alert(' አዲሱ ሰራተኛ በተሳካ ሁኔታ ተመዝግቧል!');
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -3108,7 +3108,7 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    alert('✅ የፅዳት ቡድኑ በተሳካ ሁኔታ ተፈጥሯል!');
+          alert(' የፅዳት ቡድኑ በተሳካ ሁኔታ ተፈጥሯል!');
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -3223,11 +3223,11 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    alert('✅ የደመወዝ ክፍያ በተሳካ ሁኔታ ተመዝግቧል! በአድሚኑ የወጪ ገጽ ላይ ታክሏል።');
+          alert(' የደመወዝ ክፍያ በተሳካ ሁኔታ ተመዝግቧል! በአድሚኑ የወጪ ገጽ ላይ ታክሏል።');
                     closeModal();
                     loadActiveTab();
                 } else {
-                    alert('❌ ስህተት: ' + (data.message || 'ክፍያውን መመዝገብ አልተቻለም'));
+          alert(' ስህተት: ' + (data.message || 'ክፍያውን መመዝገብ አልተቻለም'));
                 }
             } catch (err) {
                 alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
@@ -3283,11 +3283,11 @@
                                         <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between gap-2">
                                             <div>
                                                 <h4 class="text-xs font-bold text-white">${f.customer?.full_name}</h4>
-                                                <p class="text-[11px] text-slate-400">📞 ${f.customer?.phone}</p>
+                        <p class="text-[11px] text-slate-400"> ${f.customer?.phone}</p>
                                                 <span class="text-[9px] px-2 py-0.5 rounded-full uppercase font-bold ${f.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}">${f.status}</span>
                                             </div>
                                             <div class="flex items-center gap-1 shrink-0">
-                                                <button onclick="openDirectSmsModal('${f.customer?.phone || ''}', '${f.customer?.full_name || ''}')" class="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold">📩</button>
+                        <button onclick="openDirectSmsModal('${f.customer?.phone || ''}', '${f.customer?.full_name || ''}')" class="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold"></button>
                                                 <button onclick="openFollowupCallModal(${f.id}, '${f.customer?.full_name}', '${f.customer?.phone}')" class="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold">መዝግብ</button>
                                             </div>
                                         </div>
@@ -3315,10 +3315,10 @@
                                                 <p class="text-[10px] text-red-300 font-semibold mt-0.5">${c.category}: ${c.description}</p>
                                             </div>
                                             <div class="flex items-center gap-1 shrink-0">
-                                                <button onclick="openDirectSmsModal('${c.customer?.phone || ''}', '${c.customer?.full_name || ''}')" class="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold">📩</button>
+                        <button onclick="openDirectSmsModal('${c.customer?.phone || ''}', '${c.customer?.full_name || ''}')" class="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold"></button>
                                                 ${c.status !== 'resolved' ? `
                                                     <button onclick="openResolveComplaintModal(${c.id})" class="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-[11px] font-bold">መፍትሄ</button>
-                                                ` : '<span class="text-[11px] text-emerald-400 font-bold">✓</span>'}
+                        ` : '<span class="text-[11px] text-emerald-400 font-bold"></span>'}
                                             </div>
                                         </div>
                                     `).join('')}
@@ -3341,7 +3341,7 @@
                                             <div class="flex items-center justify-between">
                                                 <div>
                                                     <span class="text-xs font-bold text-white">${fb.customer?.full_name || 'ውድ ደንበኛ'}</span>
-                                                    <span class="text-[10px] text-amber-400 ml-1.5 font-bold">${'★'.repeat(fb.rating)}${'☆'.repeat(5 - fb.rating)}</span>
+                          <span class="text-[10px] text-amber-400 ml-1.5 font-bold">${''.repeat(fb.rating)}${''.repeat(5 - fb.rating)}</span>
                                                 </div>
                                                 <span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${fb.is_approved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'}">
                                                     ${fb.is_approved ? 'በድረ-ገጽ ይታያል' : 'ተደብቋል'}
@@ -3351,7 +3351,7 @@
                                             <div class="pt-2 border-t border-slate-700/60 flex justify-between items-center text-[10px]">
                                                 <span class="text-slate-400">${fb.source || 'web'}</span>
                                                 <button onclick="toggleFeedbackApproval(${fb.id}, ${!fb.is_approved})" class="px-2.5 py-1 rounded-lg ${fb.is_approved ? 'bg-red-950/70 hover:bg-red-900 border border-red-500/30 text-red-300' : 'bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300'} font-bold transition-all">
-                                                    ${fb.is_approved ? '🚫 ከድረ-ገጽ ደብቅ' : '✅ በድረ-ገጽ እንዲታይ ፍቀድ'}
+                          ${fb.is_approved ? ' ከድረ-ገጽ ደብቅ' : ' በድረ-ገጽ እንዲታይ ፍቀድ'}
                                                 </button>
                                             </div>
                                         </div>
@@ -3375,10 +3375,10 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert('✅ ' + (data.message || 'ተዘምኗል!'));
+          alert(' ' + (data.message || 'ተዘምኗል!'));
                     loadActiveTab();
                 } else {
-                    alert('❌ ስህተት: ' + (data.message || 'ማዘመን አልተቻለም'));
+          alert(' ስህተት: ' + (data.message || 'ማዘመን አልተቻለም'));
                 }
             } catch(e) {
                 alert('የግንኙነት ስህተት: ' + e.message);
@@ -3469,11 +3469,11 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert('✅ ቅሬታው ተመዝግቧል! ወደ ቅሬታዎች ዝርዝር ታክሏል።');
+          alert(' ቅሬታው ተመዝግቧል! ወደ ቅሬታዎች ዝርዝር ታክሏል።');
                     closeModal();
                     loadActiveTab();
                 } else {
-                    alert('❌ ስህተት: ' + (data.message || 'ቅሬታውን መመዝገብ አልተቻለም'));
+          alert(' ስህተት: ' + (data.message || 'ቅሬታውን መመዝገብ አልተቻለም'));
                 }
             } catch (err) {
                 alert('የግንኙነት ስህተት: ' + err.message);
@@ -3548,7 +3548,7 @@
                                         <div class="pt-2">
                                             <button onclick="dispatchCampaignNow(${c.id})" class="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg cursor-pointer">
                                                 <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                                                <span>🚀 አሁን ለሁሉም ላክ (Send Now)</span>
+                        <span> አሁን ለሁሉም ላክ (Send Now)</span>
                                             </button>
                                         </div>
                                     ` : ''}
@@ -3570,7 +3570,7 @@
                 const res = await apiFetch(`/api/campaigns/${campaignId}/send`, { method: 'POST' });
                 const data = await res.json();
                 if (res.ok) {
-                    alert('✓ ' + (data.message || 'ማስታወቂያው በተሳካ ሁኔታ ተልኳል!'));
+          alert(' ' + (data.message || 'ማስታወቂያው በተሳካ ሁኔታ ተልኳል!'));
                     loadActiveTab();
                 } else {
                     alert('ስህተት፡ ' + (data.message || 'መላክ አልተቻለም'));
@@ -3587,7 +3587,7 @@
                     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                             <div>
-                                <h3 class="text-base font-bold text-white">📢 አዲስ የማስታወቂያ ዘመቻ ፍጠር</h3>
+                <h3 class="text-base font-bold text-white"> አዲስ የማስታወቂያ ዘመቻ ፍጠር</h3>
                                 <p class="text-[11px] text-slate-400">ለደንበኞች በ SMS ወይም በቴሌግራም መልዕክት ማስተላለፊያ</p>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
@@ -3601,8 +3601,8 @@
                                 <div>
                                     <label class="block text-slate-400 mb-1">የመላኪያ ቻናል *</label>
                                     <select id="cmp-channel" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer">
-                                        <option value="sms">📱 SMS (የጽሑፍ መልዕክት)</option>
-                                        <option value="telegram">✈️ Telegram (ቴሌግራም ቦት)</option>
+                    <option value="sms"> SMS (የጽሑፍ መልዕክት)</option>
+                    <option value="telegram">️ Telegram (ቴሌግራም ቦት)</option>
                                     </select>
                                 </div>
                                 <div>
@@ -3661,7 +3661,7 @@
                         btn.textContent = 'ወዲያውኑ በመላክ ላይ...';
                         await apiFetch(`/api/campaigns/${campaignId}/send`, { method: 'POST' });
                     }
-                    alert('✓ የማስታወቂያ ዘመቻው በተሳካ ሁኔታ ተፈጥሮ ተልኳል!');
+          alert(' የማስታወቂያ ዘመቻው በተሳካ ሁኔታ ተፈጥሮ ተልኳል!');
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -3706,7 +3706,7 @@
                                     <label class="block text-slate-400 mb-1">የባለቤቱ ስልክ ቁጥር (ይፋዊ መላኪያ)</label>
                                     <div class="flex items-center gap-2">
                                         <input type="text" id="setting-owner-phone" value="0970075509" class="w-full bg-slate-800 border border-cyan-500/50 rounded-xl px-3 py-2 text-cyan-300 font-mono font-bold">
-                                        <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-[10px] whitespace-nowrap">✓ ተረጋግጧል</span>
+                    <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-[10px] whitespace-nowrap"> ተረጋግጧል</span>
                                     </div>
                                 </div>
 
@@ -3748,7 +3748,7 @@
                                         <span>በሲስተም SMS ላክ</span>
                                     </button>
                                     <a id="btn-owner-direct-sim-sms" href="sms:0970075509?&body=ሰላም! ይህ ከሜሽ ክሊኒንግ (0970075509) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው።" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
-                                        <span>📱 በስልክ SIM ላክ</span>
+                    <span> በስልክ SIM ላክ</span>
                                     </a>
                                 </div>
                             </div>
@@ -3792,7 +3792,7 @@
 
                             <div class="space-y-2 text-xs text-slate-300">
                                 <div class="p-3 rounded-2xl bg-amber-950/20 border border-amber-500/20">
-                                    <p class="font-bold text-white text-sm">🗓 የዛሬ ቀን፡ ${EC.formatEth(new Date())}</p>
+                  <p class="font-bold text-white text-sm"> የዛሬ ቀን፡ ${EC.formatEth(new Date())}</p>
                                     <p class="text-[11px] text-slate-400 mt-1">የኢትዮጵያ ቀን አቆጣጠር አልጎሪዝም በትክክል ተስተካክሎ 2019 ዓ.ም እያሳየ ይገኛል።</p>
                                 </div>
                             </div>
@@ -3846,7 +3846,7 @@
                         successCount++;
                     }
                 }
-                alert(`✅ የሙከራ ኤስኤምኤስ ለ ${successCount}/${phoneList.length} ቁጥሮች በሲስተም መዝገብ ላይ ተልኳል!`);
+        alert(` የሙከራ ኤስኤምኤስ ለ ${successCount}/${phoneList.length} ቁጥሮች በሲስተም መዝገብ ላይ ተልኳል!`);
             } catch (e) {
                 alert('የግንኙነት ስህተት: ' + e.message);
             } finally {
@@ -4104,7 +4104,7 @@
                                 <i data-lucide="plus-circle" class="w-4 h-4 text-cyan-400"></i>
                                 <span>አዲስ አገልግሎት መመዝገቢያ</span>
                             </h3>
-                            <button type="button" onclick="document.getElementById('cms-add-service-modal').remove()" class="text-slate-400 hover:text-white">✕</button>
+              <button type="button" onclick="document.getElementById('cms-add-service-modal').remove()" class="text-slate-400 hover:text-white"></button>
                         </div>
                         <form onsubmit="submitNewService(event)" class="space-y-3 text-xs">
                             <div>
@@ -4324,7 +4324,7 @@
                                         </td>
                                         <td class="p-3.5">
                                             <div class="flex text-amber-400">
-                                                ${'★'.repeat(f.rating || 5)}${'☆'.repeat(5 - (f.rating || 5))}
+                        ${''.repeat(f.rating || 5)}${''.repeat(5 - (f.rating || 5))}
                                             </div>
                                         </td>
                                         <td class="p-3.5 max-w-xs truncate text-slate-300" title="${f.comment || ''}">
@@ -4382,7 +4382,7 @@
                                 <i data-lucide="star" class="w-4 h-4 text-amber-400"></i>
                                 <span>አዲስ የደንበኛ ምስክርነት ማከል</span>
                             </h3>
-                            <button type="button" onclick="document.getElementById('cms-add-review-modal').remove()" class="text-slate-400 hover:text-white">✕</button>
+              <button type="button" onclick="document.getElementById('cms-add-review-modal').remove()" class="text-slate-400 hover:text-white"></button>
                         </div>
                         <form onsubmit="submitNewCmsReview(event)" class="space-y-3 text-xs">
                             <div>
@@ -4392,9 +4392,9 @@
                             <div>
                                 <label class="text-slate-400 block mb-1">የኮከብ ደረጃ (Rating 1 - 5)</label>
                                 <select id="new-rev-rating" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
-                                    <option value="5">★★★★★ (5 Stars)</option>
-                                    <option value="4">★★★★☆ (4 Stars)</option>
-                                    <option value="3">★★★☆☆ (3 Stars)</option>
+                  <option value="5"> (5 Stars)</option>
+                  <option value="4"> (4 Stars)</option>
+                  <option value="3"> (3 Stars)</option>
                                 </select>
                             </div>
                             <div>
@@ -4522,12 +4522,12 @@
                                     <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                         <div>
                                             <div class="flex flex-wrap items-center gap-2">
-                                                <span class="text-xs font-bold text-cyan-400">🗓 ${a.eth_date || EC.formatEth(a.appointment_date)}</span>
-                                                <span class="text-[10px] text-slate-400 font-normal">🌐 ${a.appointment_date || '—'}</span>
+                        <span class="text-xs font-bold text-cyan-400"> ${a.eth_date || EC.formatEth(a.appointment_date)}</span>
+                        <span class="text-[10px] text-slate-400 font-normal"> ${a.appointment_date || '—'}</span>
                                                 <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-700/80 text-cyan-300 font-bold">${formatTimeSlot(a.appointment_time_slot)}</span>
                                             </div>
-                                            <h4 class="text-sm font-bold text-white mt-1">${a.customer?.full_name || 'Customer'} - 📞 ${a.customer?.phone || ''}</h4>
-                                            <p class="text-xs text-slate-400">📍 ${a.order?.address || 'Addis Ababa'} | የተመደበ ቡድን: <strong>${a.team?.team_name || 'ቡድን አልተመደበም'}</strong></p>
+                      <h4 class="text-sm font-bold text-white mt-1">${a.customer?.full_name || 'Customer'} - ${a.customer?.phone || ''}</h4>
+                      <p class="text-xs text-slate-400"> ${a.order?.address || 'Addis Ababa'} | የተመደበ ቡድን: <strong>${a.team?.team_name || 'ቡድን አልተመደበም'}</strong></p>
                                         </div>
                                         <span class="px-3 py-1 rounded-full text-xs font-bold uppercase self-start sm:self-auto ${a.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}">${a.status}</span>
                                     </div>
@@ -4563,9 +4563,9 @@
                     new: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                 };
                 const tierLabels = {
-                    vip: '👑 ቪአይፒ (VIP)',
+          vip: ' ቪአይፒ (VIP)',
                     regular: '⭐ መደበኛ ደንበኛ',
-                    new: '🌱 አዲስ ደንበኛ'
+          new: ' አዲስ ደንበኛ'
                 };
                 const currentTier = (c.customer_type || 'new').toLowerCase();
 
@@ -4633,7 +4633,7 @@
                                             <div class="space-y-0.5">
                                                 <div class="flex items-center gap-2">
                                                     <span class="font-bold text-white">${o.order_number}</span>
-                                                    <span class="text-[11px] text-cyan-300">🗓 ${o.eth_appointment_date || EC.formatEth(o.appointment_date)}</span>
+                          <span class="text-[11px] text-cyan-300"> ${o.eth_appointment_date || EC.formatEth(o.appointment_date)}</span>
                                                 </div>
                                                 <p class="text-[11px] text-slate-400">${(o.items || []).map(i => `${i.item_name} (x${parseFloat(i.quantity)})`).join(', ') || 'የፅዳት አገልግሎት'}</p>
                                             </div>
@@ -4657,7 +4657,7 @@
                                         ${timeline.map(t => `
                                             <div class="p-2.5 bg-slate-950/50 border border-slate-800 rounded-xl flex items-start gap-2.5 text-xs">
                                                 <span class="text-base shrink-0 mt-0.5">
-                                                    ${t.type === 'feedback' ? '⭐' : (t.type === 'payment' ? '💳' : (t.type === 'complaint' ? '⚠️' : '📦'))}
+                          ${t.type === 'feedback' ? '⭐' : (t.type === 'payment' ? '' : (t.type === 'complaint' ? '️' : ''))}
                                                 </span>
                                                 <div class="flex-1">
                                                     <div class="flex items-center justify-between">
@@ -4710,12 +4710,12 @@
                                     <div>
                                         <span class="text-slate-400 block text-[11px]">ደንበኛ</span>
                                         <strong class="text-white">${o.customer?.full_name}</strong>
-                                        <p class="text-slate-400 text-[11px]">📞 ${o.customer?.phone}</p>
+                    <p class="text-slate-400 text-[11px]"> ${o.customer?.phone}</p>
                                     </div>
                                     <div>
                                         <span class="text-slate-400 block text-[11px]">Schedule & መገኛ</span>
                                         <strong class="text-white">${o.eth_appointment_date || o.appointment_date} (${o.appointment_time_slot})</strong>
-                                        <p class="text-slate-400 text-[11px]">📍 ${o.address || o.customer?.address}</p>
+                    <p class="text-slate-400 text-[11px]"> ${o.address || o.customer?.address}</p>
                                         ${(o.latitude && o.longitude) ? `
                                             <div class="mt-2 text-xs text-cyan-400 font-semibold flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span>አድራሻ: ${o.address || o.customer?.address || 'አዲስ አበባ'}</span></div>
                                         ` : `
@@ -4753,11 +4753,11 @@
                                 ${o.order_status !== 'completed' && o.order_status !== 'cancelled' ? `
                                     <button onclick="closeModal(); confirmAndAssignOrder(${o.id});" class="px-4 py-2 bg-blue-950/80 hover:bg-blue-900 border border-blue-500/40 text-blue-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
                                         <i data-lucide="user-check" class="w-4 h-4 text-blue-400"></i>
-                                        <span>👤 ሰራተኛ መድብ (Assign Worker)</span>
+                    <span> ሰራተኛ መድብ (Assign Worker)</span>
                                     </button>
                                     <button onclick="closeModal(); openPostponeOrderModal(${o.id}, '${o.order_number}', '${o.customer?.full_name}');" class="px-4 py-2 bg-amber-950/70 hover:bg-amber-900 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
                                         <i data-lucide="calendar-clock" class="w-4 h-4 text-amber-400"></i>
-                                        <span>📅 ቀጠሮ አስተላልፍ (Postpone)</span>
+                    <span> ቀጠሮ አስተላልፍ (Postpone)</span>
                                     </button>
                                 ` : ''}
                                 <button onclick="closeModal()" class="px-5 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-700">ዝጋ</button>
@@ -4798,7 +4798,7 @@
                         <div class="space-y-3">
                             <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-1.5">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">የተመዘገበ ሙሉ አድራሻ</span>
-                                <p class="text-sm font-bold text-white leading-relaxed">📍 ${address}</p>
+                <p class="text-sm font-bold text-white leading-relaxed"> ${address}</p>
                             </div>
 
                             <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/80 flex items-center justify-between">
@@ -4904,7 +4904,7 @@
                             <!-- 1. Direct Employee Assignment (Primary) -->
                             <div class="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-2.5">
                                 <div class="flex items-center justify-between">
-                                    <label class="block font-bold text-cyan-300">👤 የፅዳት ሰራተኛ በቀጥታ መድብ (Cleaners)</label>
+                  <label class="block font-bold text-cyan-300"> የፅዳት ሰራተኛ በቀጥታ መድብ (Cleaners)</label>
                                     <span class="text-[10px] bg-cyan-950 text-cyan-400 border border-cyan-800 px-2 py-0.5 rounded-full font-bold">${cleaners.length} ሰራተኞች</span>
                                 </div>
                                 ${cleaners.length === 0 ? `
@@ -4913,7 +4913,7 @@
                                 ` : `
                                     <select id="assign-worker-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
                                         <option value="">-- የፅዳት ሰራተኛ ይምረጡ --</option>
-                                        ${cleaners.map(c => `<option value="${c.id}">${c.name} (📞 ${c.phone || c.email})</option>`).join('')}
+                    ${cleaners.map(c => `<option value="${c.id}">${c.name} ( ${c.phone || c.email})</option>`).join('')}
                                     </select>
                                     <button onclick="submitWorkerAssignment(${orderId})" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold flex items-center justify-center gap-1.5 shadow-md shadow-cyan-950/40">
                                         <i data-lucide="check" class="w-4 h-4"></i>
@@ -4926,7 +4926,7 @@
                             ${teams.length > 0 ? `
                                 <div class="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800/80 space-y-2.5">
                                     <div class="flex items-center justify-between">
-                                        <label class="block font-bold text-slate-300">👥 ወይም የተደራጀ ቡድን መድብ (Teams)</label>
+                    <label class="block font-bold text-slate-300"> ወይም የተደራጀ ቡድን መድብ (Teams)</label>
                                         <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">${teams.length} ቡድኖች</span>
                                     </div>
                                     <select id="assign-team-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white">
@@ -4963,7 +4963,7 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    alert('✅ ' + (data.message || 'ሰራተኛው ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል!'));
+          alert(' ' + (data.message || 'ሰራተኛው ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል!'));
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -4988,7 +4988,7 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    alert('✅ ' + (data.message || 'ቡድኑ ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል!'));
+          alert(' ' + (data.message || 'ቡድኑ ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል!'));
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -5007,7 +5007,7 @@
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
                             <div>
                                 <h3 class="text-base font-bold text-white">የድህረ-ፅዳት ክትትል ጥሪ መዝግብ</h3>
-                                <p class="text-xs text-slate-400">${name} (📞 ${phone})</p>
+                <p class="text-xs text-slate-400">${name} ( ${phone})</p>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
@@ -5056,11 +5056,11 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert('✅ የደንበኛው አስተያየት በተሳካ ሁኔታ ተመዝግቧል! ከክትትል ወረፋው ተወግዶ በደንበኛው የግል ታሪክ ውስጥ ገብቷል።');
+          alert(' የደንበኛው አስተያየት በተሳካ ሁኔታ ተመዝግቧል! ከክትትል ወረፋው ተወግዶ በደንበኛው የግል ታሪክ ውስጥ ገብቷል።');
                     closeModal();
                     loadActiveTab();
                 } else {
-                    alert('❌ ስህተት: ' + (data.message || 'የጥሪ ውጤቱን መመዝገብ አልተቻለም'));
+          alert(' ስህተት: ' + (data.message || 'የጥሪ ውጤቱን መመዝገብ አልተቻለም'));
                 }
             } catch (err) {
                 alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
@@ -5346,7 +5346,7 @@
                 });
 
                 if (visitRes.ok) {
-                    alert('✓ የመስክ ሽያጭ የስራ እንቅስቃሴው በተሳካ ሁኔታ በሰንጠረዡ ላይ ተመዝግቧል!');
+          alert(' የመስክ ሽያጭ የስራ እንቅስቃሴው በተሳካ ሁኔታ በሰንጠረዡ ላይ ተመዝግቧል!');
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -5377,13 +5377,13 @@
                         <!-- Top Controls: Print and Close -->
                         <div class="flex flex-wrap items-center justify-between pb-4 border-b border-slate-200 print:hidden gap-3">
                             <div class="flex items-center gap-2">
-                                <span class="px-3 py-1 bg-blue-100 text-blue-900 font-extrabold text-xs rounded-full">📄 ይፋዊ ፕሮፎርማ ሰነድ</span>
+                <span class="px-3 py-1 bg-blue-100 text-blue-900 font-extrabold text-xs rounded-full"> ይፋዊ ፕሮፎርማ ሰነድ</span>
                                 <span id="prof-ref-badge" class="text-xs text-slate-500 font-mono">Ref: ${profNum}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button onclick="window.print()" class="px-4 py-2 bg-gradient-to-r from-blue-700 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
                                     <i data-lucide="printer" class="w-4 h-4"></i>
-                                    <span>🖨️ አትም / PDF</span>
+                  <span>️ አትም / PDF</span>
                                 </button>
                                 <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl">ዝጋ</button>
                             </div>
@@ -5404,8 +5404,8 @@
                                         </div>
                                     </div>
                                     <div class="text-[11px] text-slate-600 mt-2 space-y-0.5">
-                                        <p>📞 ስልክ፡ <strong>0970075509</strong></p>
-                                        <p>🌐 ቴሌግራም ቻናል፡ <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashdeepcleaning</a></p>
+                    <p> ስልክ፡ <strong>0970075509</strong></p>
+                    <p> ቴሌግራም ቻናል፡ <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashdeepcleaning</a></p>
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -5533,7 +5533,7 @@
                                         <!-- Official Circular Stamp Graphic -->
                                         <div class="w-32 h-32 rounded-full border-4 border-dashed border-blue-800 flex flex-col items-center justify-center p-2 text-blue-900 select-none rotate-[-6deg] opacity-90 shadow-inner">
                                             <span class="text-[9px] font-black uppercase tracking-wider">MEASH CLEANING</span>
-                                            <span class="text-[8px] font-bold">★ OFFICIAL STAMP ★</span>
+                      <span class="text-[8px] font-bold"> OFFICIAL STAMP </span>
                                             <span class="text-[14px] font-black text-blue-800 my-0.5">ሜሽ</span>
                                             <span class="text-[8px] font-extrabold uppercase">APPROVED</span>
                                         </div>
@@ -5680,14 +5680,14 @@
                         <!-- Clean Team Status & Schedule Overview (No Map Required) -->
                         <div class="p-5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg">🚚</div>
+                <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg"></div>
                                 <div>
                                     <h4 class="text-sm font-bold text-white">${teamName} — የስራ ስምሪት ዝርዝር</h4>
                                     <p class="text-xs text-slate-400 mt-0.5">የተመደቡ ንቁ ስራዎች፡ <strong class="text-cyan-400">${activeJobs} ስራዎች</strong></p>
                                 </div>
                             </div>
                             <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
-                                📍 <strong>አድራሻ እና የስራ ክልል፡</strong> አዲስ አበባ (ቦሌ፣ ቂርቆስ፣ የካ፣ አራዳ እና አጠቃላይ የጽዳት ክልሎች)
+                 <strong>አድራሻ እና የስራ ክልል፡</strong> አዲስ አበባ (ቦሌ፣ ቂርቆስ፣ የካ፣ አራዳ እና አጠቃላይ የጽዳት ክልሎች)
                             </div>
                         </div>
 
@@ -5722,7 +5722,7 @@
                                 <div style="position:relative; display:flex; align-items:center; justify-content:center;">
                                     <div style="position:absolute; width:44px; height:44px; border-radius:50%; background:rgba(6,182,212,0.3); animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
                                     <div style="width:36px; height:36px; border-radius:50%; background:#0284c7; border:3px solid #ffffff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.4); font-size:16px;">
-                                        🚗
+                    
                                     </div>
                                 </div>
                             `,
@@ -5732,7 +5732,7 @@
 
                         L.marker([lat, lng], { icon: customIcon })
                             .addTo(map)
-                            .bindPopup(`<b>${teamName}</b><br>መሪ፡ ${leaderName}<br>📞 ${phone}`)
+              .bindPopup(`<b>${teamName}</b><br>መሪ፡ ${leaderName}<br> ${phone}`)
                             .openPopup();
                     } catch (e) {
                         console.error('Map init error:', e);
@@ -5769,15 +5769,15 @@
                         <form onsubmit="submitPostponeOrder(event, ${orderId})" class="space-y-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-300 mb-1.5">አዲሱ የቀጠሮ ቀን (New Date) *</label>
-                                <input type="date" id="postpone-date" required value="${tomorrowStr}" min="${new Date().toISOString().split('T')[0]}" onchange="const eth=EC.toEth(this.value); document.getElementById('postpone-eth-hint').textContent='🗓 ' + EC.formatEth(eth.year, eth.month, eth.day);" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
-                                <p id="postpone-eth-hint" class="text-[10px] text-amber-400 font-bold mt-1">🗓 ${EC.formatEth(tomorrow)}</p>
+                <input type="date" id="postpone-date" required value="${tomorrowStr}" min="${new Date().toISOString().split('T')[0]}" onchange="const eth=EC.toEth(this.value); document.getElementById('postpone-eth-hint').textContent=' ' + EC.formatEth(eth.year, eth.month, eth.day);" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                <p id="postpone-eth-hint" class="text-[10px] text-amber-400 font-bold mt-1"> ${EC.formatEth(tomorrow)}</p>
                             </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-300 mb-1.5">የቀጠሮ ሰዓት (ጠዋት ወይም ከሰዓት ብቻ) *</label>
                                 <select id="postpone-slot" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
-                                    <option value="morning">🌅 ጥዋት (2:00 - 6:00 ጠዋቱ ETH • Morning 8:00 AM - 12:00 PM)</option>
-                                    <option value="afternoon">☀️ ከሰዓት (7:00 - 11:00 ከሰዓቱ ETH • Afternoon 1:00 PM - 5:00 PM)</option>
+                  <option value="morning"> ጥዋት (2:00 - 6:00 ጠዋቱ ETH • Morning 8:00 AM - 12:00 PM)</option>
+                  <option value="afternoon">️ ከሰዓት (7:00 - 11:00 ከሰዓቱ ETH • Afternoon 1:00 PM - 5:00 PM)</option>
                                 </select>
                             </div>
 
@@ -5830,14 +5830,14 @@
 
                 if (res.ok) {
                     closeModal();
-                    alert('✅ ' + data.message);
+          alert(' ' + data.message);
                     // Refresh current view
                     switchRole(currentUser.role);
                 } else {
-                    alert('❌ ስህተት: ' + (data.message || 'ቀጠሮውን ማስተላለፍ አልተቻለም::'));
+          alert(' ስህተት: ' + (data.message || 'ቀጠሮውን ማስተላለፍ አልተቻለም::'));
                 }
             } catch (err) {
-                alert('❌ የግንኙነት ስህተት: ' + err.message);
+        alert(' የግንኙነት ስህተት: ' + err.message);
             } finally {
                 btn.disabled = false;
             }
@@ -5875,20 +5875,20 @@
                 if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
                     const reg = await navigator.serviceWorker.ready;
                     reg.showNotification('ሜሽ የፅዳት አገልግሎት | Mesh Cleaning', {
-                        body: '✅ ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል! የትዕዛዝ እና የቀጠሮ ማንቂያዎች ይደርሱዎታል።',
+            body: ' ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል! የትዕዛዝ እና የቀጠሮ ማንቂያዎች ይደርሱዎታል።',
                         icon: '/assets/icon-192.png',
                         badge: '/assets/icon-192.png',
                         vibrate: [200, 100, 200]
                     });
                 } else {
                     new Notification('ሜሽ የፅዳት አገልግሎት | Mesh Cleaning', {
-                        body: '✅ ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል!',
+            body: ' ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል!',
                         icon: '/assets/icon-192.png'
                     });
                 }
-                alert('✅ ማሳወቂያዎች ተፈቅደዋል! የስልክዎ/የኮምፒውተርዎ የስክሪን ማሳወቂያ ደርሶዎታል።');
+        alert(' ማሳወቂያዎች ተፈቅደዋል! የስልክዎ/የኮምፒውተርዎ የስክሪን ማሳወቂያ ደርሶዎታል።');
             } else {
-                alert('⚠️ ማሳወቂያዎች አልተፈቀዱም። እባክዎ በብሮውዘር ቅንብር ውስጥ ይፍቀዱ።');
+        alert('️ ማሳወቂያዎች አልተፈቀዱም። እባክዎ በብሮውዘር ቅንብር ውስጥ ይፍቀዱ።');
             }
         }
 
