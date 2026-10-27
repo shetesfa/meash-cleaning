@@ -13,6 +13,7 @@ class Organization extends Model
     protected $fillable = [
         'org_code',
         'name',
+        'contact_person',
         'industry',
         'address',
         'phone',

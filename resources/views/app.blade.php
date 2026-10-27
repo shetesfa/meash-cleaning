@@ -301,6 +301,9 @@
         // ============================================================
         const EC = {
             months: ['መስከረም','ጥቅምት','ኅዳር','ታኅሣሥ','ጥር','የካቲት','መጋቢት','ሚያዝያ','ግንቦት','ሰኔ','ሐምሌ','ነሐሴ','ጳጉሜ'],
+            todayEth() {
+                return this.toEth(new Date());
+            },
             toEth(gcDate) {
                 if (!gcDate) return { year: 2019, month: 1, day: 1 };
                 let d;
@@ -411,7 +414,7 @@
         return ' ጥዋት (2:00–6:00 ጠዋቱ ETH • 8am–12pm GC)';
             }
             if (s.includes('afternoon') || s.includes('ከሰዓት')) {
-        return '️ ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm GC)';
+        return ' ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm GC)';
             }
             return slot;
         }
@@ -1588,11 +1591,11 @@
                                 </button>
                                 <button onclick="openCreateProformaModal()" class="px-3.5 py-2.5 bg-amber-600/90 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer">
                                     <i data-lucide="file-text" class="w-4 h-4"></i>
-                  <span>️ ፕሮፎርማ አዘጋጅ</span>
+                                    <span>ፕሮፎርማ አዘጋጅ</span>
                                 </button>
                                 <button onclick="exportSalesTableToExcel()" class="px-3.5 py-2.5 bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer">
                                     <i data-lucide="download" class="w-4 h-4"></i>
-                  <span> Excel አውርድ (.xls)</span>
+                                    <span>Excel አውርድ (.xls)</span>
                                 </button>
                             </div>
                         </div>
@@ -1662,10 +1665,10 @@
                                                     <td class="border border-slate-300 py-2 px-3 text-slate-700 leading-snug">${notes}</td>
                                                     <td class="border border-slate-300 py-2 px-2 text-center whitespace-nowrap space-x-1">
                                                         <button onclick="openPrintProformaDirectModal('${(orgName).replace(/'/g, "\\'")}', '${(contactName).replace(/'/g, "\\'")}', '${(phone).replace(/'/g, "\\'")}', '${(address).replace(/'/g, "\\'")}')" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded text-[10px]" title="ፕሮፎርማ አትም">
-                              ️ Proforma
+                                                            ፕሮፎርማ
                                                         </button>
                                                         <button onclick="advanceSalesStageDirect(${v.id}, '${v.stage}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded text-[10px]" title="ደረጃ ቀይር">
-                              ️ ደረጃ
+                                                            ደረጃ
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -1750,29 +1753,63 @@
             // Clone table and strip last action column
             const clone = table.cloneNode(true);
             const allRows = clone.querySelectorAll('tr');
+            let dataRowCount = 0;
             allRows.forEach(row => {
                 const cells = row.querySelectorAll('th, td');
                 if (cells.length > 0) {
                     cells[cells.length - 1].remove(); // remove last column (action buttons)
                 }
+                if (row.parentElement && row.parentElement.tagName === 'TBODY' && !row.innerText.includes('የተመዘገበ የውጭ ሽያጭ እንቅስቃሴ የለም')) {
+                    dataRowCount++;
+                }
             });
 
-            const todayStr = new Date().toISOString().split('T')[0];
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            const ethToday = EC.formatEth(today);
+            const userName = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : 'የሜሽ ሽያጭ አስተዳደር';
+
             const template = `
                 <html>
                 <head>
                     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
                     <style>
-                        table { border-collapse: collapse; font-family: Segoe UI, Tahoma, sans-serif; font-size: 11pt; width: 100%; }
-                        th { background-color: #1b4382; color: #ffffff; font-weight: bold; border: 1px solid #777777; padding: 10px; text-align: left; }
-                        td { border: 1px solid #dddddd; padding: 8px; vertical-align: top; }
-                        .banner { background-color: #1b4382; color: #ffffff; padding: 15px; font-size: 16pt; font-weight: bold; }
+                        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; margin: 0; padding: 15px; background: #ffffff; }
+                        table { border-collapse: collapse; width: 100%; font-size: 10pt; }
+                        th { background-color: #1b4382; color: #ffffff; font-weight: bold; border: 1px solid #475569; padding: 10px 8px; text-align: center; vertical-align: middle; }
+                        td { border: 1px solid #cbd5e1; padding: 8px; vertical-align: middle; }
+                        tr:nth-child(even) { background-color: #f8fafc; }
                     </style>
                 </head>
                 <body>
-                    <div class="banner">MEASH CLEANING SOLUTION — Outdoor Sales Activity Log (${todayStr})</div>
-                    <br/>
+                    <table style="width:100%; border:none; margin-bottom:12px;">
+                        <tr style="border:none;">
+                            <td colspan="11" style="border:none; background-color:#0f274a; color:#ffffff; padding:18px; text-align:center;">
+                                <div style="font-size:22pt; font-weight:900; letter-spacing:1.5px; color:#ffffff;">MEASH CLEANING SOLUTION</div>
+                                <div style="font-size:13pt; font-weight:bold; color:#38bdf8; margin-top:3px;">ሜሽ የፅዳት እና የህንፃ አያያዝ አገልግሎት</div>
+                                <div style="font-size:10pt; font-style:italic; color:#cbd5e1; margin-top:4px;">«የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት! | Your Environment, Our Responsibility»</div>
+                                <div style="font-size:9.5pt; color:#93c5fd; margin-top:6px;">ስልክ፡ 0970075509 / 0998142190 | ቴሌግራም፡ @meashdeepcleaning | አዲስ አበባ፣ ኢትዮጵያ</div>
+                            </td>
+                        </tr>
+                        <tr style="border:none;">
+                            <td colspan="6" style="border:none; padding:8px 0; font-size:10pt; font-weight:bold; color:#1e293b;">
+                                ይፋዊ የመስክ ሽያጭ የስራ እንቅስቃሴ መዝገብ (Outdoor Sales Activity Log)
+                            </td>
+                            <td colspan="5" style="border:none; padding:8px 0; font-size:10pt; text-align:right; color:#475569;">
+                                ቀን፡ <strong>${ethToday} (${todayStr})</strong> | ያወጣው፡ <strong>${userName}</strong>
+                            </td>
+                        </tr>
+                    </table>
+
                     ${clone.outerHTML}
+
+                    <table style="width:100%; border:none; margin-top:14px;">
+                        <tr style="border:none;">
+                            <td colspan="11" style="border:none; padding:12px; background-color:#f1f5f9; font-size:9.5pt; color:#334155;">
+                                <strong>ማጠቃለያ፡</strong> ጠቅላላ የተመዘገቡ የጉብኝትና የድርጅቶች እንቅስቃሴዎች ብዛት፦ <strong>${dataRowCount}</strong> | ይህ ሰነድ በሜሽ ክሊኒንግ ሶሉሽን ይፋዊ የውጭ ሽያጭ መረጃ ቋት የተዘጋጀ ነው።
+                            </td>
+                        </tr>
+                    </table>
                 </body>
                 </html>
             `;
@@ -2370,7 +2407,7 @@
                             ${!pricesLive ? `
                             <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
                                 <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
-                <span>️ የቀጥታ የዋጋ መረጃ አልተገኘም (Prices may be old)። ኢንተርኔት እስኪመጣ ድረስ አዲስ ትዕዛዝ መመዝገብ ተከልክሏል።</span>
+                <span> የቀጥታ የዋጋ መረጃ አልተገኘም (Prices may be old)። ኢንተርኔት እስኪመጣ ድረስ አዲስ ትዕዛዝ መመዝገብ ተከልክሏል።</span>
                             </div>
                             ` : ''}
                             <div class="grid grid-cols-2 gap-3">
@@ -2416,7 +2453,7 @@
                                     <label class="block text-xs font-semibold text-slate-400 mb-1">የቀጠሮ ሰዓት (ጥዋት / ከሰዓት ብቻ) *</label>
                                     <select id="mo-slot" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer">
                     <option value="morning"> ጥዋት (2:00–6:00 ጠዋቱ ETH • 8am–12pm)</option>
-                    <option value="afternoon">️ ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm)</option>
+                    <option value="afternoon"> ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm)</option>
                                     </select>
                                 </div>
                             </div>
@@ -3602,7 +3639,7 @@
                                     <label class="block text-slate-400 mb-1">የመላኪያ ቻናል *</label>
                                     <select id="cmp-channel" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer">
                     <option value="sms"> SMS (የጽሑፍ መልዕክት)</option>
-                    <option value="telegram">️ Telegram (ቴሌግራም ቦት)</option>
+                    <option value="telegram"> Telegram (ቴሌግራም ቦት)</option>
                                     </select>
                                 </div>
                                 <div>
@@ -4657,7 +4694,7 @@
                                         ${timeline.map(t => `
                                             <div class="p-2.5 bg-slate-950/50 border border-slate-800 rounded-xl flex items-start gap-2.5 text-xs">
                                                 <span class="text-base shrink-0 mt-0.5">
-                          ${t.type === 'feedback' ? '⭐' : (t.type === 'payment' ? '' : (t.type === 'complaint' ? '️' : ''))}
+                          ${t.type === 'feedback' ? '⭐' : (t.type === 'payment' ? '' : (t.type === 'complaint' ? '' : ''))}
                                                 </span>
                                                 <div class="flex-1">
                                                     <div class="flex items-center justify-between">
@@ -4813,7 +4850,7 @@
                             </div>
 
                             <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400">
-                                ℹ️ ቡድኑ ወደ ስራው ቦታ ሲሄድ ጥያቄ ካጋጠመው በቀጥታ ለደንበኛው መደወል ይችላል።
+                                ℹ ቡድኑ ወደ ስራው ቦታ ሲሄድ ጥያቄ ካጋጠመው በቀጥታ ለደንበኛው መደወል ይችላል።
                             </div>
                         </div>
 
@@ -5153,6 +5190,24 @@
             alert('Problem report logged and flagged for Reception attention.');
         }
 
+        function handleOrgSectorChange(val) {
+            const box = document.getElementById('org-sector-other-box');
+            const input = document.getElementById('org-sector-other-input');
+            if (!box) return;
+            if (val === 'other') {
+                box.classList.remove('hidden');
+                if (input) {
+                    input.required = true;
+                    input.focus();
+                }
+            } else {
+                box.classList.add('hidden');
+                if (input) {
+                    input.required = false;
+                }
+            }
+        }
+
         function openAddOrganizationModal() {
             const container = document.getElementById('generic-modal-container');
             container.innerHTML = `
@@ -5170,7 +5225,7 @@
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-slate-400 mb-1">የድርጅቱ ዓይነት (ዘርፍ) *</label>
-                                    <select id="org-sector" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+                                    <select id="org-sector" onchange="handleOrgSectorChange(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
                                         <option value="hotel">ሆቴል</option>
                                         <option value="restaurant">ሬስቶራንት</option>
                                         <option value="cafe">ካፌ</option>
@@ -5181,17 +5236,22 @@
                                         <option value="real_estate">ሪል እስቴት</option>
                                         <option value="embassy">ኤምባሲ / NGO</option>
                                         <option value="mall">ሞል / የገበያ ማዕከል</option>
+                                        <option value="other">ሌላ (የራስዎን ዘርፍ ይጻፉ)</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-slate-400 mb-1">ያነጋገሩት ኃላፊ ስም *</label>
-                                    <input type="text" id="org-contact" required placeholder="ለምሳሌ፡ አቶ ዮሐንስ (ማናጀር)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                                    <label class="block text-slate-400 mb-1">ያነጋገሩት ኃላፊ ስም</label>
+                                    <input type="text" id="org-contact" placeholder="ለምሳሌ፡ አቶ ዮሐንስ (ማናጀር)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
                                 </div>
+                            </div>
+                            <div id="org-sector-other-box" class="hidden bg-slate-800/90 p-3 rounded-xl border border-cyan-500/60 space-y-1">
+                                <label class="block text-cyan-300 font-bold">የስራ ዘርፉን ስም እዚህ ይጻፉ *</label>
+                                <input type="text" id="org-sector-other-input" placeholder="ለምሳሌ፡ የመኪና ማጠቢያ፣ ፋብሪካ፣ ሱፐርማርኬት፣ የውበት ሳሎን..." class="w-full bg-slate-900 border border-cyan-500 rounded-xl px-3 py-2 text-white">
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-slate-400 mb-1">ስልክ ቁጥር *</label>
-                                    <input type="tel" id="org-phone" required placeholder="0911..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                                    <input type="tel" id="org-phone" required placeholder="0911..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
                                 </div>
                                 <div>
                                     <label class="block text-slate-400 mb-1">አድራሻ / ቦታ *</label>
@@ -5210,11 +5270,17 @@
 
         async function submitAddOrganization(e) {
             e.preventDefault();
+            const sectorSelect = document.getElementById('org-sector').value;
+            let finalIndustry = sectorSelect;
+            if (sectorSelect === 'other') {
+                const customVal = document.getElementById('org-sector-other-input')?.value.trim();
+                finalIndustry = customVal || 'ሌላ';
+            }
             await apiFetch('/api/sales/organizations', {
                 method: 'POST',
                 body: JSON.stringify({
                     name: document.getElementById('org-name').value,
-                    industry: document.getElementById('org-sector').value,
+                    industry: finalIndustry,
                     contact_person: document.getElementById('org-contact').value,
                     phone: document.getElementById('org-phone').value,
                     address: document.getElementById('org-subcity').value,
@@ -5224,11 +5290,31 @@
             loadActiveTab();
         }
 
+        function handleSalesVisitOrgChange(orgId) {
+            if (!orgId || !window._salesOrgsCache) return;
+            const selected = window._salesOrgsCache.find(o => o.id == orgId);
+            const contactInput = document.getElementById('visit-contact');
+            const phoneInput = document.getElementById('visit-phone');
+            if (selected) {
+                if (contactInput) {
+                    contactInput.placeholder = selected.contact_person ? `አስቀድሞ የተመዘገበ፡ ${selected.contact_person}` : 'ያነጋገሩት ኃላፊ ስም';
+                }
+                if (phoneInput) {
+                    phoneInput.placeholder = selected.phone ? `አስቀድሞ የተመዘገበ፡ ${selected.phone}` : 'ስልክ ቁጥር';
+                }
+            }
+        }
+
         async function openLogSalesVisitModal() {
             const container = document.getElementById('generic-modal-container');
             const res = await apiFetch('/api/sales/organizations?per_page=100');
             const data = await res.json();
             const orgs = data.data || [];
+            window._salesOrgsCache = orgs;
+
+            const firstOrg = orgs[0] || null;
+            const defaultContactPlaceholder = firstOrg && firstOrg.contact_person ? `አስቀድሞ የተመዘገበ፡ ${firstOrg.contact_person}` : 'ያነጋገሩት ኃላፊ ስም';
+            const defaultPhonePlaceholder = firstOrg && firstOrg.phone ? `አስቀድሞ የተመዘገበ፡ ${firstOrg.phone}` : '0911...';
 
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -5244,7 +5330,7 @@
                             <div>
                                 <label class="block text-slate-400 mb-1">የድርጅቱ ስም *</label>
                                 ${orgs.length > 0 ? `
-                                    <select id="visit-org" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold mb-2">
+                                    <select id="visit-org" onchange="handleSalesVisitOrgChange(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold mb-2">
                                         ${orgs.map(o => `<option value="${o.id}">${o.name} (${o.industry || 'ተቋም'}) - ${o.address || 'አዲስ አበባ'}</option>`).join('')}
                                     </select>
                                 ` : `
@@ -5253,12 +5339,12 @@
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-slate-400 mb-1">ያነጋገሩት ኃላፊ ስም (ማዕረግ) *</label>
-                                    <input type="text" id="visit-contact" required placeholder="ለምሳሌ፡ ብርሃኑ አሰፋ (ማናጀር)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                                    <label class="block text-slate-400 mb-1">ያነጋገሩት ኃላፊ ስም <span class="text-slate-500 font-normal text-[10px]">(አማራጭ - ከተቀየረ)</span></label>
+                                    <input type="text" id="visit-contact" placeholder="${defaultContactPlaceholder}" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
                                 </div>
                                 <div>
-                                    <label class="block text-slate-400 mb-1">ስልክ ቁጥር *</label>
-                                    <input type="tel" id="visit-phone" required placeholder="0911..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+                                    <label class="block text-slate-400 mb-1">ስልክ ቁጥር <span class="text-slate-500 font-normal text-[10px]">(አማራጭ - ከተቀየረ)</span></label>
+                                    <input type="tel" id="visit-phone" placeholder="${defaultPhonePlaceholder}" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
@@ -5302,6 +5388,9 @@
                 const orgSelect = document.getElementById('visit-org');
                 let orgId = orgSelect ? orgSelect.value : null;
 
+                let contact = document.getElementById('visit-contact')?.value.trim();
+                let phone = document.getElementById('visit-phone')?.value.trim();
+
                 if (!orgId) {
                     const orgNameInput = document.getElementById('visit-new-org-name');
                     const orgName = orgNameInput ? orgNameInput.value.trim() : 'ተቋም';
@@ -5310,8 +5399,8 @@
                         body: JSON.stringify({
                             name: orgName,
                             industry: 'office',
-                            contact_person: document.getElementById('visit-contact').value,
-                            phone: document.getElementById('visit-phone').value,
+                            contact_person: contact || 'ኃላፊ',
+                            phone: phone || '0911000000',
                             address: 'Addis Ababa',
                         })
                     });
@@ -5324,18 +5413,25 @@
                     return;
                 }
 
+                // If contact person or phone not explicitly provided, use the registered organization's data
+                if (orgId && window._salesOrgsCache) {
+                    const matchedOrg = window._salesOrgsCache.find(o => o.id == orgId);
+                    if (matchedOrg) {
+                        if (!contact) contact = matchedOrg.contact_person || 'ኃላፊ';
+                        if (!phone) phone = matchedOrg.phone || '';
+                    }
+                }
+
                 const stage = document.getElementById('visit-stage').value;
                 const notes = document.getElementById('visit-notes').value;
-                const contact = document.getElementById('visit-contact').value;
-                const phone = document.getElementById('visit-phone').value;
 
                 const visitRes = await apiFetch('/api/sales/visits', {
                     method: 'POST',
                     body: JSON.stringify({
                         organization_id: orgId,
-                        contact_person: contact,
-                        phone: phone,
-                        contact_phone: phone,
+                        contact_person: contact || 'ኃላፊ',
+                        phone: phone || '0911000000',
+                        contact_phone: phone || '0911000000',
                         address: 'Addis Ababa',
                         stage: stage,
                         interest_level: 'medium',
@@ -5346,7 +5442,7 @@
                 });
 
                 if (visitRes.ok) {
-          alert(' የመስክ ሽያጭ የስራ እንቅስቃሴው በተሳካ ሁኔታ በሰንጠረዡ ላይ ተመዝግቧል!');
+                    alert('የመስክ ሽያጭ የስራ እንቅስቃሴው በተሳካ ሁኔታ በሰንጠረዡ ላይ ተመዝግቧል!');
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -5366,7 +5462,7 @@
         }
 
         function openCreateProformaModal(defaultOrg = '', defaultContact = '', defaultPhone = '', defaultAddress = '') {
-            const todayEth = EC.todayEth();
+            const todayEth = (typeof EC !== 'undefined' && EC.todayEth) ? EC.todayEth() : ((typeof EC !== 'undefined' && EC.toEth) ? EC.toEth(new Date()) : { year: 2019, month: 2, day: 19 });
             const dateStr = `${todayEth.day}/${todayEth.month}/${todayEth.year}`;
             const profNum = 'MSH-PRF-' + Math.floor(1000 + Math.random() * 9000);
 
@@ -5377,13 +5473,13 @@
                         <!-- Top Controls: Print and Close -->
                         <div class="flex flex-wrap items-center justify-between pb-4 border-b border-slate-200 print:hidden gap-3">
                             <div class="flex items-center gap-2">
-                <span class="px-3 py-1 bg-blue-100 text-blue-900 font-extrabold text-xs rounded-full"> ይፋዊ ፕሮፎርማ ሰነድ</span>
+                                <span class="px-3 py-1 bg-blue-100 text-blue-900 font-extrabold text-xs rounded-full">ይፋዊ ፕሮፎርማ ሰነድ</span>
                                 <span id="prof-ref-badge" class="text-xs text-slate-500 font-mono">Ref: ${profNum}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button onclick="window.print()" class="px-4 py-2 bg-gradient-to-r from-blue-700 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
                                     <i data-lucide="printer" class="w-4 h-4"></i>
-                  <span>️ አትም / PDF</span>
+                                    <span>አትም / PDF</span>
                                 </button>
                                 <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl">ዝጋ</button>
                             </div>
@@ -5404,8 +5500,8 @@
                                         </div>
                                     </div>
                                     <div class="text-[11px] text-slate-600 mt-2 space-y-0.5">
-                    <p> ስልክ፡ <strong>0970075509</strong></p>
-                    <p> ቴሌግራም ቻናል፡ <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashdeepcleaning</a></p>
+                                        <p>ስልክ፡ <strong>0970075509 / 0998142190</strong></p>
+                                        <p>ቴሌግራም ቻናል፡ <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashdeepcleaning</a></p>
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -5777,7 +5873,7 @@
                                 <label class="block text-xs font-bold text-slate-300 mb-1.5">የቀጠሮ ሰዓት (ጠዋት ወይም ከሰዓት ብቻ) *</label>
                                 <select id="postpone-slot" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
                   <option value="morning"> ጥዋት (2:00 - 6:00 ጠዋቱ ETH • Morning 8:00 AM - 12:00 PM)</option>
-                  <option value="afternoon">️ ከሰዓት (7:00 - 11:00 ከሰዓቱ ETH • Afternoon 1:00 PM - 5:00 PM)</option>
+                  <option value="afternoon"> ከሰዓት (7:00 - 11:00 ከሰዓቱ ETH • Afternoon 1:00 PM - 5:00 PM)</option>
                                 </select>
                             </div>
 
@@ -5888,7 +5984,7 @@
                 }
         alert(' ማሳወቂያዎች ተፈቅደዋል! የስልክዎ/የኮምፒውተርዎ የስክሪን ማሳወቂያ ደርሶዎታል።');
             } else {
-        alert('️ ማሳወቂያዎች አልተፈቀዱም። እባክዎ በብሮውዘር ቅንብር ውስጥ ይፍቀዱ።');
+        alert(' ማሳወቂያዎች አልተፈቀዱም። እባክዎ በብሮውዘር ቅንብር ውስጥ ይፍቀዱ።');
             }
         }
 

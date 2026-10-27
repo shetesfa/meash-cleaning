@@ -45,6 +45,7 @@ class OutdoorSalesController extends Controller
             'email' => 'nullable|email',
             'website' => 'nullable|string',
             'notes' => 'nullable|string',
+            'contact_person' => 'nullable|string|max:255',
         ]);
 
         $validated['org_code'] = Organization::generateNextCode();
@@ -106,16 +107,19 @@ class OutdoorSalesController extends Controller
 
     public function storeVisit(Request $request): JsonResponse
     {
-        if (!$request->has('phone') && $request->has('contact_phone')) {
+        if (!$request->filled('phone') && $request->filled('contact_phone')) {
             $request->merge(['phone' => $request->input('contact_phone')]);
         }
 
         $org = Organization::find($request->input('organization_id'));
-        if (!$request->has('address') && $org) {
+        if (!$request->filled('address') && $org) {
             $request->merge(['address' => $org->address ?: 'Addis Ababa']);
         }
-        if (!$request->has('phone') && $org) {
+        if (!$request->filled('phone') && $org) {
             $request->merge(['phone' => $org->phone ?: '0911000000']);
+        }
+        if (!$request->filled('contact_person') && $org) {
+            $request->merge(['contact_person' => $org->contact_person ?: 'ኃላፊ']);
         }
         if (!$request->has('interest_level')) {
             $request->merge(['interest_level' => 'medium']);
@@ -123,10 +127,10 @@ class OutdoorSalesController extends Controller
 
         $validated = $request->validate([
             'organization_id' => 'required|exists:organizations,id',
-            'contact_person' => 'required|string|max:255',
+            'contact_person' => 'nullable|string|max:255',
             'contact_position' => 'nullable|string|max:128',
-            'phone' => 'required|string|max:32',
-            'address' => 'required|string',
+            'phone' => 'nullable|string|max:32',
+            'address' => 'nullable|string',
             'services_introduced' => 'nullable|string',
             'visit_purpose' => 'nullable|string',
             'interest_level' => 'nullable|string|in:low,medium,high',
@@ -135,6 +139,16 @@ class OutdoorSalesController extends Controller
             'next_followup_date' => 'nullable|date',
             'stage' => 'nullable|string|in:new_lead,visited,contact_established,interested,proforma_requested,proforma_sent,negotiation,won,lost,followup_later',
         ]);
+
+        if (empty($validated['contact_person'])) {
+            $validated['contact_person'] = ($org && $org->contact_person) ? $org->contact_person : 'ኃላፊ';
+        }
+        if (empty($validated['phone'])) {
+            $validated['phone'] = ($org && $org->phone) ? $org->phone : '0911000000';
+        }
+        if (empty($validated['address'])) {
+            $validated['address'] = ($org && $org->address) ? $org->address : 'Addis Ababa';
+        }
 
         $validated['visit_code'] = SalesVisit::generateNextCode();
         $validated['salesperson_user_id'] = $request->user()->id;
