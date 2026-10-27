@@ -67,7 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // B. Customers
-    Route::apiResource('customers', CustomerController::class);
+    Route::apiResource('customers', CustomerController::class)->except(['destroy']);
 
     // C. Services
     Route::get('/services', [ServiceController::class, 'index']);
@@ -76,7 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/services/{service}', [ServiceController::class, 'update'])->middleware('role:owner,reception');
 
     // D. Orders (Multi-item)
-    Route::apiResource('orders', OrderController::class);
+    Route::apiResource('orders', OrderController::class)->only(['index', 'show', 'store']);
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{order}/assign-team', [OrderController::class, 'assignTeam'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/payment', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception');
