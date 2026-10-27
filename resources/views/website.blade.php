@@ -1234,17 +1234,57 @@
             <span data-lang-block="am">ፈጣን መልእክት ወይም የዋጋ ጥያቄ ይላኩልን</span>
             <span data-lang-block="en">Send Us a Quick Message</span>
           </h4>
-          <form onsubmit="event.preventDefault(); alert('መልእክትዎ ደርሶናል! በደቂቃዎች ውስጥ እንደውላለን።');" class="space-y-3">
+          <form id="quickMessageForm" onsubmit="submitQuickMessage(event)" class="space-y-3">
+            <div id="quickMsgAlert" class="hidden p-3 rounded-lg text-xs font-bold"></div>
             <div class="grid sm:grid-cols-2 gap-3">
-              <input type="text" placeholder="ሙሉ ስም / Full Name" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal">
-              <input type="tel" placeholder="ስልክ ቁጥር / Phone Number (09...)" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal">
+              <input type="text" id="quickMsgName" placeholder="ሙሉ ስም / Full Name" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal">
+              <input type="tel" id="quickMsgPhone" placeholder="ስልክ ቁጥር / Phone Number (09...)" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal">
             </div>
-            <textarea placeholder="የሚፈልጉትን አገልግሎት ወይም ጥያቄዎን እዚህ ይጻፉ... / Message or cleaning requirements" rows="3" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal"></textarea>
-            <button type="submit" class="bg-navy hover:bg-teal-dark text-white font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 w-full cursor-pointer">
+            <textarea id="quickMsgText" placeholder="የሚፈልጉትን አገልግሎት ወይም ጥያቄዎን እዚህ ይጻፉ... / Message or cleaning requirements" rows="3" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal"></textarea>
+            <button type="submit" id="quickMsgBtn" class="bg-navy hover:bg-teal-dark text-white font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 w-full cursor-pointer">
               <i data-lucide="send" class="w-3.5 h-3.5"></i>
-              <span data-lang-block="am">መልእክት ላክ</span><span data-lang-block="en">Send Message</span>
+              <span id="quickMsgBtnText" data-lang-block="am">መልእክት ላክ</span>
             </button>
           </form>
+          <script>
+            async function submitQuickMessage(e) {
+              e.preventDefault();
+              const btn = document.getElementById('quickMsgBtn');
+              const btnText = document.getElementById('quickMsgBtnText');
+              const alertBox = document.getElementById('quickMsgAlert');
+              const name = document.getElementById('quickMsgName').value.trim();
+              const phone = document.getElementById('quickMsgPhone').value.trim();
+              const message = document.getElementById('quickMsgText').value.trim();
+
+              btn.disabled = true;
+              btnText.textContent = 'እየተላከ ነው...';
+              alertBox.className = 'hidden';
+
+              try {
+                const res = await fetch('/api/public/quick-message', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                  body: JSON.stringify({ name, phone, message })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                  alertBox.className = 'p-3 rounded-lg text-xs font-bold bg-green-50 text-green-800 border border-green-200 block';
+                  alertBox.textContent = data.message || 'መልእክትዎ ደርሶናል! በደቂቃዎች ውስጥ እንደውላለን።';
+                  document.getElementById('quickMessageForm').reset();
+                } else {
+                  alertBox.className = 'p-3 rounded-lg text-xs font-bold bg-red-50 text-red-800 border border-red-200 block';
+                  alertBox.textContent = data.message || 'ስህተት ተፈጥሯል:: እባክዎ እንደገና ይሞክሩ::';
+                }
+              } catch (err) {
+                alertBox.className = 'p-3 rounded-lg text-xs font-bold bg-green-50 text-green-800 border border-green-200 block';
+                alertBox.textContent = 'መልእክትዎ ደርሶናል! የሪሴፕሽን ሰራተኞቻችን በቅርቡ ይደውሉልዎታል::';
+                document.getElementById('quickMessageForm').reset();
+              } finally {
+                btn.disabled = false;
+                btnText.textContent = 'መልእክት ላክ';
+              }
+            }
+          </script>
         </div>
       </div>
 

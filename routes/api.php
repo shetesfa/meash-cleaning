@@ -41,6 +41,7 @@ Route::prefix('public')->group(function () {
     Route::get('/track-order', [PublicWebsiteController::class, 'trackOrder']);
     Route::post('/reschedule-order', [PublicWebsiteController::class, 'rescheduleOrder']);
     Route::get('/reviews', [PublicWebsiteController::class, 'publicReviews']);
+    Route::post('/quick-message', [PublicWebsiteController::class, 'quickMessage']);
 });
 
 // 2. TELEGRAM ENGINE (Bot, Inline Query @meash, Mini App)

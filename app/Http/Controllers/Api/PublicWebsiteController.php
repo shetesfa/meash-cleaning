@@ -385,4 +385,60 @@ class PublicWebsiteController extends Controller
             'eth_appointment_date' => $eth['formatted_am'],
         ]);
     }
+
+    public function quickMessage(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:32',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        $customer = Customer::firstOrCreate(
+            ['phone' => $validated['phone']],
+            [
+                'customer_code' => Customer::generateNextCode(),
+                'full_name' => $validated['name'],
+                'customer_type' => 'individual',
+                'marketing_consent' => true,
+                'consent_timestamp' => now(),
+            ]
+        );
+
+        Notification::create([
+            'title' => 'አዲስ ፈጣን መልእክት ከድረ-ገጽ',
+            'body' => "ደንበኛ፡ {$validated['name']} ({$validated['phone']})\nመልእክት፡ {$validated['message']}",
+            'type' => 'customer_inquiry',
+            'data' => [
+                'customer_id' => $customer->id,
+                'name' => $validated['name'],
+                'phone' => $validated['phone'],
+                'message' => $validated['message'],
+            ],
+        ]);
+
+        $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
+        $adminChatId = config('services.telegram.admin_chat_id') ?: env('TELEGRAM_ADMIN_CHAT_ID');
+        if (!empty($botToken) && !empty($adminChatId)) {
+            try {
+                $text = "<b>አዲስ ፈጣን መልእክት ከድረ-ገጽ ደርሷል!</b>\n\n" .
+                    "<b>ስም:</b> " . htmlspecialchars($validated['name']) . "\n" .
+                    "<b>ስልክ:</b> <code>" . htmlspecialchars($validated['phone']) . "</code>\n" .
+                    "<b>የደንበኛው ጥያቄ:</b>\n" . htmlspecialchars($validated['message']) . "\n\n" .
+                    "እባክዎ ደውለው ያነጋግሯቸው!";
+                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                    'chat_id' => $adminChatId,
+                    'text' => $text,
+                    'parse_mode' => 'HTML',
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Quick message telegram alert failed: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'መልእክትዎ በተሳካ ሁኔታ ደርሶናል! የሪሴፕሽን ሰራተኞቻችን በጥቂት ደቂቃዎች ውስጥ በስልክ ይደውሉልዎታል::',
+        ]);
+    }
 }
