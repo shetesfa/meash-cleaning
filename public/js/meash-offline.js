@@ -1,6 +1,6 @@
 /**
  * MEASH CLEANING SOLUTION - Offline-First IndexedDB & Sync Engine
- * Built for high-reliability field operations with automatic retry & conflict detection.
+ * Built for high-reliability field operations with automatic retry, failure tracking & conflict handling.
  */
 
 class MeashOfflineEngine {
@@ -11,22 +11,46 @@ class MeashOfflineEngine {
         this.isOnline = navigator.onLine;
         this.isSyncing = false;
         this.listeners = [];
-        this.init();
+        this.init().catch(err => {
+            console.error('Fatal initialization error in MeashOfflineEngine:', err);
+            this.showDbErrorBanner('ዳታቤዝ መክፈት አልተቻለም (IndexedDB unavailable): ' + err.message);
+        });
     }
 
     async init() {
-        await this.openDatabase();
+        try {
+            await this.openDatabase();
+        } catch (err) {
+            this.showDbErrorBanner('ስልክዎ ላይ ዳታ ማስቀመጥ አልተቻለም (IndexedDB failed to open).');
+            throw err;
+        }
+
         this.setupNetworkListeners();
         this.updateOnlineStatus();
 
-        // Attempt initial sync if online
         if (this.isOnline) {
-            setTimeout(() => this.syncQueue(), 2000);
+            setTimeout(() => this.syncQueue(), 1500);
         }
+    }
+
+    showDbErrorBanner(msg) {
+        let banner = document.getElementById('indexeddb-error-banner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'indexeddb-error-banner';
+            banner.className = 'fixed top-0 left-0 right-0 z-50 bg-red-600 text-white p-3 text-xs font-bold text-center shadow-lg';
+            document.body.prepend(banner);
+        }
+        banner.innerText = '⚠️ ' + msg;
+        banner.classList.remove('hidden');
     }
 
     openDatabase() {
         return new Promise((resolve, reject) => {
+            if (!window.indexedDB) {
+                return reject(new Error('IndexedDB not supported on this browser'));
+            }
+
             const request = indexedDB.open(this.dbName, this.dbVersion);
 
             request.onupgradeneeded = (event) => {
@@ -63,8 +87,8 @@ class MeashOfflineEngine {
             };
 
             request.onerror = (event) => {
-                console.error('IndexedDB error:', event.target.error);
-                reject(event.target.error);
+                console.error('IndexedDB open error:', event.target.error);
+                reject(event.target.error || new Error('Unknown IndexedDB open error'));
             };
         });
     }
@@ -81,7 +105,6 @@ class MeashOfflineEngine {
             this.updateOnlineStatus();
         });
 
-        // Periodic connectivity heartbeat probe
         setInterval(() => {
             if (navigator.onLine) {
                 fetch('/api/ping', { method: 'GET', cache: 'no-cache' })
@@ -107,22 +130,39 @@ class MeashOfflineEngine {
         this.notifyStatus(callback);
     }
 
-    notifyStatus(cb = null) {
-        this.getPendingCount().then(count => {
-            const status = {
-                online: this.isOnline,
-                isSyncing: this.isSyncing,
-                pendingCount: count,
-                label: this.isOnline
-                    ? (count > 0 ? `🟢 Online (${count} syncing...)` : '🟢 Online')
-                    : `🟠 Offline (${count} saved locally)`,
-            };
-            if (cb) {
-                cb(status);
+    async notifyStatus(cb = null) {
+        const counts = await this.getQueueCounts();
+        const status = {
+            online: this.isOnline,
+            isSyncing: this.isSyncing,
+            pendingCount: counts.pending,
+            failedCount: counts.failed,
+            label: this.isOnline
+                ? (this.isSyncing ? `🔄 Syncing (${counts.pending})...` : (counts.failed > 0 ? `⚠️ ${counts.failed} failed items` : (counts.pending > 0 ? `🟢 Online (${counts.pending} queued)` : '🟢 Online')))
+                : `🟠 Offline (${counts.pending} saved locally)`,
+        };
+
+        if (cb) {
+            cb(status);
+        } else {
+            this.listeners.forEach(fn => fn(status));
+        }
+
+        // Update UI pill if present
+        const pill = document.getElementById('offline-sync-pill');
+        if (pill) {
+            pill.innerText = status.label;
+            if (counts.failed > 0) {
+                pill.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-950/80 text-red-300 border border-red-700 cursor-pointer';
+                pill.onclick = () => this.showFailedItemsModal();
+            } else if (!this.isOnline) {
+                pill.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/80 text-amber-300 border border-amber-700';
+                pill.onclick = null;
             } else {
-                this.listeners.forEach(fn => fn(status));
+                pill.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-700';
+                pill.onclick = null;
             }
-        });
+        }
     }
 
     updateOnlineStatus() {
@@ -137,6 +177,12 @@ class MeashOfflineEngine {
     }
 
     async enqueue(entityType, action, payload, clientVersion = 1) {
+        if (!this.db) {
+            const err = new Error('IndexedDB not ready. Action cannot be queued offline.');
+            this.showDbErrorBanner(err.message);
+            throw err;
+        }
+
         const item = {
             client_uuid: this.generateUUID(),
             entity_type: entityType,
@@ -146,19 +192,17 @@ class MeashOfflineEngine {
             client_timestamp: new Date().toISOString(),
             status: 'pending',
             retries: 0,
+            last_error: null,
         };
 
-        // 1. Save in IndexedDB queue
         await this.putStoreItem('sync_queue', item);
 
-        // 2. Apply optimistic local update to relevant cache store
         if (entityType === 'order' || entityType === 'job_action') {
             await this.applyLocalOrderUpdate(item);
         }
 
         this.notifyStatus();
 
-        // 3. Try to sync immediately if online
         if (this.isOnline) {
             this.syncQueue();
         }
@@ -178,6 +222,7 @@ class MeashOfflineEngine {
                     const nextStatus = payload.order_status || payload.action;
                     if (nextStatus === 'complete') {
                         existing.order_status = 'completed';
+                        existing.completed_at = new Date().toISOString();
                     } else if (nextStatus === 'start') {
                         existing.order_status = 'cleaning';
                     } else if (nextStatus === 'on_the_way') {
@@ -186,16 +231,7 @@ class MeashOfflineEngine {
                         existing.order_status = nextStatus;
                     }
 
-                    if (existing.order_status === 'completed') {
-                        existing.completed_at = new Date().toISOString();
-                    }
-                    if (payload.notes) {
-                        existing.completion_notes = payload.notes;
-                    }
-                    if (payload.latitude && payload.longitude) {
-                        existing.latitude = payload.latitude;
-                        existing.longitude = payload.longitude;
-                    }
+                    if (payload.notes) existing.completion_notes = payload.notes;
                     existing._locally_updated = true;
                     await this.putStoreItem('my_jobs', existing);
                 }
@@ -206,9 +242,9 @@ class MeashOfflineEngine {
     }
 
     async syncQueue() {
-        if (this.isSyncing || !this.isOnline) return;
+        if (this.isSyncing || !this.isOnline || !this.db) return;
 
-        const pendingItems = await this.getAllPendingItems();
+        const pendingItems = await this.getPendingItems();
         if (pendingItems.length === 0) {
             this.notifyStatus();
             return;
@@ -230,65 +266,147 @@ class MeashOfflineEngine {
                 body: JSON.stringify({ items: pendingItems }),
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            if (response.status === 401) {
+                console.warn('Sync 401 Unauthorized: please log in again.');
+                window.dispatchEvent(new CustomEvent('meash-auth-required', { detail: 'Please login again to sync offline data.' }));
+                return;
+            }
 
-                // Process successfully synced
-                if (data.synced && Array.isArray(data.synced)) {
-                    for (const s of data.synced) {
-                        await this.deleteStoreItem('sync_queue', s.client_uuid);
+            if (!response.ok) {
+                // Non-200 response: increment retries on all attempted items
+                const statusText = `Server error HTTP ${response.status}`;
+                for (const item of pendingItems) {
+                    item.retries = (item.retries || 0) + 1;
+                    item.last_error = statusText;
+                    if (item.retries >= 5) {
+                        item.status = 'failed';
+                    }
+                    await this.putStoreItem('sync_queue', item);
+                }
+                return;
+            }
+
+            const data = await response.json();
+
+            // 1. Process successfully synced items
+            if (data.synced && Array.isArray(data.synced)) {
+                for (const s of data.synced) {
+                    await this.deleteStoreItem('sync_queue', s.client_uuid);
+                }
+            }
+
+            // 2. Process individual item errors from server
+            if (data.errors && Array.isArray(data.errors)) {
+                for (const errItem of data.errors) {
+                    const item = await this.getStoreItem('sync_queue', errItem.client_uuid);
+                    if (item) {
+                        item.status = 'failed';
+                        item.last_error = errItem.error || 'Server validation failed';
+                        await this.putStoreItem('sync_queue', item);
                     }
                 }
-
-                // Process conflicts
-                if (data.conflicts && data.conflicts.length > 0) {
-                    window.dispatchEvent(new CustomEvent('meash-sync-conflict', { detail: data.conflicts }));
-                }
-
-                window.dispatchEvent(new CustomEvent('meash-sync-completed', { detail: data }));
             }
+
+            // 3. Process conflicts
+            if (data.conflicts && data.conflicts.length > 0) {
+                window.dispatchEvent(new CustomEvent('meash-sync-conflict', { detail: data.conflicts }));
+            }
+
+            window.dispatchEvent(new CustomEvent('meash-sync-completed', { detail: data }));
         } catch (err) {
-            console.error('Sync batch error:', err);
+            console.error('Sync batch network error:', err);
+            for (const item of pendingItems) {
+                item.retries = (item.retries || 0) + 1;
+                item.last_error = err.message;
+                if (item.retries >= 5) {
+                    item.status = 'failed';
+                }
+                await this.putStoreItem('sync_queue', item);
+            }
         } finally {
             this.isSyncing = false;
             this.notifyStatus();
         }
     }
 
+    async getQueueCounts() {
+        const all = await this.getAllItems('sync_queue');
+        let pending = 0;
+        let failed = 0;
+        for (const it of all) {
+            if (it.status === 'failed') failed++;
+            else pending++;
+        }
+        return { pending, failed };
+    }
+
+    async getPendingItems() {
+        const all = await this.getAllItems('sync_queue');
+        return all.filter(it => it.status !== 'failed');
+    }
+
+    async getFailedItems() {
+        const all = await this.getAllItems('sync_queue');
+        return all.filter(it => it.status === 'failed');
+    }
+
+    async retryFailedItem(clientUuid) {
+        const item = await this.getStoreItem('sync_queue', clientUuid);
+        if (item) {
+            item.status = 'pending';
+            item.retries = 0;
+            item.last_error = null;
+            await this.putStoreItem('sync_queue', item);
+            this.notifyStatus();
+            this.syncQueue();
+        }
+    }
+
+    async discardFailedItem(clientUuid) {
+        await this.deleteStoreItem('sync_queue', clientUuid);
+        this.notifyStatus();
+    }
+
+    async showFailedItemsModal() {
+        const failed = await this.getFailedItems();
+        let modal = document.getElementById('failed-sync-items-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'failed-sync-items-modal';
+            modal.className = 'fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4';
+            document.body.appendChild(modal);
+        }
+
+        modal.innerHTML = `
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-white shadow-2xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold flex items-center gap-2 text-red-400">
+                        <span>⚠️</span>
+                        <span>ያልተመሳሰሉ መረጃዎች (${failed.length} Failed Items)</span>
+                    </h3>
+                    <button onclick="document.getElementById('failed-sync-items-modal').remove()" class="text-slate-400 hover:text-white">✕</button>
+                </div>
+                <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
+                    ${failed.length === 0 ? '<p class="text-xs text-slate-400">ምንም ስህተት ያለበት መረጃ የለም (No failed items)</p>' : failed.map(item => `
+                        <div class="p-3 bg-slate-800 rounded-xl border border-red-900/40 text-xs">
+                            <p class="font-bold text-white">${item.action} (${item.entity_type})</p>
+                            <p class="text-[11px] text-red-400 mt-1">ስህተት፡ ${item.last_error || 'Validation failed'}</p>
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="window.meashOffline.retryFailedItem('${item.client_uuid}').then(() => window.meashOffline.showFailedItemsModal())" class="px-2.5 py-1 bg-cyan-600 hover:bg-cyan-500 rounded text-[10px] font-bold">እንደገና ሞክር (Retry)</button>
+                                <button onclick="window.meashOffline.discardFailedItem('${item.client_uuid}').then(() => window.meashOffline.showFailedItemsModal())" class="px-2.5 py-1 bg-slate-700 hover:bg-red-800 rounded text-[10px] font-bold">አስወግድ (Discard)</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <button onclick="document.getElementById('failed-sync-items-modal').remove()" class="w-full mt-4 py-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold">ዝጋ (Close)</button>
+            </div>
+        `;
+    }
+
     // Low-level IndexedDB helpers
-    getPendingCount() {
-        return new Promise((resolve) => {
-            if (!this.db) return resolve(0);
-            try {
-                const tx = this.db.transaction(['sync_queue'], 'readonly');
-                const store = tx.objectStore('sync_queue');
-                const req = store.count();
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => resolve(0);
-            } catch (e) {
-                resolve(0);
-            }
-        });
-    }
-
-    getAllPendingItems() {
-        return new Promise((resolve) => {
-            if (!this.db) return resolve([]);
-            try {
-                const tx = this.db.transaction(['sync_queue'], 'readonly');
-                const store = tx.objectStore('sync_queue');
-                const req = store.getAll();
-                req.onsuccess = () => resolve(req.result || []);
-                req.onerror = () => resolve([]);
-            } catch (e) {
-                resolve([]);
-            }
-        });
-    }
-
     putStoreItem(storeName, item) {
         return new Promise((resolve, reject) => {
-            if (!this.db) return resolve(null);
+            if (!this.db) return reject(new Error('DB not open'));
             const tx = this.db.transaction([storeName], 'readwrite');
             const store = tx.objectStore(storeName);
             const req = store.put(item);
@@ -299,7 +417,7 @@ class MeashOfflineEngine {
 
     getStoreItem(storeName, key) {
         return new Promise((resolve, reject) => {
-            if (!this.db) return resolve(null);
+            if (!this.db) return reject(new Error('DB not open'));
             const tx = this.db.transaction([storeName], 'readonly');
             const store = tx.objectStore(storeName);
             const req = store.get(key);
@@ -310,22 +428,13 @@ class MeashOfflineEngine {
 
     deleteStoreItem(storeName, key) {
         return new Promise((resolve, reject) => {
-            if (!this.db) return resolve(null);
+            if (!this.db) return reject(new Error('DB not open'));
             const tx = this.db.transaction([storeName], 'readwrite');
             const store = tx.objectStore(storeName);
             const req = store.delete(key);
             req.onsuccess = () => resolve(true);
             req.onerror = () => reject(req.error);
         });
-    }
-
-    async cacheItems(storeName, items) {
-        if (!this.db || !Array.isArray(items)) return;
-        const tx = this.db.transaction([storeName], 'readwrite');
-        const store = tx.objectStore(storeName);
-        for (const it of items) {
-            store.put(it);
-        }
     }
 
     getAllItems(storeName) {

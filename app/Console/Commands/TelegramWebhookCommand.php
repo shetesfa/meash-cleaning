@@ -24,10 +24,15 @@ class TelegramWebhookCommand extends Command
             $url = config('services.telegram.webhook_url') ?: 'https://meash-cleaning.onrender.com/api/telegram/webhook';
             $this->info("Setting Webhook to: {$url}...");
 
-            $resp = Http::get("https://api.telegram.org/bot{$token}/setWebhook", [
-                'url' => $url,
-                'drop_pending_updates' => true,
-            ])->json();
+            try {
+                $resp = Http::timeout(10)->get("https://api.telegram.org/bot{$token}/setWebhook", [
+                    'url' => $url,
+                    'drop_pending_updates' => true,
+                ])->json();
+            } catch (\Throwable $e) {
+                $this->error("Failed to connect to Telegram API: " . $e->getMessage());
+                return 1;
+            }
 
             if ($resp['ok'] ?? false) {
                 $this->info('✅ Webhook successfully set to Render!');
@@ -40,9 +45,14 @@ class TelegramWebhookCommand extends Command
         } elseif ($action === 'delete') {
             $this->info('Deleting Telegram Webhook...');
 
-            $resp = Http::get("https://api.telegram.org/bot{$token}/deleteWebhook", [
-                'drop_pending_updates' => false,
-            ])->json();
+            try {
+                $resp = Http::timeout(10)->get("https://api.telegram.org/bot{$token}/deleteWebhook", [
+                    'drop_pending_updates' => false,
+                ])->json();
+            } catch (\Throwable $e) {
+                $this->error("Failed to delete Telegram webhook: " . $e->getMessage());
+                return 1;
+            }
 
             if ($resp['ok'] ?? false) {
                 $this->info('✅ Webhook deleted! Bot is now ready for Local Polling.');
@@ -54,8 +64,13 @@ class TelegramWebhookCommand extends Command
         } else {
             // Status
             $this->info('Fetching Telegram Bot & Webhook Status...');
-            $getMe = Http::get("https://api.telegram.org/bot{$token}/getMe")->json();
-            $info = Http::get("https://api.telegram.org/bot{$token}/getWebhookInfo")->json();
+            try {
+                $getMe = Http::timeout(10)->get("https://api.telegram.org/bot{$token}/getMe")->json();
+                $info = Http::timeout(10)->get("https://api.telegram.org/bot{$token}/getWebhookInfo")->json();
+            } catch (\Throwable $e) {
+                $this->error("Failed to fetch Telegram bot info: " . $e->getMessage());
+                return 1;
+            }
 
             if (!($getMe['ok'] ?? false)) {
                 $this->error('❌ Invalid Bot Token: ' . json_encode($getMe));

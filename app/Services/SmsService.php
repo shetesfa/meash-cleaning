@@ -197,7 +197,14 @@ class SmsService
             $metadata['event'] ?? 'general',
             $message
         );
-        @file_put_contents(storage_path('logs/sms.log'), $logEntry, FILE_APPEND);
+        try {
+            $logPath = storage_path('logs/sms.log');
+            if (file_put_contents($logPath, $logEntry, FILE_APPEND) === false) {
+                \Illuminate\Support\Facades\Log::error('Failed to write to SMS log at ' . $logPath);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('SMS log write error: ' . $e->getMessage());
+        }
 
         // Database Audit Log
         try {
@@ -255,4 +262,20 @@ class SmsService
 
         return $clean;
     }
+
+    /**
+     * Get live SMS gateway status
+     */
+    public static function getGatewayStatus(): array
+    {
+        $afro = env('AFROMESSAGE_TOKEN', env('SMS_API_KEY'));
+        $gateway = env('SMS_GATEWAY_URL');
+        $isLive = !empty($afro) || !empty($gateway);
+        return [
+            'is_live' => $isLive,
+            'status' => $isLive ? 'LIVE' : 'NOT CONNECTED',
+            'provider' => !empty($afro) ? 'afromessage' : (!empty($gateway) ? 'custom_gateway' : 'local_simulation'),
+        ];
+    }
+
 }

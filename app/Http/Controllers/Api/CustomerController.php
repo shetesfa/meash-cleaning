@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Services\EthiopianCalendarService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CustomerController extends Controller
 {
@@ -184,7 +185,13 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'full_name' => 'sometimes|required|string|max:255',
-            'phone' => 'sometimes|required|string|max:32',
+            'phone' => [
+                'sometimes',
+                'required',
+                'string',
+                'max:32',
+                Rule::unique('customers', 'phone')->ignore($customer->id),
+            ],
             'alt_phone' => 'nullable|string|max:32',
             'address' => 'nullable|string',
             'subcity' => 'nullable|string|max:64',

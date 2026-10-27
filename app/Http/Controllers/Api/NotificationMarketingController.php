@@ -199,11 +199,32 @@ class NotificationMarketingController extends Controller
             ['phone' => $validated['phone'], 'message' => $validated['message']]
         );
 
+        $status = $res['status'] ?? 'unknown';
+        $isLive = !empty($res['is_live']);
+
+        if ($status === 'logged_locally') {
+            $message = 'NOT delivered - SMS gateway is not set. Logged locally in simulation mode.';
+        } elseif ($status === 'delivered') {
+            $message = 'SMS sent successfully to live mobile carrier.';
+        } elseif ($status === 'gateway_failed') {
+            $message = 'Failed to deliver SMS: Gateway rejected request.';
+        } elseif ($status === 'network_error') {
+            $message = 'Failed to deliver SMS: Network error or timeout.';
+        } else {
+            $message = 'SMS dispatch completed with status: ' . $status;
+        }
+
         return response()->json([
-            'success' => $res['ok'] ?? false,
-            'message' => 'SMS sent successfully by authorized staff.',
+            'success' => $isLive,
+            'status' => $status,
+            'message' => $message,
             'result' => $res,
         ]);
     }
-}
 
+    public function smsStatus(): JsonResponse
+    {
+        return response()->json(\App\Services\SmsService::getGatewayStatus());
+    }
+
+}

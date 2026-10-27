@@ -2315,7 +2315,9 @@ class TelegramController extends Controller
                 $tgUser->phone_number = $phone;
                 $tgUser->save();
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to update Telegram user phone: ' . $e->getMessage());
+        }
     }
 
     /**

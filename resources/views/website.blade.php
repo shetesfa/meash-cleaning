@@ -196,6 +196,10 @@
       <a href="#book" onclick="preselectService('glass')" class="text-sm font-bold text-navy flex items-center gap-1"><span data-lang-block="am">ይያዙ</span><span data-lang-block="en">Book</span> <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
     </div>
   </div>
+  <div id="price-fallback-warning" class="hidden my-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs flex items-center gap-2">
+    <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+    <span>⚠️ <span data-lang-block="am">የቀጥታ ዋጋዎች ሊዘገዩ ይችላሉ (Prices may be old)</span><span data-lang-block="en">Live prices could not be fetched; cached prices shown (Prices may be old)</span></span>
+  </div>
   <p class="text-xs text-navy/40 mt-4" data-lang-block="am">* ዋጋዎች በአካባቢና በብዛት ሊለያዩ ይችላሉ።</p>
   <p class="text-xs text-navy/40 mt-4" data-lang-block="en">* Prices shown are per unit and may vary by location or quantity.</p>
 </section>
@@ -905,15 +909,21 @@
   async function loadServicePrices(){
     try {
       const res = await fetch('/api/public/services');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.data || []);
+      if (!list.length) throw new Error('Empty services list');
       list.forEach(svc => {
         if (svc.id != null && svc.base_price != null) {
           servicePrices[svc.id] = parseFloat(svc.base_price);
         }
       });
+      const warnEl = document.getElementById('price-fallback-warning');
+      if (warnEl) warnEl.classList.add('hidden');
     } catch (err) {
       console.warn('Could not load live prices from /api/public/services', err);
+      const warnEl = document.getElementById('price-fallback-warning');
+      if (warnEl) warnEl.classList.remove('hidden');
     }
     renderPrices();
     updateWizardTotal();

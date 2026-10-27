@@ -21,27 +21,51 @@ if %errorlevel% neq 0 (
 )
 
 echo [2/4] Ensuring database and tables are ready...
-mysql -u root -e "CREATE DATABASE IF NOT EXISTS meash_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >nul 2>&1
-php artisan migrate --force >nul 2>&1
-php artisan db:seed --force >nul 2>&1
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS meash_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+if %errorlevel% neq 0 (
+    echo [ERROR] MySQL is not reachable. Please start MySQL in XAMPP.
+    pause
+    exit /b 1
+)
 
-echo [3/4] Opening Meash Cleaning Solution in your browser...
+php artisan migrate --force
+if %errorlevel% neq 0 (
+    echo [ERROR] Database migration failed!
+    pause
+    exit /b 1
+)
+
+php artisan db:seed --force
+if %errorlevel% neq 0 (
+    echo [ERROR] Database seeding failed!
+    pause
+    exit /b 1
+)
+
+echo [3/4] Launching Meash Central Server on port 8080...
+start "Meash Central Server" php artisan serve --host=0.0.0.0 --port=8080
+
+echo [4/4] Waiting for server health check (http://localhost:8080/health)...
+powershell -Command "$i=0; while($i -lt 15) { try { $r = Invoke-WebRequest -Uri 'http://localhost:8080/health' -UseBasicParsing -TimeoutSec 2; if($r.StatusCode -eq 200) { exit 0 } } catch {} Start-Sleep -Seconds 1; $i++ }; exit 1"
+if %errorlevel% neq 0 (
+    echo [WARNING] Health check timed out, launching browser anyway...
+) else (
+    echo [OK] Server is ready and healthy!
+)
+
 start http://localhost:8080
 start http://localhost:8080/app
 
-echo [4/4] Starting Laravel Central Server on http://localhost:8080 ...
 echo.
 echo =====================================================================
 echo  Platform URLs:
 echo   - Customer Public Website: http://localhost:8080
 echo   - Internal Business PWA:   http://localhost:8080/app
-echo   - Mobile / LAN Access:     http://10.77.164.165:8080
+echo   - Mobile / LAN Access:     http://localhost:8080
 echo   - Telegram Bot Link:       https://t.me/meash_cleaning_solution_bot
 echo   - Telegram Mini App:       https://shetesfa.github.io/meash-mini-app/
 echo =====================================================================
 echo.
-echo Press Ctrl+C to stop the server at any time.
-echo.
-
-php artisan serve --host=0.0.0.0 --port=8080
-pause
+echo Server window is running. You can close this launcher window.
+timeout /t 5 >nul
+exit

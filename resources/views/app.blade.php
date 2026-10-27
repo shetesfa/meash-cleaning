@@ -531,6 +531,47 @@
             return res;
         }
 
+        async function loadJson(url, options = {}) {
+            const res = await apiFetch(url, options);
+            if (!res.ok) {
+                let errMsg = `Request failed (${res.status})`;
+                try {
+                    const data = await res.json();
+                    errMsg = data.message || data.error || errMsg;
+                } catch (_) {
+                    try {
+                        const txt = await res.text();
+                        if (txt) errMsg = txt;
+                    } catch (_) {}
+                }
+                const err = new Error(errMsg);
+                err.status = res.status;
+                throw err;
+            }
+            return await res.json();
+        }
+
+        function renderErrorCard(container, message, retryFn) {
+            if (!container) return;
+            container.innerHTML = `
+                <div class="p-8 text-center bg-slate-900/80 border border-red-500/30 rounded-3xl max-w-md mx-auto my-12 shadow-2xl space-y-4">
+                    <div class="w-14 h-14 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center mx-auto shadow-inner">
+                        <i data-lucide="alert-circle" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white mb-1">መረጃውን መጫን አልተቻለም (Failed to Load)</h3>
+                        <p class="text-xs text-red-300 font-medium">${message || 'የኔትወርክ ወይም የሰርቨር ችግር አጋጥሟል'}</p>
+                    </div>
+                    ${retryFn ? `
+                    <button onclick="${retryFn}" class="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 mx-auto transition">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> እንደገና ሞክር (Retry)
+                    </button>
+                    ` : ''}
+                </div>
+            `;
+            if (window.lucide) lucide.createIcons();
+        }
+
         // Role configurations with bilingual support
         const roleNavs = {
             owner: [
@@ -1397,7 +1438,6 @@
             }
 
             await cleanerJobAction(orderId, 'on_the_way', { latitude: lat, longitude: lng });
-            alert('🚗 ጉዞ ጀምረዋል! ለደንበኛው የጽዳት ቡድኑ በመንገድ ላይ መሆኑን የሚገልጽ SMS ተልኳል።');
         }
 
         async function cleanerJobAction(orderId, action, extraPayload = {}) {
@@ -1407,8 +1447,26 @@
                 order_status: action === 'complete' ? 'completed' : (action === 'start' ? 'cleaning' : (action === 'on_the_way' ? 'on_the_way' : action)),
             }, extraPayload);
 
-            // Queue via offline engine so it works 100% when internet is absent!
-            await window.meashOffline.enqueue('order', 'job_action', payload);
+            if (navigator.onLine) {
+                try {
+                    const res = await apiFetch(`/api/orders/${orderId}/status`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ status: payload.order_status, ...extraPayload })
+                    });
+                    if (res && res.ok) {
+                        alert(action === 'on_the_way' ? '🚗 ጉዞ ጀምረዋል! (Sent)' : '✅ የስራ ሁኔታ ተቀይሮ ተልኳል (Sent)');
+                    } else {
+                        await window.meashOffline.enqueue('order', 'job_action', payload);
+                        alert('📡 ከመስመር ውጭ ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
+                    }
+                } catch (e) {
+                    await window.meashOffline.enqueue('order', 'job_action', payload);
+                    alert('📡 ከመስመር ውጭ ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
+                }
+            } else {
+                await window.meashOffline.enqueue('order', 'job_action', payload);
+                alert('📡 ከመስመር ውጭ ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
+            }
 
             // Reload UI immediately to reflect optimistic update
             loadActiveTab();
@@ -2232,7 +2290,7 @@
                 try {
                     const res = await apiFetch('/api/services');
                     if (res.ok) {
-                        window._appServicesList = await res.json();
+                        const svcData = await res.json(); window._appServicesList = Array.isArray(svcData) ? svcData : (svcData.data || []); window._pricesLive = (window._appServicesList.length > 0);
                     }
                 } catch (e) {
                     console.error('Failed to load services:', e);
@@ -2260,6 +2318,12 @@
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white">&times;</button>
                         </div>
                         <form onsubmit="submitAdminOrder(event)" class="space-y-4">
+                            ${!pricesLive ? `
+                            <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+                                <span>⚠️ የቀጥታ የዋጋ መረጃ አልተገኘም (Prices may be old)። ኢንተርኔት እስኪመጣ ድረስ አዲስ ትዕዛዝ መመዝገብ ተከልክሏል።</span>
+                            </div>
+                            ` : ''}
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-400 mb-1">የደንበኛ ሙሉ ስም *</label>
@@ -2358,7 +2422,7 @@
 
                             <div class="flex justify-end gap-2 pt-2">
                                 <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">ሰርዝ</button>
-                                <button type="submit" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg">ትዕዛዝ መዝግብ</button>
+                                <button type="submit" ${!pricesLive ? 'disabled' : ''} class="px-5 py-2 ${!pricesLive ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg'} text-xs font-bold rounded-xl">ትዕዛዝ መዝግብ</button>
                             </div>
                         </form>
                     </div>
@@ -3613,7 +3677,7 @@
                                     </div>
                                     <div>
                                         <h3 class="text-sm font-bold text-white">የኤስኤምኤስ (SMS) ግንኙነት ማረጋገጫ</h3>
-                                        <span class="text-[10px] text-emerald-400 font-bold">● SMS Gateway ንቁ (Active)</span>
+                                        <span id="setting-sms-status-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">⏳ SMS ሁኔታ በማረጋገጥ ላይ...</span>
                                     </div>
                                 </div>
                             </div>
@@ -3688,6 +3752,21 @@
                 </div>
             `;
             lucide.createIcons();
+            // Live SMS status check
+            try {
+                apiFetch('/api/sms/status').then(r => r.json()).then(sData => {
+                    const pill = document.getElementById('setting-sms-status-pill');
+                    if (pill) {
+                        if (sData.is_live) {
+                            pill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/30';
+                            pill.textContent = '● SMS: LIVE (' + (sData.provider || 'Gateway') + ')';
+                        } else {
+                            pill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950/80 text-amber-400 border border-amber-500/30';
+                            pill.textContent = '● SMS: NOT CONNECTED';
+                        }
+                    }
+                }).catch(() => {});
+            } catch (_) {}
         }
 
         async function sendTestSmsFromSettings() {

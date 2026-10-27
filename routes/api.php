@@ -145,6 +145,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/campaigns', [NotificationMarketingController::class, 'storeCampaign'])->middleware('role:owner');
     Route::post('/campaigns/{campaign}/send', [NotificationMarketingController::class, 'sendCampaign'])->middleware('role:owner');
     Route::post('/notifications/send-direct-sms', [NotificationMarketingController::class, 'sendDirectSms'])->middleware('role:owner,reception');
+    Route::get('/sms/status', [NotificationMarketingController::class, 'smsStatus']);
 
     // K. Offline-First Synchronization & Conflicts
     Route::prefix('sync')->group(function () {
