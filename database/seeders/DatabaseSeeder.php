@@ -948,7 +948,7 @@ class DatabaseSeeder extends Seeder
             'title' => 'የመስከረም አዲስ ዓመት ልዩ ቅናሽ (Enkutatash New Year Promo)',
             'channel' => 'telegram',
             'audience_filter' => 'all_customers',
-            'message_text' => 'እንኳን ለአዲሱ ዓመት በሰላም አደረሳችሁ! ሜአሽ የፅዳት አገልግሎት ለሶፋ እና ምንጣፍ እጥበት 15% የበዓል ቅናሽ አዘጋጅቷል:: አሁኑኑ በ @meash_cleaning_solution_bot ቀጠሮ ይያዙ!',
+            'message_text' => 'እንኳን ለአዲሱ ዓመት በሰላም አደረሳችሁ! ሜሽ የፅዳት አገልግሎት ለሶፋ እና ምንጣፍ እጥበት 15% የበዓል ቅናሽ አዘጋጅቷል:: አሁኑኑ በ @meash_cleaning_solution_bot ቀጠሮ ይያዙ!',
             'status' => 'completed',
             'total_targets' => 2,
             'sent_count' => 2,

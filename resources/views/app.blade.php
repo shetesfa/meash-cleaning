@@ -95,7 +95,42 @@
                     </div>
                 </div>
 
-                
+                <!-- Quick Role Selector Buttons for Fast Access -->
+                <div class="pt-1">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">ፈጣን ምርጫ (Quick Access)፦</p>
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <button type="button" onclick="fillTestAccount('owner@meash.com')" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 rounded-xl p-2.5 text-center cursor-pointer transition">
+                            <span class="block text-base mb-0.5">👑</span>
+                            <span class="block font-bold text-cyan-400 text-xs">ዋና ስራ አስኪያጅ</span>
+                            <span class="block text-[9px] text-slate-400">Owner</span>
+                        </button>
+                        <button type="button" onclick="fillTestAccount('reception@meash.com')" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 rounded-xl p-2.5 text-center cursor-pointer transition">
+                            <span class="block text-base mb-0.5">📞</span>
+                            <span class="block font-bold text-cyan-400 text-xs">ሪሴፕሽን</span>
+                            <span class="block text-[9px] text-slate-400">Reception</span>
+                        </button>
+                        <button type="button" onclick="fillTestAccount('cleaner1@meash.com')" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 rounded-xl p-2.5 text-center cursor-pointer transition">
+                            <span class="block text-base mb-0.5">🧹</span>
+                            <span class="block font-bold text-cyan-400 text-xs">ፅዳት ሰራተኛ</span>
+                            <span class="block text-[9px] text-slate-400">Cleaner</span>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-2 text-center">💡 የይለፍ ቃል፦ <code class="text-cyan-400 font-bold bg-slate-800 px-1.5 py-0.5 rounded">password</code></p>
+                </div>
+
+                <button type="submit" id="btn-app-login" class="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span id="btn-app-login-text">ወደ ሲስተም ግባ (Login to Mesh OS)</span>
+                </button>
+            </form>
+
+            <div class="mt-5 pt-4 border-t border-slate-800 text-center">
+                <a href="/" class="text-xs text-slate-400 hover:text-cyan-400 font-semibold inline-flex items-center gap-1.5 transition">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                    <span>ወደ ደንበኞች ድረ-ገጽ ተመለስ (Back to Website)</span>
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- MAIN AUTHENTICATED SYSTEM WRAPPER -->
@@ -442,6 +477,16 @@
                 if (loginScreen) loginScreen.classList.remove('hidden');
                 if (appWrapper) appWrapper.classList.add('hidden');
                 return false;
+            }
+        }
+
+        function fillTestAccount(email) {
+            const loginInput = document.getElementById('app-login-input');
+            const pwdInput = document.getElementById('app-password-input');
+            if (loginInput) loginInput.value = email;
+            if (pwdInput) {
+                pwdInput.value = 'password';
+                pwdInput.focus();
             }
         }
 
@@ -4172,7 +4217,7 @@
                             </div>
                             <div>
                                 <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ መፈክር በአማርኛ (Slogan AM)</label>
-                                <input type="text" id="set-slogan-am" value="${s.company_slogan_am || 'አካባቢዎ ንፁህ፣ ሃላፊነቱ የኛ!'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                <input type="text" id="set-slogan-am" value="${s.company_slogan_am || 'የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት!'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                             </div>
                         </div>
 
@@ -4409,7 +4454,7 @@
                     <form onsubmit="saveCmsAboutText(event)" class="space-y-4 bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl">
                         <div>
                             <label class="text-xs font-bold text-slate-300 block mb-1">የአማርኛ መግለጫ ጽሁፍ (About Us AM)</label>
-                            <textarea id="set-about-am" rows="4" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs leading-relaxed focus:border-cyan-400">${s.about_text_am || 'ሜአሽ ክሊኒንግ ሶሉሽን (MEASH CLEANING SOLUTION) በአዲስ አበባ ከተማ ለመኖሪያ ቤቶች፣ ለቢሮዎች፣ ለሆቴሎች እና ለተቋማት አስተማማኝ እና ጥራት ያለው የጥልቅ ጽዳት አገልግሎት በዘመናዊ ማሽኖችና ኬሚካሎች በመታገዝ በታማኝነት ይሰጣል።'}</textarea>
+                            <textarea id="set-about-am" rows="4" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs leading-relaxed focus:border-cyan-400">${s.about_text_am || 'ሜሽ ክሊኒንግ ሶሉሽን (MEASH CLEANING SOLUTION) በአዲስ አበባ ከተማ ለመኖሪያ ቤቶች፣ ለቢሮዎች፣ ለሆቴሎች እና ለተቋማት አስተማማኝ እና ጥራት ያለው የጥልቅ ጽዳት አገልግሎት በዘመናዊ ማሽኖችና ኬሚካሎች በመታገዝ በታማኝነት ይሰጣል።'}</textarea>
                         </div>
 
                         <div>

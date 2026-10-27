@@ -27,7 +27,7 @@
   '@context' => 'https://schema.org',
   '@type' => 'HomeAndConstructionBusiness',
   'name' => 'MEASH CLEANING SOLUTION',
-  'alternateName' => 'ሜአሽ ክሊኒንግ ሶሉሽን',
+  'alternateName' => 'ሜሽ ክሊኒንግ ሶሉሽን',
   'image' => 'https://meash-cleaning-gy5x.onrender.com/logo.jpg',
   'slogan' => 'Your Environment, Our Responsibility.',
   'url' => 'https://meash-cleaning-gy5x.onrender.com',
@@ -161,7 +161,7 @@
 
       <!-- Slogan Badge -->
       <div class="mb-3 text-xs sm:text-sm font-extrabold tracking-wider uppercase text-teal-dark">
-        <span data-lang-block="am">አካባቢዎ ንፁህ፣ ሃላፊነቱ የኛ!</span>
+        <span data-lang-block="am">የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት!</span>
         <span data-lang-block="en">"Your Environment, Our Responsibility."</span>
       </div>
 
@@ -275,12 +275,12 @@
         <span data-lang-block="am">ስለ ድርጅታችን</span><span data-lang-block="en">ABOUT MEASH CLEANING</span>
       </div>
       <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight mb-6">
-        <span data-lang-block="am">አካባቢዎ ንፁህ፣ ሃላፊነቱ የኛ!<br><span class="text-teal-dark font-normal text-[0.8em]">የጽዳት ጥራትን በሙያዊ ብቃት እንቀይራለን።</span></span>
+        <span data-lang-block="am">የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት!<br><span class="text-teal-dark font-normal text-[0.8em]">የጽዳት ጥራትን በሙያዊ ብቃት እንቀይራለን።</span></span>
         <span data-lang-block="en">Your Environment, Our Responsibility.<br><span class="text-teal-dark font-normal text-[0.8em]">Redefining Professional Cleaning in Addis Ababa.</span></span>
       </h2>
       <div class="text-navy/75 text-[15px] sm:text-[16px] leading-relaxed space-y-4">
         <p data-lang-block="am">
-          <b>MEASH CLEANING SOLUTION (ሜአሽ ክሊኒንግ ሶሉሽን)</b> በአዲስ አበባ ከተማ ለመኖሪያ ቤቶች፣ ለቢሮዎች፣ ለሆቴሎች፣ ለሬስቶራንቶች እና ለትላልቅ አዳራሾች ዘመናዊ እና ጥልቅ የጽዳት አገልግሎት የሚሰጥ ግንባር ቀደም ተቋም ነው።
+          <b>MEASH CLEANING SOLUTION (ሜሽ ክሊኒንግ ሶሉሽን)</b> በአዲስ አበባ ከተማ ለመኖሪያ ቤቶች፣ ለቢሮዎች፣ ለሆቴሎች፣ ለሬስቶራንቶች እና ለትላልቅ አዳራሾች ዘመናዊ እና ጥልቅ የጽዳት አገልግሎት የሚሰጥ ግንባር ቀደም ተቋም ነው።
         </p>
         <p data-lang-block="en">
           <b>MEASH CLEANING SOLUTION</b> is Addis Ababa’s trusted deep cleaning partner for residential villas, modern workspaces, luxury hotels, commercial kitchens, and event halls. We combine industrial extraction machines with hospital-grade sanitization.
@@ -1374,9 +1374,9 @@
         <div>
           <label class="block text-[11px] font-bold text-navy/70 mb-1">የስራ ዘርፍ / ሚና (Staff Role)</label>
           <select id="staff-role-select" class="w-full px-3 py-2.5 rounded-lg border border-navy/20 bg-fog text-navy text-xs font-semibold focus:outline-none focus:border-teal cursor-pointer">
-            <option value="owner">👑 1. ዋና ስራ አስኪያጅ (Owner / General Manager)</option>
-            <option value="reception">📞 2. ሪሴፕሽን እና ስራ ማስተናገጃ (Reception)</option>
-            <option value="cleaner">🧹 3. የፅዳት ሰራተኛ (Cleaner / Technician)</option>
+            <option value="owner@meash.com">👑 1. ዋና ስራ አስኪያጅ (Owner / General Manager)</option>
+            <option value="reception@meash.com">📞 2. ሪሴፕሽን እና ስራ ማስተናገጃ (Reception)</option>
+            <option value="cleaner1@meash.com">🧹 3. የፅዳት ሰራተኛ (Cleaner / Technician)</option>
           </select>
         </div>
 
@@ -1388,6 +1388,7 @@
               <i id="staff-pwd-eye" data-lucide="eye" class="w-4 h-4"></i>
             </button>
           </div>
+          <p class="text-[10px] text-teal-dark font-medium mt-1">💡 ነባሪ የይለፍ ቃል፦ <code class="font-bold bg-teal-light px-1.5 py-0.5 rounded">password</code></p>
         </div>
 
         <div class="flex items-center gap-2 pt-2">
@@ -1396,6 +1397,13 @@
             <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
             <span id="staff-login-btn-text">ግባ (Login)</span>
           </button>
+        </div>
+
+        <div class="pt-2 text-center border-t border-navy/10">
+          <a href="/app" class="text-[11px] text-teal hover:underline font-bold inline-flex items-center gap-1">
+            <span>ወደ ዋናው የአስተዳዳሪ ሲስተም ገጽ ይሂዱ (Go to /app)</span>
+            <i data-lucide="external-link" class="w-3 h-3"></i>
+          </a>
         </div>
       </form>
     </div>
@@ -2182,7 +2190,12 @@
         })
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        data = { message: 'የተሳሳተ የይለፍ ቃል ነው፤ እባክዎ በትክክል ያስገቡ!' };
+      }
 
       if (res.ok && data.token) {
         localStorage.setItem('meash_token', data.token);
@@ -2192,13 +2205,17 @@
         btn.classList.add('bg-teal', 'text-white');
         setTimeout(() => {
           window.location.href = '/app';
-        }, 400);
+        }, 300);
       } else {
         errBox.classList.remove('hidden');
-        errText.innerText = data.message || 'የተሳሳተ የይለፍ ቃል ነው፤ እባክዎ በትክክል ያስገቡ!';
+        let errorMsg = data.message || 'የተሳሳተ የይለፍ ቃል ነው፤ እባክዎ በትክክል ያስገቡ!';
+        if (data.errors && typeof data.errors === 'object') {
+          errorMsg = Object.values(data.errors).flat().join(' ');
+        }
+        errText.innerText = errorMsg;
         pwdInput.classList.add('border-red-500');
         btn.disabled = false;
-        btnText.innerText = 'ግባ (Access Admin)';
+        btnText.innerText = 'ግባ (Login)';
         pwdInput.focus();
         pwdInput.select();
       }

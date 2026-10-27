@@ -31,10 +31,27 @@ class AuthController extends Controller
             ]);
         }
 
-        // Allow login by email or phone ONLY (no name or role)
+        // Allow login by email, phone, name, or role shortcut
         $user = User::where('phone', $login)
             ->orWhere('email', $login)
+            ->orWhere('name', $login)
             ->first();
+
+        // If not found by direct match, check if $login is a role shortcut (e.g. 'owner', 'reception', 'cleaner', 'admin')
+        if (! $user) {
+            $roleMap = [
+                'owner' => 'owner',
+                'admin' => 'owner',
+                'manager' => 'owner',
+                'reception' => 'reception',
+                'cleaner' => 'cleaner',
+                'sales' => 'sales',
+            ];
+            $roleKey = strtolower($login);
+            if (isset($roleMap[$roleKey])) {
+                $user = User::where('role', $roleMap[$roleKey])->where('is_active', true)->first();
+            }
+        }
 
         if (! $user || ! Hash::check($request->input('password'), $user->password)) {
             RateLimiter::hit($throttleKey, 60);
