@@ -6,9 +6,18 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\User;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class MeashOfflineSyncTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed();
+    }
+
     public function test_offline_sync_batch_creates_order_idempotently(): void
     {
         $cleaner = User::where('role', 'cleaner')->first();

@@ -5,9 +5,18 @@ namespace Tests\Feature;
 use App\Http\Controllers\Api\TelegramController;
 use App\Models\Order;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class MeashTelegramTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed();
+    }
+
     public function test_telegram_inline_query_generates_rich_cards(): void
     {
         $controller = new TelegramController();

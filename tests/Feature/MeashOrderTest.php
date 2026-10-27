@@ -13,6 +13,14 @@ use Tests\TestCase;
 
 class MeashOrderTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed();
+    }
+
     public function test_multi_item_order_calculates_totals_accurately(): void
     {
         $user = User::where('role', 'owner')->first();

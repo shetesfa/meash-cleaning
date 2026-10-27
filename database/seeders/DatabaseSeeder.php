@@ -31,9 +31,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $isLocal = app()->environment('local');
+        $isLocalOrTesting = app()->environment('local', 'testing');
 
-        if (! $isLocal) {
+        if (! $isLocalOrTesting) {
             $this->command->info('Running DatabaseSeeder in production mode (demo data disabled).');
             $ownerEmail = env('MEASH_OWNER_EMAIL', env('OWNER_EMAIL', 'owner@meash.com'));
             $ownerPassword = env('MEASH_OWNER_PASSWORD', env('OWNER_PASSWORD'));

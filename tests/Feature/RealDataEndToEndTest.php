@@ -8,9 +8,19 @@ use App\Models\Service;
 use App\Models\TelegramUser;
 use App\Models\User;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class RealDataEndToEndTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed();
+        \Illuminate\Support\Facades\Config::set('services.telegram.webhook_secret', 'test-secret');
+    }
+
     /**
      * 1. Test Website Real Data Booking Flow
      */
@@ -115,7 +125,8 @@ class RealDataEndToEndTest extends TestCase
                 'text' => '/start',
             ]
         ];
-        $resStart = $this->postJson('/api/telegram/webhook', $startUpdate);
+        \Illuminate\Support\Facades\Config::set('services.telegram.webhook_secret', 'test-secret');
+        $resStart = $this->withHeaders(['X-Telegram-Bot-Api-Secret-Token' => 'test-secret'])->postJson('/api/telegram/webhook', $startUpdate);
         $resStart->assertStatus(200);
 
         // Step 2: Book via mini-app data handler webhook
@@ -228,7 +239,7 @@ class RealDataEndToEndTest extends TestCase
             ]
         ];
 
-        $resCallback = $this->postJson('/api/telegram/webhook', $callbackUpdate);
+        $resCallback = $this->withHeaders(['X-Telegram-Bot-Api-Secret-Token' => 'test-secret'])->postJson('/api/telegram/webhook', $callbackUpdate);
         $resCallback->assertStatus(200);
 
         // Verify order created in Database with source telegram_bot

@@ -7,9 +7,18 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class MeashFinanceTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed();
+    }
+
     public function test_payment_updates_order_payment_status_automatically(): void
     {
         $owner = User::where('role', 'owner')->first();
