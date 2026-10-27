@@ -593,18 +593,18 @@ class TelegramController extends Controller
         return;
       }
 
-      $welcome = " <b>እንኳን ወደ ሜሽ የፅዳት አገልግሎት በደህና መጡ!</b>\n" .
+      $welcome = "<b>እንኳን ወደ ሜሽ የፅዳት አገልግሎት በደህና መጡ!</b>\n" .
         "<b>Welcome to Meash Cleaning Solution!</b>\n\n" .
-        " <b>ጥራት ያለው ፅዳት:: ንፁህ:: አስተማማኝ::</b>\n" .
+        "<b>ጥራት ያለው ፅዳት:: ንፁህ:: አስተማማኝ::</b>\n" .
         "<i>(Professional Cleaning. Fresh. Clean. Reliable.)</i>\n\n" .
         "በአዲስ አበባ አስተማማኝ የሶፋ፣ የምንጣፍ፣ የፍራሽ፣ የመስታወት እና የቤት/ቢሮ ጥልቅ ፅዳት እንሰጣለን::\n\n" .
         "ዛሬ ምን ማፅዳት ይፈልጋሉ? ከታች ካሉት አማራጮች አንዱን ይምረጡ:";
 
       $httpsUrl = $this->getMiniAppHttpsUrl();
-      $wizardButton = ['text' => ' በቦቱ ቀጠሮ ያስይዙ (1 ደቂቃ)', 'callback_data' => 'book_start_wizard'];
+      $wizardButton = ['text' => 'በቦቱ ቀጠሮ ያስይዙ (1 ደቂቃ)', 'callback_data' => 'book_start_wizard'];
       $appButton = $httpsUrl
-        ? ['text' => ' በቴሌግራም ሚኒ አፕ (Mini App)', 'web_app' => ['url' => $httpsUrl]]
-        : ['text' => ' ቦታ ያስይዙ | Book Now', 'callback_data' => 'menu_book'];
+        ? ['text' => 'በቴሌግራም ሚኒ አፕ (Mini App)', 'web_app' => ['url' => $httpsUrl]]
+        : ['text' => 'ቦታ ያስይዙ | Book Now', 'callback_data' => 'menu_book'];
 
       $replyMarkup = [
         'inline_keyboard' => [
@@ -615,23 +615,23 @@ class TelegramController extends Controller
             $appButton,
           ],
           [
-            ['text' => ' አገልግሎቶችና ዋጋ | Services', 'callback_data' => 'menu_services'],
-            ['text' => ' የትዕዛዝ ሁኔታ | Status', 'callback_data' => 'menu_status'],
+            ['text' => 'አገልግሎቶችና ዋጋ | Services', 'callback_data' => 'menu_services'],
+            ['text' => 'የትዕዛዝ ሁኔታ | Status', 'callback_data' => 'menu_status'],
           ],
           [
-            ['text' => ' ሪሴፕሽን ያግኙ | Reception', 'callback_data' => 'menu_contact'],
-            ['text' => '⭐ አስተያየት ይስጡ | Feedback', 'callback_data' => 'menu_feedback'],
+            ['text' => 'ሪሴፕሽን ያግኙ | Reception', 'callback_data' => 'menu_contact'],
+            ['text' => 'አስተያየት ይስጡ | Feedback', 'callback_data' => 'menu_feedback'],
           ],
           [
-            ['text' => ' ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-            ['text' => ' TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+            ['text' => 'TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
           ],
           [
-            ['text' => ' Facebook', 'url' => 'https://facebook.com/meashclean'],
-            ['text' => ' Instagram', 'url' => 'https://instagram.com/@meashdeepcleaning'],
+            ['text' => 'Facebook', 'url' => 'https://facebook.com/meashclean'],
+            ['text' => 'Instagram', 'url' => 'https://instagram.com/@meashdeepcleaning'],
           ],
           [
-            ['text' => ' ለሌሎች አጋራ | Share', 'switch_inline_query_current_chat' => ''],
+            ['text' => 'ለሌሎች አጋራ | Share', 'switch_inline_query_current_chat' => ''],
           ],
         ],
       ];
@@ -930,19 +930,19 @@ class TelegramController extends Controller
     } elseif ($data === 'menu_status') {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " <b>የትዕዛዝዎን ሁኔታ ለመከታተል:</b>\n\nየትዕዛዝ ቁጥርዎን (ለምሳሌ <code>ORD-2026-0001</code>) ጽፈው ይላኩልን:: የትዕዛዝዎን ዝርዝር እና የቡድኑን ሁኔታ ወዲያውኑ እንልክልዎታለን::",
+        'text' => "<b>የትዕዛዝዎን ሁኔታ ለመከታተል:</b>\n\nየትዕዛዝ ቁጥርዎን (ለምሳሌ <code>ORD-2026-0001</code>) ጽፈው ይላኩልን:: የትዕዛዝዎን ዝርዝር እና የቡድኑን ሁኔታ ወዲያውኑ እንልክልዎታለን::",
         'parse_mode' => 'HTML',
       ]);
     } elseif ($data === 'menu_feedback') {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "⭐ <b>የደንበኞች አስተያየት እና ደረጃ:</b>\n\nየተሰጠዎት የፅዳት አገልግሎት እንዴት ነበር? አስተያየትዎን ወይም ደረጃዎን ከ 1 እስከ 5 ኮከብ በ 0970075509 ይንገሩን:: የእርስዎ እርካታ የኩባንያችን ዋና አላማ ነው!",
+        'text' => "<b>የደንበኞች አስተያየት እና ደረጃ:</b>\n\nየተሰጠዎት የፅዳት አገልግሎት እንዴት ነበር? አስተያየትዎን ወይም ደረጃዎን ከ 1 እስከ 5 ኮከብ በ 0970075509 ይንገሩን:: የእርስዎ እርካታ የኩባንያችን ዋና አላማ ነው!",
         'parse_mode' => 'HTML',
       ]);
     } elseif ($data === 'menu_complaint') {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " <b>ቅሬታ ማሳወቂያ እና አስቸኳይ ክትትል:</b>\n\nበተሰጠው አገልግሎት ላይ ያልተሟላ ነገር ካለ ወይም ቅሬታ ካለዎት ወዲያውኑ በ 0970075509 ይደውሉልን:: የቡድን መሪያችን በ 24 ሰዓት ውስጥ መጥቶ ያለምንም ተጨማሪ ክፍያ ዳግም እንዲፀዳ ይደረጋል!",
+        'text' => "<b>ቅሬታ ማሳወቂያ እና አስቸኳይ ክትትል:</b>\n\nበተሰጠው አገልግሎት ላይ ያልተሟላ ነገር ካለ ወይም ቅሬታ ካለዎት ወዲያውኑ በ 0970075509 ይደውሉልን:: የቡድን መሪያችን በ 24 ሰዓት ውስጥ መጥቶ ያለምንም ተጨማሪ ክፍያ ዳግም እንዲፀዳ ይደረጋል!",
         'parse_mode' => 'HTML',
       ]);
     } elseif ($data === 'menu_start') {
