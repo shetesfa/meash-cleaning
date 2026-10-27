@@ -91,7 +91,7 @@ class TelegramPollCommand extends Command
                                 $this->line("<fg=cyan>[INLINE QUERY]</> from {$user}: \"@{$botUser} {$q}\"");
                                 $controller->handleInlineQuery($update['inline_query']);
                             } elseif (isset($update['message'])) {
-                                $text = $update['message']['text'] ?? (isset($update['message']['web_app_data']) ? '[🌐 MINI APP BOOKING DATA]' : (isset($update['message']['location']) ? ('[📍 LIVE GPS LOCATION: ' . $update['message']['location']['latitude'] . ', ' . $update['message']['location']['longitude'] . ']') : (isset($update['message']['contact']) ? ('[📱 CONTACT: ' . $update['message']['contact']['phone_number'] . ']') : '')));
+                                $text = $update['message']['text'] ?? (isset($update['message']['web_app_data']) ? '[ MINI APP BOOKING DATA]' : (isset($update['message']['location']) ? ('[ LIVE GPS LOCATION: ' . $update['message']['location']['latitude'] . ', ' . $update['message']['location']['longitude'] . ']') : (isset($update['message']['contact']) ? ('[ CONTACT: ' . $update['message']['contact']['phone_number'] . ']') : '')));
                                 $user = $update['message']['from']['first_name'] ?? 'User';
                                 $this->line("<fg=green>[MESSAGE]</> from {$user}: \"{$text}\"");
                                 $controller->handleMessage($update['message']);

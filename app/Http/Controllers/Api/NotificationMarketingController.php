@@ -124,7 +124,7 @@ class NotificationMarketingController extends Controller
                     try {
                         \Illuminate\Support\Facades\Http::timeout(5)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                             'chat_id' => $tgUser->telegram_id,
-                            'text' => "📢 " . $campaign->title . "\n\n" . $campaign->message_text,
+                            'text' => " " . $campaign->title . "\n\n" . $campaign->message_text,
                         ]);
                         $sent++;
                     } catch (\Throwable $e) {

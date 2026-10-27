@@ -35,11 +35,11 @@ class TelegramWebhookCommand extends Command
             }
 
             if ($resp['ok'] ?? false) {
-                $this->info('✅ Webhook successfully set to Render!');
+                $this->info(' Webhook successfully set to Render!');
                 $this->line('The Telegram Bot is now active 24/7 on the cloud.');
                 return 0;
             } else {
-                $this->error('❌ Failed to set webhook: ' . json_encode($resp));
+                $this->error(' Failed to set webhook: ' . json_encode($resp));
                 return 1;
             }
         } elseif ($action === 'delete') {
@@ -55,10 +55,10 @@ class TelegramWebhookCommand extends Command
             }
 
             if ($resp['ok'] ?? false) {
-                $this->info('✅ Webhook deleted! Bot is now ready for Local Polling.');
+                $this->info(' Webhook deleted! Bot is now ready for Local Polling.');
                 return 0;
             } else {
-                $this->error('❌ Failed to delete webhook: ' . json_encode($resp));
+                $this->error(' Failed to delete webhook: ' . json_encode($resp));
                 return 1;
             }
         } else {
@@ -73,20 +73,20 @@ class TelegramWebhookCommand extends Command
             }
 
             if (!($getMe['ok'] ?? false)) {
-                $this->error('❌ Invalid Bot Token: ' . json_encode($getMe));
+                $this->error(' Invalid Bot Token: ' . json_encode($getMe));
                 return 1;
             }
 
             $botUser = $getMe['result']['username'] ?? 'unknown';
-            $this->info("🤖 Bot Username: @{$botUser}");
+            $this->info(" Bot Username: @{$botUser}");
 
             $wh = $info['result'] ?? [];
             $whUrl = $wh['url'] ?? '';
 
             if (empty($whUrl)) {
-                $this->warn('⚡ Webhook Status: INACTIVE (Local Polling mode enabled)');
+                $this->warn(' Webhook Status: INACTIVE (Local Polling mode enabled)');
             } else {
-                $this->info("🌐 Webhook Status: ACTIVE pointing to {$whUrl}");
+                $this->info(" Webhook Status: ACTIVE pointing to {$whUrl}");
                 $this->line("   Pending updates: " . ($wh['pending_update_count'] ?? 0));
                 $this->line("   IP Address: " . ($wh['ip_address'] ?? 'N/A'));
             }
