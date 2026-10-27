@@ -27,15 +27,17 @@ if %errorlevel% neq 0 (
 )
 
 echo [3/3] Opening Meash Cleaning Solution in your browser...
-start http://localhost:8000
-start http://localhost:8000/app
+start http://localhost:8080
+start http://localhost:8080/app
 
 echo.
 echo =====================================================================
-echo  Platform URLs (Powered by Apache Web Server - ZERO ARTISAN):
-echo   - Customer Public Website: http://localhost:8000
-echo   - Internal Business PWA:   http://localhost:8000/app
-echo   - Telegram Mini App:       http://localhost:8000/telegram-miniapp
+echo  Platform URLs:
+echo   - Customer Public Website: http://localhost:8080
+echo   - Internal Business PWA:   http://localhost:8080/app
+echo   - Mobile / LAN Access:     http://10.77.164.165:8080
+echo   - Telegram Bot Link:       https://t.me/meash_cleaning_solution_bot
+echo   - Telegram Mini App:       https://shetesfa.github.io/meash-mini-app/
 echo =====================================================================
 echo.
 echo Website is running normally on Apache!

@@ -4,13 +4,30 @@ namespace App\Console\Commands;
 
 use App\Http\Controllers\Api\TelegramController;
 use Illuminate\Console\Command;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class TelegramPollCommand extends Command
 {
     protected $signature = 'telegram:poll';
     protected $description = 'Polls Telegram updates in real-time for local development (no webhook required)';
+
+    private function tgCall(string $token, string $method, array $params = [], int $timeout = 10): ?array
+    {
+        $url = "https://api.telegram.org/bot{$token}/{$method}";
+        if (!empty($params)) {
+            $url .= '?' . http_build_query($params);
+        }
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        $res = curl_exec($ch);
+        curl_close($ch);
+
+        return $res ? json_decode($res, true) : null;
+    }
 
     public function handle(): void
     {
@@ -29,7 +46,7 @@ class TelegramPollCommand extends Command
         $this->info('Connecting to Telegram Bot API...');
 
         // Verify token with getMe
-        $getMe = Http::withOptions(['verify' => false, 'timeout' => 10])->get("https://api.telegram.org/bot{$token}/getMe")->json();
+        $getMe = $this->tgCall($token, 'getMe', [], 10);
         if (!($getMe['ok'] ?? false)) {
             $this->error('Failed to authenticate with Telegram. Please check your bot token.');
             $this->line(json_encode($getMe));
@@ -40,11 +57,11 @@ class TelegramPollCommand extends Command
         $this->info("Successfully connected as @{$botUser}!");
 
         // If webhook is active, clear it so local getUpdates doesn't conflict
-        $info = Http::withOptions(['verify' => false, 'timeout' => 10])->get("https://api.telegram.org/bot{$token}/getWebhookInfo")->json();
+        $info = $this->tgCall($token, 'getWebhookInfo', [], 10);
         if (!empty($info['result']['url'] ?? '')) {
             $this->warn("Active webhook detected ({$info['result']['url']}).");
             $this->info("Switching to Local Polling mode (clearing webhook)...");
-            Http::withOptions(['verify' => false, 'timeout' => 10])->get("https://api.telegram.org/bot{$token}/deleteWebhook");
+            $this->tgCall($token, 'deleteWebhook', [], 10);
         }
 
         $this->info("Listening for Telegram messages & Inline Queries (@{$botUser} ...)");
@@ -55,13 +72,12 @@ class TelegramPollCommand extends Command
 
         while (true) {
             try {
-                $response = Http::withOptions(['verify' => false])->timeout(35)->get("https://api.telegram.org/bot{$token}/getUpdates", [
+                $data = $this->tgCall($token, 'getUpdates', [
                     'offset' => $offset,
                     'timeout' => 20,
-                ]);
+                ], 25);
 
-                if ($response->ok()) {
-                    $data = $response->json();
+                if ($data && ($data['ok'] ?? false)) {
                     $updates = $data['result'] ?? [];
 
                     foreach ($updates as $update) {
@@ -90,9 +106,10 @@ class TelegramPollCommand extends Command
                     }
                 }
             } catch (\Exception $e) {
-                $this->warn('Polling retry in 3 seconds: ' . $e->getMessage());
-                sleep(3);
+                $this->warn('Polling retry in 2 seconds: ' . $e->getMessage());
+                sleep(2);
             }
+            usleep(200000); // 0.2s pause between polls
         }
     }
 }

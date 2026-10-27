@@ -26,20 +26,22 @@ php artisan migrate --force >nul 2>&1
 php artisan db:seed --force >nul 2>&1
 
 echo [3/4] Opening Meash Cleaning Solution in your browser...
-start http://localhost:8000
-start http://localhost:8000/app
+start http://localhost:8080
+start http://localhost:8080/app
 
-echo [4/4] Starting Laravel Central Server on http://localhost:8000 ...
+echo [4/4] Starting Laravel Central Server on http://localhost:8080 ...
 echo.
 echo =====================================================================
 echo  Platform URLs:
-echo   - Customer Public Website: http://localhost:8000
-echo   - Internal Business PWA:   http://localhost:8000/app
-echo   - Telegram Mini App:       http://localhost:8000/telegram-miniapp
+echo   - Customer Public Website: http://localhost:8080
+echo   - Internal Business PWA:   http://localhost:8080/app
+echo   - Mobile / LAN Access:     http://10.77.164.165:8080
+echo   - Telegram Bot Link:       https://t.me/meash_cleaning_solution_bot
+echo   - Telegram Mini App:       https://shetesfa.github.io/meash-mini-app/
 echo =====================================================================
 echo.
 echo Press Ctrl+C to stop the server at any time.
 echo.
 
-php artisan serve --host=0.0.0.0 --port=8000
+php artisan serve --host=0.0.0.0 --port=8080
 pause
