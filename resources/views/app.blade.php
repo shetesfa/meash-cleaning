@@ -1506,17 +1506,7 @@
                                             <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-400"></i>
                                             <span>ደውል</span>
                                         </a>
-                                        ${(job.latitude && job.longitude) ? `
-                                            <button onclick="openInAppLiveRideMap(${job.id}, ${job.latitude}, ${job.longitude}, '${(job.customer?.full_name || 'ውድ ደንበኛ').replace(/'/g, "\\'")}', '${(job.customer?.phone || '').replace(/'/g, "\\'")}', '${(job.address || job.customer?.address || 'Addis Ababa').replace(/'/g, "\\'")}', 'Team Alpha')" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors">
-                                                <i data-lucide="navigation-2" class="w-3.5 h-3.5 text-cyan-400"></i>
-                                                <span>የቀጥታ ካርታ</span>
-                                            </button>
-                                        ` : `
-                                            <div class="py-2.5 rounded-xl bg-slate-800/40 text-slate-400 border border-slate-700/50 text-[11px] font-medium flex items-center justify-center gap-1 text-center" title="ደንበኛው ካርታ አልመረጠም">
-                                                <i data-lucide="map-pin-off" class="w-3.5 h-3.5 text-slate-500"></i>
-                                                <span>ካርታ የለውም</span>
-                                            </div>
-                                        `}
+                                        <button onclick="openCustomerAddressModal('${(job.address || job.customer?.address || 'አዲስ አበባ').replace(/'/g, "\'")}', '${(job.customer?.full_name || 'ውድ ደንበኛ').replace(/'/g, "\'")}', '${(job.customer?.phone || '').replace(/'/g, "\'")}')\" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i><span>አድራሻ</span></button>
 
                                         ${(job.order_status === 'new' || job.order_status === 'assigned') ? `
                                             <button onclick="cleanerStartJourney(${job.id})" class="py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg col-span-2">
@@ -1524,19 +1514,11 @@
                                                 <span>🚗 ወደ ደንበኛው ጉዞ ጀምር</span>
                                             </button>
                                         ` : (job.order_status === 'on_the_way' ? `
-                                            <button onclick="cleanerSendLiveGps(${job.id})" class="py-2.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5">
-                                                <i data-lucide="map-pin" class="w-3.5 h-3.5 animate-pulse text-emerald-400"></i>
-                                                <span>📍 GPS አድስ</span>
-                                            </button>
                                             <button onclick="cleanerJobAction(${job.id}, 'start')" class="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg">
                                                 <i data-lucide="play" class="w-3.5 h-3.5"></i>
                                                 <span>ስራ ጀምር</span>
                                             </button>
                                         ` : (job.order_status === 'cleaning' ? `
-                                            <button onclick="cleanerSendLiveGps(${job.id})" class="py-2.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 text-xs font-bold flex items-center justify-center gap-1.5">
-                                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i>
-                                                <span>📍 GPS አድስ</span>
-                                            </button>
                                             <button onclick="cleanerJobAction(${job.id}, 'complete')" class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg">
                                                 <i data-lucide="check" class="w-3.5 h-3.5"></i>
                                                 <span>ስራ ጨርስ</span>
@@ -1579,29 +1561,6 @@
 
             await cleanerJobAction(orderId, 'on_the_way', { latitude: lat, longitude: lng });
             alert('🚗 ጉዞ ጀምረዋል! ለደንበኛው የጽዳት ቡድኑ በመንገድ ላይ መሆኑን የሚገልጽ SMS ተልኳል።');
-        }
-
-        async function cleanerSendLiveGps(orderId) {
-            if (!navigator.geolocation) {
-                alert('የስልክዎ/ብሮውዘርዎ ጂፒኤስ (GPS) አልተገኘም።');
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const lat = pos.coords.latitude;
-                const lng = pos.coords.longitude;
-                try {
-                    await apiFetch('/api/teams/update-location', {
-                        method: 'POST',
-                        body: JSON.stringify({ latitude: lat, longitude: lng })
-                    });
-                    alert(`📍 የቀጥታ GPS መገኛዎ ታድሷል! (${lat.toFixed(4)}, ${lng.toFixed(4)}) ደንበኛው በካርታ ላይ እያየዎት ነው።`);
-                } catch(e) {
-                    alert('GPS ማዘመን አልተቻለም: ' + e.message);
-                }
-            }, (err) => {
-                alert('የጂፒኤስ መረጃ ማግኘት አልተቻለም: ' + err.message);
-            }, { enableHighAccuracy: true, timeout: 8000 });
         }
 
         async function cleanerJobAction(orderId, action, extraPayload = {}) {
@@ -4162,10 +4121,7 @@
                                         <strong class="text-white">${o.eth_appointment_date || o.appointment_date} (${o.appointment_time_slot})</strong>
                                         <p class="text-slate-400 text-[11px]">📍 ${o.address || o.customer?.address}</p>
                                         ${(o.latitude && o.longitude) ? `
-                                            <button onclick="closeModal(); openInAppLiveRideMap(${o.id}, ${o.latitude}, ${o.longitude}, '${(o.customer?.full_name || 'ውድ ደንበኛ').replace(/'/g, "\\'")}', '${(o.customer?.phone || '').replace(/'/g, "\\'")}', '${(o.address || o.customer?.address || 'Addis Ababa').replace(/'/g, "\\'")}', '${(o.assigned_team?.team_name || 'የፅዳት ቡድን').replace(/'/g, "\\'")}', ${o.assigned_team?.current_latitude || 9.025}, ${o.assigned_team?.current_longitude || 38.746});" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/90 border border-cyan-500/40 text-cyan-300 font-bold text-xs hover:bg-cyan-900 transition-colors">
-                                                <i data-lucide="navigation-2" class="w-3.5 h-3.5 text-cyan-400"></i>
-                                                <span>የቀጥታ ካርታ እይ (In-App Ride Map)</span>
-                                            </button>
+                                            <div class="mt-2 text-xs text-cyan-400 font-semibold flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span>አድራሻ: ${o.address || o.customer?.address || 'አዲስ አበባ'}</span></div>
                                         ` : `
                                             <div class="mt-2 text-slate-400 text-[11px] flex items-center gap-1">
                                                 <i data-lucide="map-pin-off" class="w-3.5 h-3.5 text-slate-500"></i>
@@ -5100,7 +5056,7 @@
                                     <span class="w-2.5 h-2.5 rounded-full ${isWorking ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}"></span>
                                     <h3 class="text-base font-extrabold text-white">${teamName} — የቀጥታ የመስክ መገኛ</h3>
                                 </div>
-                                <p class="text-xs text-slate-400 mt-0.5">${isWorking ? 'ቡድኑ በስራ ስምሪት ላይ ስለሆነ የቀጥታ ጂፒኤስ (GPS) መገኛ ይታያል።' : 'ቡድኑ ንቁ ስራ ላይ አይደለም (የግል መገኛ ለደህንነት ተደብቋል)።'}</p>
+                                <p class="text-xs text-slate-400 mt-0.5">${isWorking ? 'ቡድኑ በስራ ስምሪት ላይ ስለሆነ ወቅታዊ የስራ ደረጃው ይታያል።' : 'ቡድኑ ንቁ ስራ ላይ አይደለም (የግል መገኛ ለደህንነት ተደብቋል)።'}</p>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
@@ -5140,7 +5096,7 @@
                         </div>
 
                         <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
-                            <span class="text-slate-400">${isWorking ? 'GPS Ping: የቀጥታ መረጃ በየጊዜው ይታደሳል' : 'የደህንነት ሁኔታ: ጥበቃ የተደረገለት'}</span>
+                            <span class="text-slate-400">${isWorking ? 'የስራ ሁኔታ: ንቁ ስምሪት ላይ' : 'የደህንነት ሁኔታ: ጥበቃ የተደረገለት'}</span>
                             <div class="flex gap-2">
                                 <a href="tel:${phone}" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center gap-1.5">
                                     <i data-lucide="phone" class="w-3.5 h-3.5"></i>

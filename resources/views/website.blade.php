@@ -21,7 +21,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
-<!-- Leaflet map removed for zero-error stability -->
 
 <script>
   // Immediate dark mode theme initialization to avoid flash
@@ -342,8 +341,6 @@
           </select>
           <input id="book-address" type="text" placeholder="Street, house no. / ጎዳና፣ የቤት ቁጥር" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
           <input id="book-landmark" type="text" placeholder="Landmark / መለያ ቦታ (ምሳሌ፡ ሆቴል አጠገብ)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm">
-          <input type="hidden" id="book-latitude"><input type="hidden" id="book-longitude">
-          <!-- Direct clear text address - map removed -->
           <div class="flex gap-3">
             <button type="button" onclick="showWizardStep(1)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
             <button type="button" onclick="showWizardStep(3)" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
@@ -556,15 +553,15 @@
   </div>
 </section>
 
-<!-- ================= TRACK ORDER & LIVE GPS CLEANER TRACKING ================= -->
+<!-- ================= TRACK ORDER ================= -->
 <section id="track" class="max-w-2xl mx-auto px-6 py-20 text-center">
   <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-light text-teal-dark text-xs font-bold mb-3">
-    <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
-    <span data-lang-block="am">የቀጥታ የጽዳት ቡድን መገኛ ካርታ (Live GPS)</span>
-    <span data-lang-block="en">Live GPS Cleaner Tracking</span>
+    <i data-lucide="search" class="w-3.5 h-3.5"></i>
+    <span data-lang-block="am">የትዕዛዝ ሁኔታ መከታተያ</span>
+    <span data-lang-block="en">Order Status Tracking</span>
   </div>
-  <h2 class="font-serif font-semibold text-2xl mb-2"><span data-lang-block="am">ትዕዛዝዎን እና የቡድኑን መገኛ ይከታተሉ</span><span data-lang-block="en">Track your order &amp; Cleaner GPS</span></h2>
-  <p class="text-xs text-navy/60 mb-5 max-w-md mx-auto"><span data-lang-block="am">የትዕዛዝ ቁጥርዎን ወይም ስልክዎን በማስገባት የቡድኑን የስራ ደረጃ እና የቀጥታ መገኛ በካርታው ላይ ይመልከቱ</span><span data-lang-block="en">Enter your order ID or phone number to see live status and real-time cleaner location.</span></p>
+  <h2 class="font-serif font-semibold text-2xl mb-2"><span data-lang-block="am">የትዕዛዝዎን ሁኔታ ይከታተሉ</span><span data-lang-block="en">Track Your Order Status</span></h2>
+  <p class="text-xs text-navy/60 mb-5 max-w-md mx-auto"><span data-lang-block="am">የትዕዛዝ ቁጥርዎን ወይም ስልክዎን በማስገባት የትዕዛዝዎን የስራ ሂደት እና የቀጠሮ ቀን ይመልከቱ</span><span data-lang-block="en">Enter your order ID or phone number to see real-time order status and schedule.</span></p>
   <form onsubmit="trackOrder(event)" class="max-w-md mx-auto flex gap-2">
     <input id="track-input" type="text" placeholder="MEASH-000123 or phone" class="flex-1 rounded-md border border-navy/15 px-4 py-3 text-sm focus:outline-none focus:border-teal">
     <button type="submit" id="btn-track-submit" class="bg-navy hover:bg-teal-dark text-white font-bold px-6 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ፈልግ</span><span data-lang-block="en">Track</span></button>
@@ -1043,20 +1040,6 @@
     if (window.lucide) lucide.createIcons();
   }
 
-  function getWebGps(){
-    if (!navigator.geolocation) { alert('GPS not supported on this device.'); return; }
-    navigator.geolocation.getCurrentPosition((pos) => {
-      document.getElementById('book-latitude').value = pos.coords.latitude;
-      document.getElementById('book-longitude').value = pos.coords.longitude;
-      const feedback = document.getElementById('web-gps-feedback');
-      feedback.classList.remove('hidden');
-      feedback.className = 'mb-3 p-3 rounded-md bg-teal-light text-teal-dark text-xs font-bold';
-      feedback.innerText = 'Location captured (±' + Math.round(pos.coords.accuracy) + 'm)';
-    }, () => {
-      alert('Could not get location. Please type your address, or call 0970075509.');
-    }, { enableHighAccuracy: true, timeout: 10000 });
-  }
-
   async function submitBooking(e){
     e.preventDefault();
     const btn = document.getElementById('btn-submit-booking');
@@ -1069,8 +1052,8 @@
       subcity: document.getElementById('book-subcity').value,
       address: document.getElementById('book-address').value + (document.getElementById('book-landmark').value ? ` (${document.getElementById('book-landmark').value})` : ''),
       landmark: document.getElementById('book-landmark').value || null,
-      latitude: document.getElementById('book-latitude').value ? parseFloat(document.getElementById('book-latitude').value) : null,
-      longitude: document.getElementById('book-longitude').value ? parseFloat(document.getElementById('book-longitude').value) : null,
+      latitude: null,
+      longitude: null,
       appointment_date: document.getElementById('book-date').value,
       appointment_time_slot: document.getElementById('book-time-slot').value,
       subscription_plan: plan,
@@ -1112,9 +1095,6 @@
     showWizardStep(1);
   }
 
-  let liveTrackMap = null;
-
-  
   function openWebRescheduleModal(orderNumber) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1226,7 +1206,7 @@
           </div>`;
         }
 
-                let mapHtml = `
+                let addressSummaryHtml = `
           <div class="mt-4 pt-4 border-t border-navy/10 space-y-3">
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 text-xs flex items-center gap-3">
               <div class="w-9 h-9 rounded-xl bg-teal/15 text-teal-dark flex items-center justify-center shrink-0 font-bold text-base">📍</div>
@@ -1348,13 +1328,11 @@
 
             ${subBadge}
             ${teamInfoHtml}
-            ${mapHtml}
+            ${addressSummaryHtml}
             ${rescheduleBtnHtml}
           </div>`;
 
         if (window.lucide) lucide.createIcons();
-
-        // Map removed for 100% stability
 
       } else {
         box.innerHTML = `<div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
