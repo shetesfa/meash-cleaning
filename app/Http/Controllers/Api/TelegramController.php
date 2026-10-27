@@ -349,7 +349,7 @@ class TelegramController extends Controller
         'thumbnail_url' => 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=240&h=240&fit=crop',
         'message_text' => " <b>የመስታወት እና የፊት ለፊት ህንፃ ፅዳት (GLASS & FACADE)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
-          "️ ምንም አይነት የውሃ ነጠብጣብ የሌለው ፍጹም የሚያንጸባርቅ መስታወት!\n" .
+          " ምንም አይነት የውሃ ነጠብጣብ የሌለው ፍጹም የሚያንጸባርቅ መስታወት!\n" .
           "• የውስጥ እና የውጭ መስታወት እጥበት\n" .
           "• የረንዳ መስታወት፣ የሻወር ካቢኔ እና የበር መስታወት\n" .
           "• ለከፍተኛ ህንፃዎች ደህንነታቸው የተጠበቀ ዘመናዊ መወጣጫዎች\n\n" .
@@ -509,6 +509,41 @@ class TelegramController extends Controller
         );
       } catch (\Throwable $th) {
         Log::warning('Could not record telegram user: ' . $th->getMessage());
+      }
+    }
+
+    // Auto-capture phone from contact or text and sync directly to Customer
+    $extractedPhone = null;
+    if ($contact && !empty($contact['phone_number'])) {
+      $extractedPhone = $contact['phone_number'];
+    } elseif (!empty($text) && preg_match('/(09\d{8}|07\d{8}|\+2519\d{8}|\+2517\d{8})/', $text, $m)) {
+      $extractedPhone = $m[1];
+    }
+    if ($extractedPhone) {
+      if (str_starts_with($extractedPhone, '+251')) {
+        $extractedPhone = '0' . substr($extractedPhone, 4);
+      } elseif (str_starts_with($extractedPhone, '251')) {
+        $extractedPhone = '0' . substr($extractedPhone, 3);
+      }
+      if ($tgUser) {
+        $tgUser->phone_number = $extractedPhone;
+        $tgUser->save();
+      }
+      try {
+        $cName = trim(($from['first_name'] ?? '') . ' ' . ($from['last_name'] ?? '')) ?: 'የቴሌግራም ደንበኛ';
+        Customer::updateOrCreate(
+          ['phone' => $extractedPhone],
+          [
+            'customer_code' => Customer::generateNextCode(),
+            'full_name' => $cName,
+            'address' => 'አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ',
+            'telegram_user_id' => (string)$chatId,
+            'marketing_consent' => true,
+            'consent_timestamp' => now(),
+          ]
+        );
+      } catch (\Throwable $th) {
+        Log::warning('Auto customer sync failed: ' . $th->getMessage());
       }
     }
 
@@ -799,7 +834,7 @@ class TelegramController extends Controller
       " <b>አገልግሎት:</b> {$serviceNameAm}\n" .
       " <b>አድራሻ:</b> {$address} ({$subcity})\n" .
       " <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$ethAppt['formatted_am']}) ጠዋት 2:00\n" .
-      " <b>የተገመተ ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
+      " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
       " <b>የማረጋገጫ ኤስኤምኤስ (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
       "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
 
@@ -940,7 +975,7 @@ class TelegramController extends Controller
     $msg = " <b>ቀጠሮ ለመያዝ | Appointment Booking</b>\n\n" .
       "በሜሽ ክሊኒንግ 3 ምቹ የቀጠሮ ማስያዣ መንገዶች አሉ:\n\n" .
       "1. <b>በቦቱ ደረጃ-በደረጃ ቀጠሮ ማስያዝ (Interactive Wizard):</b>\n" .
-      "  አገልግሎት፣ ስም፣ ስልክና የቀጥታ <b>GPS ካርታ (Live Map Pin)</b> በመላክ በ 1 ደቂቃ ውስጥ ይመዝገቡ!\n\n" .
+      "  አገልግሎት፣ ስም፣ ስልክና አድራሻዎን በማስገባት በ 1 ደቂቃ ውስጥ ይመዝገቡ!\n\n" .
       "2. <b>በቴሌግራም ሚኒ አፕ (Telegram Mini App):</b>\n" .
       "  ቀጥታ በስማርት ፎርም እቃዎችን መርጠው ዋጋውን እያዩ ማዘዝ ይችላሉ::\n\n" .
       "3. <b>በስልክ በቀጥታ ለማዘዝ:</b>\n" .
@@ -1067,7 +1102,7 @@ class TelegramController extends Controller
 
     $postponeBanner = '';
     if ($isPostponed) {
-      $postponeBanner = "️ <b>ማሳሰቢያ፡ የዚህ ትዕዛዝ ቀጠሮ ተላልፏል! (Rescheduled)</b>\n" .
+      $postponeBanner = " <b>ማሳሰቢያ፡ የዚህ ትዕዛዝ ቀጠሮ ተላልፏል! (Rescheduled)</b>\n" .
         " <b>አዲሱ የቀጠሮ ቀን:</b> <b>{$apptDateStr} ({$ethDateStr})</b>\n\n";
     }
 
@@ -1255,7 +1290,7 @@ class TelegramController extends Controller
           " <b>የትዕዛዝ ቁጥር:</b> <code>{$order->order_number}</code>\n" .
           " <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$order->appointment_time_slot}){$planTxt}\n" .
           " <b>አድራሻ:</b> {$order->address}\n" .
-          " <b>የተገመተ ጠቅላላ ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
+          " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
           "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ",
         'parse_mode' => 'HTML',
       ]);
@@ -1616,20 +1651,35 @@ class TelegramController extends Controller
         }
 
         $payload['customer_phone'] = $phone;
+        $tgUser->phone_number = $phone;
         $tgUser->payload_cache = $payload;
         $tgUser->bot_state = 'booking_location';
         $tgUser->save();
+
+        // ደንበኛውን ወዲያውኑ ወደ Customer እንመዝግበው!
+        try {
+          $custName = $payload['customer_name'] ?? trim(($tgUser->first_name ?? '') . ' ' . ($tgUser->last_name ?? '')) ?: 'የቴሌግራም ደንበኛ';
+          Customer::updateOrCreate(
+            ['phone' => $phone],
+            [
+              'customer_code' => Customer::generateNextCode(),
+              'full_name' => $custName,
+              'address' => 'አዲስ አበባ',
+              'telegram_user_id' => (string)$chatId,
+              'marketing_consent' => true,
+              'consent_timestamp' => now(),
+            ]
+          );
+        } catch (\Throwable $th) {
+          Log::warning("Could not auto-register Customer from phone prompt: " . $th->getMessage());
+        }
+
         $this->promptForLocation($chatId, $payload);
         return true;
 
       case 'booking_location':
         if ($location) {
-          // LIVE GPS PIN
-          $lat = $location['latitude'];
-          $lng = $location['longitude'];
-          $payload['latitude'] = $lat;
-          $payload['longitude'] = $lng;
-          $payload['address'] = "የቀጥታ GPS ካርታ መገኛ (Live Location Pin)";
+          $payload['address'] = "አዲስ አበባ";
           $tgUser->payload_cache = $payload;
           $tgUser->bot_state = 'booking_date';
           $tgUser->save();
@@ -1946,11 +1996,6 @@ class TelegramController extends Controller
     if ($subcity && !str_contains($address, $subcity)) {
       $locLine .= " ({$subcity})";
     }
-    if ($lat && $lng) {
-      // GPS line removed
-    } else {
-      $locLine .= "\n <b>ካርታ:</b> አልተመረጠም (የጽሁፍ አድራሻ ብቻ)";
-    }
 
     $msg = " <b>የትዕዛዝዎ ማጠቃለያ (Booking Summary):</b>\n\n" .
       " <b>ደንበኛ:</b> {$name}\n" .
@@ -1959,8 +2004,8 @@ class TelegramController extends Controller
       "{$locLine}\n" .
       " <b>የቀጠሮ ቀን:</b> {$apptDate} ({$ethDate['formatted_am']})\n" .
       " <b>የቀጠሮ ሰዓት:</b> {$timeSlotAm}\n" .
-      " <b>የተገመተ ጠቅላላ ዋጋ:</b> " . number_format($estTotal, 2) . " ብር\n\n" .
-      "ትዕዛዙ ትክክል ከሆነ ከታች ያለውን <b>' ትዕዛዙን አረጋግጥ'</b> የሚለውን ቁልፍ ይጫኑ:";
+      " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($estTotal, 2) . " ብር\n\n" .
+      "ትዕዛዙ ትክክል ከሆነ ከታች ያለውን <b>'ትዕዛዙን አረጋግጥ'</b> የሚለውን ቁልፍ ይጫኑ:";
 
     $buttons = [
       'inline_keyboard' => [
@@ -2096,9 +2141,8 @@ class TelegramController extends Controller
       " <b>ስልክ:</b> {$phone}\n" .
       " <b>አገልግሎት:</b> {$svcName}\n" .
       " <b>አድራሻ:</b> {$address}" . ($subcity ? " ({$subcity})" : "") . "\n" .
-      ($lat && $lng ? " <b>የቀጥታ GPS ካርታ:</b> ተያይዟል \n" : "") .
       " <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$ethAppt['formatted_am']}) {$timeSlotAm}\n" .
-      " <b>የተገመተ ጠቅላላ ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
+      " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
       " <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
       "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
 
@@ -2141,7 +2185,7 @@ class TelegramController extends Controller
     if (!$data || !is_array($data)) {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "️ <b>የላኩት መረጃ በትክክል አልደረሰም::</b> እባክዎ እንደገና ይሞክሩ::",
+        'text' => " <b>የላኩት መረጃ በትክክል አልደረሰም::</b> እባክዎ እንደገና ይሞክሩ::",
         'parse_mode' => 'HTML',
       ]);
       return;
@@ -2161,7 +2205,7 @@ class TelegramController extends Controller
     if (empty($phone)) {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "️ <b>እባክዎ ትክክለኛ ስልክ ቁጥር ያስገቡ::</b>",
+        'text' => " <b>እባክዎ ትክክለኛ ስልክ ቁጥር ያስገቡ::</b>",
         'parse_mode' => 'HTML',
       ]);
       return;
@@ -2283,9 +2327,8 @@ class TelegramController extends Controller
       " <b>ደንበኛ:</b> {$customerName}\n" .
       " <b>ስልክ:</b> {$phone}\n" .
       " <b>አድራሻ:</b> {$address}" . ($subcity ? " ({$subcity})" : "") . "\n" .
-      ($lat && $lng ? " <b>የቀጥታ GPS ካርታ:</b> ተያይዟል \n" : "") .
       " <b>የቀጠሮ ቀን:</b> " . (is_string($order->appointment_date) ? $order->appointment_date : $order->appointment_date->format('Y-m-d')) . " ({$ethAppt['formatted_am']}) {$timeSlot}\n" .
-      " <b>የተገመተ ጠቅላላ ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
+      " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
       " <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
       "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
 
@@ -2353,7 +2396,7 @@ class TelegramController extends Controller
       $ethDateStr = $newDate;
     }
 
-    $msg = "️ <b>ውድ {$name}፣ የቀጠሮ ማስተላለፍ ማሳወቂያ!</b>\n" .
+    $msg = " <b>ውድ {$name}፣ የቀጠሮ ማስተላለፍ ማሳወቂያ!</b>\n" .
       "━━━━━━━━━━━━━━━━━━━━\n" .
       " <b>የትዕዛዝ ቁጥር:</b> <code>{$orderNo}</code>\n" .
       " <b>የተላለፈበት ምክንያት:</b> {$reason}\n" .

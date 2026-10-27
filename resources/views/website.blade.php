@@ -36,7 +36,7 @@
   'priceRange' => 'ETB 50 - ETB 6000',
   'address' => [
     '@type' => 'PostalAddress',
-    'streetAddress' => 'Bole Medhanealem',
+    'streetAddress' => 'Ayat, in front of Tesfu Mall',
     'addressLocality' => 'Addis Ababa',
     'addressRegion' => 'Addis Ababa',
     'postalCode' => '1000',
@@ -44,8 +44,8 @@
   ],
   'geo' => [
     '@type' => 'GeoCoordinates',
-    'latitude' => 9.0003,
-    'longitude' => 38.7818
+    'latitude' => 9.0227,
+    'longitude' => 38.8681
   ],
   'sameAs' => [
     'https://t.me/meashdeepcleaning',
@@ -339,7 +339,7 @@
           <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ዋና መስሪያ ቤት አድራሻ</span><span data-lang-block="en">Head Office Location</span></div>
           <div class="text-sm font-semibold flex items-center gap-2">
             <i data-lucide="map-pin" class="w-4 h-4 text-teal"></i>
-            <span>ቦሌ መድኃኔዓለም፣ አዲስ አበባ፣ ኢትዮጵያ</span>
+            <span>አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ፣ ኢትዮጵያ</span>
           </div>
         </div>
 
@@ -1181,7 +1181,7 @@
       </h2>
       <p class="text-navy/70 dark:text-slate-300 text-sm sm:text-base mt-2">
         <span data-lang-block="am">ለማንኛውም ጥያቄ፣ የቀጠሮ ማረጋገጫ ወይም የድርጅት ጽዳት ውይይት በማንኛውም ሰዓት ይደውሉልን።</span>
-        <span data-lang-block="en">Call our direct lines, chat with us on Telegram, or visit our headquarters in Bole, Addis Ababa.</span>
+        <span data-lang-block="en">Call our direct lines, chat with us on Telegram, or visit our headquarters in Ayat, in front of Tesfu Mall, Addis Ababa.</span>
       </p>
     </div>
 
@@ -1215,7 +1215,7 @@
             <i data-lucide="map-pin" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
             <div>
               <h5 class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">ዋና ቢሮ አድራሻ</span><span data-lang-block="en">Main Office Address</span></h5>
-              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">ቦሌ መድኃኔዓለም ቤተክርስቲያን አካባቢ፣ አዲስ አበባ፣ ኢትዮጵያ (Bole Medhanealem, Addis Ababa)</p>
+              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">አያት፣ ተስፉ ሞል ፊት ለፊት ሕንፃ ላይ፣ አዲስ አበባ፣ ኢትዮጵያ (Ayat, in front of Tesfu Mall, Addis Ababa)</p>
             </div>
           </div>
           <div class="flex items-start gap-3">
@@ -1251,8 +1251,8 @@
       <!-- Google Maps Embed Container -->
       <div class="rounded-3xl overflow-hidden border border-navy/10 shadow-lg h-[460px] lg:h-[580px] bg-slate-100 dark:bg-slate-800 relative">
         <iframe
-          title="Meash Cleaning Location in Bole Addis Ababa"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15761.73719047913!2d38.7818784!3d9.0003056!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b85043d92f5d7%3A0xe54d7e7c80d85ef4!2sBole%20Medhanealem%20Cathedral!5e0!3m2!1sen!2set!4v1700000000000!5m2!1sen!2set"
+          title="Meash Cleaning Location in Ayat Addis Ababa"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15760.329864205844!2d38.861111!3d9.022778!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b910055555555%3A0x1111111111111111!2sAyat%20Addis%20Ababa!5e0!3m2!1sen!2set!4v1700000000000!5m2!1sen!2set"
           width="100%"
           height="100%"
           style="border:0;"
@@ -1269,10 +1269,10 @@
             </div>
             <div>
               <h5 class="font-serif font-bold text-sm">Meash Cleaning HQ</h5>
-              <p class="text-xs text-navy/60 dark:text-slate-400">Bole Medhanealem, Addis Ababa</p>
+              <p class="text-xs text-navy/60 dark:text-slate-400">Ayat, in front of Tesfu Mall, Addis Ababa</p>
             </div>
           </div>
-          <a href="https://maps.google.com/?q=Bole+Medhanealem+Addis+Ababa" target="_blank" class="text-xs font-bold bg-navy hover:bg-teal text-white px-3 py-1.5 rounded-lg transition shrink-0">
+          <a href="https://maps.google.com/?q=Ayat+Tesfu+Mall+Addis+Ababa" target="_blank" class="text-xs font-bold bg-navy hover:bg-teal text-white px-3 py-1.5 rounded-lg transition shrink-0">
             Open Map
           </a>
         </div>
@@ -1334,7 +1334,7 @@
         <li><a href="https://www.tiktok.com/@meashcleaningsolition" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="video" class="w-3.5 h-3.5 text-teal"></i> TikTok (@meashcleaningsolition)</a></li>
       </ul>
       <div class="mt-4 pt-4 border-t border-white/10 text-xs text-white/50">
-        Bole Medhanealem, Addis Ababa, Ethiopia
+        Ayat, in front of Tesfu Mall, Addis Ababa, Ethiopia
       </div>
     </div>
   </div>

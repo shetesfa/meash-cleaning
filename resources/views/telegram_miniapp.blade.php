@@ -107,7 +107,7 @@
 
       <!-- Total Preview -->
       <div class="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/80 to-blue-950/80 border border-cyan-500/40 flex justify-between items-center shadow-md">
-        <span class="text-xs font-semibold text-slate-300" id="lbl-total-est">የተገመተ ጠቅላላ ዋጋ:</span>
+        <span class="text-xs font-semibold text-slate-300" id="lbl-total-est">ጠቅላላ ክፍያ / ዋጋ:</span>
         <span id="tma-total-preview" class="text-base font-extrabold text-cyan-300">1,750.00 ብር</span>
       </div>
 
@@ -145,7 +145,7 @@
           <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" id="lbl-slot">የቀጠሮ ሰዓት</label>
           <select id="tma-slot" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500">
             <option value="morning" id="opt-morning"> ጠዋት (2:00–6:00 ጠዋቱ ETH)</option>
-            <option value="afternoon" id="opt-afternoon">️ ከሰዓት (7:00–11:00 ከሰዓቱ ETH)</option>
+            <option value="afternoon" id="opt-afternoon"> ከሰዓት (7:00–11:00 ከሰዓቱ ETH)</option>
           </select>
         </div>
       </div>
@@ -236,7 +236,7 @@
         addressPlaceholder: 'የሰፈር ስም፣ ልዩ መለያ እና የቤት ቁጥር...',
         namePlaceholder: 'ሙሉ ስምዎ',
         phonePlaceholder: 'ስልክ ቁጥር (ለምሳሌ 0911223344)',
-        totalEst: 'የተገመተ ጠቅላላ ዋጋ:',
+        totalEst: 'ጠቅላላ ክፍያ / ዋጋ:',
         submitBtn: 'ቀጠሮውን አረጋግጥ (Submit Booking)',
         submitting: 'በመመዝገብ ላይ...',
         successTitle: ' ቀጠሮዎ በተሳካ ሁኔታ ተመዝግቧል!',
@@ -476,19 +476,19 @@
           
           if (acc > 1000) {
             alertBox.className = 'mb-2 p-2.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-amber-200 text-[11px] flex items-center justify-between';
-            document.getElementById('tma-gps-status').innerHTML = `️ በኮምፒውተር/IP የተገመተ መገኛ (±${(acc/1000).toFixed(1)}km): እባክዎ ሰፈርዎን ይምረጡ`;
+            document.getElementById('tma-gps-status').innerHTML = `በኔትወርክ የተገኘ መገኛ (±${(acc/1000).toFixed(1)}km): እባክዎ ሰፈርዎን ይምረጡ`;
           } else {
             alertBox.className = 'mb-2 p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-[11px] flex items-center justify-between';
-            document.getElementById('tma-gps-status').innerHTML = ` ትክክለኛ የሞባይል GPS ተገኝቷል (±${acc}m)`;
+            document.getElementById('tma-gps-status').innerHTML = `ትክክለኛ የሞባይል GPS ተገኝቷል (±${acc}m)`;
           }
 
           document.getElementById('tma-gps-link').href = `https://www.google.com/maps?q=${lat},${lng}`;
-          btn.innerText = ' ተገኝቷል';
+          btn.innerText = 'ተገኝቷል';
           lucide.createIcons();
         },
         (err) => {
-          btn.innerText = ' የቀጥታ GPS ያዝ';
-          alert('ካርታውን ማግኘት አልተቻለም:: አድራሻዎን ከታች ይጻፉ:: (Could not access location. Please type your address).');
+          btn.innerText = 'አድራሻ ይጻፉ';
+          alert('አድራሻዎን ከታች ባለው ሳጥን ውስጥ ይጻፉ:: (Please type your address).');
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );

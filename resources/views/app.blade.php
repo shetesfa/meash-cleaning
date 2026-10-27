@@ -4260,7 +4260,7 @@
 
                         <div>
                             <label class="text-xs font-bold text-slate-300 block mb-1">የቢሮ አድራሻ በአማርኛ (Office Location AM)</label>
-                            <input type="text" id="set-address-am" value="${s.company_address_am || 'ቦሌ መድኃኔዓለም፣ አዲስ አበባ፣ ኢትዮጵያ'}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                            <input type="text" id="set-address-am" value="${s.company_address_am || 'አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ፣ ኢትዮጵያ'}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                         </div>
 
                         <div class="grid sm:grid-cols-2 gap-4">
@@ -5783,7 +5783,7 @@
                                 </div>
                             </div>
                             <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
-                 <strong>አድራሻ እና የስራ ክልል፡</strong> አዲስ አበባ (ቦሌ፣ ቂርቆስ፣ የካ፣ አራዳ እና አጠቃላይ የጽዳት ክልሎች)
+                                <strong>አድራሻ እና የስራ ክልል፡</strong> አዲስ አበባ (አያት ተስፉ ሞል ፊት ለፊት እና አጠቃላይ የጽዳት ክልሎች)
                             </div>
                         </div>
 
