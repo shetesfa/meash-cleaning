@@ -666,7 +666,7 @@
             <span class="bg-emerald-600/90 backdrop-blur px-2.5 py-1 rounded">AFTER: 100% ንጹህ</span>
           </div>
           <div>
-            <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">Bole Medhanealem — Villa</span>
+            <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">Ayat — Villa</span>
           </div>
         </div>
         <h4 class="font-serif font-bold text-lg text-navy dark:text-white">

@@ -1761,9 +1761,9 @@ class TelegramController extends Controller
     $name = $payload['customer_name'] ?? 'ደንበኛ';
     $phone = $payload['customer_phone'] ?? '';
 
-    $msg = " <b>ደረጃ 4/5፡ አድራሻዎን ይምረጡ ወይም ይጻፉ (Address):</b>\n\n" .
-      " ደንበኛ: <b>{$name}</b> ( {$phone})\n\n" .
-      "ፅዳቱ የሚከናወንበትን ክፍለ ከተማ ከስር ካሉት ቁልፎች ይምረጡ ወይም የሰፈር/ጎዳና አድራሻዎን ጽፈው ይላኩልን (ለምሳሌ፡ <i>ቦሌ መድኃኔዓለም፣ ህንጻ ቁጥር 3</i>)::";
+    $msg = "<b>ደረጃ 4/5፡ አድራሻዎን ይምረጡ ወይም ይጻፉ (Address):</b>\n\n" .
+      "ደንበኛ: <b>{$name}</b> ({$phone})\n\n" .
+      "ፅዳቱ የሚከናወንበትን ክፍለ ከተማ ከስር ካሉት ቁልፎች ይምረጡ ወይም የሰፈር/ጎዳና አድራሻዎን ጽፈው ይላኩልን (ለምሳሌ፡ <i>አያት ተስፉ ሞል ፊት ለፊት</i>)::";
 
     $replyKeyboard = [
       'keyboard' => [
