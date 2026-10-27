@@ -12,13 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('feedbacks', function (Blueprint $table) {
-            $table->boolean('is_approved')->default(false)->after('source')->index();
+            if (!Schema::hasColumn('feedbacks', 'is_approved')) {
+                $table->boolean('is_approved')->default(false)->after('source')->index();
+            }
         });
 
         // Auto approve existing high rating feedbacks for seed display
-        \Illuminate\Support\Facades\DB::table('feedbacks')
-            ->where('rating', '>=', 4)
-            ->update(['is_approved' => true]);
+        if (Schema::hasColumn('feedbacks', 'is_approved')) {
+            \Illuminate\Support\Facades\DB::table('feedbacks')
+                ->where('rating', '>=', 4)
+                ->update(['is_approved' => true]);
+        }
     }
 
     /**
