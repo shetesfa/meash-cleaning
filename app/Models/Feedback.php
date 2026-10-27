@@ -18,10 +18,12 @@ class Feedback extends Model
         'rating',
         'comment',
         'source',
+        'is_approved',
     ];
 
     protected $casts = [
         'rating' => 'integer',
+        'is_approved' => 'boolean',
     ];
 
     public function order(): BelongsTo

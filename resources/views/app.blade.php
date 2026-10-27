@@ -584,6 +584,7 @@
                 { id: 'finance', label_en: 'Finance & Expenses', label_am: 'ፋይናንስ እና ወጪዎች', icon: 'wallet' },
                 { id: 'care', label_en: 'Customer Care', label_am: 'የደንበኞች እንክብካቤ', icon: 'heart-handshake' },
                 { id: 'campaigns', label_en: 'ማስታወቂያ እና ፕሮሞሽን', label_am: 'የማስታወቂያ ዘመቻ', icon: 'send' },
+                { id: 'website_cms', label_en: 'Website & CMS', label_am: 'የድረ-ገጽ ማስተዳደሪያ', icon: 'globe' },
                 { id: 'settings', label_en: 'System Settings', label_am: 'የሲስተም ቅንብሮች', icon: 'settings' },
             ],
             reception: [
@@ -594,6 +595,7 @@
                 { id: 'customers', label_en: 'Customer CRM', label_am: 'የደንበኞች መረጃ', icon: 'users' },
                 { id: 'care', label_en: 'Follow-up & ክፍት ቅሬታዎች', label_am: 'ክትትል እና ቅሬታዎች', icon: 'phone-call' },
                 { id: 'finance', label_en: 'Payments & Revenue', label_am: 'ክፍያዎች እና ገቢ', icon: 'credit-card' },
+                { id: 'website_cms', label_en: 'Website CMS', label_am: 'የድረ-ገጽ ማስተዳደሪያ', icon: 'globe' },
                 { id: 'settings', label_en: 'System Settings', label_am: 'የሲስተም ቅንብሮች (SMS)', icon: 'settings' },
             ],
             cleaner: [
@@ -933,6 +935,8 @@
                 renderCampaignsModule(viewport);
             } else if (activeTab === 'settings') {
                 renderSettingsModule(viewport);
+            } else if (activeTab === 'website_cms') {
+                renderWebsiteCmsModule(viewport);
             } else {
                 renderOwnerDashboard(viewport);
             }
@@ -3819,6 +3823,637 @@
             const qr = document.getElementById('qr-sim-sms');
             if (qr) {
                 qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(`SMSTO:${joinedPhones}:${msg}`)}`;
+            }
+        }
+        // ==========================================
+        // 10c. WEBSITE & CMS CONTENT MANAGER (NEW)
+        // ==========================================
+        let currentCmsSubTab = 'services';
+        let cmsServicesData = [];
+        let cmsSettingsData = {};
+        let cmsFeedbacksData = [];
+
+        async function renderWebsiteCmsModule(container) {
+            container.innerHTML = `
+                <div class="max-w-7xl mx-auto space-y-6">
+                    <!-- Header -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-cyan-400 uppercase tracking-wider">የድረ-ገጽ ማስተዳደሪያ</span>
+                                <span class="text-[10px] bg-cyan-950 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-bold">Live CMS</span>
+                            </div>
+                            <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">የድረ-ገጽ ይዘት፣ ዋጋ እና ቅንብሮች (Website CMS)</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">የድርጅቱን ስልኮች፣ መፈክር፣ የአገልግሎት ዋጋዎችን እና የደንበኛ ምስክርነቶችን በቀላሉ ያስተዳድሩ።</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="/" target="_blank" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-xs rounded-xl transition border border-slate-700 flex items-center gap-2">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                <span>ድረ-ገጹን ጎብኝ (Visit Live Site)</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- CMS Sub-navigation Tabs -->
+                    <div class="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto text-xs font-bold">
+                        <button type="button" onclick="switchCmsTab('services')" id="btn-cms-services" class="px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-2 ${currentCmsSubTab === 'services' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/20' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">
+                            <i data-lucide="tag" class="w-3.5 h-3.5"></i>
+                            <span>1. አገልግሎቶች እና ዋጋ (Services &amp; Pricing)</span>
+                        </button>
+                        <button type="button" onclick="switchCmsTab('contact')" id="btn-cms-contact" class="px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-2 ${currentCmsSubTab === 'contact' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/20' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">
+                            <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                            <span>2. ስልክ፣ አድራሻ እና መፈክር (Contact &amp; Slogan)</span>
+                        </button>
+                        <button type="button" onclick="switchCmsTab('reviews')" id="btn-cms-reviews" class="px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-2 ${currentCmsSubTab === 'reviews' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/20' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">
+                            <i data-lucide="star" class="w-3.5 h-3.5"></i>
+                            <span>3. የደንበኛ አስተያየቶች (Testimonials)</span>
+                        </button>
+                        <button type="button" onclick="switchCmsTab('about')" id="btn-cms-about" class="px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-2 ${currentCmsSubTab === 'about' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/20' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            <span>4. ስለ ድርጅቱ ጽሁፍ (About Us Text)</span>
+                        </button>
+                    </div>
+
+                    <!-- CMS Tab Content Container -->
+                    <div id="cms-tab-content" class="min-h-[400px]">
+                        <div class="p-12 text-center text-slate-500 text-xs">መረጃዎች በመጫን ላይ ናቸው...</div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+            loadCmsTabData();
+        }
+
+        async function switchCmsTab(tab) {
+            currentCmsSubTab = tab;
+            ['services', 'contact', 'reviews', 'about'].forEach(t => {
+                const btn = document.getElementById(`btn-cms-${t}`);
+                if (btn) {
+                    if (t === tab) {
+                        btn.className = 'px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-2 bg-cyan-600 text-white shadow-lg shadow-cyan-600/20';
+                    } else {
+                        btn.className = 'px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-2 bg-slate-900 text-slate-400 hover:text-white border border-slate-800';
+                    }
+                }
+            });
+            loadCmsTabData();
+        }
+
+        async function loadCmsTabData() {
+            const container = document.getElementById('cms-tab-content');
+            if (!container) return;
+
+            if (currentCmsSubTab === 'services') {
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">አገልግሎቶችን በመጫን ላይ...</div>`;
+                try {
+                    const res = await apiFetch('/api/services/all');
+                    cmsServicesData = await res.json();
+                    renderCmsServicesTab(container);
+                } catch (e) {
+                    container.innerHTML = `<div class="p-6 bg-red-950/40 border border-red-500/30 rounded-2xl text-red-400 text-xs">አገልግሎቶችን መጫን አልተቻለም፡ ${e.message}</div>`;
+                }
+            } else if (currentCmsSubTab === 'contact') {
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">ቅንብሮችን በመጫን ላይ...</div>`;
+                try {
+                    const res = await apiFetch('/api/admin/website/settings');
+                    const d = await res.json();
+                    cmsSettingsData = d.settings || {};
+                    renderCmsContactTab(container);
+                } catch (e) {
+                    container.innerHTML = `<div class="p-6 bg-red-950/40 border border-red-500/30 rounded-2xl text-red-400 text-xs">ቅንብሮችን መጫን አልተቻለም፡ ${e.message}</div>`;
+                }
+            } else if (currentCmsSubTab === 'reviews') {
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">አስተያየቶችን በመጫን ላይ...</div>`;
+                try {
+                    const res = await apiFetch('/api/admin/website/feedbacks');
+                    const d = await res.json();
+                    cmsFeedbacksData = d.data || d || [];
+                    renderCmsReviewsTab(container);
+                } catch (e) {
+                    container.innerHTML = `<div class="p-6 bg-red-950/40 border border-red-500/30 rounded-2xl text-red-400 text-xs">አስተያየቶችን መጫን አልተቻለም፡ ${e.message}</div>`;
+                }
+            } else if (currentCmsSubTab === 'about') {
+                if (!Object.keys(cmsSettingsData).length) {
+                    try {
+                        const res = await apiFetch('/api/admin/website/settings');
+                        const d = await res.json();
+                        cmsSettingsData = d.settings || {};
+                    } catch (_) {}
+                }
+                renderCmsAboutTab(container);
+            }
+        }
+
+        // Sub-tab 1: Services & Pricing
+        function renderCmsServicesTab(container) {
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">የአገልግሎቶች ዝርዝር እና ዋጋዎች (Live Services &amp; Pricing)</h3>
+                            <p class="text-xs text-slate-400">እዚህ የተስተካከለ ማንኛውም ዋጋ ወይም ስም ወዲያውኑ በዋናው ድረ-ገጽ ላይ ይንጸባረቃል።</p>
+                        </div>
+                        <button type="button" onclick="openAddServiceModal()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-cyan-600/20 cursor-pointer">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>አዲስ አገልግሎት ጨምር</span>
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-xl">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-800/80 text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-800">
+                                <tr>
+                                    <th class="p-3.5">መለያ / ኮድ</th>
+                                    <th class="p-3.5">የአገልግሎት ስም (አማርኛ / EN)</th>
+                                    <th class="p-3.5">መነሻ ዋጋ (ETB)</th>
+                                    <th class="p-3.5">መለኪያ አሃድ</th>
+                                    <th class="p-3.5">ሁኔታ (Status)</th>
+                                    <th class="p-3.5 text-right">ድርጊት (Actions)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800 text-slate-300">
+                                ${cmsServicesData.map(s => `
+                                    <tr class="hover:bg-slate-800/50 transition">
+                                        <td class="p-3.5 font-mono text-cyan-400 font-bold">${s.code}</td>
+                                        <td class="p-3.5">
+                                            <div class="font-bold text-white text-sm">${s.name_am || s.name_en}</div>
+                                            <div class="text-[11px] text-slate-400">${s.name_en}</div>
+                                        </td>
+                                        <td class="p-3.5">
+                                            <div class="flex items-center gap-1.5">
+                                                <input type="number" id="cms-svc-price-${s.id}" value="${parseFloat(s.base_price)}" class="w-24 px-2 py-1 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono font-bold text-xs focus:border-cyan-400">
+                                                <button type="button" onclick="saveServicePrice(${s.id})" title="ዋጋ መዝግብ" class="p-1 bg-cyan-600/30 hover:bg-cyan-600 text-cyan-300 hover:text-white rounded-md transition cursor-pointer">
+                                                    <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="p-3.5 font-semibold text-slate-400">${s.unit}</td>
+                                        <td class="p-3.5">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${s.is_active ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/30' : 'bg-red-950 text-red-400 border border-red-500/30'}">
+                                                ${s.is_active ? '● ንቁ (Active)' : '○ የጠፋ (Hidden)'}
+                                            </span>
+                                        </td>
+                                        <td class="p-3.5 text-right">
+                                            <button type="button" onclick="toggleServiceActiveState(${s.id}, ${s.is_active ? 0 : 1})" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border transition ${s.is_active ? 'border-amber-500/30 text-amber-400 hover:bg-amber-950' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-950'} cursor-pointer">
+                                                ${s.is_active ? 'ደብቅ' : 'አሳይ'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function saveServicePrice(id) {
+            const input = document.getElementById(`cms-svc-price-${id}`);
+            if (!input) return;
+            const newPrice = parseFloat(input.value);
+            if (isNaN(newPrice) || newPrice < 0) {
+                alert('እባክዎ ትክክለኛ የዋጋ መጠን ያስገቡ።');
+                return;
+            }
+
+            try {
+                const res = await apiFetch(`/api/services/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ base_price: newPrice })
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    alert('የአገልግሎት ዋጋው በተሳካ ሁኔታ ተዘምኗል!');
+                    loadCmsTabData();
+                } else {
+                    alert('ስህተት፡ ' + (d.message || 'ዋጋ ማስተካከል አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የግንኙነት ችግር፡ ' + err.message);
+            }
+        }
+
+        async function toggleServiceActiveState(id, newState) {
+            try {
+                const res = await apiFetch(`/api/services/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_active: Boolean(newState) })
+                });
+                if (res.ok) {
+                    loadCmsTabData();
+                }
+            } catch (err) {
+                alert('ስህተት፡ ' + err.message);
+            }
+        }
+
+        function openAddServiceModal() {
+            const modalHtml = `
+                <div id="cms-add-service-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 text-white">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <h3 class="font-bold text-base flex items-center gap-2">
+                                <i data-lucide="plus-circle" class="w-4 h-4 text-cyan-400"></i>
+                                <span>አዲስ አገልግሎት መመዝገቢያ</span>
+                            </h3>
+                            <button type="button" onclick="document.getElementById('cms-add-service-modal').remove()" class="text-slate-400 hover:text-white">✕</button>
+                        </div>
+                        <form onsubmit="submitNewService(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="text-slate-400 block mb-1">መለያ ኮድ (Unique Code e.g. tile_clean)</label>
+                                <input id="new-svc-code" type="text" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 block mb-1">የአማርኛ ስም (Amharic Name)</label>
+                                <input id="new-svc-name-am" type="text" required placeholder="የወለል ማሽን እጥበት" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 block mb-1">የእንግሊዝኛ ስም (English Name)</label>
+                                <input id="new-svc-name-en" type="text" required placeholder="Floor Rotary Scrubbing" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-slate-400 block mb-1">መነሻ ዋጋ (Base Price ETB)</label>
+                                    <input id="new-svc-price" type="number" required min="0" step="0.5" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                                </div>
+                                <div>
+                                    <label class="text-slate-400 block mb-1">መለኪያ አሃድ (Unit e.g. seat, sqm)</label>
+                                    <input id="new-svc-unit" type="text" required value="service" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-slate-400 block mb-1">አጭር መግለጫ (Description)</label>
+                                <textarea id="new-svc-desc" rows="2" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"></textarea>
+                            </div>
+                            <div class="pt-2 flex justify-end gap-2">
+                                <button type="button" onclick="document.getElementById('cms-add-service-modal').remove()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">ይቅር</button>
+                                <button type="submit" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold">አስቀምጥ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            lucide.createIcons();
+        }
+
+        async function submitNewService(e) {
+            e.preventDefault();
+            const payload = {
+                code: document.getElementById('new-svc-code').value.trim().toLowerCase().replace(/\s+/g, '_'),
+                name_am: document.getElementById('new-svc-name-am').value.trim(),
+                name_en: document.getElementById('new-svc-name-en').value.trim(),
+                base_price: parseFloat(document.getElementById('new-svc-price').value),
+                unit: document.getElementById('new-svc-unit').value.trim(),
+                description_am: document.getElementById('new-svc-desc').value.trim(),
+                description_en: document.getElementById('new-svc-desc').value.trim(),
+                is_active: true
+            };
+
+            try {
+                const res = await apiFetch('/api/services', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    alert('አዲሱ አገልግሎት በተሳካ ሁኔታ ተመዝግቧል!');
+                    document.getElementById('cms-add-service-modal')?.remove();
+                    loadCmsTabData();
+                } else {
+                    alert('ስህተት፡ ' + (d.message || JSON.stringify(d.errors)));
+                }
+            } catch (err) {
+                alert('የግንኙነት ችግር፡ ' + err.message);
+            }
+        }
+
+        // Sub-tab 2: Contact Info & Slogan
+        function renderCmsContactTab(container) {
+            const s = cmsSettingsData || {};
+            container.innerHTML = `
+                <div class="max-w-3xl space-y-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">የስልክ ቁጥሮች፣ አድራሻ እና መፈክር (Contact Info &amp; Slogan)</h3>
+                        <p class="text-xs text-slate-400">እዚህ የተቀየረ ማንኛውም ስልክ ቁጥር ወይም መፈክር በቀጥታ በዋናው ድረ-ገጽ ራስጌ፣ ግርጌ እና Click-to-Call ላይ ይቀየራል።</p>
+                    </div>
+
+                    <form onsubmit="saveCmsContactSettings(event)" class="space-y-4 bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl">
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">ዋና ስልክ ቁጥር 1 (Primary Hotline)</label>
+                                <input type="text" id="set-phone-1" value="${s.contact_phone_1 || '0970075509'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-sm focus:border-cyan-400">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">ተጨማሪ ስልክ ቁጥር 2 (Secondary Hotline)</label>
+                                <input type="text" id="set-phone-2" value="${s.contact_phone_2 || '0998142190'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-sm focus:border-cyan-400">
+                            </div>
+                        </div>
+
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ ስም (Company Name)</label>
+                                <input type="text" id="set-comp-name" value="${s.company_name || 'MEASH CLEANING SOLUTION'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">ይፋዊ ኢሜይል (Company Email)</label>
+                                <input type="email" id="set-comp-email" value="${s.company_email || 'info@meashcleaning.com'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                            </div>
+                        </div>
+
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ መፈክር በእንግሊዝኛ (Slogan EN)</label>
+                                <input type="text" id="set-slogan-en" value="${s.company_slogan || 'Your Environment, Our Responsibility.'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ መፈክር በአማርኛ (Slogan AM)</label>
+                                <input type="text" id="set-slogan-am" value="${s.company_slogan_am || 'አካባቢዎ ንፁህ፣ ሃላፊነቱ የኛ!'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-slate-300 block mb-1">የቢሮ አድራሻ በአማርኛ (Office Location AM)</label>
+                            <input type="text" id="set-address-am" value="${s.company_address_am || 'ቦሌ መድኃኔዓለም፣ አዲስ አበባ፣ ኢትዮጵያ'}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                        </div>
+
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቦት ሊንክ (Telegram Bot)</label>
+                                <input type="text" id="set-tg-bot" value="${s.telegram_bot || 'https://t.me/meash_cleaning_solution_bot'}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቻናል (Telegram Channel)</label>
+                                <input type="text" id="set-tg-chan" value="${s.telegram_channel || 'https://t.me/meashdeepcleaning'}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 flex justify-end">
+                            <button type="submit" id="btn-save-contact" class="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 shadow-lg shadow-cyan-600/30 cursor-pointer">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                                <span>ቅንብሮችን መዝግብ (Save Settings)</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function saveCmsContactSettings(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-contact');
+            btn.disabled = true;
+            btn.innerText = 'በመመዝገብ ላይ...';
+
+            const payload = {
+                contact_phone_1: document.getElementById('set-phone-1').value.trim(),
+                contact_phone_2: document.getElementById('set-phone-2').value.trim(),
+                company_name: document.getElementById('set-comp-name').value.trim(),
+                company_email: document.getElementById('set-comp-email').value.trim(),
+                company_slogan: document.getElementById('set-slogan-en').value.trim(),
+                company_slogan_am: document.getElementById('set-slogan-am').value.trim(),
+                company_address_am: document.getElementById('set-address-am').value.trim(),
+                telegram_bot: document.getElementById('set-tg-bot').value.trim(),
+                telegram_channel: document.getElementById('set-tg-chan').value.trim()
+            };
+
+            try {
+                const res = await apiFetch('/api/admin/website/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    alert('የስልክ ቁጥሮች እና መፈክር በተሳካ ሁኔታ ተመዝግበዋል!');
+                    cmsSettingsData = d.settings || payload;
+                } else {
+                    alert('ስህተት፡ ' + (d.message || 'ማስቀመጥ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የግንኙነት ችግር፡ ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'ቅንብሮችን መዝግብ (Save Settings)';
+            }
+        }
+
+        // Sub-tab 3: Customer Reviews / Testimonials
+        function renderCmsReviewsTab(container) {
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">የደንበኞች ምስክርነት ማስተዳደሪያ (Customer Reviews)</h3>
+                            <p class="text-xs text-slate-400">እዚህ የጸደቁ (Approved) አስተያየቶች ብቻ በድረ-ገጹ "What Clients Say" ክፍል ላይ ይታያሉ።</p>
+                        </div>
+                        <button type="button" onclick="openAddReviewModal()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-cyan-600/20 cursor-pointer">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>አዲስ ምስክርነት ጨምር</span>
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900 shadow-xl">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-800/80 text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-800">
+                                <tr>
+                                    <th class="p-3.5">ደንበኛ</th>
+                                    <th class="p-3.5">ደረጃ (Rating)</th>
+                                    <th class="p-3.5">አስተያየት (Comment)</th>
+                                    <th class="p-3.5">ምንጭ</th>
+                                    <th class="p-3.5">በድረ-ገጽ (Status)</th>
+                                    <th class="p-3.5 text-right">ድርጊት</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800 text-slate-300">
+                                ${cmsFeedbacksData.length === 0 ? `<tr><td colspan="6" class="p-6 text-center text-slate-500">ምንም የተመዘገበ አስተያየት የለም። "አዲስ ምስክርነት ጨምር" የሚለውን ይጫኑ።</td></tr>` : ''}
+                                ${cmsFeedbacksData.map(f => `
+                                    <tr class="hover:bg-slate-800/50 transition">
+                                        <td class="p-3.5 font-bold text-white">
+                                            ${f.customer ? f.customer.full_name : 'ደንበኛ #' + (f.customer_id || f.id)}
+                                        </td>
+                                        <td class="p-3.5">
+                                            <div class="flex text-amber-400">
+                                                ${'★'.repeat(f.rating || 5)}${'☆'.repeat(5 - (f.rating || 5))}
+                                            </div>
+                                        </td>
+                                        <td class="p-3.5 max-w-xs truncate text-slate-300" title="${f.comment || ''}">
+                                            "${f.comment || 'ምንም አስተያየት የለም'}"
+                                        </td>
+                                        <td class="p-3.5 text-slate-400 uppercase text-[10px] font-mono">${f.source || 'web'}</td>
+                                        <td class="p-3.5">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${f.is_approved ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/30' : 'bg-amber-950 text-amber-400 border border-amber-500/30'}">
+                                                ${f.is_approved ? '● ይፋ የተደረገ (Live)' : '○ ተደብቋል (Hidden)'}
+                                            </span>
+                                        </td>
+                                        <td class="p-3.5 text-right space-x-2">
+                                            <button type="button" onclick="toggleReviewApprovalState(${f.id})" class="px-2 py-1 text-[11px] font-bold rounded-lg border transition ${f.is_approved ? 'border-amber-500/30 text-amber-400 hover:bg-amber-950' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-950'} cursor-pointer">
+                                                ${f.is_approved ? 'ደብቅ' : 'አጽድቅ (Publish)'}
+                                            </button>
+                                            <button type="button" onclick="deleteCmsReview(${f.id})" class="px-2 py-1 text-[11px] font-bold rounded-lg border border-red-500/30 text-red-400 hover:bg-red-950 transition cursor-pointer">
+                                                አጥፋ
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function toggleReviewApprovalState(id) {
+            try {
+                const res = await apiFetch(`/api/admin/website/feedbacks/${id}/toggle-approve`, { method: 'PUT' });
+                if (res.ok) loadCmsTabData();
+            } catch (err) {
+                alert('ስህተት፡ ' + err.message);
+            }
+        }
+
+        async function deleteCmsReview(id) {
+            if (!confirm('ይህንን አስተያየት መሰረዝ ይፈልጋሉ?')) return;
+            try {
+                const res = await apiFetch(`/api/admin/website/feedbacks/${id}`, { method: 'DELETE' });
+                if (res.ok) loadCmsTabData();
+            } catch (err) {
+                alert('ስህተት፡ ' + err.message);
+            }
+        }
+
+        function openAddReviewModal() {
+            const modalHtml = `
+                <div id="cms-add-review-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 text-white">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <h3 class="font-bold text-base flex items-center gap-2">
+                                <i data-lucide="star" class="w-4 h-4 text-amber-400"></i>
+                                <span>አዲስ የደንበኛ ምስክርነት ማከል</span>
+                            </h3>
+                            <button type="button" onclick="document.getElementById('cms-add-review-modal').remove()" class="text-slate-400 hover:text-white">✕</button>
+                        </div>
+                        <form onsubmit="submitNewCmsReview(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="text-slate-400 block mb-1">የደንበኛው ስም እና ቦታ (e.g. Bethlehem Tadesse — Bole)</label>
+                                <input id="new-rev-name" type="text" required placeholder="Bethlehem Tadesse — Bole" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 block mb-1">የኮከብ ደረጃ (Rating 1 - 5)</label>
+                                <select id="new-rev-rating" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                                    <option value="5">★★★★★ (5 Stars)</option>
+                                    <option value="4">★★★★☆ (4 Stars)</option>
+                                    <option value="3">★★★☆☆ (3 Stars)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-slate-400 block mb-1">የደንበኛው አስተያየት (Testimonial Quote)</label>
+                                <textarea id="new-rev-comment" rows="3" required placeholder="ሶፋዬ እንደ አዲስ ሆኗል፤ ቡድኑ በጣም ጨዋና ፈጣን ነበር..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"></textarea>
+                            </div>
+                            <div class="pt-2 flex justify-end gap-2">
+                                <button type="button" onclick="document.getElementById('cms-add-review-modal').remove()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">ይቅር</button>
+                                <button type="submit" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold">በድረ-ገጽ አትም</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            lucide.createIcons();
+        }
+
+        async function submitNewCmsReview(e) {
+            e.preventDefault();
+            const payload = {
+                customer_name: document.getElementById('new-rev-name').value.trim(),
+                rating: parseInt(document.getElementById('new-rev-rating').value),
+                comment: document.getElementById('new-rev-comment').value.trim(),
+                source: 'web',
+                is_approved: true
+            };
+
+            try {
+                const res = await apiFetch('/api/admin/website/feedbacks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    alert('አስተያየቱ በተሳካ ሁኔታ ተመዝግቦ በድረ-ገጹ እንዲታይ ተደርጓል!');
+                    document.getElementById('cms-add-review-modal')?.remove();
+                    loadCmsTabData();
+                } else {
+                    alert('ስህተት ተፈጥሯል');
+                }
+            } catch (err) {
+                alert('የግንኙነት ችግር፡ ' + err.message);
+            }
+        }
+
+        // Sub-tab 4: About Us Text
+        function renderCmsAboutTab(container) {
+            const s = cmsSettingsData || {};
+            container.innerHTML = `
+                <div class="max-w-3xl space-y-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">ስለ ድርጅቱ መግለጫ ጽሁፍ (About Us Narrative)</h3>
+                        <p class="text-xs text-slate-400">በዋናው ድረ-ገጽ ላይ "ስለ እኛ (About Us)" ክፍል የሚታዩ ጽሁፎችን በቀላሉ ያርትዑ።</p>
+                    </div>
+
+                    <form onsubmit="saveCmsAboutText(event)" class="space-y-4 bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl">
+                        <div>
+                            <label class="text-xs font-bold text-slate-300 block mb-1">የአማርኛ መግለጫ ጽሁፍ (About Us AM)</label>
+                            <textarea id="set-about-am" rows="4" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs leading-relaxed focus:border-cyan-400">${s.about_text_am || 'ሜአሽ ክሊኒንግ ሶሉሽን (MEASH CLEANING SOLUTION) በአዲስ አበባ ከተማ ለመኖሪያ ቤቶች፣ ለቢሮዎች፣ ለሆቴሎች እና ለተቋማት አስተማማኝ እና ጥራት ያለው የጥልቅ ጽዳት አገልግሎት በዘመናዊ ማሽኖችና ኬሚካሎች በመታገዝ በታማኝነት ይሰጣል።'}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-slate-300 block mb-1">የእንግሊዝኛ መግለጫ ጽሁፍ (About Us EN)</label>
+                            <textarea id="set-about-en" rows="4" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs leading-relaxed focus:border-cyan-400">${s.about_text_en || 'MEASH CLEANING SOLUTION is Addis Ababa’s premier residential and commercial deep cleaning specialist. Equipped with modern steam and extraction machines, hospital-grade eco-friendly chemicals, and vetted background-checked cleaning professionals.'}</textarea>
+                        </div>
+
+                        <div class="pt-4 flex justify-end">
+                            <button type="submit" id="btn-save-about" class="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 shadow-lg shadow-cyan-600/30 cursor-pointer">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                                <span>መግለጫውን መዝግብ (Save About Text)</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function saveCmsAboutText(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-about');
+            btn.disabled = true;
+            btn.innerText = 'በመመዝገብ ላይ...';
+
+            const payload = {
+                about_text_am: document.getElementById('set-about-am').value.trim(),
+                about_text_en: document.getElementById('set-about-en').value.trim()
+            };
+
+            try {
+                const res = await apiFetch('/api/admin/website/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    alert('የድርጅቱ መግለጫ ጽሁፎች በተሳካ ሁኔታ ተዘምነዋል!');
+                }
+            } catch (err) {
+                alert('የግንኙነት ችግር፡ ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'መግለጫውን መዝግብ (Save About Text)';
             }
         }
         // ==========================================

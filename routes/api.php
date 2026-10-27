@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminWebsiteController;
 use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerCareController;
@@ -34,6 +35,7 @@ Route::get('/ping', function () {
 
 // 1. PUBLIC WEBSITE & CUSTOMER BOOKING
 Route::prefix('public')->group(function () {
+    Route::get('/settings', [PublicWebsiteController::class, 'settings']);
     Route::get('/services', [PublicWebsiteController::class, 'services']);
     Route::post('/book', [PublicWebsiteController::class, 'book']);
     Route::get('/track-order', [PublicWebsiteController::class, 'trackOrder']);
@@ -146,6 +148,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/campaigns/{campaign}/send', [NotificationMarketingController::class, 'sendCampaign'])->middleware('role:owner');
     Route::post('/notifications/send-direct-sms', [NotificationMarketingController::class, 'sendDirectSms'])->middleware('role:owner,reception');
     Route::get('/sms/status', [NotificationMarketingController::class, 'smsStatus']);
+
+    // K. Website Settings & Content CMS
+    Route::prefix('admin/website')->middleware('role:owner,reception')->group(function () {
+        Route::get('/settings', [AdminWebsiteController::class, 'getSettings']);
+        Route::post('/settings', [AdminWebsiteController::class, 'updateSettings']);
+        Route::get('/feedbacks', [AdminWebsiteController::class, 'getFeedbacks']);
+        Route::post('/feedbacks', [AdminWebsiteController::class, 'storeFeedback']);
+        Route::put('/feedbacks/{id}/toggle-approve', [AdminWebsiteController::class, 'toggleFeedbackApproval']);
+        Route::delete('/feedbacks/{id}', [AdminWebsiteController::class, 'deleteFeedback']);
+    });
 
     // K. Offline-First Synchronization & Conflicts
     Route::prefix('sync')->group(function () {

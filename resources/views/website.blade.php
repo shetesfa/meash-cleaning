@@ -3,18 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>Meash Cleaning Solution | ሜሽ ክሊኒንግ ሶሉሽን</title>
-<meta name="description" content="Meash Cleaning Solution — professional sofa, carpet, mattress & glass steam cleaning in Addis Ababa. Call 0970075509">
+<title>MEASH CLEANING SOLUTION | Best Deep Cleaning Services in Addis Ababa | የጽዳት አገልግሎት</title>
+<meta name="description" content="MEASH CLEANING SOLUTION — Premier residential and commercial deep cleaning in Addis Ababa, Ethiopia. Sofa, carpet, mattress, glass, post-construction and office cleaning. Your Environment, Our Responsibility. Call 0970075509 / 0998142190">
+<meta name="keywords" content="Cleaning Services in Addis Ababa, Sofa Cleaning in Addis Ababa, Carpet Washing Addis Ababa, Office Cleaning Addis Ababa, Deep Cleaning Ethiopia, Hotel Cleaning Addis, Commercial Cleaning Addis Ababa, Meash Cleaning Solution, የሶፋ እጥበት አዲስ አበባ, የምንጣፍ እጥበት, የቢሮ ጽዳት">
+<meta name="author" content="MEASH CLEANING SOLUTION">
 <meta name="theme-color" content="#0B1220">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
 <link rel="icon" type="image/jpeg" href="/logo.jpg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Meash">
-<meta property="og:title" content="Meash Cleaning Solution">
-<meta property="og:description" content="Professional home & office cleaning in Addis Ababa.">
+
+<!-- Open Graph & Social SEO -->
+<meta property="og:title" content="MEASH CLEANING SOLUTION | Your Environment, Our Responsibility.">
+<meta property="og:description" content="Professional deep cleaning for villas, apartments, corporate offices, hotels & restaurants in Addis Ababa. Call 0970075509 / 0998142190.">
 <meta property="og:image" content="/logo.jpg">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://meash-cleaning-gy5x.onrender.com">
+
+<!-- LocalBusiness Schema.org JSON-LD Structured Data for Google Search -->
+<script type="application/ld+json">
+{!! json_encode([
+  '@context' => 'https://schema.org',
+  '@type' => 'HomeAndConstructionBusiness',
+  'name' => 'MEASH CLEANING SOLUTION',
+  'alternateName' => 'ሜአሽ ክሊኒንግ ሶሉሽን',
+  'image' => 'https://meash-cleaning-gy5x.onrender.com/logo.jpg',
+  'slogan' => 'Your Environment, Our Responsibility.',
+  'url' => 'https://meash-cleaning-gy5x.onrender.com',
+  'telephone' => '+251970075509',
+  'email' => 'info@meashcleaning.com',
+  'priceRange' => 'ETB 50 - ETB 6000',
+  'address' => [
+    '@type' => 'PostalAddress',
+    'streetAddress' => 'Bole Medhanealem',
+    'addressLocality' => 'Addis Ababa',
+    'addressRegion' => 'Addis Ababa',
+    'postalCode' => '1000',
+    'addressCountry' => 'ET'
+  ],
+  'geo' => [
+    '@type' => 'GeoCoordinates',
+    'latitude' => 9.0003,
+    'longitude' => 38.7818
+  ],
+  'sameAs' => [
+    'https://t.me/meashdeepcleaning',
+    'https://t.me/meash_cleaning_solution_bot',
+    'https://www.tiktok.com/@meashcleaningsolition'
+  ]
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+</script>
 
 <!-- Fonts & Minified Compiled CSS -->
     <link rel="stylesheet" href="/css/fonts.css">
@@ -64,30 +103,45 @@
 
 <!-- ================= NAV ================= -->
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-navy/10">
-  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
     <a href="#top" class="flex items-center gap-2.5">
-      <img src="/logo.jpg" alt="Meash" class="w-9 h-9 rounded-lg object-cover">
-      <span class="font-serif font-semibold text-lg tracking-tight">Meash Cleaning Solution</span>
+      <img src="/logo.jpg" alt="Meash Logo" class="w-9 h-9 rounded-lg object-cover shadow-sm">
+      <div class="leading-tight">
+        <span class="font-serif font-bold text-base sm:text-lg tracking-tight text-navy block">MEASH</span>
+        <span class="text-[10px] tracking-wider text-teal-dark font-bold uppercase hidden sm:block">Cleaning Solution</span>
+      </div>
     </a>
-    <nav class="hidden md:flex items-center gap-8 text-[13px] font-semibold tracking-wide text-navy/70">
-      <a href="#services" class="hover:text-teal"><span data-lang-block="am">አገልግሎቶች</span><span data-lang-block="en">Services</span></a>
-      <a href="#process" class="hover:text-teal"><span data-lang-block="am">ሂደት</span><span data-lang-block="en">Process</span></a>
-      <a href="#reviews" class="hover:text-teal"><span data-lang-block="am">አስተያየቶች</span><span data-lang-block="en">Reviews</span></a>
-      <a href="#track" class="hover:text-teal"><span data-lang-block="am">ትዕዛዝ ፈልግ</span><span data-lang-block="en">Track Order</span></a>
+    <nav class="hidden lg:flex items-center gap-5 text-[13px] font-semibold tracking-wide text-navy/75">
+      <a href="#about" class="hover:text-teal transition"><span data-lang-block="am">ስለ እኛ</span><span data-lang-block="en">About</span></a>
+      <a href="#services" class="hover:text-teal transition"><span data-lang-block="am">የቤት ጽዳት</span><span data-lang-block="en">Residential</span></a>
+      <a href="#commercial" class="hover:text-teal transition text-teal-dark font-bold flex items-center gap-1">
+        <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+        <span data-lang-block="am">የድርጅቶች ጽዳት</span><span data-lang-block="en">Commercial</span>
+      </a>
+      <a href="#gallery" class="hover:text-teal transition"><span data-lang-block="am">የስራ ጋለሪ</span><span data-lang-block="en">Projects</span></a>
+      <a href="#reviews" class="hover:text-teal transition"><span data-lang-block="am">አስተያየቶች</span><span data-lang-block="en">Reviews</span></a>
+      <a href="#qr-code" class="hover:text-teal transition flex items-center gap-1"><i data-lucide="qr-code" class="w-3.5 h-3.5"></i> QR</a>
+      <a href="#contact" class="hover:text-teal transition"><span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Contact</span></a>
+      <a href="#track" class="hover:text-teal transition"><span data-lang-block="am">ትዕዛዝ ፈልግ</span><span data-lang-block="en">Track</span></a>
     </nav>
     <div class="flex items-center gap-2">
+      <!-- Direct Call Buttons -->
+      <a href="tel:0970075509" class="hidden xl:flex items-center gap-1.5 text-xs font-bold bg-teal/10 text-teal-dark px-3 py-1.5 rounded-full hover:bg-teal/20 transition">
+        <i data-lucide="phone-call" class="w-3.5 h-3.5"></i> 0970 07 55 09
+      </a>
       <!-- Dark Mode Toggle Button -->
       <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 rounded-full border border-navy/15 text-navy hover:bg-navy/5 transition cursor-pointer flex items-center justify-center" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
         <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
       </button>
 
-      <div class="hidden sm:flex items-center gap-1 mr-1 border border-navy/15 rounded-full p-0.5">
+      <div class="hidden sm:flex items-center gap-1 border border-navy/15 rounded-full p-0.5">
         <button type="button" onclick="setLang('am')" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer">አማ</button>
         <button type="button" onclick="setLang('en')" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer">EN</button>
         <button type="button" onclick="setLang('both')" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer">አማ/EN</button>
       </div>
-      <a href="#book" class="bg-navy hover:bg-teal-dark text-white text-[13px] font-bold px-5 py-2.5 rounded-md transition">
-        <span data-lang-block="am">ቀጠሮ ይያዙ</span><span data-lang-block="en">Book Now</span>
+      <a href="#book" class="bg-navy hover:bg-teal-dark text-white text-[12px] sm:text-[13px] font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-md transition shadow-sm flex items-center gap-1.5">
+        <i data-lucide="calendar" class="w-3.5 h-3.5 hidden sm:inline"></i>
+        <span data-lang-block="am">ዋጋ / ቀጠሮ</span><span data-lang-block="en">Quote / Book</span>
       </a>
     </div>
   </div>
@@ -96,46 +150,105 @@
 <main id="top">
 
 <!-- ================= HERO ================= -->
-<section class="relative">
-  <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-[1.1fr_.9fr] gap-0 min-h-[560px]">
-    <div class="flex flex-col justify-center py-16 md:py-24 pr-0 md:pr-14">
-      <div class="flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wide mb-6">
-        <i data-lucide="badge-check" class="w-4 h-4"></i>
-        <span data-lang-block="am">ላይሰንስ ያለው • 160°ሲ ስቲም ቴክኖሎጂ</span>
-        <span data-lang-block="en">Licensed &amp; Insured — 160°C Steam Technology</span>
+<section class="relative bg-gradient-to-b from-teal-light/20 via-transparent to-transparent">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-[1.15fr_.85fr] gap-6 min-h-[580px] items-center py-12 md:py-16">
+    <div class="flex flex-col justify-center pr-0 md:pr-10">
+      <div class="inline-flex items-center gap-2 text-teal-dark bg-teal-light/40 border border-teal/20 px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide mb-5 w-fit">
+        <i data-lucide="shield-check" class="w-4 h-4"></i>
+        <span data-lang-block="am">በህጋዊ ፈቃድ የታገዘ • 160°C የስቲም ቴክኖሎጂ</span>
+        <span data-lang-block="en">Licensed &amp; Insured • 160°C German Steam Tech</span>
       </div>
-      <h1 class="font-serif font-semibold text-[2.6rem] md:text-[3.4rem] leading-[1.05] tracking-tight lang-both-stack">
-        <div data-lang-block="am">ንፁህ ቤት፣<br>የተረጋገጠ ውጤት።</div>
-        <div data-lang-block="en">A cleaner home,<br>done properly.</div>
+
+      <!-- Slogan Badge -->
+      <div class="mb-3 text-xs sm:text-sm font-extrabold tracking-wider uppercase text-teal-dark">
+        <span data-lang-block="am">አካባቢዎ ንፁህ፣ ሃላፊነቱ የኛ!</span>
+        <span data-lang-block="en">"Your Environment, Our Responsibility."</span>
+      </div>
+
+      <h1 class="font-serif font-bold text-[2.4rem] sm:text-[3.2rem] md:text-[3.6rem] leading-[1.08] tracking-tight text-navy">
+        <div data-lang-block="am">MEASH CLEANING SOLUTION<br><span class="text-teal-dark text-[0.8em] font-normal">ሙያዊና አስተማማኝ የጽዳት አገልግሎት</span></div>
+        <div data-lang-block="en">MEASH CLEANING SOLUTION<br><span class="text-teal-dark text-[0.8em] font-normal">Addis Ababa’s Deep Cleaning Experts</span></div>
       </h1>
-      <p class="mt-6 text-navy/65 text-[17px] leading-relaxed max-w-md lang-both-stack">
-        <span data-lang-block="am">ሶፋ፣ ምንጣፍ፣ ፍራሽና መስታወት ጥልቅ እጥበት — በሰለጠነ ቡድን፣ ዘመናዊ መሳሪያ በመጠቀም። ዋጋውን ወዲያውኑ ይመልከቱ።</span>
-        <span data-lang-block="en">Sofa, carpet, mattress and glass deep-cleaning — carried out by a trained team. See the price instantly, before you book.</span>
+
+      <p class="mt-5 text-navy/70 text-[15px] sm:text-[17px] leading-relaxed max-w-xl">
+        <span data-lang-block="am">ለመኖሪያ ቤቶች፣ ለቢሮዎች፣ ለሆቴሎች፣ ለሬስቶራንቶች እና ለተቋማት — በሰለጠኑ ታማኝ ባለሙያዎች እና በጀርመን ዘመናዊ ማሽኖች የተደገፈ ጥልቅ ጽዳት። ዋጋውን አስቀድመው ይወቁ ወይም ቀጠሮ ይያዙ!</span>
+        <span data-lang-block="en">Residential villas, corporate offices, hotels, cafes &amp; auditoriums — executed with industrial extraction tech, eco-friendly hospital sanitizers and vetted cleaning crews.</span>
       </p>
-      <div class="mt-9 flex flex-wrap items-center gap-4">
-        <a href="#book" class="bg-navy text-white font-bold text-sm px-7 py-3.5 rounded-md hover:bg-teal-dark transition flex items-center gap-2">
-          <span data-lang-block="am">ዋጋ ይመልከቱና ይያዙ</span><span data-lang-block="en">See Price &amp; Book</span>
-          <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+
+      <!-- Primary Action Buttons & Click to Call -->
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <a href="#book" class="bg-navy hover:bg-teal-dark text-white font-bold text-sm px-6 py-3.5 rounded-lg transition shadow-md flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span data-lang-block="am">የዋጋ ስሌት እና ቀጠሮ</span><span data-lang-block="en">Get Quote &amp; Book</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
         </a>
-        <a href="tel:0970075509" class="font-bold text-sm text-navy flex items-center gap-2 border-b-2 border-transparent hover:border-navy pb-0.5">
-          <i data-lucide="phone" class="w-4 h-4"></i> 0970 07 55 09
+        <a href="#commercial" class="border-2 border-teal-dark text-teal-dark hover:bg-teal-dark hover:text-white font-bold text-sm px-5 py-3 rounded-lg transition flex items-center gap-2">
+          <i data-lucide="building-2" class="w-4 h-4"></i>
+          <span data-lang-block="am">የድርጅቶች ኮንትራት</span><span data-lang-block="en">Commercial Contracts</span>
         </a>
       </div>
-      <div class="mt-14 grid grid-cols-3 gap-6 border-t border-navy/10 pt-7 max-w-md">
-        <div><div class="font-serif font-semibold text-2xl">3,200+</div><div class="text-[12px] text-navy/55 mt-0.5" data-lang-block="am">የተከናወኑ ስራዎች</div><div class="text-[12px] text-navy/55 mt-0.5" data-lang-block="en">Jobs completed</div></div>
-        <div><div class="font-serif font-semibold text-2xl">4.9<span class="text-base">/5</span></div><div class="text-[12px] text-navy/55 mt-0.5" data-lang-block="am">የደንበኛ ደረጃ</div><div class="text-[12px] text-navy/55 mt-0.5" data-lang-block="en">Customer rating</div></div>
-        <div><div class="font-serif font-semibold text-2xl">6</div><div class="text-[12px] text-navy/55 mt-0.5" data-lang-block="am">ዓመታት ልምድ</div><div class="text-[12px] text-navy/55 mt-0.5" data-lang-block="en">Years in business</div></div>
+
+      <!-- Quick Contact Pills (Direct Call & Telegram) -->
+      <div class="mt-6 flex flex-wrap items-center gap-4 text-xs font-bold text-navy">
+        <span class="text-navy/50 font-medium"><span data-lang-block="am">አሁኑኑ ይደውሉ፡</span><span data-lang-block="en">Call Now:</span></span>
+        <a href="tel:0970075509" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
+          <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0970 07 55 09
+        </a>
+        <a href="tel:0998142190" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
+          <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0998 14 21 90
+        </a>
+        <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="hover:text-teal flex items-center gap-1.5 bg-teal/10 text-teal-dark border border-teal/20 px-3 py-1.5 rounded-md">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram Bot
+        </a>
+      </div>
+
+      <!-- Key Trust Metrics -->
+      <div class="mt-10 grid grid-cols-3 gap-4 sm:gap-6 border-t border-navy/10 pt-6 max-w-lg">
+        <div>
+          <div class="font-serif font-bold text-2xl sm:text-3xl text-navy">3,200+</div>
+          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="am">የተከናወኑ ስራዎች</div>
+          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="en">Jobs Done</div>
+        </div>
+        <div>
+          <div class="font-serif font-bold text-2xl sm:text-3xl text-navy">4.9<span class="text-base font-normal">/5</span></div>
+          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="am">የደንበኞች እርካታ</div>
+          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="en">Rating</div>
+        </div>
+        <div>
+          <div class="font-serif font-bold text-2xl sm:text-3xl text-navy">100%</div>
+          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="am">የታመኑ ባለሙያዎች</div>
+          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="en">Vetted Staff</div>
+        </div>
       </div>
     </div>
+
+    <!-- Hero Visual / Feature Card -->
     <div class="relative hidden md:block">
-      <div class="duo grain absolute inset-y-8 right-0 left-6 rounded-2xl overflow-hidden">
-        <div class="absolute bottom-7 left-7 right-7 bg-white/95 backdrop-blur rounded-xl p-5 shadow-xl">
-          <div class="flex items-center gap-2 text-teal-dark font-bold text-xs mb-2">
-            <i data-lucide="shield-check" class="w-4 h-4"></i>
-            <span data-lang-block="am">የዛሬ ውጤት</span><span data-lang-block="en">Today's job</span>
+      <div class="duo grain rounded-2xl overflow-hidden p-8 text-white shadow-2xl relative min-h-[440px] flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold">
+            <i data-lucide="award" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>Addis Ababa Trusted Cleaner</span>
           </div>
-          <p class="text-sm text-navy/70 leading-snug" data-lang-block="am">3 መቀመጫ ሶፋ — ቦሌ, ካዛንቺስ<br>ተጠናቅቋል በ 47 ደቂቃ</p>
-          <p class="text-sm text-navy/70 leading-snug" data-lang-block="en">3-seat sofa — Bole, Kazanchis<br>Completed in 47 minutes</p>
+          <h3 class="font-serif font-semibold text-2xl leading-snug">
+            የላቀ የንፅህና ጥራት፣<br>ለቤትዎ እና ለተቋምዎ።
+          </h3>
+          <p class="text-xs text-white/80 leading-relaxed max-w-xs">
+            ከፍተኛ ሙቀት ያለው ስቲም ማሽን ጀርሞችንና አልጋ ቁንጫዎችን 100% ያጠፋል፤ እቃዎትን ሳይጎዳ በጥንቃቄ ያጥባል።
+          </p>
+        </div>
+
+        <div class="bg-white/95 text-navy backdrop-blur rounded-xl p-4 shadow-xl border border-white/20">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-teal-dark flex items-center gap-1.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> ዛሬ የተጠናቀቀ ስራ
+            </span>
+            <span class="text-[11px] text-navy/50">ቦሌ መድኃኔዓለም</span>
+          </div>
+          <p class="text-xs text-navy/80 font-medium">
+            የ 7 መቀመጫ ሶፋ + የሳሎን ምንጣፍ ጥልቅ እጥበት<br>
+            <span class="text-emerald-700 font-bold">100% ቆሻሻ እና ጠረን ተወግዷል</span>
+          </p>
         </div>
       </div>
     </div>
@@ -144,16 +257,270 @@
 
 <!-- ================= LOGO/TRUST STRIP ================= -->
 <section class="border-y border-navy/10 bg-fog">
-  <div class="max-w-6xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-navy/50 text-xs font-bold tracking-wide">
-    <span class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-4 h-4"></i> <span data-lang-block="am">የተመዘገበ ንግድ</span><span data-lang-block="en">Registered Business</span></span>
-    <span class="flex items-center gap-1.5"><i data-lucide="users" class="w-4 h-4"></i> <span data-lang-block="am">የሰለጠነ ቡድን</span><span data-lang-block="en">Trained Staff</span></span>
-    <span class="flex items-center gap-1.5"><i data-lucide="clock" class="w-4 h-4"></i> <span data-lang-block="am">7 ቀን አገልግሎት</span><span data-lang-block="en">7-Day Service</span></span>
-    <span class="flex items-center gap-1.5"><i data-lucide="building-2" class="w-4 h-4"></i> <span data-lang-block="am">ኮርፖሬት ውል</span><span data-lang-block="en">Corporate Contracts</span></span>
+  <div class="max-w-7xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-navy/60 text-xs font-bold tracking-wide">
+    <span class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ህጋዊ የተመዘገበ ድርጅት</span><span data-lang-block="en">Licensed Company</span></span>
+    <span class="flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የሰለጠኑ ታማኝ ባለሙያዎች</span><span data-lang-block="en">Trained &amp; Vetted Crews</span></span>
+    <span class="flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">160°C የጀርመን ስቲም ማሽን</span><span data-lang-block="en">German 160°C Steam Tech</span></span>
+    <span class="flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">በሳምንት 7 ቀን አገልግሎት</span><span data-lang-block="en">7 Days a Week</span></span>
+    <span class="flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የኮርፖሬት ኮንትራት ውል</span><span data-lang-block="en">Corporate Contracts</span></span>
   </div>
 </section>
 
-<!-- ================= SERVICES (with live price) ================= -->
-<section id="services" class="max-w-6xl mx-auto px-6 py-24">
+<!-- ================= ABOUT US SECTION ================= -->
+<section id="about" class="py-20 bg-white border-b border-navy/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
+    <div>
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3 py-1 rounded-full">
+        <i data-lucide="info" class="w-3.5 h-3.5"></i>
+        <span data-lang-block="am">ስለ ድርጅታችን</span><span data-lang-block="en">ABOUT MEASH CLEANING</span>
+      </div>
+      <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight mb-6">
+        <span data-lang-block="am">አካባቢዎ ንፁህ፣ ሃላፊነቱ የኛ!<br><span class="text-teal-dark font-normal text-[0.8em]">የጽዳት ጥራትን በሙያዊ ብቃት እንቀይራለን።</span></span>
+        <span data-lang-block="en">Your Environment, Our Responsibility.<br><span class="text-teal-dark font-normal text-[0.8em]">Redefining Professional Cleaning in Addis Ababa.</span></span>
+      </h2>
+      <div class="text-navy/75 text-[15px] sm:text-[16px] leading-relaxed space-y-4">
+        <p data-lang-block="am">
+          <b>MEASH CLEANING SOLUTION (ሜአሽ ክሊኒንግ ሶሉሽን)</b> በአዲስ አበባ ከተማ ለመኖሪያ ቤቶች፣ ለቢሮዎች፣ ለሆቴሎች፣ ለሬስቶራንቶች እና ለትላልቅ አዳራሾች ዘመናዊ እና ጥልቅ የጽዳት አገልግሎት የሚሰጥ ግንባር ቀደም ተቋም ነው።
+        </p>
+        <p data-lang-block="en">
+          <b>MEASH CLEANING SOLUTION</b> is Addis Ababa’s trusted deep cleaning partner for residential villas, modern workspaces, luxury hotels, commercial kitchens, and event halls. We combine industrial extraction machines with hospital-grade sanitization.
+        </p>
+        <p data-lang-block="am">
+          ድርጅታችን ጤናማ እና ንጹህ አካባቢን ለመፍጠር በሰለጠኑ፣ የታማኝነት ማረጋገጫ ባላቸው (Vetted) ባለሙያዎች እና ለአካባቢ ተስማሚ በሆኑ (Eco-friendly) የጀርመን ኬሚካሎች በመታገዝ የደንበኞቹን እምነት በከፍተኛ ደረጃ ገንብቷል።
+        </p>
+      </div>
+
+      <!-- Feature Checklist -->
+      <div class="mt-8 grid sm:grid-cols-2 gap-4">
+        <div class="flex items-start gap-3">
+          <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
+          <div>
+            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">ዘመናዊ ስቲም ማሽን</span><span data-lang-block="en">Steam Sanitization</span></h4>
+            <p class="text-xs text-navy/60"><span data-lang-block="am">ጀርሞችንና አልጋ ቁንጫዎችን 100% ያስወግዳል</span><span data-lang-block="en">Eliminates bacteria, mites &amp; odors</span></p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
+          <div>
+            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">የኢትዮጵያ ዘመን አቆጣጠር</span><span data-lang-block="en">Ethiopian Calendar</span></h4>
+            <p class="text-xs text-navy/60"><span data-lang-block="am">ቀጠሮዎን በኢትዮጵያ ቀን በቀላሉ ያስተካክሉ</span><span data-lang-block="en">Book seamlessly in Ge'ez calendar</span></p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
+          <div>
+            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">ግልጽና ቋሚ ዋጋ</span><span data-lang-block="en">Upfront Honest Pricing</span></h4>
+            <p class="text-xs text-navy/60"><span data-lang-block="am">ምንም የተደበቀ ወጪ የሌለው ግልጽ ስሌት</span><span data-lang-block="en">Zero hidden fees or surprises</span></p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
+          <div>
+            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">የድርጅት ፕሮፎርማ ውል</span><span data-lang-block="en">Corporate Contracts</span></h4>
+            <p class="text-xs text-navy/60"><span data-lang-block="am">ህጋዊ ደረሰኝ፣ ቫት እና የረጅም ጊዜ ኮንትራት</span><span data-lang-block="en">Official VAT receipt &amp; SLAs</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Badge Box -->
+    <div class="bg-gradient-to-br from-slate-900 to-navy text-white rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-teal/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="flex items-center gap-3 mb-6">
+        <img src="/logo.jpg" alt="Logo" class="w-12 h-12 rounded-xl object-cover border border-white/20">
+        <div>
+          <h3 class="font-serif font-bold text-xl">MEASH CLEANING SOLUTION</h3>
+          <p class="text-xs text-teal-light font-medium tracking-wider">Your Environment, Our Responsibility.</p>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="border-b border-white/10 pb-4">
+          <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ዋና መስሪያ ቤት አድራሻ</span><span data-lang-block="en">Head Office Location</span></div>
+          <div class="text-sm font-semibold flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4 text-teal"></i>
+            <span>ቦሌ መድኃኔዓለም፣ አዲስ አበባ፣ ኢትዮጵያ</span>
+          </div>
+        </div>
+
+        <div class="border-b border-white/10 pb-4">
+          <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ቀጥታ ስልክ መስመሮች (24/7)</span><span data-lang-block="en">Direct Hotlines</span></div>
+          <div class="flex flex-wrap gap-4 mt-2">
+            <a href="tel:0970075509" class="text-sm font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
+              <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0970 07 55 09
+            </a>
+            <a href="tel:0998142190" class="text-sm font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
+              <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0998 14 21 90
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ማህበራዊ ትስስር ገጾች</span><span data-lang-block="en">Connect With Us</span></div>
+          <div class="flex items-center gap-3 mt-2">
+            <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram Channel
+            </a>
+            <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
+              <i data-lucide="bot" class="w-3.5 h-3.5"></i> Telegram Bot
+            </a>
+            <a href="https://www.tiktok.com/@meashcleaningsolition" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
+              <i data-lucide="video" class="w-3.5 h-3.5"></i> TikTok
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMMERCIAL CLEANING SERVICES (DEDICATED SECTION) ================= -->
+<section id="commercial" class="py-24 bg-fog border-b border-navy/10 relative overflow-hidden">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="max-w-2xl mb-16">
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
+        <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+        <span data-lang-block="am">ለድርጅቶች፣ ለሆቴሎች እና ለተቋማት</span><span data-lang-block="en">COMMERCIAL &amp; CONTRACT CLEANING</span>
+      </div>
+      <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight">
+        <span data-lang-block="am">የተቋማት እና የንግድ ቦታዎች ጥልቅ ጽዳት</span>
+        <span data-lang-block="en">Commercial &amp; Facility Cleaning Solutions</span>
+      </h2>
+      <p class="text-navy/70 text-base mt-3">
+        <span data-lang-block="am">ለቢሮዎች፣ ለሆቴሎች፣ ለሬስቶራንቶች፣ ለካፌዎች እና ለስብሰባ አዳራሾች አስተማማኝ የረጅም ጊዜ የኮንትራት ወይም የጊዜያዊ ጽዳት ውል። ህጋዊ ደረሰኝ እና የቫት ሰነድ እናቀርባለን።</span>
+        <span data-lang-block="en">Tailored recurring contracts and deep turnaround sanitization for corporations, hospitality chains, dining spots, and auditorium venues across Addis Ababa.</span>
+      </p>
+    </div>
+
+    <!-- Commercial Grid of 6 Specialized Sectors -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- 1. Office Cleaning -->
+      <div class="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-lg flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-5">
+            <i data-lucide="briefcase" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-serif font-bold text-xl text-navy mb-2">
+            <span data-lang-block="am">የቢሮ እና የስራ ቦታ ጽዳት</span><span data-lang-block="en">Office &amp; Corporate Cleaning</span>
+          </h3>
+          <p class="text-sm text-navy/65 leading-relaxed">
+            <span data-lang-block="am">የቢሮ ጠረጴዛዎች፣ ወንበሮች፣ ምንጣፍ በሮተሪ ማሽን ማጠብ፣ የኮምፒውተር ገመዶች ጽዳት እና የሽንት ቤት ጥልቅ ማጽዳት።</span>
+            <span data-lang-block="en">Executive desks, partitioned workstations, carpet extraction, restrooms sanitization &amp; trash collection.</span>
+          </p>
+        </div>
+        <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
+          <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ተለዋዋጭ ሰዓት (ምሽት/ቅዳሜ)</span><span data-lang-block="en">After-Hours / Weekends</span></span>
+          <a href="#book" onclick="preselectService('office')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
+        </div>
+      </div>
+
+      <!-- 2. Hotel Cleaning -->
+      <div class="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-lg flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-5">
+            <i data-lucide="hotel" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-serif font-bold text-xl text-navy mb-2">
+            <span data-lang-block="am">የሆቴል እና ሎጅ ጽዳት</span><span data-lang-block="en">Hotel &amp; Hospitality Sanitization</span>
+          </h3>
+          <p class="text-sm text-navy/65 leading-relaxed">
+            <span data-lang-block="am">የእንግዳ ማረፊያ ክፍሎች፣ አልጋዎች፣ ፍራሽ በስቲም ማጽዳት፣ ኮሪደር ምንጣፍ እጥበት እና የሎቢ ወለል ማሽን እጥበት።</span>
+            <span data-lang-block="en">Guest room deep clean, steam mattress disinfection, corridor carpet cleaning and marble lobby polishing.</span>
+          </p>
+        </div>
+        <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
+          <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">የቱሪዝም ደረጃ ጥራት</span><span data-lang-block="en">Hospitality Standards</span></span>
+          <a href="#book" onclick="preselectService('hotel_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
+        </div>
+      </div>
+
+      <!-- 3. Restaurant & Cafe -->
+      <div class="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-lg flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-5">
+            <i data-lucide="coffee" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-serif font-bold text-xl text-navy mb-2">
+            <span data-lang-block="am">የሬስቶራንት እና ካፌ ጽዳት</span><span data-lang-block="en">Restaurant &amp; Café Cleaning</span>
+          </h3>
+          <p class="text-sm text-navy/65 leading-relaxed">
+            <span data-lang-block="am">የንግድ ኩሽና ዘይት ማቅለጥና ማስወገድ (Degreasing)፣ የወንበሮችና የሶፋዎች እጥበት፣ የወለል ሴራሚክ እጥበት።</span>
+            <span data-lang-block="en">Heavy kitchen hood degreasing, dining chair upholstery, ceramic grout scrub &amp; food-safe sanitizers.</span>
+          </p>
+        </div>
+        <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
+          <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ጤና ጥበቃ ደረጃ</span><span data-lang-block="en">Food-Safe Chemicals</span></span>
+          <a href="#book" onclick="preselectService('restaurant_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
+        </div>
+      </div>
+
+      <!-- 4. Hall & Commercial Chair -->
+      <div class="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-lg flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-5">
+            <i data-lucide="armchair" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-serif font-bold text-xl text-navy mb-2">
+            <span data-lang-block="am">የአዳራሽና ወንበሮች እጥበት</span><span data-lang-block="en">Auditorium &amp; Hall Chairs</span>
+          </h3>
+          <p class="text-sm text-navy/65 leading-relaxed">
+            <span data-lang-block="am">የስብሰባ አዳራሾች፣ ሲኒማዎች፣ ቤተ-እምነቶች ወንበሮችን በጅምላ በቦታው ላይ በፈጣን ማሽን ማጠብ እና ማድረቅ።</span>
+            <span data-lang-block="en">High-volume fabric &amp; leather seat shampoo extraction for cinemas, churches &amp; conference halls.</span>
+          </p>
+        </div>
+        <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
+          <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">በጅምላ ቅናሽ ያለው</span><span data-lang-block="en">Volume Discounts</span></span>
+          <a href="#book" onclick="preselectService('hall_chair_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
+        </div>
+      </div>
+
+      <!-- 5. Commercial Glass Facade -->
+      <div class="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-lg flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-5">
+            <i data-lucide="sun" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-serif font-bold text-xl text-navy mb-2">
+            <span data-lang-block="am">የፎቅ እና መስታወት ጽዳት</span><span data-lang-block="en">Commercial Glass Facades</span>
+          </h3>
+          <p class="text-sm text-navy/65 leading-relaxed">
+            <span data-lang-block="am">የህንፃዎች የውጭና የውስጥ መስታወት፣ የሾፕ ፍሮንት (Showrooms) እና የባንኮች መስታወት ጥርት ያለ እጥበት።</span>
+            <span data-lang-block="en">Streak-free pure water window washing, bank branch facades, automotive showrooms &amp; multistory glass.</span>
+          </p>
+        </div>
+        <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
+          <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ጭረት የማይተው እጥበት</span><span data-lang-block="en">Streak-Free</span></span>
+          <a href="#book" onclick="preselectService('glass')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
+        </div>
+      </div>
+
+      <!-- 6. Long-Term Contracts -->
+      <div class="bg-gradient-to-br from-navy to-slate-900 text-white rounded-2xl p-7 border border-teal/30 shadow-xl flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-teal text-white flex items-center justify-center mb-5">
+            <i data-lucide="file-check-2" class="w-6 h-6"></i>
+          </div>
+          <h3 class="font-serif font-bold text-xl text-white mb-2">
+            <span data-lang-block="am">ቋሚ የጽዳት ኮንትራት ውል</span><span data-lang-block="en">Long-Term Cleaning SLAs</span>
+          </h3>
+          <p class="text-sm text-white/80 leading-relaxed">
+            <span data-lang-block="am">ሳምንታዊ፣ በየ 15 ቀኑ ወይም ወርሃዊ ቋሚ የጽዳት ውል ከቋሚ ሰራተኞች እና ክትትል ጋር። ለኤምባሲዎች፣ ባንኮች እና ድርጅቶች።</span>
+            <span data-lang-block="en">Dedicated daily/weekly cleaners, site supervisors, and guaranteed SLA replacements for NGOs &amp; banks.</span>
+          </p>
+        </div>
+        <div class="mt-6 pt-5 border-t border-white/20 flex items-center justify-between">
+          <span class="text-xs font-bold text-teal-light"><span data-lang-block="am">እስከ 15% የኮንትራት ቅናሽ</span><span data-lang-block="en">Up to 15% Off</span></span>
+          <a href="tel:0970075509" class="text-xs font-bold bg-teal text-white px-3.5 py-1.5 rounded hover:bg-teal-dark transition flex items-center gap-1">
+            <i data-lucide="phone-call" class="w-3 h-3"></i> ደውለው ይወያዩ
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RESIDENTIAL SERVICES (with live price) ================= -->
+<section id="services" class="max-w-7xl mx-auto px-4 sm:px-6 py-24">
   <div class="max-w-lg mb-14">
     <div class="text-teal-dark font-bold text-xs tracking-wide mb-3"><span data-lang-block="am">አገልግሎቶች</span><span data-lang-block="en">SERVICES</span></div>
     <h2 class="font-serif font-semibold text-3xl md:text-4xl leading-tight"><span data-lang-block="am">የምናቀርባቸው አገልግሎቶች</span><span data-lang-block="en">What we clean</span></h2>
@@ -194,6 +561,33 @@
       </div>
       <div class="text-right font-serif font-semibold text-lg svc-price" data-svc-price="4">70 ETB</div>
       <a href="#book" onclick="preselectService('glass')" class="text-sm font-bold text-navy flex items-center gap-1"><span data-lang-block="am">ይያዙ</span><span data-lang-block="en">Book</span> <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    </div>
+    <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="8">
+      <i data-lucide="sparkles" class="w-7 h-7 text-teal-dark"></i>
+      <div>
+        <h3 class="font-serif font-semibold text-xl"><span data-lang-block="am">የወለል እና ሴራሚክ ማሽን እጥበት</span><span data-lang-block="en">Floor &amp; Ceramic Scrubbing</span></h3>
+        <p class="text-navy/60 text-sm mt-1"><span data-lang-block="am">ያረጁ ቆሻሻዎችን በከባድ ሮተሪ ማሽን ማሸትና ማጽዳት።</span><span data-lang-block="en">Single-disc rotary scrub, grout dirt removal and shine restore.</span></p>
+      </div>
+      <div class="text-right font-serif font-semibold text-lg svc-price" data-svc-price="8">50 ETB</div>
+      <a href="#book" onclick="preselectService('floor_ceramic')" class="text-sm font-bold text-navy flex items-center gap-1"><span data-lang-block="am">ይያዙ</span><span data-lang-block="en">Book</span> <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    </div>
+    <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="7">
+      <i data-lucide="wind" class="w-7 h-7 text-teal-dark"></i>
+      <div>
+        <h3 class="font-serif font-semibold text-xl"><span data-lang-block="am">የመጋረጃ ስቲም እጥበት</span><span data-lang-block="en">Curtains &amp; Drapes Steam Clean</span></h3>
+        <p class="text-navy/60 text-sm mt-1"><span data-lang-block="am">መጋረጃውን ሳያወርዱ በቦታው ላይ በስቲም ማጠብና ማደስ።</span><span data-lang-block="en">On-site steam freshening and dust removal without unhanging.</span></p>
+      </div>
+      <div class="text-right font-serif font-semibold text-lg svc-price" data-svc-price="7">120 ETB</div>
+      <a href="#book" onclick="preselectService('curtain')" class="text-sm font-bold text-navy flex items-center gap-1"><span data-lang-block="am">ይያዙ</span><span data-lang-block="en">Book</span> <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    </div>
+    <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="5">
+      <i data-lucide="home" class="w-7 h-7 text-teal-dark"></i>
+      <div>
+        <h3 class="font-serif font-semibold text-xl"><span data-lang-block="am">የቪላ / አፓርታማ ሙሉ ጥልቅ ጽዳት</span><span data-lang-block="en">Full Residential Deep Clean</span></h3>
+        <p class="text-navy/60 text-sm mt-1"><span data-lang-block="am">የግንባታ ማጠናቀቂያ፣ የኪራይ መቀየሪያ ወይም መደበኛ ጥልቅ ጽዳት።</span><span data-lang-block="en">Post-construction or move-in top-to-bottom villa/flat cleaning.</span></p>
+      </div>
+      <div class="text-right font-serif font-semibold text-lg svc-price" data-svc-price="5">2,500 ETB</div>
+      <a href="#book" onclick="preselectService('home')" class="text-sm font-bold text-navy flex items-center gap-1"><span data-lang-block="am">ይያዙ</span><span data-lang-block="en">Book</span> <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
     </div>
   </div>
   <div id="price-fallback-warning" class="hidden my-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs flex items-center gap-2">
@@ -236,27 +630,199 @@
   </div>
 </section>
 
-<!-- ================= REVIEWS ================= -->
-<section id="reviews" class="max-w-6xl mx-auto px-6 py-24">
-  <div class="max-w-lg mb-14">
-    <div class="text-teal-dark font-bold text-xs tracking-wide mb-3"><span data-lang-block="am">አስተያየት</span><span data-lang-block="en">TESTIMONIALS</span></div>
-    <h2 class="font-serif font-semibold text-3xl md:text-4xl leading-tight"><span data-lang-block="am">ደንበኞቻችን ምን ይላሉ</span><span data-lang-block="en">What clients say</span></h2>
+<!-- ================= PROJECTS / GALLERY SECTION (BEFORE & AFTER) ================= -->
+<section id="gallery" class="py-24 bg-white dark:bg-slate-900 border-b border-navy/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-14">
+      <div>
+        <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3 py-1 rounded-full">
+          <i data-lucide="image" class="w-3.5 h-3.5"></i>
+          <span data-lang-block="am">የስራ ውጤቶች ጋለሪ</span><span data-lang-block="en">PROJECTS &amp; RESULTS</span>
+        </div>
+        <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
+          <span data-lang-block="am">ከጽዳት በፊት እና በኋላ (Before &amp; After)</span>
+          <span data-lang-block="en">Real Cleaning Transformations</span>
+        </h2>
+        <p class="text-navy/65 dark:text-slate-300 text-sm sm:text-base mt-2 max-w-xl">
+          <span data-lang-block="am">በሰለጠኑ ባለሙያዎቻችን የተከናወኑ እውነተኛ የጽዳት ውጤቶች። በዘመናዊ ስቲም ማሽን ያረጁ ቆሻሻዎችን ሙሉ በሙሉ አስወግደን አዲስ እናደርጋለን።</span>
+          <span data-lang-block="en">Witness the difference of industrial hot-water extraction and steam decontamination across real Addis homes and workspaces.</span>
+        </p>
+      </div>
+      <div class="mt-6 md:mt-0 flex items-center gap-3">
+        <a href="#book" class="bg-navy hover:bg-teal-dark text-white text-xs font-bold px-4 py-2.5 rounded-lg transition flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span data-lang-block="am">የእርሶንም ያጽዱ</span><span data-lang-block="en">Book Transformation</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Gallery Grid of Before/After Showcases -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- 1. Sofa Restoration -->
+      <div class="rounded-2xl border border-navy/10 bg-fog dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition">
+        <div class="relative rounded-xl overflow-hidden mb-4 bg-slate-200 aspect-[4/3] flex flex-col justify-between p-4 bg-gradient-to-br from-amber-900/40 to-slate-900 text-white">
+          <div class="flex justify-between items-center text-[11px] font-bold">
+            <span class="bg-red-500/80 backdrop-blur px-2.5 py-1 rounded">BEFORE: ያረጀ ቆሻሻ</span>
+            <span class="bg-emerald-600/90 backdrop-blur px-2.5 py-1 rounded">AFTER: 100% ንጹህ</span>
+          </div>
+          <div>
+            <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">Bole Medhanealem — Villa</span>
+          </div>
+        </div>
+        <h4 class="font-serif font-bold text-lg text-navy dark:text-white">
+          <span data-lang-block="am">የሳሎን ሶፋ ጥልቅ እጥበት</span><span data-lang-block="en">Luxury Fabric Sofa Restoration</span>
+        </h4>
+        <p class="text-xs text-navy/60 dark:text-slate-400 mt-1">
+          <span data-lang-block="am">የቡና እና የቀለም ጠባሳዎች በስቲም ማሽን ሙሉ በሙሉ ተወግደው ፈጣን ማድረቂያ ተደርጎለታል።</span>
+          <span data-lang-block="en">Deep coffee &amp; oil stains completely extracted with rapid dry steam conditioning.</span>
+        </p>
+      </div>
+
+      <!-- 2. Carpet & Rug Scrub -->
+      <div class="rounded-2xl border border-navy/10 bg-fog dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition">
+        <div class="relative rounded-xl overflow-hidden mb-4 bg-slate-200 aspect-[4/3] flex flex-col justify-between p-4 bg-gradient-to-br from-teal-900/60 to-slate-900 text-white">
+          <div class="flex justify-between items-center text-[11px] font-bold">
+            <span class="bg-red-500/80 backdrop-blur px-2.5 py-1 rounded">BEFORE: አቧራና ጠረን</span>
+            <span class="bg-emerald-600/90 backdrop-blur px-2.5 py-1 rounded">AFTER: ደማቅ ቀለም</span>
+          </div>
+          <div>
+            <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">Kazanchis — Corporate Office</span>
+          </div>
+        </div>
+        <h4 class="font-serif font-bold text-lg text-navy dark:text-white">
+          <span data-lang-block="am">የቢሮ ሙሉ ምንጣፍ እጥበት</span><span data-lang-block="en">High-Traffic Office Carpet</span>
+        </h4>
+        <p class="text-xs text-navy/60 dark:text-slate-400 mt-1">
+          <span data-lang-block="am">በሮተሪ ማሽን ታጥቦ የነበረው ቆሻሻ ወጥቶ ዋናው ደማቅ ቀለሙ ተመልሷል።</span>
+          <span data-lang-block="en">Industrial rotary extraction returned faded carpet fibers back to vivid tone.</span>
+        </p>
+      </div>
+
+      <!-- 3. Ceramic Tile Grout -->
+      <div class="rounded-2xl border border-navy/10 bg-fog dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition">
+        <div class="relative rounded-xl overflow-hidden mb-4 bg-slate-200 aspect-[4/3] flex flex-col justify-between p-4 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white">
+          <div class="flex justify-between items-center text-[11px] font-bold">
+            <span class="bg-red-500/80 backdrop-blur px-2.5 py-1 rounded">BEFORE: ጥቁር መገጣጠሚያ</span>
+            <span class="bg-emerald-600/90 backdrop-blur px-2.5 py-1 rounded">AFTER: የሚያብረቀርቅ</span>
+          </div>
+          <div>
+            <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">CMC — Commercial Restaurant</span>
+          </div>
+        </div>
+        <h4 class="font-serif font-bold text-lg text-navy dark:text-white">
+          <span data-lang-block="am">የወለል ሴራሚክ ማሽን እጥበት</span><span data-lang-block="en">Tile Grout &amp; Ceramic Scrub</span>
+        </h4>
+        <p class="text-xs text-navy/60 dark:text-slate-400 mt-1">
+          <span data-lang-block="am">በመገጣጠሚያዎች ውስጥ የጠቆሩ ቆሻሻዎች በከፍተኛ ኃይል ማሽን ተነስተዋል።</span>
+          <span data-lang-block="en">Blackened grout lines sanitized and restored to pristine clean shine.</span>
+        </p>
+      </div>
+    </div>
   </div>
-  <div class="grid md:grid-cols-3 gap-8">
-    <div class="border-l-2 border-teal pl-5">
-      <p class="text-[15px] text-navy/80 leading-relaxed" data-lang-block="am">"ሶፋዬ እንደ አዲስ ሆኗል፤ ቡድኑ በጣም ጨዋና ፈጣን ነበር።"</p>
-      <p class="text-[15px] text-navy/80 leading-relaxed" data-lang-block="en">"My sofa looks brand new. The team was professional and fast."</p>
-      <p class="mt-4 font-bold text-sm text-navy/50">Bethlehem T. — Bole</p>
+</section>
+
+<!-- ================= REVIEWS / TESTIMONIALS ================= -->
+<section id="reviews" class="max-w-7xl mx-auto px-4 sm:px-6 py-24 border-b border-navy/10">
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-14">
+    <div>
+      <div class="text-teal-dark font-bold text-xs tracking-wider uppercase mb-3"><span data-lang-block="am">የደንበኞች ምስክርነት</span><span data-lang-block="en">CLIENT TESTIMONIALS</span></div>
+      <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
+        <span data-lang-block="am">ደንበኞቻችን ስለ እኛ ምን ይላሉ?</span><span data-lang-block="en">What our clients say</span>
+      </h2>
     </div>
-    <div class="border-l-2 border-teal pl-5">
-      <p class="text-[15px] text-navy/80 leading-relaxed" data-lang-block="am">"በስልክ ቀላል ቀጠሮ ያዝኩ፤ በሰዓቱ ደረሱ።"</p>
-      <p class="text-[15px] text-navy/80 leading-relaxed" data-lang-block="en">"Booking was simple and they arrived exactly on time."</p>
-      <p class="mt-4 font-bold text-sm text-navy/50">Yonas A. — Kazanchis</p>
+    <div class="mt-4 sm:mt-0 flex items-center gap-2 text-amber-500 text-sm font-bold">
+      <div class="flex">
+        <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+        <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+        <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+        <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+        <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+      </div>
+      <span class="text-navy dark:text-white font-serif">4.9 / 5.0 (300+ Reviews)</span>
     </div>
-    <div class="border-l-2 border-teal pl-5">
-      <p class="text-[15px] text-navy/80 leading-relaxed" data-lang-block="am">"ለቢሮያችን ወርሃዊ ውል ገባን፣ ውጤቱ በጣም ጥሩ ነው።"</p>
-      <p class="text-[15px] text-navy/80 leading-relaxed" data-lang-block="en">"We signed a monthly contract for our office — consistently great results."</p>
-      <p class="mt-4 font-bold text-sm text-navy/50">Selam Hotel — Corporate</p>
+  </div>
+
+  <div id="dynamic-reviews-grid" class="grid md:grid-cols-3 gap-8">
+    <div class="border-l-2 border-teal pl-5 bg-fog/50 dark:bg-slate-800/50 p-4 rounded-r-xl">
+      <div class="flex text-amber-400 mb-2">
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+      </div>
+      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="am">"ሶፋዬ ልክ ዛሬ ከሱቅ እንደተገዛ አዲስ ሆኗል! ቡድኑ በጣም ጨዋና ንጹህ ስራ የሚሰሩ ናቸው።"</p>
+      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="en">"My sofa looks brand new. The team was punctual, respectful, and thorough."</p>
+      <p class="mt-4 font-bold text-sm text-teal-dark">Bethlehem Tadesse — ቦሌ (Bole)</p>
+    </div>
+
+    <div class="border-l-2 border-teal pl-5 bg-fog/50 dark:bg-slate-800/50 p-4 rounded-r-xl">
+      <div class="flex text-amber-400 mb-2">
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+      </div>
+      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="am">"በድረ-ገጹ በኢትዮጵያ ቀን ቀጠሮ መያዝ መቻሉ በጣም አስደስቶኛል። በሰዓቱ ደርሰው በ 1 ሰዓት ውስጥ ጨረሱ።"</p>
+      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="en">"Booking through the Ethiopian calendar was super convenient. Arrived right on schedule."</p>
+      <p class="mt-4 font-bold text-sm text-teal-dark">Yonas Assefa — ካዛንቺስ (Kazanchis)</p>
+    </div>
+
+    <div class="border-l-2 border-teal pl-5 bg-fog/50 dark:bg-slate-800/50 p-4 rounded-r-xl">
+      <div class="flex text-amber-400 mb-2">
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+      </div>
+      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="am">"ለሆቴላችን ወርሃዊ የጽዳት ኮንትራት ገብተናል፤ ህጋዊ ደረሰኝና አስተማማኝ ክትትል ይሰጣሉ። ውጤቱ ድንቅ ነው።"</p>
+      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="en">"We contracted them for our hotel property — professional SLA compliance &amp; VAT receipts."</p>
+      <p class="mt-4 font-bold text-sm text-teal-dark">Selam Hospitality Group — Corporate</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= QR CODE SECTION ================= -->
+<section id="qr-code" class="py-20 bg-fog dark:bg-slate-800/50 border-b border-navy/10">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+    <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3 py-1 rounded-full">
+      <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+      <span data-lang-block="am">ፈጣን የሞባይል ስካነር</span><span data-lang-block="en">SCAN &amp; BOOK ON MOBILE</span>
+    </div>
+    <h2 class="font-serif font-bold text-2xl sm:text-3xl text-navy dark:text-white leading-tight mb-3">
+      <span data-lang-block="am">በስልክዎ ስካን በማድረግ በቀጥታ ቀጠሮ ይያዙ</span>
+      <span data-lang-block="en">Scan QR Code to Open on Mobile or Telegram</span>
+    </h2>
+    <p class="text-navy/70 dark:text-slate-300 text-sm max-w-lg mx-auto mb-8">
+      <span data-lang-block="am">የካሜራ መተግበሪያዎን በመክፈት ይህንን QR ኮድ ስካን ያድርጉ፤ ወዲያውኑ የቀጠሮ መመዝገቢያው ወይም የቴሌግራም ቦቱ በስልክዎ ይከፈታል።</span>
+      <span data-lang-block="en">Point your phone camera to scan this QR code to access instant mobile booking and automated Telegram assistant.</span>
+    </p>
+
+    <!-- QR Cards Grid -->
+    <div class="grid sm:grid-cols-2 gap-6 max-w-xl mx-auto">
+      <!-- Website QR -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-navy/10 flex flex-col items-center">
+        <div class="p-3 bg-white rounded-xl shadow-inner border border-gray-100 mb-4">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://meash-cleaning-gy5x.onrender.com" alt="Website QR Code" class="w-36 h-36 rounded-lg">
+        </div>
+        <h4 class="font-bold text-sm text-navy dark:text-white flex items-center gap-1.5 mb-1">
+          <i data-lucide="globe" class="w-4 h-4 text-teal"></i> Website Direct Booking
+        </h4>
+        <span class="text-xs text-navy/50">meash-cleaning-gy5x.onrender.com</span>
+      </div>
+
+      <!-- Telegram Bot QR -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-navy/10 flex flex-col items-center">
+        <div class="p-3 bg-white rounded-xl shadow-inner border border-gray-100 mb-4">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://t.me/meash_cleaning_solution_bot" alt="Telegram Bot QR Code" class="w-36 h-36 rounded-lg">
+        </div>
+        <h4 class="font-bold text-sm text-navy dark:text-white flex items-center gap-1.5 mb-1">
+          <i data-lucide="bot" class="w-4 h-4 text-teal"></i> Telegram Mini App &amp; Bot
+        </h4>
+        <span class="text-xs text-navy/50">@meash_cleaning_solution_bot</span>
+      </div>
     </div>
   </div>
 </section>
@@ -280,36 +846,64 @@
       <form id="booking-form" onsubmit="submitBooking(event)">
         <!-- STEP 1 -->
         <div id="step-1" class="wizard-step">
-          <p class="font-semibold mb-4 text-sm"><span data-lang-block="am">አገልግሎት ይምረጡ</span><span data-lang-block="en">Choose a service</span></p>
-          <div class="grid grid-cols-2 gap-3 mb-2">
-            <button type="button" onclick="selectServiceForBooking('sofa',1)" class="svc-btn border-2 border-navy rounded-lg p-4 text-left flex items-center gap-3 cursor-pointer">
-              <i data-lucide="sofa" class="w-5 h-5 text-teal-dark"></i>
-              <span><span class="font-semibold text-sm block"><span data-lang-block="am">ሶፋ</span><span data-lang-block="en">Sofa</span></span><span class="text-xs text-navy/50 wiz-price" data-wiz-price="1">350 ETB / unit</span></span>
+          <!-- Property Type Selector (NEW for Residential & Commercial) -->
+          <div class="mb-5 bg-teal-light/30 border border-teal/20 p-3.5 rounded-xl">
+            <label class="text-xs font-bold text-teal-dark uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
+              <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+              <span data-lang-block="am">የቦታው / የንብረቱ አይነት</span><span data-lang-block="en">Property Type</span>
+            </label>
+            <select id="book-property-type" class="w-full rounded-lg border border-navy/15 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-navy font-semibold focus:border-teal cursor-pointer">
+              <option value="residential">🏠 Residential Home / Villa / Flat (የመኖሪያ ቤት / ቪላ)</option>
+              <option value="office">🏢 Corporate / Office Workspace (የድርጅት / ተቋም ቢሮ)</option>
+              <option value="hotel">🏨 Hotel / Guest House / Lodge (ሆቴል / ሎጅ)</option>
+              <option value="restaurant">☕ Restaurant / Café / Bar (ሬስቶራንት / ካፌ)</option>
+              <option value="hall">🪑 Event Hall / Church / Cinema (አዳራሽ / ሲኒማ)</option>
+              <option value="commercial_store">🏬 Commercial Store / Showroom (የንግድ ሱቅ)</option>
+              <option value="other">📌 Other Property (ሌላ)</option>
+            </select>
+          </div>
+
+          <p class="font-semibold mb-3 text-sm text-navy"><span data-lang-block="am">የጽዳት አገልግሎት ይምረጡ</span><span data-lang-block="en">Choose cleaning service</span></p>
+          <div class="grid grid-cols-2 gap-2.5 mb-2">
+            <button type="button" onclick="selectServiceForBooking('sofa',1)" class="svc-btn border-2 border-navy rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
+              <i data-lucide="sofa" class="w-5 h-5 text-teal-dark shrink-0"></i>
+              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">ሶፋ</span><span data-lang-block="en">Sofa</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="1">350 ETB / seat</span></span>
             </button>
-            <button type="button" onclick="selectServiceForBooking('carpet',2)" class="svc-btn border-2 border-navy/10 rounded-lg p-4 text-left flex items-center gap-3 cursor-pointer">
-              <i data-lucide="layout-grid" class="w-5 h-5 text-teal-dark"></i>
-              <span><span class="font-semibold text-sm block"><span data-lang-block="am">ምንጣፍ</span><span data-lang-block="en">Carpet</span></span><span class="text-xs text-navy/50 wiz-price" data-wiz-price="2">80 ETB / unit</span></span>
+            <button type="button" onclick="selectServiceForBooking('carpet',2)" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
+              <i data-lucide="layout-grid" class="w-5 h-5 text-teal-dark shrink-0"></i>
+              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">ምንጣፍ</span><span data-lang-block="en">Carpet</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="2">80 ETB / sqm</span></span>
             </button>
-            <button type="button" onclick="selectServiceForBooking('mattress',3)" class="svc-btn border-2 border-navy/10 rounded-lg p-4 text-left flex items-center gap-3 cursor-pointer">
-              <i data-lucide="bed" class="w-5 h-5 text-teal-dark"></i>
-              <span><span class="font-semibold text-sm block"><span data-lang-block="am">ፍራሽ</span><span data-lang-block="en">Mattress</span></span><span class="text-xs text-navy/50 wiz-price" data-wiz-price="3">600 ETB / unit</span></span>
+            <button type="button" onclick="selectServiceForBooking('mattress',3)" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
+              <i data-lucide="bed" class="w-5 h-5 text-teal-dark shrink-0"></i>
+              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">ፍራሽ</span><span data-lang-block="en">Mattress</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="3">600 ETB / unit</span></span>
             </button>
-            <button type="button" onclick="selectServiceForBooking('glass',4)" class="svc-btn border-2 border-navy/10 rounded-lg p-4 text-left flex items-center gap-3 cursor-pointer">
-              <i data-lucide="square" class="w-5 h-5 text-teal-dark"></i>
-              <span><span class="font-semibold text-sm block"><span data-lang-block="am">መስታወት</span><span data-lang-block="en">Glass</span></span><span class="text-xs text-navy/50 wiz-price" data-wiz-price="4">70 ETB / unit</span></span>
+            <button type="button" onclick="selectServiceForBooking('glass',4)" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
+              <i data-lucide="square" class="w-5 h-5 text-teal-dark shrink-0"></i>
+              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">መስታወት</span><span data-lang-block="en">Glass</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="4">70 ETB / sqm</span></span>
+            </button>
+            <button type="button" onclick="selectServiceForBooking('floor_ceramic',8)" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
+              <i data-lucide="sparkles" class="w-5 h-5 text-teal-dark shrink-0"></i>
+              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">ሴራሚክ/ወለል</span><span data-lang-block="en">Floor Scrub</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="8">50 ETB / sqm</span></span>
+            </button>
+            <button type="button" onclick="selectServiceForBooking('office',6)" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
+              <i data-lucide="building-2" class="w-5 h-5 text-teal-dark shrink-0"></i>
+              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">ቢሮ / ተቋም</span><span data-lang-block="en">Office/Facility</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="6">3,500 ETB</span></span>
             </button>
           </div>
-          <label class="text-sm font-semibold block mt-5"><span data-lang-block="am">ብዛት</span><span data-lang-block="en">Quantity</span></label>
-          <div class="flex items-center gap-3 mt-2 mb-2">
-            <button type="button" onclick="changeQty(-1)" class="w-9 h-9 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog">−</button>
-            <span id="qty-display" class="font-serif font-semibold text-xl w-6 text-center">1</span>
-            <button type="button" onclick="changeQty(1)" class="w-9 h-9 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog">+</button>
+          <label class="text-xs font-semibold block mt-4 text-navy"><span data-lang-block="am">ብዛት / መጠን (Quantity / Units)</span><span data-lang-block="en">Quantity</span></label>
+          <div class="flex items-center gap-3 mt-1.5 mb-2">
+            <button type="button" onclick="changeQty(-1)" class="w-9 h-9 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">−</button>
+            <span id="qty-display" class="font-serif font-semibold text-xl w-8 text-center text-navy">1</span>
+            <button type="button" onclick="changeQty(1)" class="w-9 h-9 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">+</button>
           </div>
-          <div class="bg-teal-light rounded-md px-4 py-3 mt-5 mb-6 flex items-center justify-between">
-            <span class="text-sm font-semibold text-teal-dark"><span data-lang-block="am">የግምት ድምር</span><span data-lang-block="en">Estimated total</span></span>
-            <span id="wiz-total" class="font-serif font-semibold text-xl text-teal-dark">350 ETB</span>
+          <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-5 flex items-center justify-between">
+            <span class="text-xs sm:text-sm font-semibold text-teal-dark"><span data-lang-block="am">የግምት ድምር (Estimated Price)</span><span data-lang-block="en">Estimated total</span></span>
+            <span id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">350 ETB</span>
           </div>
-          <button type="button" onclick="showWizardStep(2)" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-md transition cursor-pointer"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
+          <button type="button" onclick="showWizardStep(2)" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-2">
+            <span data-lang-block="am">ቀጣይ: አድራሻ ያስገቡ</span><span data-lang-block="en">Next: Address &amp; Location</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
         </div>
 
         <!-- STEP 2 -->
@@ -558,48 +1152,185 @@
   <div id="track-result" class="hidden mt-6 text-left"></div>
 </section>
 
-<!-- ================= FOOTER ================= -->
-<footer class="bg-navy text-white/60 py-14 border-t border-white/10">
-  <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-4 gap-10 text-sm">
-    <div>
-      <div class="flex items-center gap-2 mb-3"><img src="/logo.jpg" class="w-8 h-8 rounded-md object-cover"><span class="font-serif font-semibold text-white">Meash</span></div>
-      <p>Addis Ababa, Ethiopia</p>
-      <p class="font-bold text-white/80 mt-1">0900 10 31 83</p>
+</section>
+
+<!-- ================= CONTACT US & GOOGLE MAPS SECTION ================= -->
+<section id="contact" class="py-24 bg-white dark:bg-slate-900 border-t border-navy/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
+        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+        <span data-lang-block="am">ያግኙን እና አድራሻችን</span><span data-lang-block="en">CONTACT US &amp; LOCATION</span>
+      </div>
+      <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
+        <span data-lang-block="am">ከእኛ ጋር በቀላሉ ይገናኙ</span>
+        <span data-lang-block="en">Get in Touch with Meash Cleaning</span>
+      </h2>
+      <p class="text-navy/70 dark:text-slate-300 text-sm sm:text-base mt-2">
+        <span data-lang-block="am">ለማንኛውም ጥያቄ፣ የቀጠሮ ማረጋገጫ ወይም የድርጅት ጽዳት ውይይት በማንኛውም ሰዓት ይደውሉልን።</span>
+        <span data-lang-block="en">Call our direct lines, chat with us on Telegram, or visit our headquarters in Bole, Addis Ababa.</span>
+      </p>
     </div>
-    <div>
-      <p class="text-white font-semibold mb-3">Services</p>
-      <p class="mb-1.5"><a href="#services" class="hover:text-teal">Sofa Cleaning</a></p>
-      <p class="mb-1.5"><a href="#services" class="hover:text-teal">Carpet Cleaning</a></p>
-      <p class="mb-1.5"><a href="#services" class="hover:text-teal">Mattress Cleaning</a></p>
-      <p><a href="#services" class="hover:text-teal">Office &amp; Corporate</a></p>
-    </div>
-    <div>
-      <p class="text-white font-semibold mb-3">Company</p>
-      <p class="mb-1.5"><a href="#process" class="hover:text-teal">About</a></p>
-      <p class="mb-1.5"><a href="#reviews" class="hover:text-teal">Reviews</a></p>
-      <p class="mb-3"><a href="tel:0970075509" class="hover:text-teal">Contact (0970 07 55 09)</a></p>
-      <!-- Staff & Admin Secure Access Button (Only in Footer) -->
-      <button type="button" onclick="openStaffModal()" class="inline-flex items-center gap-1.5 text-xs text-teal hover:text-white transition cursor-pointer py-1 border-b border-teal/40 hover:border-white">
-        <i data-lucide="lock" class="w-3.5 h-3.5 text-teal"></i>
-        <span data-lang-block="am">የሰራተኞች መግቢያ (Staff OS)</span>
-        <span data-lang-block="en">Staff &amp; Admin Access</span>
-      </button>
-    </div>
-    <div>
-      <p class="text-white font-semibold mb-3">Follow</p>
-      <p class="mb-1.5"><a href="https://t.me/meashdeepcleaning" target="_blank" class="hover:text-teal flex items-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram Channel (@meashdeepcleaning)</a></p>
-      <p class="mb-1.5"><a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="hover:text-teal flex items-center gap-1.5"><i data-lucide="bot" class="w-3.5 h-3.5"></i> Telegram Bot</a></p>
-      <p class="mb-1.5"><span class="hover:text-teal">Instagram</span></p>
-      <p class="mb-1.5"><span class="hover:text-teal">Facebook</span></p>
-      <p><a href="https://www.tiktok.com/@meashcleaningsolition" target="_blank" class="hover:text-teal flex items-center gap-1.5"><i data-lucide="video" class="w-3.5 h-3.5"></i> TikTok (@meashcleaningsolition)</a></p>
+
+    <div class="grid lg:grid-cols-2 gap-12 items-start">
+      <!-- Contact Details & Form -->
+      <div class="space-y-6">
+        <!-- Phone & Email Cards Grid -->
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="bg-fog dark:bg-slate-800 p-5 rounded-2xl border border-navy/10">
+            <div class="w-10 h-10 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-3">
+              <i data-lucide="phone-call" class="w-5 h-5"></i>
+            </div>
+            <h4 class="font-bold text-xs uppercase tracking-wider text-navy/50 dark:text-slate-400 mb-1"><span data-lang-block="am">ቀጥታ ስልክ መስመሮች</span><span data-lang-block="en">Phone Numbers</span></h4>
+            <a href="tel:0970075509" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition">0970 07 55 09</a>
+            <a href="tel:0998142190" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition mt-0.5">0998 14 21 90</a>
+          </div>
+
+          <div class="bg-fog dark:bg-slate-800 p-5 rounded-2xl border border-navy/10">
+            <div class="w-10 h-10 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-3">
+              <i data-lucide="mail" class="w-5 h-5"></i>
+            </div>
+            <h4 class="font-bold text-xs uppercase tracking-wider text-navy/50 dark:text-slate-400 mb-1"><span data-lang-block="am">ኢሜይል እና ቴሌግራም</span><span data-lang-block="en">Email &amp; Telegram</span></h4>
+            <a href="mailto:info@meashcleaning.com" class="block font-semibold text-sm text-navy dark:text-white hover:text-teal transition truncate">info@meashcleaning.com</a>
+            <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="block font-bold text-sm text-teal-dark hover:underline mt-1">@meash_cleaning_solution_bot</a>
+          </div>
+        </div>
+
+        <!-- Address & Working Hours -->
+        <div class="bg-fog dark:bg-slate-800 p-6 rounded-2xl border border-navy/10 space-y-4">
+          <div class="flex items-start gap-3">
+            <i data-lucide="map-pin" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
+            <div>
+              <h5 class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">ዋና ቢሮ አድራሻ</span><span data-lang-block="en">Main Office Address</span></h5>
+              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">ቦሌ መድኃኔዓለም ቤተክርስቲያን አካባቢ፣ አዲስ አበባ፣ ኢትዮጵያ (Bole Medhanealem, Addis Ababa)</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i data-lucide="clock" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
+            <div>
+              <h5 class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">የስራ ሰዓት</span><span data-lang-block="en">Working Hours</span></h5>
+              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">ከሰኞ እስከ እሁድ፦ ከጠዋቱ 1:00 እስከ ምሽቱ 2:00 (7 Days a Week, 7:00 AM – 8:00 PM)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Quote Message Form -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-navy/10 shadow-sm">
+          <h4 class="font-bold text-base text-navy dark:text-white mb-3 flex items-center gap-2">
+            <i data-lucide="send" class="w-4 h-4 text-teal"></i>
+            <span data-lang-block="am">ፈጣን መልእክት ወይም የዋጋ ጥያቄ ይላኩልን</span>
+            <span data-lang-block="en">Send Us a Quick Message</span>
+          </h4>
+          <form onsubmit="event.preventDefault(); alert('መልእክትዎ ደርሶናል! በደቂቃዎች ውስጥ እንደውላለን።');" class="space-y-3">
+            <div class="grid sm:grid-cols-2 gap-3">
+              <input type="text" placeholder="ሙሉ ስም / Full Name" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal">
+              <input type="tel" placeholder="ስልክ ቁጥር / Phone Number (09...)" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal">
+            </div>
+            <textarea placeholder="የሚፈልጉትን አገልግሎት ወይም ጥያቄዎን እዚህ ይጻፉ... / Message or cleaning requirements" rows="3" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal"></textarea>
+            <button type="submit" class="bg-navy hover:bg-teal-dark text-white font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 w-full cursor-pointer">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              <span data-lang-block="am">መልእክት ላክ</span><span data-lang-block="en">Send Message</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Google Maps Embed Container -->
+      <div class="rounded-3xl overflow-hidden border border-navy/10 shadow-lg h-[460px] lg:h-[580px] bg-slate-100 dark:bg-slate-800 relative">
+        <iframe
+          title="Meash Cleaning Location in Bole Addis Ababa"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15761.73719047913!2d38.7818784!3d9.0003056!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b85043d92f5d7%3A0xe54d7e7c80d85ef4!2sBole%20Medhanealem%20Cathedral!5e0!3m2!1sen!2set!4v1700000000000!5m2!1sen!2set"
+          width="100%"
+          height="100%"
+          style="border:0;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          class="w-full h-full grayscale-[20%] hover:grayscale-0 transition-all duration-500">
+        </iframe>
+        <!-- Floating Pill over Map -->
+        <div class="absolute bottom-5 left-5 right-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur p-4 rounded-2xl shadow-xl border border-navy/10 text-navy dark:text-white flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-teal-light text-teal-dark flex items-center justify-center shrink-0">
+              <i data-lucide="map-pin" class="w-5 h-5 text-teal"></i>
+            </div>
+            <div>
+              <h5 class="font-serif font-bold text-sm">Meash Cleaning HQ</h5>
+              <p class="text-xs text-navy/60 dark:text-slate-400">Bole Medhanealem, Addis Ababa</p>
+            </div>
+          </div>
+          <a href="https://maps.google.com/?q=Bole+Medhanealem+Addis+Ababa" target="_blank" class="text-xs font-bold bg-navy hover:bg-teal text-white px-3 py-1.5 rounded-lg transition shrink-0">
+            Open Map
+          </a>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="max-w-6xl mx-auto px-6 mt-10 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-white/40">
-    <div>© 2026 Meash Cleaning Solution. All rights reserved.</div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="bg-navy text-white/60 py-16 border-t border-white/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-4 gap-10 text-sm">
+    <div>
+      <div class="flex items-center gap-2.5 mb-3">
+        <img src="/logo.jpg" class="w-9 h-9 rounded-lg object-cover shadow-sm">
+        <span class="font-serif font-bold text-lg text-white">MEASH CLEANING</span>
+      </div>
+      <p class="text-xs text-teal-light font-semibold mb-3">"Your Environment, Our Responsibility."</p>
+      <p class="text-xs text-white/70 leading-relaxed mb-3">
+        በአዲስ አበባ ከተማ ለቤቶችና ተቋማት በጀርመን ስቲም ቴክኖሎጂ የታገዘ የጥልቅ ጽዳት አገልግሎት።
+      </p>
+      <div class="font-bold text-white text-sm space-y-1">
+        <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0970 07 55 09</p>
+        <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0998 14 21 90</p>
+      </div>
+    </div>
+    <div>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">የጽዳት አገልግሎቶች</p>
+      <ul class="space-y-2 text-xs">
+        <li><a href="#services" class="hover:text-teal transition">የሶፋ ጥልቅ እጥበት (Sofa)</a></li>
+        <li><a href="#services" class="hover:text-teal transition">የምንጣፍ ማሽን እጥበት (Carpet)</a></li>
+        <li><a href="#services" class="hover:text-teal transition">የፍራሽ ስቲም እጥበት (Mattress)</a></li>
+        <li><a href="#services" class="hover:text-teal transition">የወለልና ሴራሚክ ማሽን እጥበት</a></li>
+        <li><a href="#commercial" class="hover:text-teal transition font-semibold text-teal-light">የቢሮና ተቋማት ጽዳት (Office)</a></li>
+        <li><a href="#commercial" class="hover:text-teal transition font-semibold text-teal-light">የሆቴልና ሬስቶራንት ጽዳት</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ድርጅት እና መረጃ</p>
+      <ul class="space-y-2 text-xs">
+        <li><a href="#about" class="hover:text-teal transition">ስለ እኛ (About Us)</a></li>
+        <li><a href="#gallery" class="hover:text-teal transition">የስራ ጋለሪ (Before &amp; After)</a></li>
+        <li><a href="#reviews" class="hover:text-teal transition">የደንበኞች አስተያየት (Reviews)</a></li>
+        <li><a href="#qr-code" class="hover:text-teal transition">ሞባይል QR ኮድ</a></li>
+        <li><a href="#contact" class="hover:text-teal transition">አድራሻ እና ካርታ (Contact)</a></li>
+        <li class="pt-2">
+          <!-- Staff & Admin Secure Access Button -->
+          <button type="button" onclick="openStaffModal()" class="inline-flex items-center gap-1.5 text-xs text-teal hover:text-white transition cursor-pointer py-1 border-b border-teal/40 hover:border-white">
+            <i data-lucide="lock" class="w-3.5 h-3.5 text-teal"></i>
+            <span>የሰራተኞች እና አድሚን መግቢያ (Staff OS)</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ማህበራዊ ትስስር</p>
+      <ul class="space-y-2 text-xs">
+        <li><a href="https://t.me/meashdeepcleaning" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashdeepcleaning)</a></li>
+        <li><a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="bot" class="w-3.5 h-3.5 text-teal"></i> Telegram Bot (@meash_cleaning)</a></li>
+        <li><a href="https://www.tiktok.com/@meashcleaningsolition" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="video" class="w-3.5 h-3.5 text-teal"></i> TikTok (@meashcleaningsolition)</a></li>
+      </ul>
+      <div class="mt-4 pt-4 border-t border-white/10 text-xs text-white/50">
+        Bole Medhanealem, Addis Ababa, Ethiopia
+      </div>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 mt-12 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-white/40">
+    <div>© 2026 MEASH CLEANING SOLUTION. All rights reserved. Slogan: "Your Environment, Our Responsibility."</div>
     <div>
       <button type="button" onclick="openStaffModal()" class="inline-flex items-center gap-1.5 text-white/40 hover:text-white transition cursor-pointer">
         <i data-lucide="shield-check" class="w-3.5 h-3.5 text-teal"></i>
-        <span>Staff OS</span>
+        <span>Meash Staff Management System</span>
       </button>
     </div>
   </div>
@@ -929,6 +1660,32 @@
     updateWizardTotal();
   }
 
+  async function loadPublicReviews(){
+    try {
+      const res = await fetch('/api/public/reviews');
+      if (!res.ok) return;
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data.data || []);
+      if (list && list.length > 0) {
+        const grid = document.getElementById('dynamic-reviews-grid');
+        if (grid) {
+          grid.innerHTML = list.slice(0, 6).map(r => `
+            <div class="border-l-2 border-teal pl-5 bg-fog/50 dark:bg-slate-800/50 p-4 rounded-r-xl">
+              <div class="flex text-amber-400 mb-2">
+                ${'<i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>'.repeat(r.rating || 5)}
+              </div>
+              <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed">"${r.comment || ''}"</p>
+              <p class="mt-4 font-bold text-sm text-teal-dark">${r.customer ? r.customer.full_name : 'Verified Customer'}</p>
+            </div>
+          `).join('');
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load dynamic reviews:', e);
+    }
+  }
+
   function formatPrice(v){
     if (v == null || isNaN(v)) return (document.documentElement.getAttribute('data-lang') === 'am') ? 'ዋጋ ለማወቅ ይደውሉ' : 'Call for price';
     return v.toLocaleString() + ' ' + currency;
@@ -946,12 +1703,33 @@
   }
 
   // ---- Booking wizard state ----
-  const svcMap = { sofa: 1, carpet: 2, mattress: 3, glass: 4 };
+  const svcMap = { 
+    sofa: 1, 
+    carpet: 2, 
+    mattress: 3, 
+    glass: 4, 
+    home: 5, 
+    office: 6, 
+    curtain: 7, 
+    floor_ceramic: 8,
+    hotel_clean: 9,
+    restaurant_clean: 10,
+    hall_chair_clean: 11,
+    contract_cleaning: 12
+  };
   const svcNames = {
     sofa: 'Sofa Cleaning / የሶፋ እጥበት',
     carpet: 'Carpet Cleaning / የምንጣፍ እጥበት',
     mattress: 'Mattress Sanitization / የፍራሽ እጥበት',
-    glass: 'Glass & Window Cleaning / የመስታወት እጥበት'
+    glass: 'Glass & Window Cleaning / የመስታወት እጥበት',
+    home: 'Full Residential Deep Clean / የመኖሪያ ቤት ጥልቅ ጽዳት',
+    office: 'Office & Facility Cleaning / የቢሮና ተቋማት ጽዳት',
+    curtain: 'Curtains & Drapes Steam / የመጋረጃ እጥበት',
+    floor_ceramic: 'Floor & Ceramic Scrub / የወለል ሴራሚክ እጥበት',
+    hotel_clean: 'Hotel Deep Cleaning / የሆቴል ጥልቅ ጽዳት',
+    restaurant_clean: 'Restaurant Sanitization / የሬስቶራንት ጽዳት',
+    hall_chair_clean: 'Hall & Chairs Cleaning / የአዳራሽ ወንበሮች እጥበት',
+    contract_cleaning: 'Regular Contract Cleaning / ቋሚ የኮንትራት ውል'
   };
 
   let selectedSvc = 'sofa';
@@ -1052,7 +1830,7 @@
       appointment_date: document.getElementById('book-date').value,
       appointment_time_slot: document.getElementById('book-time-slot').value,
       subscription_plan: plan,
-      notes: document.getElementById('book-notes').value || 'Website booking',
+      notes: (document.getElementById('book-notes').value || 'Website booking') + ' | Property: ' + (document.getElementById('book-property-type')?.value || 'residential'),
       items: [{
         service_id: selectedSvcId,
         item_name: svcNames[selectedSvc] || 'Cleaning Service',
@@ -1515,6 +2293,7 @@
     initTheme();
     if (window.lucide) lucide.createIcons();
     loadServicePrices();
+    loadPublicReviews();
     initEthDatePicker();
   });
 </script>

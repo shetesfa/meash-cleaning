@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Service;
 use App\Models\Subscription;
+use App\Models\WebsiteSetting;
 use App\Services\EthiopianCalendarService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,18 @@ use Illuminate\Support\Facades\DB;
 
 class PublicWebsiteController extends Controller
 {
+    /**
+     * Get public website settings (phones, slogans, about text, etc.)
+     */
+    public function settings(): JsonResponse
+    {
+        $settings = WebsiteSetting::getAllKeyValue();
+        return response()->json([
+            'success' => true,
+            'settings' => $settings,
+        ]);
+    }
+
     public function services(): JsonResponse
     {
         $services = Service::where('is_active', true)
