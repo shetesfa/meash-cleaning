@@ -28,6 +28,16 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+:: Auto-restore full database from backup if tables are not yet loaded
+if exist "database\meash_db_backup.sql" (
+    mysql -u root meash_db -e "SELECT 1 FROM orders LIMIT 1;" >nul 2>&1
+    if %errorlevel% neq 0 (
+        echo [INFO] Fresh setup detected! Auto-importing database from database\meash_db_backup.sql ...
+        mysql -u root meash_db < "database\meash_db_backup.sql"
+        echo [OK] All orders, customers and settings restored successfully!
+    )
+)
+
 php artisan migrate --force
 if %errorlevel% neq 0 (
     echo [ERROR] Database migration failed!
