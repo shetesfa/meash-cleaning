@@ -32,15 +32,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $isLocalOrTesting = app()->environment('local', 'testing');
+        $seedDemoData = env('MEASH_SEED_DEMO_DATA', true);
 
-        if (! $isLocalOrTesting) {
-            $this->command->info('Running DatabaseSeeder in production mode (demo data disabled).');
+        if (! $isLocalOrTesting && ! $seedDemoData) {
+            $this->command->info('Running DatabaseSeeder in strict production mode.');
             $ownerEmail = env('MEASH_OWNER_EMAIL', env('OWNER_EMAIL', 'owner@meash.com'));
-            $ownerPassword = env('MEASH_OWNER_PASSWORD', env('OWNER_PASSWORD'));
+            $ownerPassword = env('MEASH_OWNER_PASSWORD', env('OWNER_PASSWORD', 'password'));
 
-            if (empty($ownerPassword)) {
-                $this->command->warn('MEASH_OWNER_PASSWORD is not set in .env. Skipping production owner creation.');
-            } elseif (! User::where('role', 'owner')->exists()) {
+            if (! User::where('role', 'owner')->exists()) {
                 User::create([
                     'name' => env('MEASH_OWNER_NAME', 'Meash General Manager'),
                     'email' => $ownerEmail,
@@ -66,11 +65,11 @@ class DatabaseSeeder extends Seeder
         // 1. CORE USERS ACROSS ALL ROLES
         // ==========================================
         $owner = User::create([
-            'name' => 'Meash General Manager',
-            'email' => 'owner@meash.com',
-            'phone' => '0911000001',
+            'name' => env('MEASH_OWNER_NAME', 'Meash General Manager'),
+            'email' => env('MEASH_OWNER_EMAIL', 'owner@meash.com'),
+            'phone' => env('MEASH_OWNER_PHONE', '0911000001'),
             'role' => 'owner',
-            'password' => Hash::make('password'),
+            'password' => Hash::make(env('MEASH_OWNER_PASSWORD', 'password')),
             'is_active' => true,
         ]);
 

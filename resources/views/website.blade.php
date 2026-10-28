@@ -2267,14 +2267,14 @@
         })
       });
 
-      let data = {};
+      let data = null;
       try {
         data = await res.json();
       } catch (jsonErr) {
-        data = { message: 'የተሳሳተ የይለፍ ቃል ነው፤ እባክዎ በትክክል ያስገቡ!' };
+        data = null;
       }
 
-      if (res.ok && data.token) {
+      if (res.ok && data && data.token) {
         localStorage.setItem('meash_token', data.token);
         localStorage.setItem('meash_user', JSON.stringify(data.user));
         btnText.innerText = 'ትክክል ነው! ወደ ሲስተሙ በማስገባት ላይ...';
@@ -2285,9 +2285,16 @@
         }, 300);
       } else {
         errBox.classList.remove('hidden');
-        let errorMsg = data.message || 'የተሳሳተ የይለፍ ቃል ነው፤ እባክዎ በትክክል ያስገቡ!';
-        if (data.errors && typeof data.errors === 'object') {
-          errorMsg = Object.values(data.errors).flat().join(' ');
+        let errorMsg = 'የተሳሳተ የይለፍ ቃል ነው፤ እባክዎ በትክክል ያስገቡ!';
+        if (res.status === 429) {
+          errorMsg = 'በርካታ ሙከራዎች ተደርገዋል፤ እባክዎ ጥቂት ደቂቃ ቆይተው እንደገና ይሞክሩ።';
+        } else if (res.status >= 500) {
+          errorMsg = 'ሰርቨሩ በመነሳት ላይ ነው (Render Cold Start)፤ እባክዎ ከ20-30 ሰከንድ በኋላ እንደገና ይሞክሩ።';
+        } else if (data && data.errors && typeof data.errors === 'object') {
+          const rawErr = Object.values(data.errors).flat().join(' ');
+          errorMsg = rawErr.includes('credentials') ? 'የተሳሳተ የይለፍ ቃል ወይም ተጠቃሚ አልተገኘም!' : rawErr;
+        } else if (data && data.message) {
+          errorMsg = data.message.includes('credentials') ? 'የተሳሳተ የይለፍ ቃል ወይም ተጠቃሚ አልተገኘም!' : data.message;
         }
         errText.innerText = errorMsg;
         pwdInput.classList.add('border-red-500');
@@ -2298,7 +2305,7 @@
       }
     } catch (err) {
       errBox.classList.remove('hidden');
-      errText.innerText = 'የሰርቨር ግንኙነት ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ።';
+      errText.innerText = 'የሰርቨር ግንኙነት ችግር ተፈጥሯል፤ ሰርቨሩ ከእንቅልፉ በመነሳት ላይ ሊሆን ስለሚችል እባክዎ ጥቂት ሰከንድ ጠብቀው እንደገና ይሞክሩ።';
       btn.disabled = false;
       btnText.innerText = 'ግባ (Login)';
     }
@@ -2315,9 +2322,10 @@
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ login: email, password: 'password' })
       });
-      const data = await res.json();
+      let data = null;
+      try { data = await res.json(); } catch(e) {}
 
-      if (res.ok && data.token) {
+      if (res.ok && data && data.token) {
         localStorage.setItem('meash_token', data.token);
         localStorage.setItem('meash_user', JSON.stringify(data.user));
         closeStaffModal();
@@ -2335,10 +2343,13 @@
         if (window.lucide) lucide.createIcons();
         setTimeout(() => { window.location.href = '/app'; }, 600);
       } else {
-        if (errBox) { errBox.classList.remove('hidden'); errText.innerText = data.message || 'መግባት አልተቻለም!'; }
+        let msg = 'መግባት አልተቻለም!';
+        if (res.status >= 500) msg = 'ሰርቨሩ በመነሳት ላይ ነው፤ እባክዎ ጥቂት ሰከንድ ጠብቀው እንደገና ይሞክሩ።';
+        else if (data && data.message) msg = data.message;
+        if (errBox) { errBox.classList.remove('hidden'); errText.innerText = msg; }
       }
     } catch (err) {
-      if (errBox) { errBox.classList.remove('hidden'); errText.innerText = 'የሰርቨር ግንኙነት ችግር!'; }
+      if (errBox) { errBox.classList.remove('hidden'); errText.innerText = 'የሰርቨር ግንኙነት ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ።'; }
     }
   }
 

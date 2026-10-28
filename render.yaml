@@ -32,3 +32,7 @@ services:
         value: "owner@meash.com"
       - key: MEASH_OWNER_PHONE
         value: "0911000001"
+      - key: MEASH_OWNER_PASSWORD
+        value: "password"
+      - key: MEASH_SEED_DEMO_DATA
+        value: "true"

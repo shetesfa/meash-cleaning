@@ -13,11 +13,9 @@ fi
 echo "Running migrations..."
 php artisan migrate --force
 
-# Seed database only in local environment
-if [ "$APP_ENV" = "local" ]; then
-    echo "Seeding local database..."
-    php artisan db:seed --force
-fi
+# Seed database with initial accounts and services (idempotent, skips if already seeded)
+echo "Ensuring initial database records are seeded..."
+php artisan db:seed --force
 
 # Link storage and optimize cache
 php artisan storage:link || true

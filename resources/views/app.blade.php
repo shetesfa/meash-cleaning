@@ -512,20 +512,39 @@
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({ login: loginInput, password: pwdInput })
                 });
-                const data = await res.json();
-                if (res.ok && data.token) {
+
+                let data = null;
+                try {
+                    data = await res.json();
+                } catch(e) {
+                    data = null;
+                }
+
+                if (res.ok && data && data.token) {
                     localStorage.setItem('meash_token', data.token);
                     localStorage.setItem('meash_user', JSON.stringify(data.user));
                     currentUser = Object.assign(currentUser, data.user);
                     checkAuthStatus();
                     initApp();
+                } else if (res.status === 429) {
+                    if (errText) errText.innerText = 'በርካታ ያልተሳኩ ሙከራዎች ተደርገዋል፤ እባክዎ ጥቂት ደቂቃ ቆይተው እንደገና ይሞክሩ (Too many attempts)::';
+                    if (errBanner) errBanner.classList.remove('hidden');
+                } else if (res.status >= 500) {
+                    if (errText) errText.innerText = 'ሰርቨሩ በመነሳት ላይ ነው (Render Cold Start)፤ እባክዎ ከ20-30 ሰከንድ በኋላ እንደገና ይሞክሩ::';
+                    if (errBanner) errBanner.classList.remove('hidden');
                 } else {
-                    const msg = (data && data.message) ? data.message : 'የተሳሳተ ኢሜይል/ስልክ ወይም የይለፍ ቃል አስገብተዋል::';
+                    let msg = 'የተሳሳተ ኢሜይል/ስልክ ወይም የይለፍ ቃል አስገብተዋል::';
+                    if (data && data.errors && typeof data.errors === 'object') {
+                        const rawErr = Object.values(data.errors).flat().join(' ');
+                        msg = rawErr.includes('credentials') ? 'የተሳሳተ የይለፍ ቃል ወይም ተጠቃሚ አልተገኘም (Credentials do not match)::' : rawErr;
+                    } else if (data && data.message) {
+                        msg = data.message.includes('credentials') ? 'የተሳሳተ የይለፍ ቃል ወይም ተጠቃሚ አልተገኘም (Credentials do not match)::' : data.message;
+                    }
                     if (errText) errText.innerText = msg;
                     if (errBanner) errBanner.classList.remove('hidden');
                 }
             } catch (err) {
-                if (errText) errText.innerText = 'የኔትወርክ ወይም የሰርቨር ችግር አጋጥሟል:: እባክዎ እንደገና ይሞክሩ::';
+                if (errText) errText.innerText = 'የኔትወርክ ወይም የሰርቨር ችግር አጋጥሟል:: ሰርቨሩ ከእንቅልፉ በመነሳት ላይ ሊሆን ስለሚችል እባክዎ ጥቂት ሰከንድ ጠብቀው እንደገና ይሞክሩ::';
                 if (errBanner) errBanner.classList.remove('hidden');
             } finally {
                 if (btn) btn.disabled = false;
