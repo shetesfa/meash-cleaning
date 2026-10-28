@@ -193,7 +193,7 @@
         <!-- 2. Center: Elegant Compact Role Switcher -->
         <div class="relative">
             <button type="button" onclick="toggleRoleDropdown(event)" id="role-dropdown-btn" class="flex items-center gap-1.5 px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-slate-800 border border-slate-700 hover:border-cyan-500 text-white font-bold text-xs shadow-sm transition cursor-pointer">
-        <span id="header-role-badge"> owner</span>
+                <span id="header-role-badge">ዋና ስራ አስኪያጅ (GM)</span>
                 <i data-lucide="chevron-down" id="role-chevron" class="w-3.5 h-3.5 text-slate-400 transition-transform"></i>
             </button>
 

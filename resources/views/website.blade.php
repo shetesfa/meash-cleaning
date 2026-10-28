@@ -97,55 +97,213 @@
   html.dark .border-gray-200, html.dark .border-slate-200 { border-color: #334155 !important; }
   html.dark input, html.dark select, html.dark textarea { background: #0F172A !important; color: #FFFFFF !important; border-color: #334155 !important; }
   html.dark .shadow-xl, html.dark .shadow-lg, html.dark .shadow-md, html.dark .shadow-sm { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important; }
+
+  /* Active Language Button Styles */
+  .lang-btn.active-lang, .lang-btn.bg-teal, .lang-btn.bg-navy { background-color: #0E7C7B !important; color: #FFFFFF !important; }
+  html.dark .lang-btn.active-lang, html.dark .lang-btn.bg-teal, html.dark .lang-btn.bg-navy { background-color: #0E7C7B !important; color: #FFFFFF !important; }
 </style>
 </head>
 <body class="antialiased">
 
-<!-- ================= NAV ================= -->
-<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-navy/10">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-    <a href="#top" class="flex items-center gap-2.5">
-      <img src="/logo.jpg" alt="Meash Logo" class="w-9 h-9 rounded-lg object-cover shadow-sm">
+<!-- ================= TOP ANNOUNCEMENT & HOTLINE BAR (Desktop/Tablet) ================= -->
+<div class="hidden md:block bg-[#070D18] text-slate-300 text-[11px] font-medium border-b border-white/10 relative z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-8 flex items-center justify-between">
+    <!-- Left: Address & Status -->
+    <div class="flex items-center gap-4">
+      <span class="flex items-center gap-1.5 text-slate-300">
+        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-teal-400"></i>
+        <span>አዲስ አበባ (አያት - ተስፉ ሞል ፊትለፊት) • Addis Ababa, Ayat</span>
+      </span>
+      <span class="hidden lg:flex items-center gap-1.5 text-emerald-400 font-semibold">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>24/7 ፈጣን አገልግሎት • Active Service</span>
+      </span>
+    </div>
+
+    <!-- Right: Hotlines & Shortcuts -->
+    <div class="flex items-center gap-3">
+      <a href="tel:0970075509" class="hover:text-teal-400 transition flex items-center gap-1 font-bold text-white">
+        <i data-lucide="phone-call" class="w-3 h-3 text-teal-400"></i>
+        <span>0970 07 55 09</span>
+      </a>
+      <span class="text-slate-600">/</span>
+      <a href="tel:0998142190" class="hover:text-teal-400 transition flex items-center gap-1 font-bold text-white">
+        <span>0998 14 21 90</span>
+      </a>
+      <span class="text-slate-600">|</span>
+      <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition flex items-center gap-1 text-cyan-300 font-semibold">
+        <i data-lucide="send" class="w-3 h-3 text-cyan-400"></i>
+        <span>Telegram Bot</span>
+      </a>
+      <span class="text-slate-600">|</span>
+      <button type="button" onclick="openStaffModal()" class="hover:text-teal-400 transition flex items-center gap-1 text-slate-400 hover:text-white cursor-pointer">
+        <i data-lucide="lock" class="w-3 h-3"></i>
+        <span>Staff Portal</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MAIN STICKY NAVIGATION ================= -->
+<header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0B1220]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
+    
+    <!-- Brand Logo & Name -->
+    <a href="#top" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
+      <div class="relative">
+        <img src="/logo.jpg" alt="Meash Cleaning Logo" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-300 border border-teal/20">
+        <span class="absolute -bottom-0.5 -right-0.5 w-2.5 sm:w-3 h-2.5 sm:h-3 bg-emerald-500 border-2 border-white dark:border-[#0B1220] rounded-full"></span>
+      </div>
       <div class="leading-tight">
-        <span class="font-serif font-bold text-base sm:text-lg tracking-tight text-navy block">MEASH</span>
-        <span class="text-[10px] tracking-wider text-teal-dark font-bold uppercase hidden sm:block">Cleaning Solution</span>
+        <div class="flex items-center gap-1.5">
+          <span class="font-serif font-black text-lg sm:text-xl tracking-tight text-navy dark:text-white">MEASH</span>
+          <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-teal/15 text-teal dark:text-teal-400 tracking-wider">PRO</span>
+        </div>
+        <span class="text-[10px] sm:text-[11px] font-bold text-teal-dark dark:text-teal-400 tracking-wide block">CLEANING SOLUTION</span>
       </div>
     </a>
-    <nav class="hidden lg:flex items-center gap-5 text-[13px] font-semibold tracking-wide text-navy/75">
-      <a href="#about" class="hover:text-teal transition"><span data-lang-block="am">ስለ እኛ</span><span data-lang-block="en">About</span></a>
-      <a href="#services" class="hover:text-teal transition"><span data-lang-block="am">የቤት ጽዳት</span><span data-lang-block="en">Residential</span></a>
-      <a href="#commercial" class="hover:text-teal transition text-teal-dark font-bold flex items-center gap-1">
-        <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+
+    <!-- Desktop Nav Links (xl:flex) -->
+    <nav class="hidden xl:flex items-center gap-1 text-[13px] font-bold text-slate-700 dark:text-slate-200">
+      <a href="#about" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">ስለ እኛ</span><span data-lang-block="en">About</span></a>
+      <a href="#services" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">የቤት ጽዳት</span><span data-lang-block="en">Residential</span></a>
+      <a href="#commercial" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition flex items-center gap-1 text-teal dark:text-teal-400">
+        <i data-lucide="building-2" class="w-4 h-4"></i>
         <span data-lang-block="am">የድርጅቶች ጽዳት</span><span data-lang-block="en">Commercial</span>
       </a>
-      <a href="#gallery" class="hover:text-teal transition"><span data-lang-block="am">የስራ ጋለሪ</span><span data-lang-block="en">Projects</span></a>
-      <a href="#reviews" class="hover:text-teal transition"><span data-lang-block="am">አስተያየቶች</span><span data-lang-block="en">Reviews</span></a>
-      <a href="#qr-code" class="hover:text-teal transition flex items-center gap-1"><i data-lucide="qr-code" class="w-3.5 h-3.5"></i> QR</a>
-      <a href="#contact" class="hover:text-teal transition"><span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Contact</span></a>
-      <a href="#track" class="hover:text-teal transition"><span data-lang-block="am">ትዕዛዝ ፈልግ</span><span data-lang-block="en">Track</span></a>
-    </nav>
-    <div class="flex items-center gap-2">
-      <!-- Direct Call Buttons -->
-      <a href="tel:0970075509" class="hidden xl:flex items-center gap-1.5 text-xs font-bold bg-teal/10 text-teal-dark px-3 py-1.5 rounded-full hover:bg-teal/20 transition">
-        <i data-lucide="phone-call" class="w-3.5 h-3.5"></i> 0970 07 55 09
+      <a href="#gallery" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">የስራ ጋለሪ</span><span data-lang-block="en">Projects</span></a>
+      <a href="#reviews" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">አስተያየቶች</span><span data-lang-block="en">Reviews</span></a>
+      <a href="#contact" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Contact</span></a>
+      <a href="#track" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+        <i data-lucide="search" class="w-3.5 h-3.5"></i>
+        <span data-lang-block="am">ትዕዛዝ መከታተያ</span><span data-lang-block="en">Track</span>
       </a>
+    </nav>
+
+    <!-- Header Action Controls -->
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <!-- Direct Call Button (Desktop / Mobile Icon) -->
+      <a href="tel:0970075509" class="hidden sm:flex xl:hidden items-center gap-1.5 text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-1.5 rounded-full transition shadow-sm" title="Call Now">
+        <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-500"></i>
+        <span class="hidden md:inline font-mono">0970 07 55 09</span>
+      </a>
+      <a href="tel:0970075509" class="flex sm:hidden p-2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition items-center justify-center shrink-0" title="Call Meash">
+        <i data-lucide="phone" class="w-4 h-4"></i>
+      </a>
+
       <!-- Dark Mode Toggle Button -->
-      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 rounded-full border border-navy/15 text-navy hover:bg-navy/5 transition cursor-pointer flex items-center justify-center" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
+      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 rounded-full border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
         <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
       </button>
 
-      <div class="hidden sm:flex items-center gap-1 border border-navy/15 rounded-full p-0.5">
-        <button type="button" onclick="setLang('am')" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer">አማ</button>
-        <button type="button" onclick="setLang('en')" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer">EN</button>
-        <button type="button" onclick="setLang('both')" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer">አማ/EN</button>
+      <!-- Language Selector (Desktop / Tablet) -->
+      <div class="hidden sm:flex items-center gap-0.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-full p-0.5">
+        <button type="button" onclick="setLang('am')" data-lang="am" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition">አማ</button>
+        <button type="button" onclick="setLang('en')" data-lang="en" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition">EN</button>
+        <button type="button" onclick="setLang('both')" data-lang="both" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition">አማ/EN</button>
       </div>
-      <a href="#book" class="bg-navy hover:bg-teal-dark text-white text-[12px] sm:text-[13px] font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-md transition shadow-sm flex items-center gap-1.5">
-        <i data-lucide="calendar" class="w-3.5 h-3.5 hidden sm:inline"></i>
-        <span data-lang-block="am">ዋጋ / ቀጠሮ</span><span data-lang-block="en">Quote / Book</span>
+
+      <!-- Main CTA: Quote / Book -->
+      <a href="#book" class="bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-[12px] sm:text-[13px] font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5">
+        <i data-lucide="calendar" class="w-4 h-4 hidden sm:inline"></i>
+        <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span>
       </a>
+
+      <!-- Mobile Hamburger Button (Visible on screens < xl) -->
+      <button type="button" onclick="toggleMobileNav()" id="mobile-menu-btn" class="xl:hidden p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center justify-center cursor-pointer shrink-0" aria-label="Open Navigation Menu">
+        <i data-lucide="menu" id="mobile-menu-icon" class="w-5 h-5"></i>
+      </button>
     </div>
   </div>
 </header>
+
+<!-- ================= MOBILE NAVIGATION DRAWER (Full Phone Experience) ================= -->
+<div id="mobile-nav-drawer" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden xl:hidden transition-all duration-300">
+  <div class="fixed inset-y-0 right-0 max-w-xs w-full bg-white dark:bg-[#0B1220] shadow-2xl flex flex-col justify-between border-l border-slate-200 dark:border-slate-800">
+    <!-- Drawer Top Header -->
+    <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <img src="/logo.jpg" alt="Meash Logo" class="w-9 h-9 rounded-xl object-cover border border-teal/20">
+        <div>
+          <span class="font-serif font-black text-base text-navy dark:text-white">MEASH</span>
+          <span class="text-[9px] font-bold text-teal block">CLEANING SOLUTION</span>
+        </div>
+      </div>
+      <button type="button" onclick="closeMobileNav()" class="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer" aria-label="Close menu">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Drawer Navigation Content -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+      <!-- Language Picker in Mobile Drawer -->
+      <div class="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
+        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block px-1">ቋንቋ ይምረጡ / Select Language</span>
+        <div class="grid grid-cols-3 gap-1">
+          <button type="button" onclick="setLang('am')" data-lang="am" class="lang-btn py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer">አማርኛ</button>
+          <button type="button" onclick="setLang('en')" data-lang="en" class="lang-btn py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer">English</button>
+          <button type="button" onclick="setLang('both')" data-lang="both" class="lang-btn py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer">ሁለቱም</button>
+        </div>
+      </div>
+
+      <!-- Nav Links -->
+      <div class="space-y-1 font-bold text-sm text-slate-800 dark:text-slate-200">
+        <a href="#about" onclick="closeMobileNav()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+          <i data-lucide="info" class="w-4 h-4 text-teal"></i>
+          <span><span data-lang-block="am">ስለ እኛ</span><span data-lang-block="en">About Us</span></span>
+        </a>
+        <a href="#services" onclick="closeMobileNav()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+          <i data-lucide="sparkles" class="w-4 h-4 text-teal"></i>
+          <span><span data-lang-block="am">የቤት ጽዳት አገልግሎቶች</span><span data-lang-block="en">Residential Services</span></span>
+        </a>
+        <a href="#commercial" onclick="closeMobileNav()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-teal/10 text-teal dark:text-teal-400 hover:bg-teal/20 transition">
+          <i data-lucide="building-2" class="w-4 h-4 text-teal"></i>
+          <span><span data-lang-block="am">የድርጅቶችና ቢሮ ጽዳት</span><span data-lang-block="en">Commercial Cleaning</span></span>
+        </a>
+        <a href="#gallery" onclick="closeMobileNav()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+          <i data-lucide="image" class="w-4 h-4 text-teal"></i>
+          <span><span data-lang-block="am">የስራዎች ጋለሪ</span><span data-lang-block="en">Projects Gallery</span></span>
+        </a>
+        <a href="#reviews" onclick="closeMobileNav()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+          <i data-lucide="star" class="w-4 h-4 text-amber-400"></i>
+          <span><span data-lang-block="am">የደንበኞች አስተያየት</span><span data-lang-block="en">Customer Reviews</span></span>
+        </a>
+        <a href="#track" onclick="closeMobileNav()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+          <i data-lucide="search" class="w-4 h-4 text-cyan-400"></i>
+          <span><span data-lang-block="am">የትዕዛዝ መከታተያ</span><span data-lang-block="en">Track Your Order</span></span>
+        </a>
+        <a href="#contact" onclick="closeMobileNav()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+          <i data-lucide="map-pin" class="w-4 h-4 text-teal"></i>
+          <span><span data-lang-block="am">አድራሻ እና ካርታ</span><span data-lang-block="en">Contact & Location</span></span>
+        </a>
+      </div>
+
+      <!-- Quick Action Cards in Mobile Menu -->
+      <div class="pt-2 space-y-2 border-t border-slate-200 dark:border-slate-800">
+        <a href="tel:0970075509" class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+          <i data-lucide="phone-call" class="w-4 h-4"></i>
+          <span>ቀጥታ ይደውሉ፡ 0970 07 55 09</span>
+        </a>
+        <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 rounded-xl bg-[#0088cc] hover:bg-[#0077b5] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow">
+          <i data-lucide="send" class="w-4 h-4"></i>
+          <span>ቴሌግራም ቦት (Telegram Order)</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Drawer Footer -->
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 space-y-2">
+      <a href="#book" onclick="closeMobileNav()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-dark text-white font-black text-xs flex items-center justify-center gap-2 shadow-md">
+        <i data-lucide="calendar" class="w-4 h-4"></i>
+        <span>ዋጋ አስላ / ቀጠሮ ያዝ (Book Now)</span>
+      </a>
+      <button type="button" onclick="closeMobileNav(); openStaffModal();" class="w-full py-2 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-teal flex items-center justify-center gap-1.5 cursor-pointer">
+        <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+        <span>የሰራተኞች መግቢያ (Staff Portal)</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <main id="top">
 
@@ -1686,15 +1844,67 @@
     showWizardStep(4);
   }
 
+  // ---- Mobile Navigation Drawer Toggle ----
+  function toggleMobileNav() {
+    const drawer = document.getElementById('mobile-nav-drawer');
+    const icon = document.getElementById('mobile-menu-icon');
+    if (!drawer) return;
+    drawer.classList.toggle('hidden');
+    const isOpen = !drawer.classList.contains('hidden');
+    if (icon) {
+      icon.setAttribute('data-lucide', isOpen ? 'x' : 'menu');
+      if (window.lucide) lucide.createIcons();
+    }
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+
+  function closeMobileNav() {
+    const drawer = document.getElementById('mobile-nav-drawer');
+    const icon = document.getElementById('mobile-menu-icon');
+    if (drawer && !drawer.classList.contains('hidden')) {
+      drawer.classList.add('hidden');
+      document.body.style.overflow = '';
+      if (icon) {
+        icon.setAttribute('data-lucide', 'menu');
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+  }
+
+  // Close mobile drawer when clicking backdrop outside drawer content
+  document.addEventListener('click', (e) => {
+    const drawer = document.getElementById('mobile-nav-drawer');
+    const btn = document.getElementById('mobile-menu-btn');
+    if (drawer && !drawer.classList.contains('hidden')) {
+      if (e.target === drawer) {
+        closeMobileNav();
+      }
+    }
+  });
+
   // ---- Language toggle ----
   function setLang(l){
     document.documentElement.setAttribute('data-lang', l);
     localStorage.setItem('meash_lang', l);
     document.querySelectorAll('.lang-btn').forEach(btn => {
-      btn.classList.remove('bg-navy', 'text-white');
+      btn.classList.remove('active-lang', 'bg-teal', 'bg-navy', 'text-white', 'shadow-sm');
+      btn.classList.add('text-slate-600', 'dark:text-slate-300');
     });
-    const activeBtn = Array.from(document.querySelectorAll('.lang-btn')).find(b => b.getAttribute('onclick')?.includes(`'${l}'`));
-    if (activeBtn) activeBtn.classList.add('bg-navy', 'text-white');
+    document.querySelectorAll(`.lang-btn[data-lang="${l}"]`).forEach(btn => {
+      btn.classList.add('active-lang', 'bg-teal', 'text-white', 'shadow-sm');
+      btn.classList.remove('text-slate-600', 'dark:text-slate-300');
+    });
+    // Fallback for buttons without data-lang
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      if (btn.getAttribute('onclick')?.includes(`'${l}'`)) {
+        btn.classList.add('active-lang', 'bg-teal', 'text-white', 'shadow-sm');
+        btn.classList.remove('text-slate-600', 'dark:text-slate-300');
+      }
+    });
     if (window.lucide) lucide.createIcons();
   }
 
@@ -2368,7 +2578,10 @@
 
   // Close on Escape
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeStaffModal();
+    if (e.key === 'Escape') {
+      closeStaffModal();
+      closeMobileNav();
+    }
   });
 
   // ---- Theme (Dark/Light Mode) Engine ----
