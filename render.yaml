@@ -21,7 +21,7 @@ services:
       - key: DB_DATABASE
         value: /var/www/html/database/database.sqlite
       - key: TELEGRAM_BOT_TOKEN
-        value: "8797114776:AAEaNUnduUjTTyBJ-63FiPx8lNhDgqohjbU"
+        sync: false
       - key: TELEGRAM_BOT_USERNAME
         value: "meash_cleaning_solution_bot"
       - key: TELEGRAM_WEBHOOK_URL
