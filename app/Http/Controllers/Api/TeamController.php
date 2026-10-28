@@ -58,6 +58,7 @@ class TeamController extends Controller
                 'today_jobs' => [],
                 'upcoming_jobs' => [],
                 'completed_today' => [],
+                'completed_jobs' => [],
             ]);
         }
 
@@ -93,7 +94,15 @@ class TeamController extends Controller
             ->latest('completed_at')
             ->get();
 
-        // 3. Upcoming future appointments for this team
+        // 3. Completed history (all completed jobs for this team, latest 50)
+        $completedHistory = (clone $jobsQuery)
+            ->where('order_status', 'completed')
+            ->orderByDesc('completed_at')
+            ->orderByDesc('updated_at')
+            ->limit(50)
+            ->get();
+
+        // 4. Upcoming future appointments for this team
         $upcomingJobs = (clone $jobsQuery)
             ->whereDate('appointment_date', '>', $today)
             ->whereIn('order_status', ['confirmed', 'assigned', 'new'])
@@ -113,6 +122,7 @@ class TeamController extends Controller
             'teams_list' => $allTeams,
             'today_jobs' => $todayJobs->map($formatJob),
             'completed_today' => $completedToday->map($formatJob),
+            'completed_jobs' => $completedHistory->map($formatJob),
             'upcoming_jobs' => $upcomingJobs->map($formatJob),
         ]);
     }

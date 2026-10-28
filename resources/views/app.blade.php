@@ -1411,11 +1411,35 @@
         // ==========================================
         // 3. CLEANING TEAM HUB (Android Phone View)
         // ==========================================
+        function showCleanerJobAddress(jobId) {
+            const job = (window._currentCleanerJobs || []).find(j => Number(j.id) === Number(jobId));
+            if (!job) {
+                openCustomerAddressModal(jobId, 'ውድ ደንበኛ', '0970075509', 'አዲስ አበባ (Addis Ababa)', activeCleaningTeamName);
+                return;
+            }
+            const custName = job.customer?.full_name || 'ውድ ደንበኛ';
+            const custPhone = job.customer?.phone || job.customer?.alt_phone || '0970075509';
+            let addr = job.address || job.customer?.address || '';
+            if (job.customer?.subcity && !addr.includes(job.customer.subcity)) {
+                addr = addr ? `${addr}, ${job.customer.subcity}` : job.customer.subcity;
+            }
+            if (job.customer?.landmark && !addr.includes(job.customer.landmark)) {
+                addr = addr ? `${addr} (${job.customer.landmark})` : job.customer.landmark;
+            }
+            if (!addr || addr === 'undefined' || addr === 'null' || !addr.trim()) {
+                addr = 'አዲስ አበባ (Addis Ababa)';
+            }
+            openCustomerAddressModal(job.id, custName, custPhone, addr, activeCleaningTeamName);
+        }
+
         async function renderCleanerView(container) {
             try {
                 let jobs = [];
                 let currentTeam = null;
                 let teamsList = [];
+                let todayList = [];
+                let upcomingList = [];
+                let completedList = [];
 
                 // Check offline cached jobs first if available
                 let cached = [];
@@ -1429,6 +1453,7 @@
 
                 if (cached && cached.length > 0 && window.meashOffline && !window.meashOffline.isOnline) {
                     jobs = cached;
+                    todayList = cached;
                 } else {
                     const teamParam = activeCleaningTeamId ? `?team_id=${activeCleaningTeamId}` : '';
                     const res = await apiFetch('/api/teams/my-jobs' + teamParam);
@@ -1436,10 +1461,12 @@
                         return; // Redirected to login screen cleanly
                     }
                     const data = await res.json();
-                    const todayList = data.today_jobs || [];
-                    const upcomingList = data.upcoming_jobs || [];
-                    // Merge so that all assigned jobs for this team are immediately visible
-                    jobs = [...todayList, ...upcomingList.filter(u => !todayList.some(t => t.id === u.id))];
+                    todayList = data.today_jobs || [];
+                    upcomingList = data.upcoming_jobs || [];
+                    completedList = (data.completed_jobs && data.completed_jobs.length > 0)
+                        ? data.completed_jobs
+                        : (data.completed_today || []);
+
                     currentTeam = data.team;
                     teamsList = data.teams_list || [];
 
@@ -1451,20 +1478,50 @@
                     // Cache into IndexedDB for offline access
                     if (window.meashOffline && typeof window.meashOffline.cacheItems === 'function') {
                         try {
-                            await window.meashOffline.cacheItems('my_jobs', jobs);
+                            await window.meashOffline.cacheItems('my_jobs', todayList);
                         } catch (e) {
                             console.warn('Offline caching skipped:', e);
                         }
                     }
                 }
 
+                // Determine which dataset to display based on activeTab
+                let tabTitle = 'የዛሬ የስራ ዝርዝሮች';
+                let tabBadge = `${todayList.length} ንቁ ስራዎች`;
+                let emptyTitle = 'ሁሉም ስራዎች ተጠናቀዋል!';
+                let emptyMsg = 'ለዛሬ ለቡድንዎ የተመደበ ያልተጠናቀቀ ስራ የለም።';
+
+                if (activeTab === 'cleaner_history') {
+                    jobs = completedList;
+                    tabTitle = 'የተጠናቀቁ ስራዎች (Completed Jobs)';
+                    tabBadge = `${completedList.length} የተጠናቀቁ`;
+                    emptyTitle = 'ምንም የተጠናቀቀ ስራ የለም';
+                    emptyMsg = 'እስካሁን የተጠናቀቀ ስራ አልተመዘገበም (No completed jobs found).';
+                } else if (activeTab === 'cleaner_upcoming') {
+                    jobs = upcomingList;
+                    tabTitle = 'ቀጣይ ቀጠሮዎች (Upcoming Appointments)';
+                    tabBadge = `${upcomingList.length} ቀጣይ`;
+                    emptyTitle = 'ምንም ቀጣይ ቀጠሮዎች የሉም';
+                    emptyMsg = 'ምንም ቀጣይ ቀጠሮዎች አልተገኙም (No upcoming jobs).';
+                } else {
+                    // Default: cleaner_jobs
+                    jobs = todayList;
+                    tabTitle = 'የዛሬ የስራ ዝርዝሮች (Today\'s Jobs)';
+                    tabBadge = `${todayList.length} ንቁ ስራዎች`;
+                    emptyTitle = 'ሁሉም ስራዎች ተጠናቀዋል!';
+                    emptyMsg = 'ለዛሬ ለቡድንዎ የተመደበ ያልተጠናቀቀ ስራ የለም።';
+                }
+
+                window._currentCleanerJobs = jobs;
+
                 container.innerHTML = `
-                    <div class="max-w-2xl mx-auto space-y-6">
+                    <div class="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+                        <!-- Top Header Banner -->
                         <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-cyan-900/70 to-blue-900/70 border border-cyan-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
                             <div>
                                 <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">የመስክ አጽጂ ቡድን መከታተያ</span>
-                                <h2 class="text-xl font-black text-white">የዛሬ የስራ ዝርዝሮች</h2>
-                <p class="text-xs text-cyan-300 font-semibold mt-0.5"> ${EC.formatEth(new Date())} • ${currentTeam?.team_name || activeCleaningTeamName}</p>
+                                <h2 class="text-xl font-black text-white">${tabTitle}</h2>
+                                <p class="text-xs text-cyan-300 font-semibold mt-0.5">${EC.formatEth(new Date())} • ${currentTeam?.team_name || activeCleaningTeamName}</p>
                             </div>
                             <div class="flex items-center gap-2 self-start sm:self-auto">
                                 <div class="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-2xl border border-cyan-500/50 shadow">
@@ -1475,89 +1532,132 @@
                                         `).join('')}
                                     </select>
                                 </div>
-                                <span class="px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-400 text-xs font-black shrink-0">${jobs.length} ንቁ ስራዎች</span>
+                                <span class="px-3 py-1.5 rounded-xl ${activeTab === 'cleaner_history' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'} text-xs font-black shrink-0">${tabBadge}</span>
                             </div>
+                        </div>
+
+                        <!-- Tab Quick Switch Pills (All 3 Views Accessible with 1 Tap!) -->
+                        <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-900/90 rounded-2xl border border-slate-800 shadow-md">
+                            <button onclick="setTab('cleaner_jobs')" class="py-2.5 px-2 text-center rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'cleaner_jobs' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30' : 'text-slate-400 hover:text-white bg-slate-800/40'}">
+                                <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
+                                <span>የዛሬ (${todayList.length})</span>
+                            </button>
+                            <button onclick="setTab('cleaner_upcoming')" class="py-2.5 px-2 text-center rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'cleaner_upcoming' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30' : 'text-slate-400 hover:text-white bg-slate-800/40'}">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                <span>ቀጣይ (${upcomingList.length})</span>
+                            </button>
+                            <button onclick="setTab('cleaner_history')" class="py-2.5 px-2 text-center rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'cleaner_history' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' : 'text-slate-400 hover:text-white bg-slate-800/40'}">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                <span>የተጠናቀቁ (${completedList.length})</span>
+                            </button>
                         </div>
 
                         ${jobs.length === 0 ? `
                             <div class="p-12 text-center bg-slate-900 rounded-3xl border border-slate-800">
-                                <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-400 mx-auto mb-3"></i>
-                                <h4 class="text-lg font-bold text-white">ሁሉም ስራዎች ተጠናቀዋል!</h4>
-                                <p class="text-xs text-slate-400 mt-1">ለዛሬ ለቡድንዎ የተመደበ ያልተጠናቀቀ ስራ የለም።</p>
+                                <i data-lucide="${activeTab === 'cleaner_history' ? 'clock' : (activeTab === 'cleaner_upcoming' ? 'calendar' : 'check-circle-2')}" class="w-12 h-12 ${activeTab === 'cleaner_history' ? 'text-emerald-400' : 'text-cyan-400'} mx-auto mb-3"></i>
+                                <h4 class="text-lg font-bold text-white">${emptyTitle}</h4>
+                                <p class="text-xs text-slate-400 mt-1">${emptyMsg}</p>
                             </div>
                         ` : ''}
 
                         <!-- JOB CARDS -->
                         <div class="space-y-4">
                             ${jobs.map(job => `
-                                <div class="bg-slate-900 border ${job.order_status === 'cleaning' ? 'border-cyan-500 shadow-xl shadow-cyan-500/10' : 'border-slate-800'} rounded-3xl p-5 sm:p-6 space-y-4">
+                                <div class="bg-slate-900 border ${job.order_status === 'cleaning' ? 'border-cyan-500 shadow-xl shadow-cyan-500/10' : (job.order_status === 'completed' ? 'border-emerald-500/30' : 'border-slate-800')} rounded-3xl p-5 sm:p-6 space-y-4">
                                     <!-- የቀጠሮ ሰዓት & Status -->
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-2">
-                                            <span class="w-2.5 h-2.5 rounded-full ${job.order_status === 'cleaning' ? 'bg-cyan-400 animate-ping' : 'bg-blue-400'}"></span>
-                                            <span class="text-xs font-bold text-white">${formatTimeSlot(job.appointment_time_slot)}</span>
+                                            <span class="w-2.5 h-2.5 rounded-full ${job.order_status === 'cleaning' ? 'bg-cyan-400 animate-ping' : (job.order_status === 'completed' ? 'bg-emerald-400' : 'bg-blue-400')}"></span>
+                                            <span class="text-xs font-bold text-white">${job.eth_date ? (job.eth_date + ' • ') : ''}${formatTimeSlot(job.appointment_time_slot)}</span>
                                         </div>
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${job.order_status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : (job.order_status === 'cleaning' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-blue-500/20 text-blue-400')}">
-                                            ${job.order_status}
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${job.order_status === 'completed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : (job.order_status === 'cleaning' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-blue-500/20 text-blue-400')}">
+                                            ${job.order_status === 'completed' ? 'ተጠናቋል (Completed)' : (job.order_status === 'cleaning' ? 'በጽዳት ላይ (In Progress)' : (job.order_status === 'on_the_way' ? 'በመንገድ ላይ' : job.order_status))}
                                         </span>
                                     </div>
 
                                     <!-- Customer Details -->
                                     <div>
-                                        <h3 class="text-lg font-black text-white">${job.customer?.full_name}</h3>
+                                        <h3 class="text-lg font-black text-white">${job.customer?.full_name || 'ውድ ደንበኛ'}</h3>
                                         <p class="text-xs font-medium text-slate-400 flex items-center gap-1.5 mt-1">
-                                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i>
-                                            <span>${job.address || job.customer?.address}</span>
+                                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400 shrink-0"></i>
+                                            <span>${job.address || job.customer?.address || 'አዲስ አበባ'}</span>
                                         </p>
                                     </div>
 
                                     <!-- የሚፀዱ እቃዎች / አገልግሎት Breakdown -->
                                     <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-2">
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">የሚፀዱ የተመደቡ እቃዎች</span>
-                                        ${(job.items || []).map(item => `
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">የሚፀዱ የተመደቡ እቃዎች / አገልግሎት</span>
+                                        ${(job.items && job.items.length > 0) ? job.items.map(item => `
                                             <div class="flex justify-between items-center text-xs">
-                                                <span class="font-bold text-slate-200">${item.item_name}</span>
-                                                <span class="px-2 py-0.5 rounded bg-slate-700 text-cyan-400 font-extrabold">× ${parseFloat(item.quantity)}</span>
+                                                <span class="font-bold text-slate-200">${item.service?.name_am || item.item_name || 'ጽዳት'}</span>
+                                                <span class="px-2 py-0.5 rounded bg-slate-700 text-cyan-400 font-extrabold">× ${parseFloat(item.quantity || 1)}</span>
                                             </div>
-                                        `).join('')}
+                                        `).join('') : `
+                                            <div class="text-xs text-slate-300 font-semibold flex items-center justify-between">
+                                                <span>${job.order_number || 'መደበኛ የጽዳት አገልግሎት'}</span>
+                                                <span class="text-cyan-400 font-mono">${job.total_amount ? (Number(job.total_amount).toLocaleString() + ' ETB') : ''}</span>
+                                            </div>
+                                        `}
                                     </div>
 
-                                    <!-- Action Buttons (1-Tap Experience) -->
-                                    <div class="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                        <a href="tel:${job.customer?.phone}" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 border border-slate-700">
-                                            <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-400"></i>
-                                            <span>ደውል</span>
-                                        </a>
-                                        <button onclick="openCustomerAddressModal('${(job.address || job.customer?.address || 'አዲስ አበባ').replace(/'/g, "\'")}', '${(job.customer?.full_name || 'ውድ ደንበኛ').replace(/'/g, "\'")}', '${(job.customer?.phone || '').replace(/'/g, "\'")}')\" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i><span>አድራሻ</span></button>
+                                    <!-- Action Buttons -->
+                                    ${job.order_status === 'completed' ? `
+                                        <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-slate-800/80">
+                                            <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+                                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+                                                <span>ይህ ስራ በተሳካ ሁኔታ ተጠናቋል!</span>
+                                            </div>
+                                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                                <a href="tel:${job.customer?.phone || ''}" class="flex-1 sm:flex-initial py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 border border-slate-700">
+                                                    <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                                    <span>ደውል</span>
+                                                </a>
+                                                <button onclick="showCleanerJobAddress(${job.id})" class="flex-1 sm:flex-initial py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+                                                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                                    <span>አድራሻ</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ` : `
+                                        <div class="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                            <a href="tel:${job.customer?.phone || ''}" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 border border-slate-700">
+                                                <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                                <span>ደውል</span>
+                                            </a>
+                                            <button onclick="showCleanerJobAddress(${job.id})" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+                                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-cyan-400"></i>
+                                                <span>አድራሻ</span>
+                                            </button>
 
-                                        ${(job.order_status === 'new' || job.order_status === 'assigned') ? `
-                                            <button onclick="cleanerStartJourney(${job.id})" class="py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg col-span-2">
-                                                <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
-                        <span> ወደ ደንበኛው ጉዞ ጀምር</span>
-                                            </button>
-                                        ` : (job.order_status === 'on_the_way' ? `
-                                            <button onclick="cleanerJobAction(${job.id}, 'start')" class="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg">
-                                                <i data-lucide="play" class="w-3.5 h-3.5"></i>
-                                                <span>ስራ ጀምር</span>
-                                            </button>
-                                        ` : (job.order_status === 'cleaning' ? `
-                                            <button onclick="cleanerJobAction(${job.id}, 'complete')" class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg">
-                                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                                                <span>ስራ ጨርስ</span>
-                                            </button>
-                                        ` : `
-                      <span class="py-2.5 text-center text-xs font-bold text-emerald-400 col-span-2"> ተጠናቋል</span>
-                                        `))}
+                                            ${(job.order_status === 'new' || job.order_status === 'assigned' || job.order_status === 'confirmed') ? `
+                                                <button onclick="cleanerStartJourney(${job.id})" class="py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg col-span-2 cursor-pointer">
+                                                    <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
+                                                    <span>ወደ ደንበኛው ጉዞ ጀምር</span>
+                                                </button>
+                                            ` : (job.order_status === 'on_the_way' ? `
+                                                <button onclick="cleanerJobAction(${job.id}, 'start')" class="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg cursor-pointer">
+                                                    <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                                                    <span>ስራ ጀምር</span>
+                                                </button>
+                                            ` : (job.order_status === 'cleaning' ? `
+                                                <button onclick="cleanerJobAction(${job.id}, 'complete')" class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg cursor-pointer">
+                                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                                    <span>ስራ ጨርስ</span>
+                                                </button>
+                                            ` : `
+                                                <span class="py-2.5 text-center text-xs font-bold text-emerald-400 col-span-2">ተጠናቋል</span>
+                                            `))}
 
-                                        <button onclick="openProblemReportModal(${job.id})" class="py-2.5 rounded-xl bg-red-950/50 hover:bg-red-900/50 text-red-300 text-xs font-bold flex items-center justify-center gap-1.5 border border-red-500/30">
-                                            <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-400"></i>
-                                            <span>ችግር</span>
-                                        </button>
-                                        <button onclick="openPostponeOrderModal(${job.id}, '${job.order_number}', '${job.customer?.full_name}')" class="py-2.5 rounded-xl bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 border border-amber-500/30 ${job.order_status === 'new' || job.order_status === 'assigned' ? 'col-span-1' : 'col-span-2 sm:col-span-4'} transition-all">
-                                            <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-amber-400"></i>
-                      <span> ቀጠሮ አስተላልፍ</span>
-                                        </button>
-                                    </div>
+                                            <button onclick="openProblemReportModal(${job.id})" class="py-2.5 rounded-xl bg-red-950/50 hover:bg-red-900/50 text-red-300 text-xs font-bold flex items-center justify-center gap-1.5 border border-red-500/30 cursor-pointer">
+                                                <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-400"></i>
+                                                <span>ችግር</span>
+                                            </button>
+                                            <button onclick="openPostponeOrderModal(${job.id}, '${(job.order_number || '').replace(/'/g, "\\'")}', '${(job.customer?.full_name || 'ደንበኛ').replace(/'/g, "\\'")}')" class="py-2.5 rounded-xl bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 text-xs font-bold flex items-center justify-center gap-1.5 border border-amber-500/30 ${job.order_status === 'new' || job.order_status === 'assigned' ? 'col-span-1' : 'col-span-2 sm:col-span-4'} transition-all cursor-pointer">
+                                                <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-amber-400"></i>
+                                                <span>ቀጠሮ አስተላልፍ</span>
+                                            </button>
+                                        </div>
+                                    `}
                                 </div>
                             `).join('')}
                         </div>
@@ -4924,7 +5024,38 @@
         // ==========================================
         let activeInAppMap = null;
 
-        function openCustomerAddressModal(orderId, custName, custPhone, address, teamName = 'Team Alpha') {
+        function openCustomerAddressModal(param1, param2, param3, param4, param5) {
+            let orderId, custName, custPhone, address, teamName;
+            // Support both (orderId, custName, custPhone, address, teamName) and (address, custName, custPhone)
+            if (typeof param1 === 'string' && isNaN(Number(param1)) && (param1.includes(' ') || param1.includes(',') || param1.length > 8)) {
+                address = param1;
+                custName = param2;
+                custPhone = param3;
+                orderId = null;
+                teamName = param5 || activeCleaningTeamName || 'Team Alpha';
+            } else if (arguments.length >= 4) {
+                orderId = param1;
+                custName = param2;
+                custPhone = param3;
+                address = param4;
+                teamName = param5 || activeCleaningTeamName || 'Team Alpha';
+            } else {
+                orderId = param1;
+                custName = param2;
+                custPhone = param3;
+                address = param4;
+                teamName = param5 || activeCleaningTeamName || 'Team Alpha';
+            }
+
+            if (!custName || custName === 'undefined' || custName === 'null') {
+                custName = 'ውድ ደንበኛ';
+            }
+            if (!custPhone || custPhone === 'undefined' || custPhone === 'null') {
+                custPhone = '0970075509';
+            }
+            if (!address || address === 'undefined' || address === 'null' || !String(address).trim()) {
+                address = 'አዲስ አበባ (Addis Ababa)';
+            }
             const container = document.getElementById('generic-modal-container');
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
