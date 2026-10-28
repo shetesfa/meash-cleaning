@@ -188,14 +188,17 @@
         </a>
       </div>
 
-      <!-- Quick Contact Pills (Direct Call & Telegram) -->
-      <div class="mt-6 flex flex-wrap items-center gap-4 text-xs font-bold text-navy">
+      <!-- Quick Contact Pills (Direct Call, WhatsApp & Telegram) -->
+      <div class="mt-6 flex flex-wrap items-center gap-3 text-xs font-bold text-navy">
         <span class="text-navy/50 font-medium"><span data-lang-block="am">አሁኑኑ ይደውሉ፡</span><span data-lang-block="en">Call Now:</span></span>
         <a href="tel:0970075509" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
           <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0970 07 55 09
         </a>
         <a href="tel:0998142190" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
           <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0998 14 21 90
+        </a>
+        <a href="https://wa.me/251970075509?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20inquire%20about%20your%20services" target="_blank" class="hover:opacity-90 flex items-center gap-1.5 bg-[#25D366]/15 text-[#128C7E] dark:text-[#25D366] border border-[#25D366]/30 px-3 py-1.5 rounded-md">
+          <i data-lucide="message-circle" class="w-3.5 h-3.5 text-[#25D366]"></i> WhatsApp
         </a>
         <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="hover:text-teal flex items-center gap-1.5 bg-teal/10 text-teal-dark border border-teal/20 px-3 py-1.5 rounded-md">
           <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram Bot
@@ -1200,12 +1203,22 @@
           </div>
 
           <div class="bg-fog dark:bg-slate-800 p-5 rounded-2xl border border-navy/10">
-            <div class="w-10 h-10 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-3">
-              <i data-lucide="mail" class="w-5 h-5"></i>
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center">
+                <i data-lucide="message-square" class="w-5 h-5"></i>
+              </div>
+              <div class="flex gap-2">
+                <a href="https://wa.me/251970075509?text=Hello%20Meash%20Cleaning%20Solution" target="_blank" rel="noopener noreferrer" class="text-[#25D366] hover:opacity-80" title="WhatsApp"><i data-lucide="message-circle" class="w-5 h-5"></i></a>
+                <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" rel="noopener noreferrer" class="text-teal-dark hover:opacity-80" title="Telegram"><i data-lucide="send" class="w-5 h-5"></i></a>
+              </div>
             </div>
-            <h4 class="font-bold text-xs uppercase tracking-wider text-navy/50 dark:text-slate-400 mb-1"><span data-lang-block="am">ኢሜይል እና ቴሌግራም</span><span data-lang-block="en">Email &amp; Telegram</span></h4>
+            <h4 class="font-bold text-xs uppercase tracking-wider text-navy/50 dark:text-slate-400 mb-1"><span data-lang-block="am">ኦንላይን መልእክት እና ኢሜይል</span><span data-lang-block="en">Messaging &amp; Email</span></h4>
             <a href="mailto:info@meashcleaning.com" class="block font-semibold text-sm text-navy dark:text-white hover:text-teal transition truncate">info@meashcleaning.com</a>
-            <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="block font-bold text-sm text-teal-dark hover:underline mt-1">@meash_cleaning_solution_bot</a>
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              <a href="https://wa.me/251970075509?text=Hello%20Meash%20Cleaning%20Solution" target="_blank" rel="noopener noreferrer" class="font-bold text-[#128C7E] dark:text-[#25D366] hover:underline flex items-center gap-1"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i> WhatsApp</a>
+              <span class="text-navy/30 dark:text-slate-500">•</span>
+              <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" rel="noopener noreferrer" class="font-bold text-teal-dark hover:underline flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram</a>
+            </div>
           </div>
         </div>
 
@@ -2415,5 +2428,25 @@
     });
   }
 </script>
+<!-- Floating Quick Chat Buttons (WhatsApp & Telegram) -->
+<div class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2.5 pointer-events-auto">
+  <a href="https://wa.me/251970075509?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20request%20a%20quote" 
+     target="_blank" 
+     rel="noopener noreferrer"
+     class="flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white px-3.5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-xs font-bold"
+     title="Chat on WhatsApp">
+    <i data-lucide="message-circle" class="w-5 h-5 text-white"></i>
+    <span class="hidden sm:inline">WhatsApp</span>
+  </a>
+  <a href="https://t.me/meash_cleaning_solution_bot" 
+     target="_blank" 
+     rel="noopener noreferrer"
+     class="flex items-center gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white px-3.5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-xs font-bold"
+     title="Telegram Bot">
+    <i data-lucide="send" class="w-5 h-5 text-white"></i>
+    <span class="hidden sm:inline">Telegram Bot</span>
+  </a>
+</div>
+
 </body>
 </html>
