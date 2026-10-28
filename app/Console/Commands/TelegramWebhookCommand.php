@@ -21,14 +21,31 @@ class TelegramWebhookCommand extends Command
         }
 
         if ($action === 'set') {
-            $url = config('services.telegram.webhook_url') ?: 'https://meash-cleaning.onrender.com/api/telegram/webhook';
+            $configuredWebhook = config('services.telegram.webhook_url');
+            $appUrl = config('app.url') ?: env('APP_URL');
+
+            if (!empty($configuredWebhook) && !str_contains($configuredWebhook, 'meash-cleaning.onrender.com')) {
+                $url = $configuredWebhook;
+            } elseif (!empty($appUrl) && $appUrl !== 'http://localhost') {
+                $url = rtrim($appUrl, '/') . '/api/telegram/webhook';
+            } else {
+                $url = $configuredWebhook ?: 'https://meash-cleaning-gy5x.onrender.com/api/telegram/webhook';
+            }
+
             $this->info("Setting Webhook to: {$url}...");
 
+            $secret = config('services.telegram.webhook_secret') ?: env('TELEGRAM_WEBHOOK_SECRET');
+            $params = [
+                'url' => $url,
+                'drop_pending_updates' => true,
+            ];
+            // Telegram secret_token must be 1-256 characters of [A-Za-z0-9_-]
+            if (!empty($secret) && preg_match('/^[A-Za-z0-9_-]{1,256}$/', $secret)) {
+                $params['secret_token'] = $secret;
+            }
+
             try {
-                $resp = Http::timeout(10)->get("https://api.telegram.org/bot{$token}/setWebhook", [
-                    'url' => $url,
-                    'drop_pending_updates' => true,
-                ])->json();
+                $resp = Http::timeout(10)->post("https://api.telegram.org/bot{$token}/setWebhook", $params)->json();
             } catch (\Throwable $e) {
                 $this->error("Failed to connect to Telegram API: " . $e->getMessage());
                 return 1;
