@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meash-pwa-v3';
+const CACHE_NAME = 'meash-pwa-v4';
 
 const PRECACHE_ASSETS = [
   '/',

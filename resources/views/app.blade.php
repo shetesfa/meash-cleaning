@@ -36,7 +36,7 @@
     </script>
     <!-- Engines -->
     <script src="/js/meash-i18n.js"></script>
-    <script src="/js/meash-offline.js"></script>
+    <script src="/js/meash-offline.js?v=2.2"></script>
     <style>
         :root {
             --sat: env(safe-area-inset-top, 0px);
@@ -1360,8 +1360,16 @@
                 let teamsList = [];
 
                 // Check offline cached jobs first if available
-                const cached = await window.meashOffline.getAllItems('my_jobs');
-                if (cached && cached.length > 0 && !window.meashOffline.isOnline) {
+                let cached = [];
+                try {
+                    if (window.meashOffline && typeof window.meashOffline.getAllItems === 'function') {
+                        cached = await window.meashOffline.getAllItems('my_jobs');
+                    }
+                } catch (e) {
+                    console.warn('Offline cache read error:', e);
+                }
+
+                if (cached && cached.length > 0 && window.meashOffline && !window.meashOffline.isOnline) {
                     jobs = cached;
                 } else {
                     const teamParam = activeCleaningTeamId ? `?team_id=${activeCleaningTeamId}` : '';
@@ -1380,8 +1388,12 @@
                     }
 
                     // Cache into IndexedDB for offline access
-                    if (window.meashOffline.db) {
-                        window.meashOffline.cacheItems('my_jobs', jobs);
+                    if (window.meashOffline && typeof window.meashOffline.cacheItems === 'function') {
+                        try {
+                            await window.meashOffline.cacheItems('my_jobs', jobs);
+                        } catch (e) {
+                            console.warn('Offline caching skipped:', e);
+                        }
                     }
                 }
 
