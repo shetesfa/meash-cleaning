@@ -503,14 +503,31 @@
             }
         }
 
+        function showLoginScreen(msg = '') {
+            const loginScreen = document.getElementById('app-login-screen');
+            const appWrapper = document.getElementById('app-authenticated-wrapper');
+            if (loginScreen) loginScreen.classList.remove('hidden');
+            if (appWrapper) appWrapper.classList.add('hidden');
+
+            const errBanner = document.getElementById('login-error-banner');
+            const errText = document.getElementById('login-error-text');
+            if (msg && errBanner && errText) {
+                errText.innerText = msg;
+                errBanner.classList.remove('hidden');
+            } else if (errBanner) {
+                errBanner.classList.add('hidden');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
         function checkAuthStatus() {
             const token = localStorage.getItem('meash_token');
             const storedUser = localStorage.getItem('meash_user');
             const loginScreen = document.getElementById('app-login-screen');
             const appWrapper = document.getElementById('app-authenticated-wrapper');
             
-            // If user previously logged in, KEEP THEM IN PERMANENTLY (Never self-logout)
-            if (token || storedUser) {
+            // User is only authenticated if token exists and is non-empty
+            if (token && token.trim().length > 0 && storedUser) {
                 if (loginScreen) loginScreen.classList.add('hidden');
                 if (appWrapper) appWrapper.classList.remove('hidden');
                 return true;
@@ -630,7 +647,8 @@
             if (res.status === 401) {
                 console.warn('API 401 Unauthorized for ' + url + ' - session expired');
                 localStorage.removeItem('meash_token');
-                currentUser = null;
+                localStorage.removeItem('meash_user');
+                currentUser = { role: 'cleaner', name: '', id: null, phone: '' };
                 showLoginScreen('የሴሽን ጊዜዎ አልቋል፤ እባክዎ እንደገና ይግቡ (Session expired. Please login again.)');
             }
             return res;
@@ -1053,6 +1071,7 @@
         async function renderOwnerDashboard(container) {
             try {
                 const res = await apiFetch('/api/dashboard/owner');
+                if (res.status === 401) return;
                 const data = await res.json();
                 const today = data.today || {};
                 const mtd = data.month_to_date || {};
@@ -1251,6 +1270,7 @@
         async function renderReceptionView(container) {
             try {
                 const res = await apiFetch('/api/dashboard/reception');
+                if (res.status === 401) return;
                 const data = await res.json();
 
                 container.innerHTML = `
@@ -1412,6 +1432,9 @@
                 } else {
                     const teamParam = activeCleaningTeamId ? `?team_id=${activeCleaningTeamId}` : '';
                     const res = await apiFetch('/api/teams/my-jobs' + teamParam);
+                    if (res.status === 401) {
+                        return; // Redirected to login screen cleanly
+                    }
                     const data = await res.json();
                     const todayList = data.today_jobs || [];
                     const upcomingList = data.upcoming_jobs || [];
