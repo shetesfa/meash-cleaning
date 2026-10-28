@@ -36,7 +36,40 @@
     </script>
     <!-- Engines -->
     <script src="/js/meash-i18n.js"></script>
-    <script src="/js/meash-offline.js?v=2.2"></script>
+    <script src="/js/meash-offline.js?v=2.3"></script>
+    <script>
+        // Universal Fail-Safe: Ensure cacheItems exists on MeashOfflineEngine & window.meashOffline
+        (function() {
+            function patchOfflineEngine() {
+                const patchFn = async function(storeName, items) {
+                    if (!this.db || !Array.isArray(items)) return;
+                    return new Promise((resolve) => {
+                        try {
+                            const tx = this.db.transaction([storeName], 'readwrite');
+                            const store = tx.objectStore(storeName);
+                            items.forEach(it => { try { store.put(it); } catch (_) {} });
+                            tx.oncomplete = () => resolve(true);
+                            tx.onerror = () => resolve(false);
+                        } catch (_) { resolve(false); }
+                    });
+                };
+
+                if (typeof MeashOfflineEngine !== 'undefined') {
+                    if (!MeashOfflineEngine.prototype.cacheItems) {
+                        MeashOfflineEngine.prototype.cacheItems = patchFn;
+                    }
+                }
+                if (window.meashOffline) {
+                    if (typeof window.meashOffline.cacheItems !== 'function') {
+                        window.meashOffline.cacheItems = patchFn;
+                    }
+                }
+            }
+            patchOfflineEngine();
+            document.addEventListener('DOMContentLoaded', patchOfflineEngine);
+            window.addEventListener('load', patchOfflineEngine);
+        })();
+    </script>
     <style>
         :root {
             --sat: env(safe-area-inset-top, 0px);
@@ -187,6 +220,11 @@
                 <button type="button" onclick="window.meashI18n.setLanguage('en')" class="px-1.5 py-0.5 rounded font-bold hover:bg-slate-700 text-slate-400" id="app-lang-en">EN</button>
                 <button type="button" onclick="window.meashI18n.setLanguage('am')" class="px-1.5 py-0.5 rounded font-bold hover:bg-slate-700 text-cyan-300" id="app-lang-am">አማ</button>
             </div>
+
+            <!-- Reload / Force Refresh Cache -->
+            <button type="button" onclick="forcePurgePwaCache()" title="ሲስተሙን አድስ (Reload & Update)" class="p-1.5 sm:p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800/60 rounded-xl transition-colors cursor-pointer flex items-center gap-1">
+                <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+            </button>
 
             <!-- Website link (Desktop only to save mobile space) -->
             <a href="/" target="_blank" title="የደንበኞች ድረ-ገጽ እይ" class="hidden sm:flex p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800/60 rounded-xl transition-colors">
@@ -1504,7 +1542,25 @@
                 `;
                 lucide.createIcons();
             } catch (err) {
-                container.innerHTML = `<div class="p-6 text-center text-red-400">Failed to load Cleaner jobs: ${err.message}</div>`;
+                console.error('Cleaner view error:', err);
+                container.innerHTML = `
+                    <div class="p-6 text-center space-y-4 max-w-md mx-auto bg-slate-900 border border-red-500/40 rounded-3xl my-8 shadow-2xl">
+                        <i data-lucide="alert-circle" class="w-12 h-12 text-red-400 mx-auto"></i>
+                        <div>
+                            <h4 class="text-base font-bold text-white">የስራ ዝርዝር መጫን አልተቻለም</h4>
+                            <p class="text-xs text-red-300 mt-1">${err.message}</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 justify-center pt-2">
+                            <button onclick="renderCleanerView(document.getElementById('app-viewport'))" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold shadow">
+                                እንደገና ሞክር (Retry)
+                            </button>
+                            <button onclick="forcePurgePwaCache()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-bold">
+                                ካሽ አጽዳ እና አድስ (Clear Cache)
+                            </button>
+                        </div>
+                    </div>
+                `;
+                if (window.lucide) lucide.createIcons();
             }
         }
 
@@ -6017,13 +6073,41 @@
             }
         }
 
-        // Register Service Worker
+        async function forcePurgePwaCache() {
+            try {
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(k => caches.delete(k)));
+                }
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (const reg of registrations) {
+                        await reg.unregister();
+                    }
+                }
+            } catch (e) {
+                console.warn('Cache purge error:', e);
+            }
+            window.location.href = '/app?v=' + Date.now();
+        }
+
+        // Register Service Worker with Auto-Update
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').then((reg) => {
-                    console.log('Mesh ServiceWorker registered successfully:', reg.scope);
+                    console.log('Meash ServiceWorker registered successfully:', reg.scope);
+                    try {
+                        reg.update();
+                        if (reg.waiting) {
+                            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                    } catch (_) {}
                 }).catch((err) => {
-                    console.warn('Mesh ServiceWorker registration failed:', err);
+                    console.warn('Meash ServiceWorker registration failed:', err);
+                });
+
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    console.log('New ServiceWorker controller activated');
                 });
             });
         }

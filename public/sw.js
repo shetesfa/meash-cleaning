@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meash-pwa-v4';
+const CACHE_NAME = 'meash-pwa-v5';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -102,13 +102,13 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(handleStaticAsset(req));
 });
 
-// Navigation handler: Network first with 3s timeout -> Cache -> /offline.html
+// Navigation handler: Network first with 8s timeout -> Cache -> /offline.html
 async function handleNavigation(request, url) {
   try {
-    // 3 second network timeout
+    // 8 second network timeout
     const networkPromise = fetch(request);
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Network timeout')), 3000);
+      setTimeout(() => reject(new Error('Network timeout')), 8000);
     });
 
     const response = await Promise.race([networkPromise, timeoutPromise]);
@@ -154,8 +154,24 @@ async function handleNavigation(request, url) {
   });
 }
 
-// Static asset handler: Cache first with stale-while-revalidate
+// Static asset handler: Network-first for JavaScript, Cache-first with background revalidation for other assets
 async function handleStaticAsset(request) {
+  const url = new URL(request.url);
+
+  // For JS files, ALWAYS try network first so bug fixes and logic updates arrive instantly
+  if (url.pathname.endsWith('.js') || url.pathname.includes('/js/')) {
+    try {
+      const netRes = await fetch(request);
+      if (netRes && netRes.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(request, netRes.clone()).catch(() => {});
+        return netRes;
+      }
+    } catch (e) {
+      // Fallback to cache if network is down
+    }
+  }
+
   const cache = await caches.open(CACHE_NAME);
   const cachedResponse = await cache.match(request);
 
@@ -183,6 +199,13 @@ async function handleStaticAsset(request) {
     return new Response('', { status: 404, statusText: 'Not Found' });
   }
 }
+
+// Support Skip Waiting via message
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
 // Push notifications
 self.addEventListener('push', (event) => {
