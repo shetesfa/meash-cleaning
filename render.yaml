@@ -5,6 +5,7 @@ services:
     plan: free
     region: frankfurt
     branch: main
+    autoDeploy: true
     envVars:
       - key: APP_NAME
         value: "Meash Cleaning Solution"
