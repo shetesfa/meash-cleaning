@@ -190,7 +190,7 @@ class TelegramBroadcastController extends Controller
             'title' => 'required|string|max:255',
             'message' => 'required|string|max:4000',
             'excluded_telegram_ids' => 'nullable|array',
-            'excluded_telegram_ids.*' => 'string|numeric',
+            'excluded_telegram_ids.*' => 'nullable',
         ]);
 
         $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
