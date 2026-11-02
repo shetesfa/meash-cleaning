@@ -150,6 +150,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/send-direct-sms', [NotificationMarketingController::class, 'sendDirectSms'])->middleware('role:owner,reception');
     Route::get('/sms/status', [NotificationMarketingController::class, 'smsStatus']);
 
+    // Telegram Broadcast Center (Bulk Import, Selection, Safe Dispatch)
+    Route::prefix('telegram-broadcast')->middleware('role:owner,reception')->group(function () {
+        Route::get('/recipients', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'getRecipients']);
+        Route::post('/add-recipient', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'addSingleRecipient']);
+        Route::post('/import', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'bulkImportRecipients']);
+        Route::post('/dispatch', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'dispatchBroadcast']);
+    });
+
     // K. Website Settings & Content CMS
     Route::prefix('admin/website')->middleware('role:owner,reception')->group(function () {
         Route::get('/settings', [AdminWebsiteController::class, 'getSettings']);

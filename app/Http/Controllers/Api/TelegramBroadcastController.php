@@ -1,0 +1,331 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
+use App\Models\Campaign;
+use App\Models\Customer;
+use App\Models\TelegramUser;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+class TelegramBroadcastController extends Controller
+{
+    /**
+     * Get all broadcast recipients (Telegram Users + Customers with telegram_user_id)
+     */
+    public function getRecipients(Request $request): JsonResponse
+    {
+        $search = $request->query('search', '');
+        
+        $tgQuery = TelegramUser::query();
+        if (!empty($search)) {
+            $tgQuery->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        $tgUsers = $tgQuery->orderBy('last_interaction_at', 'desc')->get()->map(function ($u) {
+            $fullName = trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? ''));
+            if (empty($fullName)) {
+                $fullName = $u->username ? '@' . $u->username : 'የቴሌግራም ደንበኛ #' . $u->telegram_id;
+            }
+            return [
+                'id' => 'tg_' . $u->id,
+                'db_id' => $u->id,
+                'source' => 'telegram_user',
+                'telegram_id' => (string)$u->telegram_id,
+                'name' => $fullName,
+                'username' => $u->username ? '@' . ltrim($u->username, '@') : '',
+                'phone' => $u->phone_number ?: 'ያልተመዘገበ',
+                'last_active' => $u->last_interaction_at ? $u->last_interaction_at->diffForHumans() : 'በቅርቡ',
+                'is_active' => true,
+            ];
+        });
+
+        // Also merge Customers that have telegram_user_id but not in TelegramUser
+        $custWithTg = Customer::whereNotNull('telegram_user_id')
+            ->where('telegram_user_id', '!=', '')
+            ->get();
+
+        $existingTgIds = $tgUsers->pluck('telegram_id')->toArray();
+        $mergedList = $tgUsers->toArray();
+
+        foreach ($custWithTg as $c) {
+            $chatId = (string)$c->telegram_user_id;
+            if (!in_array($chatId, $existingTgIds)) {
+                $mergedList[] = [
+                    'id' => 'cust_' . $c->id,
+                    'db_id' => $c->id,
+                    'source' => 'customer_record',
+                    'telegram_id' => $chatId,
+                    'name' => $c->name ?: 'ደንበኛ #' . $c->id,
+                    'username' => '',
+                    'phone' => $c->phone ?: 'ያልተመዘገበ',
+                    'last_active' => $c->updated_at ? $c->updated_at->diffForHumans() : 'በቅርቡ',
+                    'is_active' => true,
+                ];
+                $existingTgIds[] = $chatId;
+            }
+        }
+
+        return response()->json([
+            'total_count' => count($mergedList),
+            'users' => $mergedList,
+            'bot_username' => config('services.telegram.bot_username') ?: env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'),
+        ]);
+    }
+
+    /**
+     * Add a single Telegram recipient manually
+     */
+    public function addSingleRecipient(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'telegram_id' => 'required|numeric',
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'nullable|string|max:100',
+            'username' => 'nullable|string|max:100',
+            'phone_number' => 'nullable|string|max:32',
+        ]);
+
+        $tgId = (int)$validated['telegram_id'];
+        $cleanUsername = !empty($validated['username']) ? ltrim($validated['username'], '@') : null;
+        $cleanPhone = !empty($validated['phone_number']) ? preg_replace('/\D+/', '', $validated['phone_number']) : null;
+
+        $user = TelegramUser::updateOrCreate(
+            ['telegram_id' => $tgId],
+            [
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'] ?? null,
+                'username' => $cleanUsername,
+                'phone_number' => $cleanPhone,
+                'marketing_consent' => true,
+                'last_interaction_at' => now(),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "የቴሌግራም ደንበኛ {$user->first_name} በተሳካ ሁኔታ ተመዝግቧል!",
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * Bulk import recipients from text/JSON/CSV
+     */
+    public function bulkImportRecipients(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'raw_data' => 'required|string',
+        ]);
+
+        $raw = trim($validated['raw_data']);
+        $lines = preg_split('/\r\n|\r|\n/', $raw);
+        $importedCount = 0;
+        $skippedCount = 0;
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            // Handle formats:
+            // 1. "12345678, Abebe, Kebede, 0911223344, @username" (Comma or tab separated)
+            // 2. "12345678 Abebe Kebede" (Space separated)
+            // 3. Or JSON object
+            $parts = preg_split('/[,\t]+/', $line);
+            if (count($parts) >= 2) {
+                $tgId = preg_replace('/\D+/', '', trim($parts[0]));
+                $name = trim($parts[1] ?? 'ደንበኛ');
+                $phone = isset($parts[2]) ? preg_replace('/\D+/', '', trim($parts[2])) : null;
+                $username = isset($parts[3]) ? ltrim(trim($parts[3]), '@') : null;
+            } else {
+                // Try space separated
+                $spaceParts = preg_split('/\s+/', $line, 3);
+                $tgId = preg_replace('/\D+/', '', trim($spaceParts[0]));
+                $name = trim(($spaceParts[1] ?? 'ደንበኛ') . ' ' . ($spaceParts[2] ?? ''));
+                $phone = null;
+                $username = null;
+            }
+
+            if (!empty($tgId) && is_numeric($tgId) && strlen($tgId) >= 5) {
+                TelegramUser::updateOrCreate(
+                    ['telegram_id' => (int)$tgId],
+                    [
+                        'first_name' => $name,
+                        'phone_number' => $phone,
+                        'username' => $username,
+                        'marketing_consent' => true,
+                        'last_interaction_at' => now(),
+                    ]
+                );
+                $importedCount++;
+            } else {
+                $skippedCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "በአጠቃላይ {$importedCount} የቴሌግራም ደንበኞች በተሳካ ሁኔታ ተመዝግበዋል! (ያልተመዘገቡ፡ {$skippedCount})",
+            'imported_count' => $importedCount,
+            'skipped_count' => $skippedCount,
+        ]);
+    }
+
+    /**
+     * Dispatch smart safe telegram broadcast
+     * Handles batching, rate-limiting, and excludes unselected users (family/friends)
+     */
+    public function dispatchBroadcast(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'message' => 'required|string|max:4000',
+            'excluded_telegram_ids' => 'nullable|array',
+            'excluded_telegram_ids.*' => 'string|numeric',
+        ]);
+
+        $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
+        if (empty($botToken)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'የቴሌግራም ቦት ቶከን (TELEGRAM_BOT_TOKEN) አልተዋቀረም!',
+            ], 422);
+        }
+
+        $excludedIds = array_map('strval', $validated['excluded_telegram_ids'] ?? []);
+
+        // Gather all eligible recipients
+        $tgUsers = TelegramUser::all();
+        $targetChatIds = [];
+
+        foreach ($tgUsers as $u) {
+            $chatId = (string)$u->telegram_id;
+            if (!empty($chatId) && !in_array($chatId, $excludedIds)) {
+                $targetChatIds[$chatId] = [
+                    'name' => trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')),
+                    'phone' => $u->phone_number,
+                ];
+            }
+        }
+
+        // Also merge customer records with telegram_user_id
+        $custRecords = Customer::whereNotNull('telegram_user_id')
+            ->where('telegram_user_id', '!=', '')
+            ->get();
+
+        foreach ($custRecords as $c) {
+            $chatId = (string)$c->telegram_user_id;
+            if (!empty($chatId) && !in_array($chatId, $excludedIds) && !isset($targetChatIds[$chatId])) {
+                $targetChatIds[$chatId] = [
+                    'name' => $c->name,
+                    'phone' => $c->phone,
+                ];
+            }
+        }
+
+        $totalTargets = count($targetChatIds);
+        if ($totalTargets === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ምንም የሚላክለት የቴሌግራም ደንበኛ አልተመረጠም (ሁሉም ተገልለዋል)!',
+            ], 422);
+        }
+
+        // Log campaign in DB
+        $campaign = Campaign::create([
+            'title' => $validated['title'],
+            'channel' => 'telegram',
+            'audience_filter' => 'custom_broadcast_selection',
+            'message_text' => $validated['message'],
+            'status' => 'sending',
+            'total_targets' => $totalTargets,
+            'sent_count' => 0,
+            'failed_count' => 0,
+            'created_by_user_id' => $request->user()?->id,
+            'sent_at' => now(),
+        ]);
+
+        $sentSuccess = 0;
+        $failedCount = 0;
+        $title = $validated['title'];
+        $body = $validated['message'];
+        $formattedMessage = "<b>" . htmlspecialchars($title) . "</b>\n\n" . htmlspecialchars($body) . "\n\n—\n<b>ሜሽ የፅዳት አገልግሎት (Meash Cleaning)</b>\n📞 0970075509 / 0998142190";
+
+        // Safe broadcast batch loop with rate limiting (max 25 requests/sec with 40ms micro-pause)
+        $batchCounter = 0;
+        foreach ($targetChatIds as $chatId => $info) {
+            try {
+                $response = Http::timeout(4)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => $formattedMessage,
+                    'parse_mode' => 'HTML',
+                    'disable_web_page_preview' => false,
+                ]);
+
+                if ($response->successful()) {
+                    $sentSuccess++;
+                } else {
+                    $failedCount++;
+                    $resJson = $response->json();
+                    // If flood control occurs, pause for safe retry
+                    if (isset($resJson['parameters']['retry_after'])) {
+                        $waitSec = (int)$resJson['parameters']['retry_after'];
+                        sleep(min($waitSec, 5));
+                    }
+                }
+            } catch (\Throwable $e) {
+                $failedCount++;
+                Log::warning("Telegram Broadcast error for chat {$chatId}: " . $e->getMessage());
+            }
+
+            $batchCounter++;
+            // Micro sleep: every 20 messages pause 500ms to stay well below Telegram flood limits
+            if ($batchCounter % 20 === 0) {
+                usleep(500000); // 0.5s pause
+            } else {
+                usleep(35000); // 35ms pause
+            }
+        }
+
+        $campaign->update([
+            'status' => 'completed',
+            'sent_count' => $sentSuccess,
+            'failed_count' => $failedCount,
+        ]);
+
+        if ($request->user()) {
+            AuditLog::logAction(
+                $request->user()->id,
+                'telegram_broadcast_completed',
+                Campaign::class,
+                $campaign->id,
+                null,
+                [
+                    'title' => $title,
+                    'total_targets' => $totalTargets,
+                    'sent_success' => $sentSuccess,
+                    'failed_count' => $failedCount,
+                    'excluded_count' => count($excludedIds),
+                ]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "የቴሌግራም መልእክት ስርጭት ተጠናቋል! ለ {$sentSuccess} ደንበኞች በተሳካ ሁኔታ ደርሷል። (ያልተሳካ፡ {$failedCount})",
+            'total_targets' => $totalTargets,
+            'sent_success' => $sentSuccess,
+            'failed_count' => $failedCount,
+            'excluded_count' => count($excludedIds),
+        ]);
+    }
+}

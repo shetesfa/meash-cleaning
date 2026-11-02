@@ -2068,38 +2068,55 @@
             const container = document.getElementById('generic-modal-container');
             const cleanPhone = (phone || '').replace(/\s+/g, '');
             const safeName = name || 'ውድ ደንበኛ';
+            const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            // Fetch quick customer suggestions if available
+            let customerOptions = '<option value="">-- ከደንበኞች መዝገብ ይምረጡ (ወይም ከታች ስልክ ይጻፉ) --</option>';
+            if (window._cachedCustomersList && Array.isArray(window._cachedCustomersList)) {
+                customerOptions += window._cachedCustomersList.slice(0, 50).map(c => 
+                    `<option value="${c.phone}" data-name="${c.name}">${c.name} (${c.phone})</option>`
+                ).join('');
+            }
 
             container.innerHTML = `
-                <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div class="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div class="bg-slate-900 border border-cyan-500/50 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-auto">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                             <div class="flex items-center gap-2">
                                 <div class="w-8 h-8 rounded-xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center">
-                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                    <i data-lucide="message-square" class="w-4 h-4"></i>
                                 </div>
                                 <div>
-                                    <h3 class="text-base font-bold text-white">ለተጠቃሚው በቀጥታ SMS መላኪያ</h3>
-                                    <p class="text-[11px] text-slate-400">የአስተዳዳሪ እና የሰራተኞች ይፋዊ የኤስኤምኤስ መላኪያ በይነገጽ</p>
+                                    <h3 class="text-base font-bold text-white">ለደንበኛ SMS መልእክት ማዘጋጃ</h3>
+                                    <p class="text-[11px] text-slate-400">ደረሰኝ ቆራጩ መልእክቱን ሲያዘጋጅ ባለቤቱ በስልካቸው ስካን አድርገው ይልካሉ</p>
                                 </div>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
 
-                        <form onsubmit="submitDirectSms(event)" class="space-y-4 text-xs">
+                        <form onsubmit="event.preventDefault();" class="space-y-3.5 text-xs">
+                            <!-- Quick Customer Assign / Select -->
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ደንበኛን ይምረጡ (Assign Customer)</label>
+                                <select id="direct-sms-customer-select" onchange="assignCustomerToSms(this)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-slate-300 focus:outline-none focus:border-cyan-500">
+                                    ${customerOptions}
+                                </select>
+                            </div>
+
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-slate-400 font-bold mb-1">የላኪ ስልክ (የባለቤቱ / የድርጅቱ)</label>
-                                    <input type="text" id="direct-sms-sender" value="0970075509" readonly class="w-full bg-slate-800/60 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-cyan-400 font-mono font-bold cursor-not-allowed">
+                                    <label class="block text-slate-400 font-bold mb-1">የላኪ ስልክ (የባለቤቱ)</label>
+                                    <input type="text" id="direct-sms-sender" value="0970075509" readonly class="w-full bg-slate-800/60 border border-slate-700/80 rounded-xl px-3.5 py-2 text-cyan-400 font-mono font-bold cursor-not-allowed">
                                 </div>
                                 <div>
                                     <label class="block text-slate-300 font-bold mb-1">የተቀባይ ደንበኛ ስልክ *</label>
-                                    <input type="text" id="direct-sms-phone" oninput="updateDirectSmsSimLink()" required value="${cleanPhone || '0970075509'}" placeholder="0970075509" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono focus:border-cyan-500 focus:outline-none">
+                                    <input type="text" id="direct-sms-phone" oninput="updateDirectSmsSimLink()" required value="${cleanPhone || '0970075509'}" placeholder="0970075509" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white font-mono font-bold focus:border-cyan-500 focus:outline-none">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-slate-300 font-bold mb-1">ፈጣን ዝግጁ አብነቶች (SMS Templates)</label>
-                                <select onchange="applySmsTemplate(this.value, '${safeName}')" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-slate-300 focus:outline-none focus:border-cyan-500">
+                                <label class="block text-slate-300 font-bold mb-1">ፈጣን ዝግጁ አብነቶች (Templates)</label>
+                                <select onchange="applySmsTemplate(this.value, document.getElementById('direct-sms-phone')?.dataset?.custName || '${safeName}')" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-slate-300 focus:outline-none focus:border-cyan-500">
                                     <option value="">-- ፈጣን አብነት ይምረጡ --</option>
                   <option value="confirm"> የቀጠሮ ማረጋገጫ (Appointment Confirmed)</option>
                   <option value="dispatched"> የቡድን ስምሪት እና የቀጥታ ካርታ (Dispatched on the way)</option>
@@ -2110,41 +2127,85 @@
 
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">የመልእክቱ ይዘት (SMS Message) *</label>
-                                <textarea id="direct-sms-message" oninput="updateDirectSmsSimLink()" required rows="3" placeholder="መልእክትዎን እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-500">ሰላም ${safeName}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!</textarea>
+                                <textarea id="direct-sms-message" oninput="updateDirectSmsSimLink()" required rows="3" placeholder="መልእክትዎን እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white leading-relaxed focus:outline-none focus:border-cyan-500">ሰላም ${safeName}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!</textarea>
                             </div>
 
-                            <!-- iOS (iPhone) & Android QR Code Section -->
-                            <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-cyan-500/30 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-                                <div class="bg-white p-2 rounded-2xl shadow-lg border border-slate-700 flex-shrink-0">
-                                    <img id="direct-sms-qr" src="" alt="SMS QR Code" class="w-28 h-28 object-contain">
+                            <!-- DEDICATED QR CODE SCANNER (Prominent on PC & Waiting for Owner Scan) -->
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-cyan-500/40 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left shadow-inner">
+                                <div class="bg-white p-2 rounded-2xl shadow-xl border border-slate-600 flex-shrink-0">
+                                    <img id="direct-sms-qr" src="" alt="SMS QR Code" class="w-32 h-32 object-contain">
                                 </div>
-                                <div class="space-y-1">
-                                    <div class="flex items-center justify-center sm:justify-start gap-1.5">
-                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">ለ iPhone እና Android</span>
-                                        <span class="text-xs font-bold text-white">ካሜራ ስካን QR ኮድ</span>
+                                <div class="space-y-1.5 flex-1">
+                                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
+                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">ለ iPhone እና Android</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1 animate-pulse">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                            <span>ባለቤቱ ስካን እስኪያደርግ ዝግጁ ሆኖ ይጠብቃል</span>
+                                        </span>
                                     </div>
-                                    <p class="text-[11px] text-slate-300">በእርሶ iPhone ወይም Android ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ ወዲያውኑ መልእክቱን በ Messages አፕ አዘጋጅቶ ያቀርባል፤ መላክ ብቻ ይጠበቅብዎታል!</p>
-                                    <p class="text-[10px] text-slate-400 font-mono">ተቀባይ ስልክ፦ <span id="direct-sms-target-display" class="text-cyan-400 font-bold">+251970075509</span></p>
+                                    <p class="text-[11px] text-slate-300">
+                                        ደረሰኝ ቆራጩ መልእክቱን እዚህ አዘጋጅቶ ያቆየዋል፤ የድርጅቱ ባለቤት በ iPhone ስልካቸው ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ ወዲያውኑ መልእክቱን በ Messages አፕ አዘጋጅቶ ያቀርብላቸዋል!
+                                    </p>
+                                    <p class="text-[10px] text-slate-400 font-mono">
+                                        ተቀባይ ደንበኛ ስልክ፦ <span id="direct-sms-target-display" class="text-cyan-400 font-bold">+251970075509</span>
+                                    </p>
                                 </div>
                             </div>
 
+                            <!-- Mobile Direct Action Button & Close -->
                             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
-                                <a id="btn-direct-sim-sms" href="#" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
-                                    <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
-                                    <span>በስልክ SIM ላክ (iPhone / Android)</span>
-                                </a>
-                                <div class="flex items-center gap-2">
-                                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700">ሰርዝ</button>
-                                    <button type="submit" id="btn-send-sms" class="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold rounded-xl shadow-lg flex items-center gap-2">
-                                        <i data-lucide="send" class="w-4 h-4"></i>
-                                        <span>በሲስተም SMS ላክ</span>
-                                    </button>
+                                ${isMobileDevice ? `
+                                    <a id="btn-direct-sim-sms" href="#" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
+                                        <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+                                        <span>በስልክ SIM ላክ (Go to Messages App)</span>
+                                    </a>
+                                ` : `
+                                    <span class="text-[11px] text-slate-400 font-medium">በኮምፒውተር (PC) ላይ የ QR ኮዱን ለባለቤቱ ስካን እንዲያደርጉት ክፍት ያድርጉት።</span>
+                                `}
+                                <div class="flex items-center gap-2 ml-auto">
+                                    <button type="button" onclick="closeModal()" class="px-5 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 cursor-pointer">ዝጋ</button>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
             `;
+            lucide.createIcons();
+            updateDirectSmsSimLink();
+
+            // Cache customers list for dropdown if not already cached
+            if (!window._cachedCustomersList) {
+                apiFetch('/api/customers').then(r => r.json()).then(res => {
+                    const cList = res.data || res || [];
+                    if (Array.isArray(cList) && cList.length > 0) {
+                        window._cachedCustomersList = cList;
+                        const sel = document.getElementById('direct-sms-customer-select');
+                        if (sel) {
+                            sel.innerHTML = '<option value="">-- ከደንበኞች መዝገብ ይምረጡ (ወይም ከታች ስልክ ይጻፉ) --</option>' +
+                                cList.slice(0, 50).map(c => `<option value="${c.phone}" data-name="${c.name}">${c.name} (${c.phone})</option>`).join('');
+                        }
+                    }
+                }).catch(() => {});
+            }
+        }
+
+        function assignCustomerToSms(selectEl) {
+            const phone = selectEl.value;
+            const opt = selectEl.selectedOptions[0];
+            const name = opt ? opt.getAttribute('data-name') : 'ውድ ደንበኛ';
+            if (phone) {
+                const phoneInput = document.getElementById('direct-sms-phone');
+                if (phoneInput) {
+                    phoneInput.value = phone;
+                    phoneInput.dataset.custName = name;
+                }
+                const msgBox = document.getElementById('direct-sms-message');
+                if (msgBox) {
+                    msgBox.value = `ሰላም ${name}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!`;
+                }
+                updateDirectSmsSimLink();
+            }
+        }
             lucide.createIcons();
             updateDirectSmsSimLink();
         }
@@ -3565,151 +3626,315 @@
         }
 
         // ==========================================
-        // 10. MARKETING CAMPAIGNS
+        // 10. TELEGRAM BROADCAST CENTER & MARKETING
         // ==========================================
+        let currentMarketingTab = 'telegram_broadcast';
+        let broadcastRecipientsList = [];
+        let excludedBroadcastIds = new Set();
+        let broadcastSearchQuery = '';
+
         async function renderCampaignsModule(container) {
             try {
-                const res = await apiFetch('/api/campaigns');
-                const data = await res.json();
-                const campaigns = data.data || [];
-
                 container.innerHTML = `
                     <div class="max-w-7xl mx-auto space-y-6">
+                        <!-- Header & Tab Navigation -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                                <h2 class="text-2xl font-black text-white">የማስታወቂያ ዘመቻዎች (SMS & Telegram)</h2>
-                                <p class="text-xs text-slate-400 mt-1">የበዓላት ቅናሽ ማስታወቂያዎች፣ ልዩ ቅናሾች እና አውቶሜትድ መልዕክቶች።</p>
+                                <h2 class="text-2xl sm:text-3xl font-black text-white">የቴሌግራም ጅምላ መልእክት እና ማርኬቲንግ</h2>
+                                <p class="text-xs text-slate-400 mt-1">ለ 4,000+ ደንበኞች በቴሌግራም ቦት መልእክት ማስተላለፊያ እና የደንበኞች መምረጫ</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button onclick="openCreateCampaignModal()" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer">
+                                <button onclick="switchMarketingTab('telegram_broadcast')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${currentMarketingTab === 'telegram_broadcast' ? 'bg-cyan-600 text-white shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'}">
                                     <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                                    <span>+ አዲስ ዘመቻ ፍጠር / ላክ</span>
+                                    <span>የቴሌግራም ጅምላ መልእክት ማዕከል</span>
+                                </button>
+                                <button onclick="switchMarketingTab('campaign_history')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${currentMarketingTab === 'campaign_history' ? 'bg-cyan-600 text-white shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'}">
+                                    <i data-lucide="history" class="w-3.5 h-3.5"></i>
+                                    <span>የቀደሙ ዘመቻዎች ታሪክ</span>
                                 </button>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            ${campaigns.length === 0 ? '<div class="p-8 text-slate-500 col-span-3 text-center">ምንም የተዘጋጀ የማስታወቂያ ዘመቻ የለም። ከላይ ያለውን "+ አዲስ ዘመቻ ፍጠር" ተጭነው ይጀምሩ።</div>' : ''}
-                            ${campaigns.map(c => {
-                                const title = (c && c.title && c.title !== 'undefined') ? c.title : (c && c.name ? c.name : 'የበዓላት ቅናሽ ማስታወቂያ');
-                                const msgText = (c && c.message_text && c.message_text !== 'undefined') ? c.message_text : (c && c.message ? c.message : 'መልዕክት አልተገለጸም');
-                                const audienceMap = {
-                                    'all_customers': 'ሁሉም ደንበኞች (All)',
-                                    'all': 'ሁሉም ደንበኞች (All)',
-                                    'vip': 'ቪአይፒ ደንበኞች (VIP)',
-                                    'regular': 'መደበኛ ደንበኞች (Regular)',
-                                    'dormant': 'የቆዩ ደንበኞች (Dormant)',
-                                    'corporate': 'ድርጅታዊ ደንበኞች (Corporate)',
-                                    'opted_in': 'ፍቃድ የሰጡ ደንበኞች'
-                                };
-                                const rawAudience = (c && c.audience_filter && c.audience_filter !== 'undefined') ? c.audience_filter : 'all_customers';
-                                const audience = audienceMap[rawAudience] || rawAudience;
-                                const sentCount = (c && c.sent_count !== undefined && c.sent_count !== null) ? c.sent_count : (c && c.total_targets ? c.total_targets : 0);
-                                const channel = ((c && c.channel) || 'sms').toUpperCase();
-                                const isSent = c && (c.status === 'sent' || c.status === 'completed');
-                                const isDraft = !isSent;
-
-                                return `
-                                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 hover:border-slate-700 transition">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
-                                            <i data-lucide="${channel === 'TELEGRAM' ? 'send' : 'message-square'}" class="w-3 h-3"></i>
-                                            ${channel} Campaign
-                                        </span>
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${isSent ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
-                                            ${isSent ? 'ተልኳል (Completed)' : 'ረቂቅ (Draft)'}
-                                        </span>
-                                    </div>
-                                    <h3 class="text-base font-bold text-white">${title}</h3>
-                                    <p class="text-xs text-slate-300 bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 leading-relaxed font-sans">
-                                        "${msgText}"
-                                    </p>
-                                    <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                                        <span>ዒላማ: <strong class="text-white">${audience}</strong></span>
-                                        <span>የተላከላቸው: <strong class="text-cyan-400 font-mono text-sm">${sentCount}</strong></span>
-                                    </div>
-                                    ${isDraft ? `
-                                        <div class="pt-2">
-                                            <button onclick="dispatchCampaignNow(${c.id})" class="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg cursor-pointer">
-                                                <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                        <span> አሁን ለሁሉም ላክ (Send Now)</span>
-                                            </button>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                                `;
-                            }).join('')}
+                        <!-- Tab View Content -->
+                        <div id="marketing-subtab-container" class="space-y-6">
+                            <div class="p-8 text-center text-slate-400">
+                                <div class="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                                <span>መረጃዎችን በማዘጋጀት ላይ...</span>
+                            </div>
                         </div>
                     </div>
                 `;
                 lucide.createIcons();
+
+                if (currentMarketingTab === 'telegram_broadcast') {
+                    await loadAndRenderBroadcastCenter();
+                } else {
+                    await loadAndRenderCampaignHistory();
+                }
             } catch (err) {
                 container.innerHTML = `<div class="p-6 text-red-400">Failed to load ማስታወቂያ እና ፕሮሞሽን Campaigns: ${err.message}</div>`;
             }
         }
 
-        async function dispatchCampaignNow(campaignId) {
-            if (!confirm('ይህንን ማስታወቂያ አሁን ለታለሙ ደንበኞች በሙሉ መላክ ይፈልጋሉ?')) return;
+        function switchMarketingTab(tab) {
+            currentMarketingTab = tab;
+            const container = document.getElementById('main-viewport');
+            if (container) renderCampaignsModule(container);
+        }
+
+        async function loadAndRenderBroadcastCenter() {
+            const subContainer = document.getElementById('marketing-subtab-container');
+            if (!subContainer) return;
+
             try {
-                const res = await apiFetch(`/api/campaigns/${campaignId}/send`, { method: 'POST' });
+                const res = await apiFetch('/api/telegram-broadcast/recipients');
                 const data = await res.json();
-                if (res.ok) {
-          alert(' ' + (data.message || 'ማስታወቂያው በተሳካ ሁኔታ ተልኳል!'));
-                    loadActiveTab();
-                } else {
-                    alert('ስህተት፡ ' + (data.message || 'መላክ አልተቻለም'));
-                }
-            } catch (err) {
-                alert('የኔትወርክ ስህተት፡ ' + err.message);
+                broadcastRecipientsList = data.users || [];
+
+                renderBroadcastCenterView(subContainer, data.bot_username || 'meash_cleaning_solution_bot');
+            } catch (e) {
+                subContainer.innerHTML = `<div class="p-6 text-red-400">የቴሌግራም ደንበኞችን መጫን አልተቻለም: ${e.message}</div>`;
             }
         }
 
-        function openCreateCampaignModal() {
+        function renderBroadcastCenterView(container, botUsername) {
+            const totalCount = broadcastRecipientsList.length;
+            const excludedCount = excludedBroadcastIds.size;
+            const eligibleCount = Math.max(0, totalCount - excludedCount);
+
+            // Filter by search query
+            const q = broadcastSearchQuery.trim().toLowerCase();
+            const filteredUsers = broadcastRecipientsList.filter(u => {
+                if (!q) return true;
+                return (u.name && u.name.toLowerCase().includes(q)) ||
+                       (u.username && u.username.toLowerCase().includes(q)) ||
+                       (u.phone && u.phone.includes(q)) ||
+                       (u.telegram_id && u.telegram_id.includes(q));
+            });
+
+            container.innerHTML = `
+                <!-- Statistics & Quick Action Bar -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-1 shadow-lg">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">በሲስተሙ የተገኙ ደንበኞች</span>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-black text-white font-mono">${totalCount.toLocaleString()}</span>
+                            <span class="text-xs text-slate-400">ተጠቃሚዎች</span>
+                        </div>
+                        <p class="text-[11px] text-cyan-400">ቦት የተጠቀሙ እና የተመዘገቡ ደንበኞች</p>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-900 border border-emerald-500/30 space-y-1 shadow-lg">
+                        <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">ለመላክ የተመረጡት (Eligible)</span>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-black text-emerald-400 font-mono">${eligibleCount.toLocaleString()}</span>
+                            <span class="text-xs text-slate-400">ደንበኞች</span>
+                        </div>
+                        <p class="text-[11px] text-slate-300">አሁን መልእክቱ የሚደርሳቸው</p>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-slate-900 border border-amber-500/30 space-y-1 shadow-lg">
+                        <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">የተገለሉት (Excluded / Family)</span>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-3xl font-black text-amber-400 font-mono">${excludedCount.toLocaleString()}</span>
+                            <span class="text-xs text-slate-400">ሰዎች</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">መልእክት የማይላክላቸው (Unselected)</p>
+                    </div>
+                </div>
+
+                <!-- Action Bar & Buttons -->
+                <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-xl">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="openTelegramBroadcastModal()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span>አዲስ መልእክት ለተመረጡት (${eligibleCount}) ላክ</span>
+                        </button>
+                        <button onclick="openBulkImportTelegramModal()" class="px-4 py-2.5 bg-cyan-700/80 hover:bg-cyan-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer">
+                            <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                            <span>📥 በጅምላ አስገባ (Bulk Import)</span>
+                        </button>
+                        <button onclick="openAddSingleTelegramModal()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer">
+                            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                            <span>+ አዲስ ተጠቃሚ</span>
+                        </button>
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-mono">
+                        ይፋዊ ቦት፡ <strong class="text-cyan-400">@${botUsername}</strong>
+                    </div>
+                </div>
+
+                <!-- Recipient Filtering & Search -->
+                <div class="p-4 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="relative flex-1 max-w-md">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" value="${broadcastSearchQuery}" oninput="handleBroadcastSearch(this.value)" placeholder="ቤተሰብ፣ ጓደኛ ወይም ደንበኛ በስም ወይም ስልክ ይፈልጉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                        </div>
+
+                        <div class="flex items-center gap-3 text-xs">
+                            <label class="flex items-center gap-2 cursor-pointer text-slate-300 font-bold select-none">
+                                <input type="checkbox" ${excludedCount === 0 ? 'checked' : ''} onchange="toggleSelectAllBroadcast(this.checked)" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
+                                <span>ሁሉንም ምረጥ (Select All: ${totalCount})</span>
+                            </label>
+                            ${excludedCount > 0 ? `
+                                <button onclick="resetExcludedBroadcastIds()" class="text-amber-400 hover:underline text-[11px] font-bold cursor-pointer">
+                                    የተገለሉትን (${excludedCount}) መልስ
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Directory Table -->
+                    <div class="overflow-x-auto max-h-[500px] overflow-y-auto rounded-2xl border border-slate-800">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-950/80 sticky top-0 z-10 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="p-3 w-12 text-center">ሁኔታ</th>
+                                    <th class="p-3">የደንበኛው ስም</th>
+                                    <th class="p-3">ስልክ ቁጥር</th>
+                                    <th class="p-3">ቴሌግራም መለያ</th>
+                                    <th class="p-3">የመጨረሻ እንቅስቃሴ</th>
+                                    <th class="p-3 text-right">እርምጃ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/60 bg-slate-900/40">
+                                ${filteredUsers.length === 0 ? `
+                                    <tr>
+                                        <td colspan="6" class="p-8 text-center text-slate-500">
+                                            ምንም የተገኘ ደንበኛ የለም። አዳዲስ ደንበኞችን ከላይ ባለው "+ በጅምላ አስገባ" ይጨምሩ።
+                                        </td>
+                                    </tr>
+                                ` : filteredUsers.map(u => {
+                                    const isExcluded = excludedBroadcastIds.has(String(u.telegram_id));
+                                    const isSelected = !isExcluded;
+                                    return `
+                                    <tr class="hover:bg-slate-800/40 transition ${isExcluded ? 'opacity-40 bg-slate-950/40' : ''}">
+                                        <td class="p-3 text-center">
+                                            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleExcludeUser('${u.telegram_id}', !this.checked)" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0 cursor-pointer">
+                                        </td>
+                                        <td class="p-3 font-bold text-white flex items-center gap-2">
+                                            <div class="w-7 h-7 rounded-full bg-cyan-600/20 text-cyan-400 flex items-center justify-center font-bold text-[11px]">
+                                                ${(u.name || 'M')[0].toUpperCase()}
+                                            </div>
+                                            <span>${u.name}</span>
+                                        </td>
+                                        <td class="p-3 font-mono text-slate-300">${u.phone || '—'}</td>
+                                        <td class="p-3 font-mono text-cyan-400">${u.username || ('ID: ' + u.telegram_id)}</td>
+                                        <td class="p-3 text-slate-400 text-[11px]">${u.last_active || 'በቅርቡ'}</td>
+                                        <td class="p-3 text-right">
+                                            ${isExcluded ? `
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">ተገልሏል (Unselected)</span>
+                                            ` : `
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">ይላካል</span>
+                                            `}
+                                        </td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function handleBroadcastSearch(val) {
+            broadcastSearchQuery = val;
+            const subContainer = document.getElementById('marketing-subtab-container');
+            if (subContainer) {
+                renderBroadcastCenterView(subContainer, 'meash_cleaning_solution_bot');
+            }
+        }
+
+        function toggleExcludeUser(telegramId, shouldExclude) {
+            const idStr = String(telegramId);
+            if (shouldExclude) {
+                excludedBroadcastIds.add(idStr);
+            } else {
+                excludedBroadcastIds.delete(idStr);
+            }
+            const subContainer = document.getElementById('marketing-subtab-container');
+            if (subContainer) {
+                renderBroadcastCenterView(subContainer, 'meash_cleaning_solution_bot');
+            }
+        }
+
+        function toggleSelectAllBroadcast(selectAll) {
+            if (selectAll) {
+                excludedBroadcastIds.clear();
+            } else {
+                broadcastRecipientsList.forEach(u => excludedBroadcastIds.add(String(u.telegram_id)));
+            }
+            const subContainer = document.getElementById('marketing-subtab-container');
+            if (subContainer) {
+                renderBroadcastCenterView(subContainer, 'meash_cleaning_solution_bot');
+            }
+        }
+
+        function resetExcludedBroadcastIds() {
+            excludedBroadcastIds.clear();
+            const subContainer = document.getElementById('marketing-subtab-container');
+            if (subContainer) {
+                renderBroadcastCenterView(subContainer, 'meash_cleaning_solution_bot');
+            }
+        }
+
+        function openTelegramBroadcastModal() {
+            const totalCount = broadcastRecipientsList.length;
+            const excludedCount = excludedBroadcastIds.size;
+            const eligibleCount = Math.max(0, totalCount - excludedCount);
+
+            if (eligibleCount === 0) {
+                alert('እባክዎ ቢያንስ አንድ ተቀባይ ይምረጡ (ሁሉም ተጠቃሚዎች ተገልለዋል)!');
+                return;
+            }
+
             const container = document.getElementById('generic-modal-container');
             container.innerHTML = `
-                <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div class="bg-slate-900 border border-cyan-500/50 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 my-auto">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-                            <div>
-                <h3 class="text-base font-bold text-white"> አዲስ የማስታወቂያ ዘመቻ ፍጠር</h3>
-                                <p class="text-[11px] text-slate-400">ለደንበኞች በ SMS ወይም በቴሌግራም መልዕክት ማስተላለፊያ</p>
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-white">አዲስ የቴሌግራም ጅምላ መልእክት ማስተላለፊያ</h3>
+                                    <p class="text-[11px] text-slate-400">ለተመረጡት ${eligibleCount} ደንበኞች በሜሽ ቦት የሚላክ</p>
+                                </div>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
-                        <form onsubmit="submitCreateCampaign(event)" class="space-y-3 text-xs">
+
+                        <div class="p-3.5 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 flex items-center justify-between text-xs">
+                            <span class="text-slate-300">የታለሙ ተቀባዮች፦</span>
+                            <span class="font-mono font-bold text-cyan-400 text-sm">${eligibleCount} ደንበኞች</span>
+                        </div>
+
+                        <form onsubmit="submitTelegramBroadcast(event)" class="space-y-4 text-xs">
                             <div>
-                                <label class="block text-slate-400 mb-1">የዘመቻው ርዕስ *</label>
-                                <input type="text" id="cmp-title" required placeholder="ለምሳሌ፡ የአዲስ ዓመት ልዩ የ 20% ቅናሽ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+                                <label class="block text-slate-300 font-bold mb-1">የማስታወቂያው ርዕስ *</label>
+                                <input type="text" id="bc-title" required placeholder="ለምሳሌ፡ የሜሽ ክሊኒንግ ልዩ የበዓል 25% ቅናሽ!" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-bold focus:outline-none focus:border-cyan-500">
                             </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-slate-400 mb-1">የመላኪያ ቻናል *</label>
-                                    <select id="cmp-channel" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer">
-                    <option value="sms"> SMS (የጽሑፍ መልዕክት)</option>
-                    <option value="telegram"> Telegram (ቴሌግራም ቦት)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-slate-400 mb-1">የደንበኛ ዒላማ *</label>
-                                    <select id="cmp-audience" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white cursor-pointer">
-                                        <option value="all_customers">ሁሉም ደንበኞች (All)</option>
-                                        <option value="vip">ቪአይፒ ደንበኞች (VIP)</option>
-                                        <option value="corporate">ድርጅታዊ ደንበኞች (Corporate)</option>
-                                        <option value="regular">መደበኛ ደንበኞች (Regular)</option>
-                                    </select>
-                                </div>
-                            </div>
+
                             <div>
-                                <label class="block text-slate-400 mb-1">የመልዕክቱ ይዘት *</label>
-                                <textarea id="cmp-message" required rows="3" placeholder="ለደንበኞች የሚላከው ማስታወቂያ ወይም የቅናሽ መልዕክት..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white leading-relaxed"></textarea>
+                                <label class="block text-slate-300 font-bold mb-1">የመልእክቱ ሙሉ ዝርዝር *</label>
+                                <textarea id="bc-message" required rows="5" placeholder="የማስታወቂያውን መልእክት እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white leading-relaxed focus:outline-none focus:border-cyan-500">ውድ ደንበኛችን፤ የሜሽ ክሊኒንግ ልዩ የጥልቅ ጽዳት አገልግሎት ቅናሽ ተዘጋጅቶ ይጠብቆታል። አሁኑኑ ቀጠሮዎን ያስይዙ!</textarea>
                             </div>
-                            <div class="flex items-center gap-2 pt-1">
-                                <input type="checkbox" id="cmp-send-now" checked class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
-                                <label for="cmp-send-now" class="text-slate-300 font-bold cursor-pointer">ወዲያውኑ ለደንበኞች ይላክ (Send Immediately)</label>
+
+                            <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                                <p>• ቴሌግራም ቦቱ እንዳይታገድ በሰከንድ የተወሰነ መጠን መልዕክት እየቆጠረ በደህንነት ይልካል።</p>
+                                <p>• እርስዎ ያገለሏቸው (${excludedCount}) ሰዎች በጭራሽ መልእክቱ አይደርሳቸውም።</p>
                             </div>
-                            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl cursor-pointer">ሰርዝ</button>
-                                <button type="submit" id="btn-submit-cmp" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg cursor-pointer">ዘመቻውን አስመዝግብ</button>
+
+                            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 cursor-pointer">ሰርዝ</button>
+                                <button type="submit" id="btn-broadcast-submit" class="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl shadow-lg flex items-center gap-2 cursor-pointer">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                    <span>አሁን በቦቱ ላክ (${eligibleCount})</span>
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -3718,45 +3943,301 @@
             lucide.createIcons();
         }
 
-        async function submitCreateCampaign(e) {
+        async function submitTelegramBroadcast(e) {
             e.preventDefault();
-            const btn = document.getElementById('btn-submit-cmp');
+            const btn = document.getElementById('btn-broadcast-submit');
             btn.disabled = true;
-            btn.textContent = 'በማስኬድ ላይ...';
+            btn.innerHTML = `<span class="animate-spin mr-1">⏳</span> በመላክ ላይ...`;
 
-            const payload = {
-                title: document.getElementById('cmp-title').value.trim(),
-                channel: document.getElementById('cmp-channel').value,
-                audience_filter: document.getElementById('cmp-audience').value,
-                message_text: document.getElementById('cmp-message').value.trim(),
-            };
+            const title = document.getElementById('bc-title').value.trim();
+            const message = document.getElementById('bc-message').value.trim();
+            const excluded = Array.from(excludedBroadcastIds);
 
-            const shouldSendNow = document.getElementById('cmp-send-now')?.checked;
+            // Replace modal content with live progress view
+            const container = document.getElementById('generic-modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-cyan-500/50 rounded-3xl max-w-md w-full p-8 shadow-2xl text-center space-y-5">
+                        <div class="w-14 h-14 rounded-2xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center mx-auto animate-pulse">
+                            <i data-lucide="send" class="w-7 h-7"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black text-white">መልእክቱ በቴሌግራም ቦት እየተሰራጨ ነው</h3>
+                            <p class="text-xs text-slate-400 mt-1">የቴሌግራም የፍጥነት ገደብን ጠብቆ ለደንበኞች እየደረሰ ነው...</p>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700">
+                                <div class="bg-gradient-to-r from-cyan-500 to-emerald-500 h-full rounded-full animate-pulse w-full"></div>
+                            </div>
+                            <span class="text-xs font-mono text-cyan-400 font-bold">እባክዎ ትንሽ ይጠብቁ...</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
 
             try {
-                const res = await apiFetch('/api/campaigns', {
+                const res = await apiFetch('/api/telegram-broadcast/dispatch', {
                     method: 'POST',
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify({
+                        title: title,
+                        message: message,
+                        excluded_telegram_ids: excluded,
+                    })
                 });
                 const data = await res.json();
-                if (res.ok) {
-                    const campaignId = data.campaign?.id;
-                    if (shouldSendNow && campaignId) {
-                        btn.textContent = 'ወዲያውኑ በመላክ ላይ...';
-                        await apiFetch(`/api/campaigns/${campaignId}/send`, { method: 'POST' });
-                    }
-          alert(' የማስታወቂያ ዘመቻው በተሳካ ሁኔታ ተፈጥሮ ተልኳል!');
+
+                if (res.ok && data.success) {
+                    container.innerHTML = `
+                        <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div class="bg-slate-900 border border-emerald-500/50 rounded-3xl max-w-md w-full p-8 shadow-2xl text-center space-y-5">
+                                <div class="w-14 h-14 rounded-2xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center mx-auto">
+                                    <i data-lucide="check-circle" class="w-8 h-8"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-black text-white">ስርጭቱ በተሳካ ሁኔታ ተጠናቋል!</h3>
+                                    <p class="text-xs text-slate-300 mt-1">${data.message}</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-left space-y-1">
+                                    <p class="text-emerald-400 font-bold">✓ የተላከላቸው ደንበኞች፦ ${data.sent_success}</p>
+                                    <p class="text-slate-400">× የተገለሉት (ቤተሰብ/ጓደኛ)፦ ${data.excluded_count}</p>
+                                    ${data.failed_count > 0 ? `<p class="text-amber-400">! ያልደረሳቸው፦ ${data.failed_count}</p>` : ''}
+                                </div>
+                                <button onclick="closeModal(); loadActiveTab();" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs cursor-pointer shadow-lg">
+                                    እሺ ተረድቻለሁ
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                } else {
+                    alert('ስህተት፡ ' + (data.message || 'ስርጭቱን ማጠናቀቅ አልተቻለም'));
                     closeModal();
                     loadActiveTab();
+                }
+            } catch (err) {
+                alert('የኔትወርክ ስህተት፡ ' + err.message);
+                closeModal();
+                loadActiveTab();
+            }
+        }
+
+        function openBulkImportTelegramModal() {
+            const container = document.getElementById('generic-modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div class="bg-slate-900 border border-cyan-500/50 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-4 my-auto">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center">
+                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-white">የቴሌግራም ደንበኞችን በጅምላ ማስገቢያ</h3>
+                                    <p class="text-[11px] text-slate-400">ከቴሌግራም የወረደውን ወይም የተዘጋጀውን ዝርዝር እዚህ ይለጥፉ</p>
+                                </div>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+
+                        <form onsubmit="submitBulkImportTelegram(event)" class="space-y-3.5 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የደንበኞች ዝርዝር (በመስመር በመስመር ለጥፉ) *</label>
+                                <textarea id="bulk-import-raw" required rows="7" placeholder="ምሳሌ፦
+12345678, አቶ አበበ, 0911223344, @abebe
+87654321, ወ/ሮ አልማዝ, 0922334455, @almaz
+99887766, ዮናስ ተስፋዬ" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white font-mono text-xs leading-relaxed focus:outline-none focus:border-cyan-500"></textarea>
+                            </div>
+
+                            <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                                <p class="font-bold text-cyan-400">የአጻጻፍ ቅርጸት (Format)፦</p>
+                                <p>• <code>ቴሌግራም_ID, ስም, ስልክ, @username</code> (በኮማ ወይም በስፔስ የተለየ)</p>
+                                <p>• ስልክ ቁጥር ብቻ ካለ <code>ቴሌግራም_ID</code> ላይ ስልኩን መጠቀም ይቻላል።</p>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 cursor-pointer">ሰርዝ</button>
+                                <button type="submit" id="btn-import-submit" class="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                    <span>አስገባ (Import Now)</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function submitBulkImportTelegram(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-import-submit');
+            btn.disabled = true;
+            btn.innerText = 'በማስገባት ላይ...';
+
+            const raw = document.getElementById('bulk-import-raw').value;
+
+            try {
+                const res = await apiFetch('/api/telegram-broadcast/import', {
+                    method: 'POST',
+                    body: JSON.stringify({ raw_data: raw })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    alert(' ' + data.message);
+                    closeModal();
+                    loadAndRenderBroadcastCenter();
                 } else {
-                    alert('ስህተት፡ ' + (data.message || 'ማስታወቂያውን መፍጠር አልተቻለም'));
+                    alert('ስህተት፡ ' + (data.message || 'ማስገባት አልተቻለም'));
                     btn.disabled = false;
-                    btn.textContent = 'ዘመቻውን አስመዝግብ';
+                    btn.innerText = 'አስገባ (Import Now)';
                 }
             } catch (err) {
                 alert('የኔትወርክ ስህተት፡ ' + err.message);
                 btn.disabled = false;
-                btn.textContent = 'ዘመቻውን አስመዝግብ';
+                btn.innerText = 'አስገባ (Import Now)';
+            }
+        }
+
+        function openAddSingleTelegramModal() {
+            const container = document.getElementById('generic-modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 my-auto">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white">+ አዲስ የቴሌግራም ደንበኛ መዝግብ</h3>
+                                <p class="text-[11px] text-slate-400">አንድ ደንበኛ በእጅ ለመጨመር</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+
+                        <form onsubmit="submitAddSingleTelegram(event)" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ቴሌግራም Chat ID ወይም ስልክ ቁጥር *</label>
+                                <input type="number" id="add-tg-id" required placeholder="ለምሳሌ፡ 12345678" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">ስም *</label>
+                                    <input type="text" id="add-tg-first" required placeholder="አበበ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">የአባት ስም</label>
+                                    <input type="text" id="add-tg-last" placeholder="ከበደ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">የቴሌግራም Username</label>
+                                    <input type="text" id="add-tg-user" placeholder="@username" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 mb-1">ስልክ ቁጥር</label>
+                                    <input type="text" id="add-tg-phone" placeholder="0911223344" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl cursor-pointer">ሰርዝ</button>
+                                <button type="submit" id="btn-add-tg-submit" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg cursor-pointer">መዝግብ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function submitAddSingleTelegram(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-add-tg-submit');
+            btn.disabled = true;
+            btn.innerText = 'በመመዝገብ ላይ...';
+
+            const payload = {
+                telegram_id: document.getElementById('add-tg-id').value,
+                first_name: document.getElementById('add-tg-first').value.trim(),
+                last_name: document.getElementById('add-tg-last').value.trim() || null,
+                username: document.getElementById('add-tg-user').value.trim() || null,
+                phone_number: document.getElementById('add-tg-phone').value.trim() || null,
+            };
+
+            try {
+                const res = await apiFetch('/api/telegram-broadcast/add-recipient', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    alert(' ' + data.message);
+                    closeModal();
+                    loadAndRenderBroadcastCenter();
+                } else {
+                    alert('ስህተት፡ ' + (data.message || 'መመዝገብ አልተቻለም'));
+                    btn.disabled = false;
+                    btn.innerText = 'መዝግብ';
+                }
+            } catch (err) {
+                alert('የኔትወርክ ስህተት፡ ' + err.message);
+                btn.disabled = false;
+                btn.innerText = 'መዝግብ';
+            }
+        }
+
+        async function loadAndRenderCampaignHistory() {
+            const subContainer = document.getElementById('marketing-subtab-container');
+            if (!subContainer) return;
+
+            try {
+                const res = await apiFetch('/api/campaigns');
+                const data = await res.json();
+                const campaigns = data.data || [];
+
+                subContainer.innerHTML = `
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                        <h3 class="text-sm font-bold text-white">የቀደሙ ዘመቻዎች እና ማስታወቂያዎች ታሪክ</h3>
+                        <span class="text-xs text-slate-400">ጠቅላላ፡ ${campaigns.length}</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${campaigns.length === 0 ? '<div class="p-8 text-slate-500 col-span-3 text-center">ምንም የተዘጋጀ የማስታወቂያ ዘመቻ የለም።</div>' : ''}
+                        ${campaigns.map(c => {
+                            const title = (c && c.title && c.title !== 'undefined') ? c.title : 'የበዓላት ቅናሽ ማስታወቂያ';
+                            const msgText = (c && c.message_text && c.message_text !== 'undefined') ? c.message_text : 'መልዕክት አልተገለጸም';
+                            const sentCount = (c && c.sent_count !== undefined && c.sent_count !== null) ? c.sent_count : (c && c.total_targets ? c.total_targets : 0);
+                            const channel = ((c && c.channel) || 'telegram').toUpperCase();
+                            const isSent = c && (c.status === 'sent' || c.status === 'completed');
+
+                            return `
+                            <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 hover:border-slate-700 transition">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
+                                        <i data-lucide="${channel === 'TELEGRAM' ? 'send' : 'message-square'}" class="w-3 h-3"></i>
+                                        ${channel} Campaign
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${isSent ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
+                                        ${isSent ? 'ተልኳል (Completed)' : 'ረቂቅ (Draft)'}
+                                    </span>
+                                </div>
+                                <h3 class="text-base font-bold text-white">${title}</h3>
+                                <p class="text-xs text-slate-300 bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 leading-relaxed font-sans">
+                                    "${msgText}"
+                                </p>
+                                <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                                    <span>ዒላማ: <strong class="text-white">${c.audience_filter || 'All'}</strong></span>
+                                    <span>የተላከላቸው: <strong class="text-cyan-400 font-mono text-sm">${sentCount}</strong></span>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                lucide.createIcons();
+            } catch (err) {
+                subContainer.innerHTML = `<div class="p-6 text-red-400">የዘመቻ ታሪክ መጫን አልተቻለም: ${err.message}</div>`;
             }
         }
 
