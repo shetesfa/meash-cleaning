@@ -2206,9 +2206,6 @@
                 updateDirectSmsSimLink();
             }
         }
-            lucide.createIcons();
-            updateDirectSmsSimLink();
-        }
 
         function updateDirectSmsSimLink() {
             const rawPhone = document.getElementById('direct-sms-phone')?.value || '0970075509';
