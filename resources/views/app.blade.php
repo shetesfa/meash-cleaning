@@ -4001,26 +4001,56 @@
                             </div>
                         </div>
 
-                        <!-- 3. Telegram Bot Status Card -->
-                        <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
-                            <div class="flex items-center gap-2 pb-3 border-b border-slate-800">
-                                <div class="w-8 h-8 rounded-xl bg-sky-600/20 text-sky-400 flex items-center justify-center">
-                                    <i data-lucide="bot" class="w-4 h-4"></i>
+                        <!-- 3. Telegram Bot Status & Controller Card -->
+                        <div class="p-6 rounded-3xl bg-slate-900 border border-sky-500/30 space-y-4 shadow-xl">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-xl bg-sky-600/20 text-sky-400 flex items-center justify-center">
+                                        <i data-lucide="bot" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-white">የቴሌግራም ቦት (Telegram Bot)</h3>
+                                        <span id="setting-tg-status-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">⏳ ሁኔታውን በማጣራት ላይ...</span>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-white">የቴሌግራም ቦት (Telegram Bot)</h3>
-                                    <span class="text-[10px] text-emerald-400 font-bold">● የተገናኘ (Connected)</span>
-                                </div>
+                                <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold text-xs flex items-center gap-1 transition">
+                                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                                    <span>ቦቱን ክፈት</span>
+                                </a>
                             </div>
 
-                            <div class="space-y-2.5 text-xs text-slate-300">
-                                <div class="flex justify-between items-center p-2 rounded-xl bg-slate-800/80">
-                                    <span class="text-slate-400">የቦት ቶከን (Token):</span>
-                                    <span class="font-mono text-cyan-300 font-bold text-[11px]">ተዋቅሯል (.env)</span>
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">የቦት ቶከን (Bot Token ከ @BotFather)</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" id="setting-tg-token" placeholder="አዲስ ቶከን ካለዎት እዚህ ያስገቡ..." class="w-full bg-slate-800 border border-slate-700 focus:border-sky-500 rounded-xl px-3 py-2 text-white font-mono text-xs">
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 mt-1 block">ቶከኑን ከቀየሩ ወይም አዲስ ካስገቡ ከታች ያለውን "አገናኝ" የሚለውን ይጫኑ::</span>
                                 </div>
-                                <div class="flex justify-between items-center p-2 rounded-xl bg-slate-800/80">
-                                    <span class="text-slate-400">የቦት ሁኔታ:</span>
-                                    <span class="text-white font-bold text-[11px]">ትዕዛዝ ይቀበላል / ንቁ</span>
+
+                                <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-1.5 text-slate-300">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-400">ቦት ተጠቃሚ (Bot Username):</span>
+                                        <span id="setting-tg-username" class="font-bold text-sky-300">@meash_cleaning_solution_bot</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-400">የተገናኘበት Webhook URL:</span>
+                                        <span id="setting-tg-webhook-url" class="font-mono text-[10px] text-slate-300 truncate max-w-[200px]">https://...</span>
+                                    </div>
+                                    <div id="setting-tg-error-row" class="hidden text-red-400 text-[11px] pt-1 border-t border-slate-700">
+                                        <strong>ስህተት፡ </strong><span id="setting-tg-error-msg"></span>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2 pt-1">
+                                    <button onclick="setTelegramWebhookFromSettings()" id="btn-settings-tg-set" class="py-2.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs">
+                                        <i data-lucide="link" class="w-3.5 h-3.5"></i>
+                                        <span>ቦቱን አገናኝ (Set Webhook)</span>
+                                    </button>
+                                    <button onclick="sendTestTelegramFromSettings()" id="btn-settings-tg-test" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs">
+                                        <i data-lucide="send" class="w-3.5 h-3.5 text-sky-400"></i>
+                                        <span>የሙከራ መልእክት ላክ</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -4063,6 +4093,134 @@
                     }
                 }).catch(() => {});
             } catch (_) {}
+
+            // Live Telegram Bot & Webhook Status Check
+            checkTelegramBotStatusInSettings();
+        }
+
+        async function checkTelegramBotStatusInSettings() {
+            try {
+                const res = await apiFetch('/api/telegram/status');
+                const data = await res.json();
+                const pill = document.getElementById('setting-tg-status-pill');
+                const usernameEl = document.getElementById('setting-tg-username');
+                const webhookUrlEl = document.getElementById('setting-tg-webhook-url');
+                const tokenInput = document.getElementById('setting-tg-token');
+                const errRow = document.getElementById('setting-tg-error-row');
+                const errText = document.getElementById('setting-tg-error-msg');
+
+                if (!pill) return;
+
+                if (!data.configured) {
+                    pill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-950/80 text-red-400 border border-red-500/30';
+                    pill.textContent = '❌ ቶከን አልተዋቀረም (Not Configured)';
+                    if (errRow) {
+                        errRow.classList.remove('hidden');
+                        errText.textContent = data.message || 'TELEGRAM_BOT_TOKEN አልተዋቀረም';
+                    }
+                    return;
+                }
+
+                if (tokenInput && data.masked_token && !tokenInput.value) {
+                    tokenInput.placeholder = 'የአሁኑ ቶከን፡ ' + data.masked_token;
+                }
+
+                if (!data.valid) {
+                    pill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-950/80 text-red-400 border border-red-500/30';
+                    pill.textContent = '❌ ልክ ያልሆነ ወይም የተሰረዘ ቶከን (Invalid Token)';
+                    if (errRow) {
+                        errRow.classList.remove('hidden');
+                        errText.textContent = data.error || data.message || 'Telegram rejected this bot token';
+                    }
+                    return;
+                }
+
+                if (usernameEl && data.bot && data.bot.username) {
+                    usernameEl.textContent = '@' + data.bot.username;
+                }
+
+                const whUrl = data.webhook ? (data.webhook.url || '') : '';
+                if (webhookUrlEl) {
+                    webhookUrlEl.textContent = whUrl || 'ያልተገናኘ (Inactive)';
+                }
+
+                if (data.webhook_active) {
+                    pill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/30';
+                    pill.textContent = '● በስራ ላይ (Active 24/7 Webhook)';
+                    if (errRow) errRow.classList.add('hidden');
+                } else {
+                    pill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950/80 text-amber-400 border border-amber-500/30';
+                    pill.textContent = '⚠️ አልተገናኘም (Inactive Webhook)';
+                    if (errRow) {
+                        errRow.classList.remove('hidden');
+                        errText.textContent = 'ቦቱ በክላውድ አልተገናኘም። እባክዎ "ቦቱን አገናኝ" የሚለውን ይጫኑ::';
+                    }
+                }
+
+                if (data.webhook && data.webhook.last_error_message && errRow) {
+                    errRow.classList.remove('hidden');
+                    errText.textContent = 'Telegram Error: ' + data.webhook.last_error_message;
+                }
+            } catch (err) {
+                console.warn('Failed to check telegram bot status:', err);
+            }
+        }
+
+        async function setTelegramWebhookFromSettings() {
+            const btn = document.getElementById('btn-settings-tg-set');
+            const tokenInput = document.getElementById('setting-tg-token');
+            const token = tokenInput ? tokenInput.value.trim() : '';
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>በማገናኘት ላይ...</span>';
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const res = await apiFetch('/api/telegram/set-webhook', {
+                    method: 'POST',
+                    body: JSON.stringify({ token: token || undefined }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                    if (tokenInput && token) tokenInput.value = '';
+                    await checkTelegramBotStatusInSettings();
+                } else {
+                    alert('❌ ' + (data.message || 'ማገናኘት አልተቻለም'));
+                }
+            } catch (e) {
+                alert('የኔትወርክ ስህተት፡ ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="link" class="w-3.5 h-3.5"></i><span>ቦቱን አገናኝ (Set Webhook)</span>';
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        async function sendTestTelegramFromSettings() {
+            const btn = document.getElementById('btn-settings-tg-test');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>በመላክ ላይ...</span>';
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const res = await apiFetch('/api/telegram/send-test', {
+                    method: 'POST',
+                    body: JSON.stringify({}),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                } else {
+                    alert('⚠️ ' + (data.message || 'መልእክት መላክ አልተቻለም'));
+                }
+            } catch (e) {
+                alert('የኔትወርክ ስህተት፡ ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5 text-sky-400"></i><span>የሙከራ መልእክት ላክ</span>';
+                if (window.lucide) lucide.createIcons();
+            }
         }
 
         async function sendTestSmsFromSettings() {

@@ -10,6 +10,7 @@ use App\Models\OrderItem;
 use App\Models\Service;
 use App\Models\Subscription;
 use App\Models\TelegramUser;
+use App\Models\WebsiteSetting;
 use App\Services\EthiopianCalendarService;
 use App\Services\SmsService;
 use Carbon\Carbon;
@@ -25,7 +26,8 @@ class TelegramController extends Controller
 
   public function __construct()
   {
-    $this->botToken = (string)(config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN'));
+    $dbToken = class_exists(WebsiteSetting::class) ? WebsiteSetting::getVal('telegram_bot_token') : null;
+    $this->botToken = (string)($dbToken ?: (config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN')));
     $this->botUsername = (string)(config('services.telegram.bot_username') ?: env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'));
   }
 
@@ -2428,5 +2430,148 @@ class TelegramController extends Controller
     ]);
 
     return ($resp['ok'] ?? false) === true;
+  }
+
+  /**
+   * Diagnostic: check real-time Telegram Bot & Webhook connection status
+   */
+  public function getWebhookStatus(): JsonResponse
+  {
+    $token = $this->botToken;
+    if (empty($token)) {
+      return response()->json([
+        'configured' => false,
+        'valid' => false,
+        'message' => 'የቴሌግራም ቦት ቶከን (TELEGRAM_BOT_TOKEN) አልተዋቀረም (Not configured).',
+      ]);
+    }
+
+    $maskedToken = strlen($token) > 12 ? substr($token, 0, 7) . '...' . substr($token, -4) : '******';
+
+    $getMe = $this->telegramApi('getMe');
+    if (!($getMe['ok'] ?? false)) {
+      return response()->json([
+        'configured' => true,
+        'masked_token' => $maskedToken,
+        'valid' => false,
+        'error' => $getMe['description'] ?? 'Unauthorized / Invalid Token',
+        'message' => 'ልክ ያልሆነ ወይም የተሰረዘ (Revoked) የቦት ቶከን ነው! አዲስ ቶከን ከ @BotFather ወስደው ያስገቡ::',
+        'get_me' => $getMe,
+      ]);
+    }
+
+    $whInfo = $this->telegramApi('getWebhookInfo');
+    $wh = $whInfo['result'] ?? [];
+    $isWebhookActive = !empty($wh['url'] ?? '');
+
+    return response()->json([
+      'configured' => true,
+      'masked_token' => $maskedToken,
+      'valid' => true,
+      'webhook_active' => $isWebhookActive,
+      'bot' => $getMe['result'] ?? null,
+      'webhook' => $wh,
+      'expected_webhook_url' => config('services.telegram.webhook_url') ?: 'https://meash-cleaning-gy5x.onrender.com/api/telegram/webhook',
+    ]);
+  }
+
+  /**
+   * Register or reset Render Cloud Webhook with Telegram
+   */
+  public function setRenderWebhook(Request $request): JsonResponse
+  {
+    if ($request->filled('token')) {
+      $newToken = trim($request->input('token'));
+      WebsiteSetting::setVal('telegram_bot_token', $newToken, 'telegram');
+      $this->botToken = $newToken;
+    }
+
+    $token = $this->botToken;
+    if (empty($token)) {
+      return response()->json([
+        'success' => false,
+        'message' => 'ቦት ቶከን (Bot Token) አልተገኘም! እባክዎ መጀመሪያ ቶከኑን ያስገቡ።',
+      ], 400);
+    }
+
+    // Verify token with getMe
+    $getMe = $this->telegramApi('getMe');
+    if (!($getMe['ok'] ?? false)) {
+      return response()->json([
+        'success' => false,
+        'message' => 'የተሳሳተ ወይም የተሰረዘ (Revoked) የቦት ቶከን ነው! Telegram: ' . ($getMe['description'] ?? 'Unauthorized'),
+      ], 400);
+    }
+
+    $url = config('services.telegram.webhook_url') ?: 'https://meash-cleaning-gy5x.onrender.com/api/telegram/webhook';
+    $params = [
+      'url' => $url,
+      'drop_pending_updates' => true,
+    ];
+
+    $secret = config('services.telegram.webhook_secret') ?: env('TELEGRAM_WEBHOOK_SECRET');
+    if (!empty($secret) && preg_match('/^[A-Za-z0-9_-]{1,256}$/', $secret)) {
+      $params['secret_token'] = $secret;
+    }
+
+    $resp = $this->telegramApi('setWebhook', $params);
+
+    if ($resp['ok'] ?? false) {
+      $botName = $getMe['result']['first_name'] ?? 'Meash Bot';
+      $botUser = $getMe['result']['username'] ?? $this->botUsername;
+      return response()->json([
+        'success' => true,
+        'message' => "ቦቱ (@{$botUser}) በተሳካ ሁኔታ ከ Render Webhook ጋር ተገናኝቷል! አሁን 24 ሰዓት ይሰራል::",
+        'bot' => $getMe['result'] ?? null,
+        'webhook_url' => $url,
+      ]);
+    }
+
+    return response()->json([
+      'success' => false,
+      'message' => 'ቴሌግራም ዌብሁክ ማገናኘት አልቻለም፡ ' . ($resp['description'] ?? json_encode($resp)),
+    ], 400);
+  }
+
+  /**
+   * Send a test Telegram alert to verify end-to-end delivery
+   */
+  public function sendTestMessage(Request $request): JsonResponse
+  {
+    $token = $this->botToken;
+    if (empty($token)) {
+      return response()->json(['success' => false, 'message' => 'የቦት ቶከን አልተዋቀረም (Bot token not set).'], 400);
+    }
+
+    $targetChatId = $request->input('chat_id') ?: (config('services.telegram.admin_chat_id') ?: env('TELEGRAM_ADMIN_CHAT_ID'));
+    if (empty($targetChatId)) {
+      $latestUser = TelegramUser::latest()->first();
+      $targetChatId = $latestUser?->telegram_id;
+    }
+
+    if (empty($targetChatId)) {
+      return response()->json([
+        'success' => false,
+        'message' => 'እስካሁን ቦቱን ያናገረ ደንበኛ ወይም የ Admin Chat ID አልተገኘም። እባክዎ መጀመሪያ በቴሌግራም @' . $this->botUsername . ' ላይ /start ብለው ያናግሩት።',
+      ], 400);
+    }
+
+    $resp = $this->telegramApi('sendMessage', [
+      'chat_id' => $targetChatId,
+      'text' => "🔔 <b>የሜሽ ቴሌግራም ቦት የሙከራ መልዕክት (Test Alert)</b>\n\n✅ ቦቱ ከ Render Cloud Webhook ጋር በትክክል ተገናኝቷል!\n⏰ ሰዓት፡ " . now()->toDateTimeString() . "\n🏢 MEASH CLEANING SOLUTION",
+      'parse_mode' => 'HTML',
+    ]);
+
+    if ($resp['ok'] ?? false) {
+      return response()->json([
+        'success' => true,
+        'message' => "የሙከራ መልእክት ለ Chat ID ({$targetChatId}) በተሳካ ሁኔታ ተልኳል!",
+      ]);
+    }
+
+    return response()->json([
+      'success' => false,
+      'message' => 'መልእክት መላክ አልተቻለም፡ ' . ($resp['description'] ?? json_encode($resp)),
+    ], 400);
   }
 }

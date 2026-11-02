@@ -48,6 +48,9 @@ Route::prefix('public')->group(function () {
 Route::prefix('telegram')->group(function () {
     Route::post('/webhook', [TelegramController::class, 'webhook']);
     Route::post('/miniapp/book', [TelegramController::class, 'miniAppBooking']);
+    Route::get('/status', [TelegramController::class, 'getWebhookStatus']);
+    Route::post('/set-webhook', [TelegramController::class, 'setRenderWebhook']);
+    Route::post('/send-test', [TelegramController::class, 'sendTestMessage']);
 });
 
 // 3. AUTHENTICATION
