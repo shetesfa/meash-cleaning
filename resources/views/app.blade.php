@@ -4391,30 +4391,40 @@
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
 
-                        <form onsubmit="submitAddSingleTelegram(event)" class="space-y-3 text-xs">
-                            <div>
-                                <label class="block text-slate-300 font-bold mb-1">ቴሌግራም Chat ID ወይም ስልክ ቁጥር *</label>
-                                <input type="number" id="add-tg-id" required placeholder="ለምሳሌ፡ 12345678" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:border-cyan-500">
-                            </div>
+                        <form onsubmit="submitAddSingleTelegram(event)" class="space-y-3.5 text-xs">
+                            <!-- Name Fields -->
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-slate-300 font-bold mb-1">ስም *</label>
-                                    <input type="text" id="add-tg-first" required placeholder="አበበ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500">
+                                    <label class="block text-slate-300 font-bold mb-1">ስም * <span class="text-cyan-400 text-[10px]">(የግዴታ)</span></label>
+                                    <input type="text" id="add-tg-first" required placeholder="ለምሳሌ፡ አበበ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-bold">
                                 </div>
                                 <div>
-                                    <label class="block text-slate-300 font-bold mb-1">የአባት ስም</label>
+                                    <label class="block text-slate-400 mb-1">የአባት ስም <span class="text-slate-500 text-[10px]">(አማራጭ)</span></label>
                                     <input type="text" id="add-tg-last" placeholder="ከበደ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500">
                                 </div>
                             </div>
+
+                            <!-- Username & Phone Rule Explanation -->
+                            <div class="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-[11px] text-cyan-300">
+                                💡 <strong>የመለያ ደንብ፦</strong> ከ <strong>Username</strong> ወይም <strong>ስልክ ቁጥር</strong> ቢያንስ አንዱን ማስገባት የግዴታ ነው። (Username ካለ ስልክ ቁጥር አማራጭ ነው፤ ስልክ ቁጥር ካለም Username አማራጭ ነው)።
+                            </div>
+
+                            <!-- Username & Phone Fields -->
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-slate-400 mb-1">የቴሌግራም Username</label>
-                                    <input type="text" id="add-tg-user" placeholder="@username" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500">
+                                    <label class="block text-slate-300 font-bold mb-1">የቴሌግራም Username</label>
+                                    <input type="text" id="add-tg-user" oninput="checkAddTgFields()" placeholder="@username" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500">
                                 </div>
                                 <div>
-                                    <label class="block text-slate-400 mb-1">ስልክ ቁጥር</label>
-                                    <input type="text" id="add-tg-phone" placeholder="0911223344" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500">
+                                    <label class="block text-slate-300 font-bold mb-1">ስልክ ቁጥር</label>
+                                    <input type="text" id="add-tg-phone" oninput="checkAddTgFields()" placeholder="0911223344" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500">
                                 </div>
+                            </div>
+
+                            <!-- Optional Chat ID -->
+                            <div>
+                                <label class="block text-slate-400 mb-1">ቴሌግራም Chat ID <span class="text-slate-500 text-[10px]">(ካወቁት ብቻ / አማራጭ)</span></label>
+                                <input type="number" id="add-tg-id" placeholder="ለምሳሌ፡ 12345678 (ካላወቁት ባዶ ይተዉት)" class="w-full bg-slate-800/70 border border-slate-700 rounded-xl px-3 py-2 text-slate-300 font-mono text-xs focus:outline-none focus:border-cyan-500">
                             </div>
 
                             <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
@@ -4428,18 +4438,52 @@
             lucide.createIcons();
         }
 
+        function checkAddTgFields() {
+            const user = (document.getElementById('add-tg-user')?.value || '').trim();
+            const phone = (document.getElementById('add-tg-phone')?.value || '').trim();
+            const userInput = document.getElementById('add-tg-user');
+            const phoneInput = document.getElementById('add-tg-phone');
+
+            if (user || phone) {
+                userInput?.classList.remove('border-amber-500');
+                phoneInput?.classList.remove('border-amber-500');
+            }
+        }
+
         async function submitAddSingleTelegram(e) {
             e.preventDefault();
+
+            const firstName = (document.getElementById('add-tg-first')?.value || '').trim();
+            const lastName = (document.getElementById('add-tg-last')?.value || '').trim();
+            const username = (document.getElementById('add-tg-user')?.value || '').trim();
+            const phone = (document.getElementById('add-tg-phone')?.value || '').trim();
+            let tgId = (document.getElementById('add-tg-id')?.value || '').trim();
+
+            if (!firstName) {
+                alert('እባክዎ የደንበኛውን ስም ያስገቡ!');
+                document.getElementById('add-tg-first')?.focus();
+                return;
+            }
+
+            // Either Username OR Phone number is mandatory
+            if (!username && !phone) {
+                alert('እባክዎ የቴሌግራም Username ወይም ስልክ ቁጥር ቢያንስ አንዱን ያስገቡ!');
+                document.getElementById('add-tg-user')?.focus();
+                return;
+            }
+
             const btn = document.getElementById('btn-add-tg-submit');
-            btn.disabled = true;
-            btn.innerText = 'በመመዝገብ ላይ...';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'በመመዝገብ ላይ...';
+            }
 
             const payload = {
-                telegram_id: document.getElementById('add-tg-id').value,
-                first_name: document.getElementById('add-tg-first').value.trim(),
-                last_name: document.getElementById('add-tg-last').value.trim() || null,
-                username: document.getElementById('add-tg-user').value.trim() || null,
-                phone_number: document.getElementById('add-tg-phone').value.trim() || null,
+                first_name: firstName,
+                last_name: lastName || null,
+                username: username ? username.replace(/^@/, '') : null,
+                phone_number: phone || null,
+                telegram_id: tgId ? parseInt(tgId, 10) : null,
             };
 
             try {
@@ -4450,18 +4494,22 @@
                 const data = await res.json();
 
                 if (res.ok && data.success) {
-                    alert(' ' + data.message);
+                    alert('✓ ' + data.message);
                     closeModal();
                     loadAndRenderBroadcastCenter();
                 } else {
                     alert('ስህተት፡ ' + (data.message || 'መመዝገብ አልተቻለም'));
-                    btn.disabled = false;
-                    btn.innerText = 'መዝግብ';
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = 'መዝግብ';
+                    }
                 }
             } catch (err) {
                 alert('የኔትወርክ ስህተት፡ ' + err.message);
-                btn.disabled = false;
-                btn.innerText = 'መዝግብ';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'መዝግብ';
+                }
             }
         }
 

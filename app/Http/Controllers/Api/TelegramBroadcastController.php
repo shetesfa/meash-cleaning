@@ -84,20 +84,49 @@ class TelegramBroadcastController extends Controller
 
     /**
      * Add a single Telegram recipient manually
+     * Name is mandatory, Father name is optional.
+     * At least one of Username OR Phone number is mandatory.
      */
     public function addSingleRecipient(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'telegram_id' => 'required|numeric',
             'first_name' => 'required|string|max:100',
             'last_name' => 'nullable|string|max:100',
             'username' => 'nullable|string|max:100',
             'phone_number' => 'nullable|string|max:32',
+            'telegram_id' => 'nullable|numeric',
         ]);
 
-        $tgId = (int)$validated['telegram_id'];
-        $cleanUsername = !empty($validated['username']) ? ltrim($validated['username'], '@') : null;
-        $cleanPhone = !empty($validated['phone_number']) ? preg_replace('/\D+/', '', $validated['phone_number']) : null;
+        $cleanUsername = !empty($validated['username']) ? ltrim(trim($validated['username']), '@') : null;
+        $cleanPhone = !empty($validated['phone_number']) ? preg_replace('/\D+/', '', trim($validated['phone_number'])) : null;
+
+        // Either Username OR Phone Number must be present
+        if (empty($cleanUsername) && empty($cleanPhone)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'እባክዎ የቴሌግራም Username ወይም ስልክ ቁጥር ቢያንስ አንዱን ያስገቡ!',
+            ], 422);
+        }
+
+        // Determine Telegram ID
+        $tgId = !empty($validated['telegram_id']) ? (int)$validated['telegram_id'] : null;
+        if (empty($tgId)) {
+            if (!empty($cleanPhone)) {
+                $tgId = (int)substr($cleanPhone, -9);
+            } else {
+                $tgId = (int)mt_rand(100000000, 999999999);
+            }
+        }
+
+        // Format clean phone for Ethiopian format if applicable
+        $formattedPhone = $cleanPhone;
+        if (!empty($cleanPhone)) {
+            if (str_starts_with($cleanPhone, '00251')) {
+                $formattedPhone = '0' . substr($cleanPhone, 5);
+            } elseif (str_starts_with($cleanPhone, '251')) {
+                $formattedPhone = '0' . substr($cleanPhone, 3);
+            }
+        }
 
         $user = TelegramUser::updateOrCreate(
             ['telegram_id' => $tgId],
@@ -105,11 +134,24 @@ class TelegramBroadcastController extends Controller
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'] ?? null,
                 'username' => $cleanUsername,
-                'phone_number' => $cleanPhone,
+                'phone_number' => $formattedPhone,
                 'marketing_consent' => true,
                 'last_interaction_at' => now(),
             ]
         );
+
+        // Also record in Customer directory if phone is present
+        if (!empty($formattedPhone)) {
+            $fullName = trim($validated['first_name'] . ' ' . ($validated['last_name'] ?? ''));
+            Customer::updateOrCreate(
+                ['phone' => $formattedPhone],
+                [
+                    'full_name' => $fullName,
+                    'telegram_user_id' => (string)$tgId,
+                    'marketing_consent' => true,
+                ]
+            );
+        }
 
         return response()->json([
             'success' => true,
