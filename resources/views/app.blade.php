@@ -3984,7 +3984,7 @@
                 });
                 const data = await res.json();
 
-                if (res.ok && data.success) {
+                if (res.ok && data.success && data.sent_success > 0) {
                     container.innerHTML = `
                         <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
                             <div class="bg-slate-900 border border-emerald-500/50 rounded-3xl max-w-md w-full p-8 shadow-2xl text-center space-y-5">
@@ -4008,9 +4008,29 @@
                     `;
                     lucide.createIcons();
                 } else {
-                    alert('ስህተት፡ ' + (data.message || 'ስርጭቱን ማጠናቀቅ አልተቻለም'));
-                    closeModal();
-                    loadActiveTab();
+                    const errMsg = data.last_error || data.message || 'ስርጭቱን ማጠናቀቅ አልተቻለም';
+                    container.innerHTML = `
+                        <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div class="bg-slate-900 border border-rose-500/50 rounded-3xl max-w-md w-full p-8 shadow-2xl text-center space-y-5">
+                                <div class="w-14 h-14 rounded-2xl bg-rose-600/20 text-rose-400 flex items-center justify-center mx-auto">
+                                    <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-black text-white">መልእክቱ አልተላከም!</h3>
+                                    <p class="text-xs text-rose-300 mt-1">${errMsg}</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-left space-y-1">
+                                    <p class="text-slate-400">✓ የተላከላቸው፦ ${data.sent_success || 0}</p>
+                                    <p class="text-rose-400 font-bold">! ያልደረሳቸው፦ ${data.failed_count || 1}</p>
+                                    <p class="text-slate-500">× የተገለሉት፦ ${data.excluded_count || 0}</p>
+                                </div>
+                                <button onclick="closeModal();" class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs cursor-pointer shadow-lg">
+                                    ተመለስና አስተካክል
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    lucide.createIcons();
                 }
             } catch (err) {
                 alert('የኔትወርክ ስህተት፡ ' + err.message);

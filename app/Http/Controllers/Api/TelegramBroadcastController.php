@@ -197,8 +197,22 @@ class TelegramBroadcastController extends Controller
         if (empty($botToken)) {
             return response()->json([
                 'success' => false,
-                'message' => 'የቴሌግራም ቦት ቶከን (TELEGRAM_BOT_TOKEN) አልተዋቀረም!',
+                'message' => 'የቴሌግራም ቦት ቶከን (TELEGRAM_BOT_TOKEN) በሲስተሙ ውስጥ አልተዋቀረም!',
             ], 422);
+        }
+
+        // Pre-flight check: Verify bot token validity with Telegram
+        try {
+            $botCheck = Http::withoutVerifying()->timeout(6)->get("https://api.telegram.org/bot{$botToken}/getMe");
+            if (!$botCheck->successful()) {
+                $errDetail = $botCheck->json('description') ?? 'Unauthorized or invalid token';
+                return response()->json([
+                    'success' => false,
+                    'message' => "የቴሌግራም ቦት ቶከን ውድቅ ተደርጓል (Telegram Error: {$errDetail})። እባክዎ ከ @BotFather ትክክለኛውን ቶከን ያረጋግጡ!",
+                ], 422);
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Telegram getMe pre-check failed: " . $e->getMessage());
         }
 
         $excludedIds = array_map('strval', $validated['excluded_telegram_ids'] ?? []);
@@ -262,9 +276,10 @@ class TelegramBroadcastController extends Controller
 
         // Safe broadcast batch loop with rate limiting (max 25 requests/sec with 40ms micro-pause)
         $batchCounter = 0;
+        $lastErrorMessage = null;
         foreach ($targetChatIds as $chatId => $info) {
             try {
-                $response = Http::timeout(4)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                $response = Http::withoutVerifying()->timeout(8)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                     'chat_id' => $chatId,
                     'text' => $formattedMessage,
                     'parse_mode' => 'HTML',
@@ -276,6 +291,7 @@ class TelegramBroadcastController extends Controller
                 } else {
                     $failedCount++;
                     $resJson = $response->json();
+                    $lastErrorMessage = $resJson['description'] ?? 'የማይታወቅ ስህተት';
                     // If flood control occurs, pause for safe retry
                     if (isset($resJson['parameters']['retry_after'])) {
                         $waitSec = (int)$resJson['parameters']['retry_after'];
@@ -284,6 +300,7 @@ class TelegramBroadcastController extends Controller
                 }
             } catch (\Throwable $e) {
                 $failedCount++;
+                $lastErrorMessage = $e->getMessage();
                 Log::warning("Telegram Broadcast error for chat {$chatId}: " . $e->getMessage());
             }
 
@@ -320,12 +337,15 @@ class TelegramBroadcastController extends Controller
         }
 
         return response()->json([
-            'success' => true,
-            'message' => "የቴሌግራም መልእክት ስርጭት ተጠናቋል! ለ {$sentSuccess} ደንበኞች በተሳካ ሁኔታ ደርሷል። (ያልተሳካ፡ {$failedCount})",
+            'success' => $sentSuccess > 0,
+            'message' => $sentSuccess > 0
+                ? "የቴሌግራም መልእክት ስርጭት ተጠናቋል! ለ {$sentSuccess} ደንበኞች በተሳካ ሁኔታ ደርሷል።" . ($failedCount > 0 ? " (ያልተሳካ፡ {$failedCount})" : "")
+                : "መልእክቱ አልተላከም! " . ($lastErrorMessage ? "የቴሌግራም ስህተት፦ {$lastErrorMessage}" : ""),
             'total_targets' => $totalTargets,
             'sent_success' => $sentSuccess,
             'failed_count' => $failedCount,
             'excluded_count' => count($excludedIds),
+            'last_error' => $lastErrorMessage,
         ]);
     }
 }
