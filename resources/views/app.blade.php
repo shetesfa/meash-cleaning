@@ -2043,6 +2043,27 @@
         // ==========================================
         // 5c. DIRECT SMS SENDER MODAL (Admin & Reception)
         // ==========================================
+        function formatPhoneForSms(rawPhone) {
+            if (!rawPhone) return '+251970075509';
+            let clean = rawPhone.toString().trim().replace(/[\s\-\(\)]/g, '');
+            if (clean.startsWith('+')) {
+                return clean;
+            }
+            if (clean.startsWith('09')) {
+                return '+251' + clean.slice(1);
+            }
+            if (clean.startsWith('07')) {
+                return '+251' + clean.slice(1);
+            }
+            if (clean.startsWith('251')) {
+                return '+' + clean;
+            }
+            if (clean.length === 9 && (clean.startsWith('9') || clean.startsWith('7'))) {
+                return '+251' + clean;
+            }
+            return clean;
+        }
+
         function openDirectSmsModal(phone = '', name = '') {
             const container = document.getElementById('generic-modal-container');
             const cleanPhone = (phone || '').replace(/\s+/g, '');
@@ -2050,8 +2071,8 @@
 
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div class="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-lg w-full p-6 shadow-2xl">
-                        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                    <div class="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                             <div class="flex items-center gap-2">
                                 <div class="w-8 h-8 rounded-xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center">
                                     <i data-lucide="send" class="w-4 h-4"></i>
@@ -2072,7 +2093,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-slate-300 font-bold mb-1">የተቀባይ ደንበኛ ስልክ *</label>
-                                    <input type="text" id="direct-sms-phone" required value="${cleanPhone || '0970075509'}" placeholder="0970075509" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono focus:border-cyan-500 focus:outline-none">
+                                    <input type="text" id="direct-sms-phone" oninput="updateDirectSmsSimLink()" required value="${cleanPhone || '0970075509'}" placeholder="0970075509" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono focus:border-cyan-500 focus:outline-none">
                                 </div>
                             </div>
 
@@ -2092,9 +2113,25 @@
                                 <textarea id="direct-sms-message" oninput="updateDirectSmsSimLink()" required rows="3" placeholder="መልእክትዎን እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-500">ሰላም ${safeName}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!</textarea>
                             </div>
 
+                            <!-- iOS (iPhone) & Android QR Code Section -->
+                            <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-cyan-500/30 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                                <div class="bg-white p-2 rounded-2xl shadow-lg border border-slate-700 flex-shrink-0">
+                                    <img id="direct-sms-qr" src="" alt="SMS QR Code" class="w-28 h-28 object-contain">
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex items-center justify-center sm:justify-start gap-1.5">
+                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">ለ iPhone እና Android</span>
+                                        <span class="text-xs font-bold text-white">ካሜራ ስካን QR ኮድ</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-300">በእርሶ iPhone ወይም Android ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ ወዲያውኑ መልእክቱን በ Messages አፕ አዘጋጅቶ ያቀርባል፤ መላክ ብቻ ይጠበቅብዎታል!</p>
+                                    <p class="text-[10px] text-slate-400 font-mono">ተቀባይ ስልክ፦ <span id="direct-sms-target-display" class="text-cyan-400 font-bold">+251970075509</span></p>
+                                </div>
+                            </div>
+
                             <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
-                                <a id="btn-direct-sim-sms" href="sms:${cleanPhone || '0970075509'}?body=ሰላም ${encodeURIComponent(safeName)}፣ የሜሽ ክሊኒንግ ቀጠሮዎ በትክክል ተረጋግጧል። በሰዓቱ እንገኛለን። እናመሰግናለን!" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
-                  <span> በስልክ SIM ላክ</span>
+                                <a id="btn-direct-sim-sms" href="#" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
+                                    <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+                                    <span>በስልክ SIM ላክ (iPhone / Android)</span>
                                 </a>
                                 <div class="flex items-center gap-2">
                                     <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700">ሰርዝ</button>
@@ -2113,16 +2150,26 @@
         }
 
         function updateDirectSmsSimLink() {
-            const phone = document.getElementById('direct-sms-phone')?.value || '0970075509';
+            const rawPhone = document.getElementById('direct-sms-phone')?.value || '0970075509';
             const msg = document.getElementById('direct-sms-message')?.value || '';
-            const cleanP = phone.replace(/\D+/g, '');
+            const intlPhone = formatPhoneForSms(rawPhone);
+
+            const targetDisp = document.getElementById('direct-sms-target-display');
+            if (targetDisp) {
+                targetDisp.textContent = intlPhone;
+            }
+
             const link = document.getElementById('btn-direct-sim-sms');
             if (link) {
-                link.href = `sms:${cleanP}?&body=${encodeURIComponent(msg)}`;
+                // ?&body= is universally recognized across iOS and Android browsers
+                link.href = `sms:${intlPhone}?&body=${encodeURIComponent(msg)}`;
             }
+
             const qr = document.getElementById('direct-sms-qr');
             if (qr) {
-                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`SMSTO:${cleanP}:${msg}`)}`;
+                // iPhone Camera natively opens Messages app with RFC 5724 standard sms:phone?&body=
+                const payload = `sms:${intlPhone}?&body=${encodeURIComponent(msg)}`;
+                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}`;
             }
         }
 
@@ -3784,9 +3831,24 @@
                                         <i data-lucide="send" class="w-3.5 h-3.5"></i>
                                         <span>በሲስተም SMS ላክ</span>
                                     </button>
-                                    <a id="btn-owner-direct-sim-sms" href="sms:0970075509?&body=ሰላም! ይህ ከሜሽ ክሊኒንግ (0970075509) የተላከ ይፋዊ የሙከራ ኤስኤምኤስ ነው።" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
-                    <span> በስልክ SIM ላክ</span>
+                                    <a id="btn-owner-direct-sim-sms" href="#" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
+                                        <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+                                        <span>በስልክ SIM ላክ (iPhone)</span>
                                     </a>
+                                </div>
+
+                                <!-- iPhone & Android QR Code Camera Scan Card -->
+                                <div class="mt-3 p-3 rounded-2xl bg-slate-950/70 border border-cyan-500/30 flex items-center gap-3">
+                                    <div class="bg-white p-2 rounded-xl flex-shrink-0 shadow-md">
+                                        <img id="qr-sim-sms" src="" alt="SMS QR Code" class="w-24 h-24 object-contain">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">ለ iPhone እና Android</span>
+                                            <span class="text-xs font-bold text-white">ካሜራ ስካን QR ኮድ</span>
+                                        </div>
+                                        <p class="text-[10px] text-slate-300">በእርሶ iPhone ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ ወዲያውኑ መልእክቱን በ Messages አፕ አዘጋጅቶ ያቀርብልዎታል።</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3838,6 +3900,7 @@
                 </div>
             `;
             lucide.createIcons();
+            updateOwnerSimSmsLink();
             // Live SMS status check
             try {
                 apiFetch('/api/sms/status').then(r => r.json()).then(sData => {
@@ -3895,7 +3958,7 @@
         function updateOwnerSimSmsLink() {
             const rawPhones = document.getElementById('setting-test-recipient')?.value || '0970075509';
             const msg = document.getElementById('setting-test-msg')?.value || '';
-            const phoneList = rawPhones.split(/[,;\s]+/).map(p => p.trim().replace(/\D+/g, '')).filter(p => p.length >= 9);
+            const phoneList = rawPhones.split(/[,;\s]+/).map(p => formatPhoneForSms(p)).filter(p => p.length >= 9);
             const joinedPhones = phoneList.join(',');
 
             const link = document.getElementById('btn-owner-direct-sim-sms');
@@ -3904,7 +3967,9 @@
             }
             const qr = document.getElementById('qr-sim-sms');
             if (qr) {
-                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(`SMSTO:${joinedPhones}:${msg}`)}`;
+                // iPhone Camera natively opens Messages app with RFC 5724 standard sms:phone?&body=
+                const payload = `sms:${joinedPhones}?&body=${encodeURIComponent(msg)}`;
+                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}`;
             }
         }
         // ==========================================
@@ -5476,6 +5541,10 @@
                                 <span class="px-3 py-1 bg-blue-100 text-blue-900 font-extrabold text-xs rounded-full">ይፋዊ ፕሮፎርማ ሰነድ</span>
                             </div>
                             <div class="flex items-center gap-2">
+                                <a id="prof-sms-link" href="#" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer transition-all">
+                                    <i data-lucide="smartphone" class="w-4 h-4"></i>
+                                    <span>በስልክ SIM ላክ (SMS)</span>
+                                </a>
                                 <button onclick="window.print()" class="px-4 py-2 bg-gradient-to-r from-blue-700 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
                                     <i data-lucide="printer" class="w-4 h-4"></i>
                                     <span>አትም / PDF</span>
@@ -5637,6 +5706,21 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- iPhone & Android Proforma SMS QR Code Card (On Screen Only) -->
+                        <div class="p-4 rounded-2xl bg-blue-50/80 border border-blue-200 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left print:hidden">
+                            <div class="bg-white p-2 rounded-2xl shadow-md border border-blue-200 flex-shrink-0">
+                                <img id="prof-sms-qr" src="" alt="Proforma SMS QR" class="w-24 h-24 object-contain">
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-center sm:justify-start gap-1.5">
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-900 border border-blue-200">ለ iPhone እና Android</span>
+                                    <span class="text-xs font-bold text-blue-950">የፕሮፎርማ SMS መላኪያ QR ኮድ</span>
+                                </div>
+                                <p class="text-[11px] text-slate-700">በእርሶ iPhone ወይም Android ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ የዚህን ፕሮፎርማ ዝርዝር እና አጠቃላይ ዋጋ የያዘውን SMS በ Messages አፕ ያዘጋጅልዎታል።</p>
+                                <p class="text-[10px] text-slate-500 font-mono">ተቀባይ ደንበኛ ስልክ፦ <span id="prof-sms-phone-display" class="text-blue-700 font-bold">+251...</span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -5711,20 +5795,26 @@
         }
 
         function updateProformaSmsQr() {
-            const profNum = document.getElementById('prof-ref-badge')?.innerText?.replace('Ref: ', '').trim() || 'MSH-PRF-1000';
             const phone = document.getElementById('prof-phone')?.value || '0970075509';
             const org = document.getElementById('prof-org-name')?.value || 'ደንበኛ';
             const grand = document.getElementById('prof-grand-total')?.innerText || '';
-            const cleanP = phone.replace(/\D+/g, '');
-            const msg = `ሰላም ${org}፣ የሜሽ ክሊኒንግ ፕሮፎርማ (${profNum}) ተዘጋጅቷል። ጠቅላላ ክፍያ፡ ${grand}። ለበለጠ መረጃ፡ 0970075509`;
+            const intlPhone = formatPhoneForSms(phone);
+            const msg = `ሰላም ${org}፣ የሜሽ ክሊኒንግ ፕሮፎርማ ተዘጋጅቷል። ጠቅላላ ክፍያ፡ ${grand}። ለበለጠ መረጃ፡ 0970075509 / 0998142190`;
+
+            const disp = document.getElementById('prof-sms-phone-display');
+            if (disp) {
+                disp.textContent = intlPhone;
+            }
 
             const qr = document.getElementById('prof-sms-qr');
             if (qr) {
-                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`SMSTO:${cleanP}:${msg}`)}`;
+                // iPhone Camera natively opens Messages app with RFC 5724 standard sms:phone?&body=
+                const payload = `sms:${intlPhone}?&body=${encodeURIComponent(msg)}`;
+                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`;
             }
             const link = document.getElementById('prof-sms-link');
             if (link) {
-                link.href = `sms:${cleanP}?&body=${encodeURIComponent(msg)}`;
+                link.href = `sms:${intlPhone}?&body=${encodeURIComponent(msg)}`;
             }
         }
 
