@@ -2207,6 +2207,7 @@
             }
         }
 
+        let _smsQrDebounceTimer = null;
         function updateDirectSmsSimLink() {
             const rawPhone = document.getElementById('direct-sms-phone')?.value || '0970075509';
             const msg = document.getElementById('direct-sms-message')?.value || '';
@@ -2223,12 +2224,15 @@
                 link.href = `sms:${intlPhone}?&body=${encodeURIComponent(msg)}`;
             }
 
-            const qr = document.getElementById('direct-sms-qr');
-            if (qr) {
-                // iPhone Camera natively opens Messages app with RFC 5724 standard sms:phone?&body=
-                const payload = `sms:${intlPhone}?&body=${encodeURIComponent(msg)}`;
-                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}`;
-            }
+            // Debounce QR regeneration so typing remains silky smooth without network lag
+            if (_smsQrDebounceTimer) clearTimeout(_smsQrDebounceTimer);
+            _smsQrDebounceTimer = setTimeout(() => {
+                const qr = document.getElementById('direct-sms-qr');
+                if (qr) {
+                    const payload = `sms:${intlPhone}?&body=${encodeURIComponent(msg)}`;
+                    qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}`;
+                }
+            }, 300);
         }
 
         function applySmsTemplate(type, customerName) {
@@ -3699,23 +3703,13 @@
             const excludedCount = excludedBroadcastIds.size;
             const eligibleCount = Math.max(0, totalCount - excludedCount);
 
-            // Filter by search query
-            const q = broadcastSearchQuery.trim().toLowerCase();
-            const filteredUsers = broadcastRecipientsList.filter(u => {
-                if (!q) return true;
-                return (u.name && u.name.toLowerCase().includes(q)) ||
-                       (u.username && u.username.toLowerCase().includes(q)) ||
-                       (u.phone && u.phone.includes(q)) ||
-                       (u.telegram_id && u.telegram_id.includes(q));
-            });
-
             container.innerHTML = `
-                <!-- Statistics & Quick Action Bar -->
+                <!-- Statistics Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-1 shadow-lg">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">በሲስተሙ የተገኙ ደንበኞች</span>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-black text-white font-mono">${totalCount.toLocaleString()}</span>
+                            <span class="text-3xl font-black text-white font-mono" id="stat-total-count">${totalCount.toLocaleString()}</span>
                             <span class="text-xs text-slate-400">ተጠቃሚዎች</span>
                         </div>
                         <p class="text-[11px] text-cyan-400">ቦት የተጠቀሙ እና የተመዘገቡ ደንበኞች</p>
@@ -3724,7 +3718,7 @@
                     <div class="p-5 rounded-3xl bg-slate-900 border border-emerald-500/30 space-y-1 shadow-lg">
                         <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">ለመላክ የተመረጡት (Eligible)</span>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-black text-emerald-400 font-mono">${eligibleCount.toLocaleString()}</span>
+                            <span class="text-3xl font-black text-emerald-400 font-mono" id="stat-eligible-count">${eligibleCount.toLocaleString()}</span>
                             <span class="text-xs text-slate-400">ደንበኞች</span>
                         </div>
                         <p class="text-[11px] text-slate-300">አሁን መልእክቱ የሚደርሳቸው</p>
@@ -3733,59 +3727,107 @@
                     <div class="p-5 rounded-3xl bg-slate-900 border border-amber-500/30 space-y-1 shadow-lg">
                         <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">የተገለሉት (Excluded / Family)</span>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-black text-amber-400 font-mono">${excludedCount.toLocaleString()}</span>
+                            <span class="text-3xl font-black text-amber-400 font-mono" id="stat-excluded-count">${excludedCount.toLocaleString()}</span>
                             <span class="text-xs text-slate-400">ሰዎች</span>
                         </div>
                         <p class="text-[11px] text-slate-400">መልእክት የማይላክላቸው (Unselected)</p>
                     </div>
                 </div>
 
-                <!-- Action Bar & Buttons -->
-                <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-xl">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="openTelegramBroadcastModal()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition">
-                            <i data-lucide="send" class="w-4 h-4"></i>
-                            <span>አዲስ መልእክት ለተመረጡት (${eligibleCount}) ላክ</span>
-                        </button>
-                        <button onclick="openBulkImportTelegramModal()" class="px-4 py-2.5 bg-cyan-700/80 hover:bg-cyan-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer">
-                            <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-                            <span>📥 በጅምላ አስገባ (Bulk Import)</span>
-                        </button>
-                        <button onclick="openAddSingleTelegramModal()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer">
-                            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                            <span>+ አዲስ ተጠቃሚ</span>
-                        </button>
+                <!-- 📝 NORMAL PAGE: IN-PAGE MESSAGE WRITER / COMPOSER -->
+                <div class="p-6 rounded-3xl bg-slate-900 border border-cyan-500/40 shadow-2xl space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800 gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-2xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center">
+                                <i data-lucide="edit-3" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-black text-white">የመልእክት መጻፊያ ማዕከል (Message Composer)</h3>
+                                <p class="text-xs text-slate-400">እንደ መደበኛ ገጽ እዚህ ይጻፉ፤ ከስር ተቀባዮችን ይምረጡና በቀጥታ በቦቱ ይላኩ</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="text-slate-400">ይፋዊ ቦት፡</span>
+                            <span class="font-mono font-bold text-cyan-400 bg-cyan-950/60 px-2.5 py-1 rounded-xl border border-cyan-500/30">@${botUsername}</span>
+                        </div>
                     </div>
-                    <div class="text-[11px] text-slate-400 font-mono">
-                        ይፋዊ ቦት፡ <strong class="text-cyan-400">@${botUsername}</strong>
+
+                    <!-- Quick Templates -->
+                    <div class="space-y-1.5">
+                        <label class="block text-slate-300 font-bold text-xs">ፈጣን ዝግጁ አብነቶች (Templates)</label>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="applyBroadcastTemplate('holiday')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer transition">
+                                🎁 የበዓላት ልዩ ቅናሽ
+                            </button>
+                            <button type="button" onclick="applyBroadcastTemplate('deep_clean')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer transition">
+                                🧽 የጥልቅ ጽዳት ጥሪ
+                            </button>
+                            <button type="button" onclick="applyBroadcastTemplate('sofa')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer transition">
+                                🛋️ የሶፋ እና ምንጣፍ እጥበት
+                            </button>
+                            <button type="button" onclick="applyBroadcastTemplate('thanks')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer transition">
+                                ⭐ ምስጋና እና አዲስ ቅናሽ
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Title & Message Textarea -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-slate-300 font-bold text-xs mb-1">የማስታወቂያው ርዕስ *</label>
+                            <input type="text" id="inpage-bc-title" value="የሜሽ ክሊኒንግ ልዩ የበዓል 25% ቅናሽ!" placeholder="ለምሳሌ፡ የሜሽ ክሊኒንግ ልዩ የበዓል 25% ቅናሽ!" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-xs focus:outline-none focus:border-cyan-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-300 font-bold text-xs mb-1">የመልእክቱ ሙሉ ዝርዝር (Message Body) *</label>
+                            <textarea id="inpage-bc-message" rows="4" placeholder="የማስታወቂያውን መልእክት እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white text-xs leading-relaxed focus:outline-none focus:border-cyan-500">ውድ ደንበኛችን፤ የሜሽ ክሊኒንግ ልዩ የጥልቅ ጽዳት አገልግሎት ቅናሽ ተዘጋጅቶ ይጠብቆታል። አሁኑኑ ቀጠሮዎን ያስይዙ!</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Action & Send Button -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800">
+                        <div class="text-[11px] text-slate-400 space-y-0.5">
+                            <p>• መልእክቱ ከስር በተመረጡት <strong class="text-emerald-400 font-mono font-bold" id="label-send-count">${eligibleCount.toLocaleString()}</strong> ደንበኞች ይላካል።</p>
+                            <p>• ያገለሏቸው (<span class="text-amber-400 font-mono" id="label-excluded-count">${excludedCount.toLocaleString()}</span>) ሰዎች አይደርሳቸውም።</p>
+                        </div>
+                        <button type="button" id="btn-inpage-send" onclick="submitInPageBroadcast()" class="px-7 py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-black text-sm rounded-2xl shadow-xl flex items-center gap-2 cursor-pointer transition transform active:scale-95">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span id="btn-inpage-send-text">አሁን በቦቱ ላክ (<span id="btn-target-count">${eligibleCount.toLocaleString()}</span>)</span>
+                        </button>
                     </div>
                 </div>
 
                 <!-- Recipient Filtering & Search -->
-                <div class="p-4 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+                <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div class="relative flex-1 max-w-md">
                             <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" value="${broadcastSearchQuery}" oninput="handleBroadcastSearch(this.value)" placeholder="ቤተሰብ፣ ጓደኛ ወይም ደንበኛ በስም ወይም ስልክ ይፈልጉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                            <input type="text" id="broadcast-search-input" oninput="handleInstantBroadcastSearch(this.value)" placeholder="ቤተሰብ፣ ጓደኛ ወይም ደንበኛ በስም ወይም ስልክ ይፈልጉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
                         </div>
 
-                        <div class="flex items-center gap-3 text-xs">
+                        <div class="flex flex-wrap items-center gap-3 text-xs">
                             <label class="flex items-center gap-2 cursor-pointer text-slate-300 font-bold select-none">
-                                <input type="checkbox" ${excludedCount === 0 ? 'checked' : ''} onchange="toggleSelectAllBroadcast(this.checked)" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
-                                <span>ሁሉንም ምረጥ (Select All: ${totalCount})</span>
+                                <input type="checkbox" id="broadcast-select-all-cb" ${excludedCount === 0 ? 'checked' : ''} onchange="toggleSelectAllBroadcast(this.checked)" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0 cursor-pointer">
+                                <span>ሁሉንም ምረጥ (<span id="select-all-count">${totalCount.toLocaleString()}</span>)</span>
                             </label>
-                            ${excludedCount > 0 ? `
-                                <button onclick="resetExcludedBroadcastIds()" class="text-amber-400 hover:underline text-[11px] font-bold cursor-pointer">
-                                    የተገለሉትን (${excludedCount}) መልስ
-                                </button>
-                            ` : ''}
+                            <button type="button" onclick="resetExcludedBroadcastIds()" class="text-amber-400 hover:underline text-[11px] font-bold cursor-pointer">
+                                የተገለሉትን መልስ
+                            </button>
+                            <button type="button" onclick="openBulkImportTelegramModal()" class="px-3 py-1.5 bg-cyan-700/80 hover:bg-cyan-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1 cursor-pointer">
+                                <i data-lucide="upload" class="w-3 h-3"></i>
+                                <span>📥 በጅምላ አስገባ</span>
+                            </button>
+                            <button type="button" onclick="openAddSingleTelegramModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1 cursor-pointer">
+                                <i data-lucide="user-plus" class="w-3 h-3"></i>
+                                <span>+ አዲስ</span>
+                            </button>
                         </div>
                     </div>
 
                     <!-- Directory Table -->
-                    <div class="overflow-x-auto max-h-[500px] overflow-y-auto rounded-2xl border border-slate-800">
-                        <table class="w-full text-left text-xs text-slate-300">
-                            <thead class="bg-slate-950/80 sticky top-0 z-10 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                    <div class="overflow-x-auto max-h-[520px] overflow-y-auto rounded-2xl border border-slate-800">
+                        <table class="w-full text-left text-xs text-slate-300" id="broadcast-directory-table">
+                            <thead class="bg-slate-950/90 sticky top-0 z-10 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
                                 <tr>
                                     <th class="p-3 w-12 text-center">ሁኔታ</th>
                                     <th class="p-3">የደንበኛው ስም</th>
@@ -3795,40 +3837,8 @@
                                     <th class="p-3 text-right">እርምጃ</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-800/60 bg-slate-900/40">
-                                ${filteredUsers.length === 0 ? `
-                                    <tr>
-                                        <td colspan="6" class="p-8 text-center text-slate-500">
-                                            ምንም የተገኘ ደንበኛ የለም። አዳዲስ ደንበኞችን ከላይ ባለው "+ በጅምላ አስገባ" ይጨምሩ።
-                                        </td>
-                                    </tr>
-                                ` : filteredUsers.map(u => {
-                                    const isExcluded = excludedBroadcastIds.has(String(u.telegram_id));
-                                    const isSelected = !isExcluded;
-                                    return `
-                                    <tr class="hover:bg-slate-800/40 transition ${isExcluded ? 'opacity-40 bg-slate-950/40' : ''}">
-                                        <td class="p-3 text-center">
-                                            <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleExcludeUser('${u.telegram_id}', !this.checked)" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0 cursor-pointer">
-                                        </td>
-                                        <td class="p-3 font-bold text-white flex items-center gap-2">
-                                            <div class="w-7 h-7 rounded-full bg-cyan-600/20 text-cyan-400 flex items-center justify-center font-bold text-[11px]">
-                                                ${(u.name || 'M')[0].toUpperCase()}
-                                            </div>
-                                            <span>${u.name}</span>
-                                        </td>
-                                        <td class="p-3 font-mono text-slate-300">${u.phone || '—'}</td>
-                                        <td class="p-3 font-mono text-cyan-400">${u.username || ('ID: ' + u.telegram_id)}</td>
-                                        <td class="p-3 text-slate-400 text-[11px]">${u.last_active || 'በቅርቡ'}</td>
-                                        <td class="p-3 text-right">
-                                            ${isExcluded ? `
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">ተገልሏል (Unselected)</span>
-                                            ` : `
-                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">ይላካል</span>
-                                            `}
-                                        </td>
-                                    </tr>
-                                    `;
-                                }).join('')}
+                            <tbody class="divide-y divide-slate-800/60 bg-slate-900/40" id="broadcast-table-body">
+                                ${renderBroadcastTableRowsHtml(broadcastRecipientsList)}
                             </tbody>
                         </table>
                     </div>
@@ -3837,14 +3847,83 @@
             lucide.createIcons();
         }
 
-        function handleBroadcastSearch(val) {
-            broadcastSearchQuery = val;
-            const subContainer = document.getElementById('marketing-subtab-container');
-            if (subContainer) {
-                renderBroadcastCenterView(subContainer, 'meash_cleaning_solution_bot');
+        function renderBroadcastTableRowsHtml(usersList) {
+            if (!usersList || usersList.length === 0) {
+                return `
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-500">
+                            ምንም የተገኘ ደንበኛ የለም። አዳዲስ ደንበኞችን ከላይ ባለው "+ በጅምላ አስገባ" ይጨምሩ።
+                        </td>
+                    </tr>
+                `;
+            }
+
+            return usersList.map(u => {
+                const isExcluded = excludedBroadcastIds.has(String(u.telegram_id));
+                const isSelected = !isExcluded;
+                const searchTokens = `${u.name || ''} ${u.username || ''} ${u.phone || ''} ${u.telegram_id || ''}`.toLowerCase();
+                return `
+                <tr id="bc-row-${u.telegram_id}" data-tokens="${encodeURIComponent(searchTokens)}" class="hover:bg-slate-800/40 transition ${isExcluded ? 'opacity-40 bg-slate-950/40' : ''}">
+                    <td class="p-3 text-center">
+                        <input type="checkbox" id="bc-cb-${u.telegram_id}" ${isSelected ? 'checked' : ''} onchange="toggleExcludeUser('${u.telegram_id}', !this.checked)" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0 cursor-pointer">
+                    </td>
+                    <td class="p-3 font-bold text-white flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-cyan-600/20 text-cyan-400 flex items-center justify-center font-bold text-[11px]">
+                            ${(u.name || 'M')[0].toUpperCase()}
+                        </div>
+                        <span>${u.name}</span>
+                    </td>
+                    <td class="p-3 font-mono text-slate-300">${u.phone || '—'}</td>
+                    <td class="p-3 font-mono text-cyan-400">${u.username || ('ID: ' + u.telegram_id)}</td>
+                    <td class="p-3 text-slate-400 text-[11px]">${u.last_active || 'በቅርቡ'}</td>
+                    <td class="p-3 text-right" id="bc-badge-${u.telegram_id}">
+                        ${isExcluded ? `
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">ተገልሏል (Unselected)</span>
+                        ` : `
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">ይላካል</span>
+                        `}
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        // Instant DOM-based search without re-rendering the page (No focus loss!)
+        function handleInstantBroadcastSearch(val) {
+            const q = (val || '').trim().toLowerCase();
+            const rows = document.querySelectorAll('#broadcast-table-body tr[data-tokens]');
+            rows.forEach(r => {
+                const tokens = decodeURIComponent(r.getAttribute('data-tokens') || '');
+                if (!q || tokens.includes(q)) {
+                    r.style.display = '';
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+        }
+
+        // Apply templates into in-page message writer
+        function applyBroadcastTemplate(type) {
+            const titleInput = document.getElementById('inpage-bc-title');
+            const msgInput = document.getElementById('inpage-bc-message');
+            if (!titleInput || !msgInput) return;
+
+            if (type === 'holiday') {
+                titleInput.value = '🎉 የሜሽ ክሊኒንግ ልዩ የበዓል 25% ቅናሽ!';
+                msgInput.value = 'ውድ ደንበኛችን፤ ለመጪው በዓል ቤቶን ወይም ቢሮዎን በባለሙያዎቻችን ጥልቅ ጽዳት (Deep Cleaning) በ 25% ቅናሽ ያስውቡ። ፈጥነው ቀጠሮ ይያዙ!';
+            } else if (type === 'deep_clean') {
+                titleInput.value = '✨ የቤት እና ቢሮ ጥልቅ የፅዳት አገልግሎት (Deep Cleaning)';
+                msgInput.value = 'ሰላም ጤና ይስጥልን! የሜሽ ክሊኒንግ ዘመናዊ የፅዳት ማሽኖችን እና አለም አቀፍ ደረጃቸውን የጠበቁ ኬሚካሎችን በመጠቀም ቤቶን እንደ አዲስ ያድሳል። ዛሬውኑ ይደውሉልን!';
+            } else if (type === 'sofa') {
+                titleInput.value = '🛋️ የሶፋ፣ ምንጣፍ እና ፍራሽ የእንፋሎት እጥበት በቦታው';
+                msgInput.value = 'ውድ ደንበኛችን፤ የሶፋ፣ ምንጣፍ እና ፍራሽ እድፍና አቧራ አስቸግሮዎታል? በዘመናዊ የእንፋሎት ማሽን ያሉበት ድረስ መጥተን በደቂቃዎች ውስጥ እናጸዳለን!';
+            } else if (type === 'thanks') {
+                titleInput.value = '⭐ ለሜሽ ክሊኒንግ ቤተሰቦች የቀረበ ልዩ ምስጋና እና ቅናሽ';
+                msgInput.value = 'ውድ ደንበኛችን፤ ስለመረጡን እናመሰግናለን! ለቀጣይ አገልግሎትዎ የሚሆን የ 15% የታማኝነት ቅናሽ ኮድ ተዘጋጅቶልዎታል።';
             }
         }
 
+        // Toggle exclude a single user with surgical DOM update (No page re-render!)
         function toggleExcludeUser(telegramId, shouldExclude) {
             const idStr = String(telegramId);
             if (shouldExclude) {
@@ -3852,29 +3931,211 @@
             } else {
                 excludedBroadcastIds.delete(idStr);
             }
-            const subContainer = document.getElementById('marketing-subtab-container');
-            if (subContainer) {
-                renderBroadcastCenterView(subContainer, 'meash_cleaning_solution_bot');
+            updateBroadcastCountersDom();
+
+            const row = document.getElementById(`bc-row-${idStr}`);
+            const badge = document.getElementById(`bc-badge-${idStr}`);
+            const cb = document.getElementById(`bc-cb-${idStr}`);
+
+            if (cb) cb.checked = !shouldExclude;
+            if (row) {
+                if (shouldExclude) {
+                    row.classList.add('opacity-40', 'bg-slate-950/40');
+                } else {
+                    row.classList.remove('opacity-40', 'bg-slate-950/40');
+                }
+            }
+            if (badge) {
+                badge.innerHTML = shouldExclude
+                    ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">ተገልሏል (Unselected)</span>`
+                    : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">ይላካል</span>`;
             }
         }
 
+        // Toggle Select All Broadcast with surgical DOM update
         function toggleSelectAllBroadcast(selectAll) {
             if (selectAll) {
                 excludedBroadcastIds.clear();
             } else {
                 broadcastRecipientsList.forEach(u => excludedBroadcastIds.add(String(u.telegram_id)));
             }
-            const subContainer = document.getElementById('marketing-subtab-container');
-            if (subContainer) {
-                renderBroadcastCenterView(subContainer, 'meash_cleaning_solution_bot');
-            }
+            updateBroadcastCountersDom();
+
+            // Update all checkboxes and rows in table
+            broadcastRecipientsList.forEach(u => {
+                const idStr = String(u.telegram_id);
+                const isExcluded = excludedBroadcastIds.has(idStr);
+                const row = document.getElementById(`bc-row-${idStr}`);
+                const badge = document.getElementById(`bc-badge-${idStr}`);
+                const cb = document.getElementById(`bc-cb-${idStr}`);
+
+                if (cb) cb.checked = !isExcluded;
+                if (row) {
+                    if (isExcluded) {
+                        row.classList.add('opacity-40', 'bg-slate-950/40');
+                    } else {
+                        row.classList.remove('opacity-40', 'bg-slate-950/40');
+                    }
+                }
+                if (badge) {
+                    badge.innerHTML = isExcluded
+                        ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">ተገልሏል (Unselected)</span>`
+                        : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">ይላካል</span>`;
+                }
+            });
         }
 
         function resetExcludedBroadcastIds() {
-            excludedBroadcastIds.clear();
-            const subContainer = document.getElementById('marketing-subtab-container');
-            if (subContainer) {
-                renderBroadcastCenterView(subContainer, 'meash_cleaning_solution_bot');
+            toggleSelectAllBroadcast(true);
+            const mainCb = document.getElementById('broadcast-select-all-cb');
+            if (mainCb) mainCb.checked = true;
+        }
+
+        // Update counters without re-rendering page
+        function updateBroadcastCountersDom() {
+            const totalCount = broadcastRecipientsList.length;
+            const excludedCount = excludedBroadcastIds.size;
+            const eligibleCount = Math.max(0, totalCount - excludedCount);
+
+            const elEligible = document.getElementById('stat-eligible-count');
+            const elExcluded = document.getElementById('stat-excluded-count');
+            const elLabelSend = document.getElementById('label-send-count');
+            const elLabelExcluded = document.getElementById('label-excluded-count');
+            const elBtnTarget = document.getElementById('btn-target-count');
+            const elMainCb = document.getElementById('broadcast-select-all-cb');
+
+            if (elEligible) elEligible.textContent = eligibleCount.toLocaleString();
+            if (elExcluded) elExcluded.textContent = excludedCount.toLocaleString();
+            if (elLabelSend) elLabelSend.textContent = eligibleCount.toLocaleString();
+            if (elLabelExcluded) elLabelExcluded.textContent = excludedCount.toLocaleString();
+            if (elBtnTarget) elBtnTarget.textContent = eligibleCount.toLocaleString();
+            if (elMainCb) elMainCb.checked = (excludedCount === 0);
+        }
+
+        // In-page Submit Telegram Broadcast
+        async function submitInPageBroadcast() {
+            const totalCount = broadcastRecipientsList.length;
+            const excludedCount = excludedBroadcastIds.size;
+            const eligibleCount = Math.max(0, totalCount - excludedCount);
+
+            if (eligibleCount === 0) {
+                alert('እባክዎ ቢያንስ አንድ ተቀባይ ይምረጡ (ሁሉም ተጠቃሚዎች ተገልለዋል)!');
+                return;
+            }
+
+            const title = (document.getElementById('inpage-bc-title')?.value || '').trim();
+            const message = (document.getElementById('inpage-bc-message')?.value || '').trim();
+
+            if (!title) {
+                alert('እባክዎ የማስታወቂያውን ርዕስ ያስገቡ!');
+                document.getElementById('inpage-bc-title')?.focus();
+                return;
+            }
+            if (!message) {
+                alert('እባክዎ የመልእክቱን ዝርዝር ያስገቡ!');
+                document.getElementById('inpage-bc-message')?.focus();
+                return;
+            }
+
+            if (!confirm(`ለመረጧቸው ${eligibleCount} ደንበኞች መልእክቱ አሁን በይፋዊው ቦት ይላክ?`)) {
+                return;
+            }
+
+            const btn = document.getElementById('btn-inpage-send');
+            const btnText = document.getElementById('btn-inpage-send-text');
+            if (btn) btn.disabled = true;
+            if (btnText) btnText.innerHTML = `<span class="animate-spin mr-1">⏳</span> በመላክ ላይ...`;
+
+            // Open live progress modal
+            const modalContainer = document.getElementById('generic-modal-container');
+            modalContainer.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-cyan-500/50 rounded-3xl max-w-md w-full p-8 shadow-2xl text-center space-y-5">
+                        <div class="w-14 h-14 rounded-2xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center mx-auto animate-pulse">
+                            <i data-lucide="send" class="w-7 h-7"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-black text-white">መልእክቱ በቴሌግራም ቦት በመላክ ላይ ነው...</h3>
+                            <p class="text-xs text-slate-400 mt-1">ቴሌግራም ቦቱ እንዳይታገድ በሰከንድ የተወሰነ መልእክት እየቆጠረ በደህንነት እየላከ ነው</p>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-left space-y-1">
+                            <p class="text-cyan-400 font-bold">የታለሙ ተቀባዮች፦ ${eligibleCount}</p>
+                            <p class="text-slate-400">የተገለሉት (ቤተሰብ/ጓደኛ)፦ ${excludedCount}</p>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                            <div class="bg-gradient-to-r from-cyan-500 to-emerald-500 h-2 rounded-full animate-pulse w-full"></div>
+                        </div>
+                        <p class="text-[11px] text-slate-500">እባክዎ መልእክቱ እስኪጠናቀቅ ገጹን አይዝጉት...</p>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+
+            try {
+                const res = await apiFetch('/api/telegram-broadcast/dispatch', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        title: title,
+                        message: message,
+                        excluded_telegram_ids: Array.from(excludedBroadcastIds),
+                    })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success && data.sent_success > 0) {
+                    modalContainer.innerHTML = `
+                        <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div class="bg-slate-900 border border-emerald-500/50 rounded-3xl max-w-md w-full p-8 shadow-2xl text-center space-y-5">
+                                <div class="w-14 h-14 rounded-2xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center mx-auto">
+                                    <i data-lucide="check-circle" class="w-8 h-8"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-black text-white">ስርጭቱ በተሳካ ሁኔታ ተጠናቋል!</h3>
+                                    <p class="text-xs text-slate-300 mt-1">${data.message}</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-left space-y-1">
+                                    <p class="text-emerald-400 font-bold">✓ የተላከላቸው ደንበኞች፦ ${data.sent_success}</p>
+                                    <p class="text-slate-400">× የተገለሉት (ቤተሰብ/ጓደኛ)፦ ${data.excluded_count}</p>
+                                    ${data.failed_count > 0 ? `<p class="text-amber-400">! ያልደረሳቸው፦ ${data.failed_count}</p>` : ''}
+                                </div>
+                                <button onclick="closeModal();" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs cursor-pointer shadow-lg">
+                                    እሺ ተረድቻለሁ
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                } else {
+                    const errMsg = data.last_error || data.message || 'ስርጭቱን ማጠናቀቅ አልተቻለም';
+                    modalContainer.innerHTML = `
+                        <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div class="bg-slate-900 border border-rose-500/50 rounded-3xl max-w-md w-full p-8 shadow-2xl text-center space-y-5">
+                                <div class="w-14 h-14 rounded-2xl bg-rose-600/20 text-rose-400 flex items-center justify-center mx-auto">
+                                    <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-black text-white">መልእክቱ አልተላከም!</h3>
+                                    <p class="text-xs text-rose-300 mt-1">${errMsg}</p>
+                                </div>
+                                <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-left space-y-1">
+                                    <p class="text-slate-400">✓ የተላከላቸው፦ ${data.sent_success || 0}</p>
+                                    <p class="text-rose-400 font-bold">! ያልደረሳቸው፦ ${data.failed_count || 1}</p>
+                                    <p class="text-slate-500">× የተገለሉት፦ ${data.excluded_count || 0}</p>
+                                </div>
+                                <button onclick="closeModal();" class="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs cursor-pointer shadow-lg">
+                                    ተመለስና አስተካክል
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                alert('የኔትወርክ ስህተት፡ ' + err.message);
+                closeModal();
+            } finally {
+                if (btn) btn.disabled = false;
+                if (btnText) btnText.innerHTML = `አሁን በቦቱ ላክ (<span id="btn-target-count">${eligibleCount.toLocaleString()}</span>)`;
             }
         }
 
