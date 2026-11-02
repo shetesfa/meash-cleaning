@@ -65,7 +65,7 @@ class TelegramBroadcastController extends Controller
                     'db_id' => $c->id,
                     'source' => 'customer_record',
                     'telegram_id' => $chatId,
-                    'name' => $c->name ?: 'ደንበኛ #' . $c->id,
+                    'name' => $c->full_name ?: 'ደንበኛ #' . $c->id,
                     'username' => '',
                     'phone' => $c->phone ?: 'ያልተመዘገበ',
                     'last_active' => $c->updated_at ? $c->updated_at->diffForHumans() : 'በቅርቡ',
@@ -226,7 +226,7 @@ class TelegramBroadcastController extends Controller
             $chatId = (string)$c->telegram_user_id;
             if (!empty($chatId) && !in_array($chatId, $excludedIds) && !isset($targetChatIds[$chatId])) {
                 $targetChatIds[$chatId] = [
-                    'name' => $c->name,
+                    'name' => $c->full_name,
                     'phone' => $c->phone,
                 ];
             }
