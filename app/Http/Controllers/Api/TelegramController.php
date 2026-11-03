@@ -26,7 +26,14 @@ class TelegramController extends Controller
 
   public function __construct()
   {
-    $dbToken = class_exists(WebsiteSetting::class) ? WebsiteSetting::getVal('telegram_bot_token') : null;
+    $dbToken = null;
+    try {
+      if (class_exists(WebsiteSetting::class)) {
+        $dbToken = WebsiteSetting::getVal('telegram_bot_token');
+      }
+    } catch (\Throwable $e) {
+      // In-memory or pre-migration fallback
+    }
     $this->botToken = (string)($dbToken ?: (config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN')));
     $this->botUsername = (string)(config('services.telegram.bot_username') ?: env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'));
   }
@@ -50,10 +57,9 @@ class TelegramController extends Controller
     try {
       $secretToken = config('services.telegram.webhook_secret') ?: env('TELEGRAM_WEBHOOK_SECRET');
       if (!empty($secretToken)) {
-        $incomingSecret = $request->header('X-Telegram-Bot-Api-Secret-Token');
-        // Only reject if a secret token header is present but does not match
-        if (!empty($incomingSecret) && !hash_equals($secretToken, $incomingSecret)) {
-          Log::warning('Telegram webhook request rejected: Secret token mismatch.');
+        $incomingSecret = (string)$request->header('X-Telegram-Bot-Api-Secret-Token');
+        if (empty($incomingSecret) || !hash_equals($secretToken, $incomingSecret)) {
+          Log::warning('Telegram webhook request rejected: Secret token missing or mismatch.');
           return response()->json(['error' => 'Unauthorized'], 401);
         }
       }

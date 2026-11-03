@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
 class TelegramWebhookTest extends TestCase
 {
+    use RefreshDatabase;
     public function test_telegram_webhook_returns_401_when_secret_is_missing(): void
     {
         Config::set('services.telegram.webhook_secret', 'expected-super-secret');
