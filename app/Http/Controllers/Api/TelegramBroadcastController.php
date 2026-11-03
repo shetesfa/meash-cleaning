@@ -314,7 +314,7 @@ class TelegramBroadcastController extends Controller
         $failedCount = 0;
         $title = $validated['title'];
         $body = $validated['message'];
-        $formattedMessage = "<b>" . htmlspecialchars($title) . "</b>\n\n" . htmlspecialchars($body) . "\n\n—\n<b>ሜሽ የፅዳት አገልግሎት (Meash Cleaning)</b>\n📞 0970075509 / 0998142190";
+        $formattedMessage = "<b>" . htmlspecialchars($title) . "</b>\n\n" . htmlspecialchars($body) . "\n\n—\n<b>ሜሽ የፅዳት አገልግሎት (Meash Cleaning)</b>\n 0970075509 / 0998142190";
 
         // Safe broadcast batch loop with rate limiting (max 25 requests/sec with 40ms micro-pause)
         $batchCounter = 0;

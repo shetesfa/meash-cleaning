@@ -1157,7 +1157,7 @@
                                         <span class="text-[10px] text-slate-400 font-medium block">ማረጋገጫ የሚጠብቁ</span>
                                         <span class="text-xl font-black text-amber-400 mt-0.5 block">${today.pending_bookings || 0}</span>
                                     </div>
-                                    <span class="text-lg">⏳</span>
+                                    <span class="text-lg"></span>
                                 </div>
 
                                 <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
@@ -2324,7 +2324,7 @@
                                     <option value="">-- ፈጣን አብነት ይምረጡ --</option>
                   <option value="confirm"> የቀጠሮ ማረጋገጫ (Appointment Confirmed)</option>
                   <option value="dispatched"> የቡድን ስምሪት እና የቀጥታ ካርታ (Dispatched on the way)</option>
-                                    <option value="feedback">⭐ የአስተያየት መቀበያ እና ምስጋና (Feedback & Thanks)</option>
+                                    <option value="feedback"> የአስተያየት መቀበያ እና ምስጋና (Feedback & Thanks)</option>
                   <option value="subscription"> የደንበኝነት አገልግሎት አስታዋሽ (Subscription Reminder)</option>
                                 </select>
                             </div>
@@ -3938,7 +3938,7 @@
                     </div>
                 </div>
 
-                <!-- 📝 NORMAL PAGE: IN-PAGE MESSAGE WRITER / COMPOSER -->
+                <!--  NORMAL PAGE: IN-PAGE MESSAGE WRITER / COMPOSER -->
                 <div class="p-6 rounded-3xl bg-slate-900 border border-cyan-500/40 shadow-2xl space-y-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800 gap-2">
                         <div class="flex items-center gap-2.5">
@@ -3961,16 +3961,16 @@
                         <label class="block text-slate-300 font-bold text-xs">ፈጣን ዝግጁ አብነቶች (Templates)</label>
                         <div class="flex flex-wrap items-center gap-2">
                             <button type="button" onclick="applyBroadcastTemplate('holiday')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer transition">
-                                🎁 የበዓላት ልዩ ቅናሽ
+                                 የበዓላት ልዩ ቅናሽ
                             </button>
                             <button type="button" onclick="applyBroadcastTemplate('deep_clean')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer transition">
-                                🧽 የጥልቅ ጽዳት ጥሪ
+                                 የጥልቅ ጽዳት ጥሪ
                             </button>
                             <button type="button" onclick="applyBroadcastTemplate('sofa')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer transition">
-                                🛋️ የሶፋ እና ምንጣፍ እጥበት
+                                 የሶፋ እና ምንጣፍ እጥበት
                             </button>
                             <button type="button" onclick="applyBroadcastTemplate('thanks')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 cursor-pointer transition">
-                                ⭐ ምስጋና እና አዲስ ቅናሽ
+                                 ምስጋና እና አዲስ ቅናሽ
                             </button>
                         </div>
                     </div>
@@ -4019,7 +4019,7 @@
                             </button>
                             <button type="button" onclick="openBulkImportTelegramModal()" class="px-3 py-1.5 bg-cyan-700/80 hover:bg-cyan-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1 cursor-pointer">
                                 <i data-lucide="upload" class="w-3 h-3"></i>
-                                <span>📥 በጅምላ አስገባ</span>
+                                <span> በጅምላ አስገባ</span>
                             </button>
                             <button type="button" onclick="openAddSingleTelegramModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl flex items-center gap-1 cursor-pointer">
                                 <i data-lucide="user-plus" class="w-3 h-3"></i>
@@ -4113,16 +4113,16 @@
             if (!titleInput || !msgInput) return;
 
             if (type === 'holiday') {
-                titleInput.value = '🎉 የሜሽ ክሊኒንግ ልዩ የበዓል 25% ቅናሽ!';
+                titleInput.value = ' የሜሽ ክሊኒንግ ልዩ የበዓል 25% ቅናሽ!';
                 msgInput.value = 'ውድ ደንበኛችን፤ ለመጪው በዓል ቤቶን ወይም ቢሮዎን በባለሙያዎቻችን ጥልቅ ጽዳት (Deep Cleaning) በ 25% ቅናሽ ያስውቡ። ፈጥነው ቀጠሮ ይያዙ!';
             } else if (type === 'deep_clean') {
-                titleInput.value = '✨ የቤት እና ቢሮ ጥልቅ የፅዳት አገልግሎት (Deep Cleaning)';
+                titleInput.value = ' የቤት እና ቢሮ ጥልቅ የፅዳት አገልግሎት (Deep Cleaning)';
                 msgInput.value = 'ሰላም ጤና ይስጥልን! የሜሽ ክሊኒንግ ዘመናዊ የፅዳት ማሽኖችን እና አለም አቀፍ ደረጃቸውን የጠበቁ ኬሚካሎችን በመጠቀም ቤቶን እንደ አዲስ ያድሳል። ዛሬውኑ ይደውሉልን!';
             } else if (type === 'sofa') {
-                titleInput.value = '🛋️ የሶፋ፣ ምንጣፍ እና ፍራሽ የእንፋሎት እጥበት በቦታው';
+                titleInput.value = ' የሶፋ፣ ምንጣፍ እና ፍራሽ የእንፋሎት እጥበት በቦታው';
                 msgInput.value = 'ውድ ደንበኛችን፤ የሶፋ፣ ምንጣፍ እና ፍራሽ እድፍና አቧራ አስቸግሮዎታል? በዘመናዊ የእንፋሎት ማሽን ያሉበት ድረስ መጥተን በደቂቃዎች ውስጥ እናጸዳለን!';
             } else if (type === 'thanks') {
-                titleInput.value = '⭐ ለሜሽ ክሊኒንግ ቤተሰቦች የቀረበ ልዩ ምስጋና እና ቅናሽ';
+                titleInput.value = ' ለሜሽ ክሊኒንግ ቤተሰቦች የቀረበ ልዩ ምስጋና እና ቅናሽ';
                 msgInput.value = 'ውድ ደንበኛችን፤ ስለመረጡን እናመሰግናለን! ለቀጣይ አገልግሎትዎ የሚሆን የ 15% የታማኝነት ቅናሽ ኮድ ተዘጋጅቶልዎታል።';
             }
         }
@@ -4248,7 +4248,7 @@
             const btn = document.getElementById('btn-inpage-send');
             const btnText = document.getElementById('btn-inpage-send-text');
             if (btn) btn.disabled = true;
-            if (btnText) btnText.innerHTML = `<span class="animate-spin mr-1">⏳</span> በመላክ ላይ...`;
+            if (btnText) btnText.innerHTML = `<span class="animate-spin mr-1"></span> በመላክ ላይ...`;
 
             // Open live progress modal
             const modalContainer = document.getElementById('generic-modal-container');
@@ -4298,7 +4298,7 @@
                                     <p class="text-xs text-slate-300 mt-1">${data.message}</p>
                                 </div>
                                 <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-left space-y-1">
-                                    <p class="text-emerald-400 font-bold">✓ የተላከላቸው ደንበኞች፦ ${data.sent_success}</p>
+                                    <p class="text-emerald-400 font-bold"> የተላከላቸው ደንበኞች፦ ${data.sent_success}</p>
                                     <p class="text-slate-400">× የተገለሉት (ቤተሰብ/ጓደኛ)፦ ${data.excluded_count}</p>
                                     ${data.failed_count > 0 ? `<p class="text-amber-400">! ያልደረሳቸው፦ ${data.failed_count}</p>` : ''}
                                 </div>
@@ -4322,7 +4322,7 @@
                                     <p class="text-xs text-rose-300 mt-1">${errMsg}</p>
                                 </div>
                                 <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-left space-y-1">
-                                    <p class="text-slate-400">✓ የተላከላቸው፦ ${data.sent_success || 0}</p>
+                                    <p class="text-slate-400"> የተላከላቸው፦ ${data.sent_success || 0}</p>
                                     <p class="text-rose-400 font-bold">! ያልደረሳቸው፦ ${data.failed_count || 1}</p>
                                     <p class="text-slate-500">× የተገለሉት፦ ${data.excluded_count || 0}</p>
                                 </div>
@@ -4409,7 +4409,7 @@
             e.preventDefault();
             const btn = document.getElementById('btn-broadcast-submit');
             btn.disabled = true;
-            btn.innerHTML = `<span class="animate-spin mr-1">⏳</span> በመላክ ላይ...`;
+            btn.innerHTML = `<span class="animate-spin mr-1"></span> በመላክ ላይ...`;
 
             const title = document.getElementById('bc-title').value.trim();
             const message = document.getElementById('bc-message').value.trim();
@@ -4461,7 +4461,7 @@
                                     <p class="text-xs text-slate-300 mt-1">${data.message}</p>
                                 </div>
                                 <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-left space-y-1">
-                                    <p class="text-emerald-400 font-bold">✓ የተላከላቸው ደንበኞች፦ ${data.sent_success}</p>
+                                    <p class="text-emerald-400 font-bold"> የተላከላቸው ደንበኞች፦ ${data.sent_success}</p>
                                     <p class="text-slate-400">× የተገለሉት (ቤተሰብ/ጓደኛ)፦ ${data.excluded_count}</p>
                                     ${data.failed_count > 0 ? `<p class="text-amber-400">! ያልደረሳቸው፦ ${data.failed_count}</p>` : ''}
                                 </div>
@@ -4485,7 +4485,7 @@
                                     <p class="text-xs text-rose-300 mt-1">${errMsg}</p>
                                 </div>
                                 <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs font-mono text-left space-y-1">
-                                    <p class="text-slate-400">✓ የተላከላቸው፦ ${data.sent_success || 0}</p>
+                                    <p class="text-slate-400"> የተላከላቸው፦ ${data.sent_success || 0}</p>
                                     <p class="text-rose-400 font-bold">! ያልደረሳቸው፦ ${data.failed_count || 1}</p>
                                     <p class="text-slate-500">× የተገለሉት፦ ${data.excluded_count || 0}</p>
                                 </div>
@@ -4610,7 +4610,7 @@
 
                             <!-- Username & Phone Rule Explanation -->
                             <div class="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-[11px] text-cyan-300">
-                                💡 <strong>የመለያ ደንብ፦</strong> ከ <strong>Username</strong> ወይም <strong>ስልክ ቁጥር</strong> ቢያንስ አንዱን ማስገባት የግዴታ ነው። (Username ካለ ስልክ ቁጥር አማራጭ ነው፤ ስልክ ቁጥር ካለም Username አማራጭ ነው)።
+                                 <strong>የመለያ ደንብ፦</strong> ከ <strong>Username</strong> ወይም <strong>ስልክ ቁጥር</strong> ቢያንስ አንዱን ማስገባት የግዴታ ነው። (Username ካለ ስልክ ቁጥር አማራጭ ነው፤ ስልክ ቁጥር ካለም Username አማራጭ ነው)።
                             </div>
 
                             <!-- Username & Phone Fields -->
@@ -4698,7 +4698,7 @@
                 const data = await res.json();
 
                 if (res.ok && data.success) {
-                    alert('✓ ' + data.message);
+                    alert(' ' + data.message);
                     closeModal();
                     loadAndRenderBroadcastCenter();
                 } else {
@@ -4821,7 +4821,7 @@
                                     </div>
                                     <div>
                                         <h3 class="text-sm font-bold text-white">የኤስኤምኤስ (SMS) ግንኙነት ማረጋገጫ</h3>
-                                        <span id="setting-sms-status-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">⏳ SMS ሁኔታ በማረጋገጥ ላይ...</span>
+                                        <span id="setting-sms-status-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300"> SMS ሁኔታ በማረጋገጥ ላይ...</span>
                                     </div>
                                 </div>
                             </div>
@@ -4873,7 +4873,7 @@
                                     </div>
                                     <div>
                                         <h3 class="text-sm font-bold text-white">የቴሌግራም ቦት (Telegram Bot)</h3>
-                                        <span id="setting-tg-status-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">⏳ ሁኔታውን በማጣራት ላይ...</span>
+                                        <span id="setting-tg-status-pill" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300"> ሁኔታውን በማጣራት ላይ...</span>
                                     </div>
                                 </div>
                                 <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold text-xs flex items-center gap-1 transition">
@@ -4977,7 +4977,7 @@
 
                 if (!data.configured) {
                     pill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-950/80 text-red-400 border border-red-500/30';
-                    pill.textContent = '❌ ቶከን አልተዋቀረም (Not Configured)';
+                    pill.textContent = ' ቶከን አልተዋቀረም (Not Configured)';
                     if (errRow) {
                         errRow.classList.remove('hidden');
                         errText.textContent = data.message || 'TELEGRAM_BOT_TOKEN አልተዋቀረም';
@@ -4991,7 +4991,7 @@
 
                 if (!data.valid) {
                     pill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-950/80 text-red-400 border border-red-500/30';
-                    pill.textContent = '❌ ልክ ያልሆነ ወይም የተሰረዘ ቶከን (Invalid Token)';
+                    pill.textContent = ' ልክ ያልሆነ ወይም የተሰረዘ ቶከን (Invalid Token)';
                     if (errRow) {
                         errRow.classList.remove('hidden');
                         errText.textContent = data.error || data.message || 'Telegram rejected this bot token';
@@ -5014,7 +5014,7 @@
                     if (errRow) errRow.classList.add('hidden');
                 } else {
                     pill.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-950/80 text-amber-400 border border-amber-500/30';
-                    pill.textContent = '⚠️ አልተገናኘም (Inactive Webhook)';
+                    pill.textContent = ' አልተገናኘም (Inactive Webhook)';
                     if (errRow) {
                         errRow.classList.remove('hidden');
                         errText.textContent = 'ቦቱ በክላውድ አልተገናኘም። እባክዎ "ቦቱን አገናኝ" የሚለውን ይጫኑ::';
@@ -5046,11 +5046,11 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert('✅ ' + data.message);
+                    alert(' ' + data.message);
                     if (tokenInput && token) tokenInput.value = '';
                     await checkTelegramBotStatusInSettings();
                 } else {
-                    alert('❌ ' + (data.message || 'ማገናኘት አልተቻለም'));
+                    alert(' ' + (data.message || 'ማገናኘት አልተቻለም'));
                 }
             } catch (e) {
                 alert('የኔትወርክ ስህተት፡ ' + e.message);
@@ -5074,9 +5074,9 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert('✅ ' + data.message);
+                    alert(' ' + data.message);
                 } else {
-                    alert('⚠️ ' + (data.message || 'መልእክት መላክ አልተቻለም'));
+                    alert(' ' + (data.message || 'መልእክት መላክ አልተቻለም'));
                 }
             } catch (e) {
                 alert('የኔትወርክ ስህተት፡ ' + e.message);
@@ -5835,7 +5835,7 @@
                 };
                 const tierLabels = {
           vip: ' ቪአይፒ (VIP)',
-                    regular: '⭐ መደበኛ ደንበኛ',
+                    regular: ' መደበኛ ደንበኛ',
           new: ' አዲስ ደንበኛ'
                 };
                 const currentTier = (c.customer_type || 'new').toLowerCase();
@@ -5928,7 +5928,7 @@
                                         ${timeline.map(t => `
                                             <div class="p-2.5 bg-slate-950/50 border border-slate-800 rounded-xl flex items-start gap-2.5 text-xs">
                                                 <span class="text-base shrink-0 mt-0.5">
-                          ${t.type === 'feedback' ? '⭐' : (t.type === 'payment' ? '' : (t.type === 'complaint' ? '' : ''))}
+                          ${t.type === 'feedback' ? '' : (t.type === 'payment' ? '' : (t.type === 'complaint' ? '' : ''))}
                                                 </span>
                                                 <div class="flex-1">
                                                     <div class="flex items-center justify-between">
@@ -6115,7 +6115,7 @@
                             </div>
 
                             <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400">
-                                ℹ ቡድኑ ወደ ስራው ቦታ ሲሄድ ጥያቄ ካጋጠመው በቀጥታ ለደንበኛው መደወል ይችላል።
+                                 ቡድኑ ወደ ስራው ቦታ ሲሄድ ጥያቄ ካጋጠመው በቀጥታ ለደንበኛው መደወል ይችላል።
                             </div>
                         </div>
 
@@ -6317,11 +6317,11 @@
                             <div>
                                 <label class="block text-slate-400 mb-1">የደንበኛ የእርካታ ደረጃ (ከ 1 እስከ 5 ኮከብ) *</label>
                                 <select id="f-rating" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                                    <option value="5">⭐⭐⭐⭐⭐ Excellent (5)</option>
-                                    <option value="4">⭐⭐⭐⭐ Very Good (4)</option>
-                                    <option value="3">⭐⭐⭐ Neutral / Okay (3)</option>
-                                    <option value="2">⭐⭐ Dissatisfied (2)</option>
-                                    <option value="1">⭐ Unacceptable (1)</option>
+                                    <option value="5"> Excellent (5)</option>
+                                    <option value="4"> Very Good (4)</option>
+                                    <option value="3"> Neutral / Okay (3)</option>
+                                    <option value="2"> Dissatisfied (2)</option>
+                                    <option value="1"> Unacceptable (1)</option>
                                 </select>
                             </div>
                             <div>

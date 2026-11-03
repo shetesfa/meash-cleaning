@@ -427,10 +427,10 @@ class TelegramController extends Controller
       // CARD 11: Help Guide & Commands
       [
         'id' => 'meash_bot_help',
-        'title' => 'ℹ የቦቱ አጠቃቀም እና ትዕዛዞች | Bot Commands & Guide',
+        'title' => ' የቦቱ አጠቃቀም እና ትዕዛዞች | Bot Commands & Guide',
         'description' => '/start, /services, /book, /status, /contact, /help',
         'thumbnail_url' => 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=240&h=240&fit=crop',
-        'message_text' => "ℹ <b>የሜሽ ቴሌግራም ቦት የአጠቃቀም መመሪያ</b>\n\n" .
+        'message_text' => " <b>የሜሽ ቴሌግራም ቦት የአጠቃቀም መመሪያ</b>\n\n" .
           "የሚከተሉትን ትዕዛዞች መጠቀም ይችላሉ:\n" .
           "• <code>/start</code> - ዋናውን ማውጫ ይከፍታል\n" .
           "• <code>/services</code> - የ 6ቱ አገልግሎቶችና የዋጋ ዝርዝር\n" .
@@ -1105,7 +1105,7 @@ class TelegramController extends Controller
       'in_progress' => 'በስራ ላይ (In Progress)',
       'completed' => 'ተጠናቋል (Completed)',
       'cancelled' => 'ተሰርዟል (Cancelled)',
-      'rescheduled' => '⏰ ቀጠሮ ተላልፏል (Rescheduled)',
+      'rescheduled' => ' ቀጠሮ ተላልፏል (Rescheduled)',
       default => $order->order_status,
     };
 
@@ -1126,7 +1126,7 @@ class TelegramController extends Controller
       " <b>ደንበኛ:</b> " . ($order->customer?->full_name ?? 'ውድ ደንበኛችን') . "\n" .
       " <b>አድራሻ:</b> {$order->address} ({$order->subcity})\n" .
       " <b>የቀጠሮ ቀን:</b> <b>{$apptDateStr}</b> ({$ethDateStr})\n" .
-      "⏰ <b>ሰዓት:</b> {$order->appointment_time_slot}\n" .
+      " <b>ሰዓት:</b> {$order->appointment_time_slot}\n" .
       " <b>የትዕዛዝ ሁኔታ:</b> <b>{$statusAm}</b>\n" .
       " <b>የተመደበው ቡድን:</b> {$teamName}\n" .
       " <b>ጠቅላላ ክፍያ:</b> " . number_format((float)($order->total ?? $order->total_amount ?? 0), 2) . " ብር\n\n" .
@@ -1152,7 +1152,7 @@ class TelegramController extends Controller
 
   private function sendHelpMessage(int|string $chatId): void
   {
-    $msg = "ℹ <b>የሜሽ ቴሌግራም ቦት መመሪያ</b>\n\n" .
+    $msg = " <b>የሜሽ ቴሌግራም ቦት መመሪያ</b>\n\n" .
       "የሚከተሉትን ትዕዛዞች መጠቀም ይችላሉ:\n" .
       "• <code>/start</code> - ዋናውን ማውጫ ይከፍታል\n" .
       "• <code>/services</code> - የአገልግሎቶች እና የዋጋ ዝርዝር\n" .
@@ -1555,7 +1555,7 @@ class TelegramController extends Controller
       $msg = " <b>የተመረጠ ክፍለ ከተማ፡ {$subcity}</b>\n\n" .
         "እባክዎን የሰፈር ስም፣ ልዩ መለያ ቦታ ወይም የቤት ቁጥር ጽፈው ይላኩልን:\n" .
         "<i>(ምሳሌ፡ ቦሌ ሚካኤል፣ ታክሲ ተራ አካባቢ ወይም ህንፃ ቁጥር)</i>\n\n" .
-        " ተጨማሪ ዝርዝር መጻፍ ካልፈለጉ ከስር ያለውን <b>'⏩ እንደዚሁ ይለፍ'</b> የሚለውን ቁልፍ ይጫኑ:";
+        " ተጨማሪ ዝርዝር መጻፍ ካልፈለጉ ከስር ያለውን <b>' እንደዚሁ ይለፍ'</b> የሚለውን ቁልፍ ይጫኑ:";
 
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
@@ -1563,7 +1563,7 @@ class TelegramController extends Controller
         'parse_mode' => 'HTML',
         'reply_markup' => json_encode([
           'inline_keyboard' => [
-            [['text' => '⏩ እንደዚሁ ይለፍ (Skip Detail)', 'callback_data' => 'book_skip_detail_address']],
+            [['text' => ' እንደዚሁ ይለፍ (Skip Detail)', 'callback_data' => 'book_skip_detail_address']],
             [['text' => ' ሰርዝ | Cancel', 'callback_data' => 'book_cancel']],
           ]
         ]),
@@ -1997,7 +1997,7 @@ class TelegramController extends Controller
           ['text' => ' ከሰዓት (7:00 - 11:00 ሰዓት / Afternoon)', 'callback_data' => 'book_time:afternoon'],
         ],
         [
-          ['text' => '⏰ ሙሉ ቀን / በማንኛውም ሰዓት (Flexible)', 'callback_data' => 'book_time:flexible'],
+          ['text' => ' ሙሉ ቀን / በማንኛውም ሰዓት (Flexible)', 'callback_data' => 'book_time:flexible'],
         ],
         [
           ['text' => ' ሰርዝ | Cancel', 'callback_data' => 'book_cancel'],
@@ -2445,7 +2445,7 @@ class TelegramController extends Controller
       " <b>የትዕዛዝ ቁጥር:</b> <code>{$orderNo}</code>\n" .
       " <b>የተላለፈበት ምክንያት:</b> {$reason}\n" .
       " <b>አዲሱ የቀጠሮ ቀን:</b> {$newDate} ({$ethDateStr})\n" .
-      "⏰ <b>ሰዓት:</b> {$timeSlotAm}\n" .
+      " <b>ሰዓት:</b> {$timeSlotAm}\n" .
       "━━━━━━━━━━━━━━━━━━━━\n" .
       "ለተፈጠረው መስተጓጎል ከልብ ይቅርታ እንጠይቃለን! የሜሽ የፅዳት ቡድን በተጠቀሰው አዲስ ሰዓት የሚገኝ ይሆናል::\n\n" .
       " <b>ለማንኛውም ጥያቄ ወይም ሰዓት ለማስተካከል:</b> 0970075509";
@@ -2596,7 +2596,7 @@ class TelegramController extends Controller
 
     $resp = $this->telegramApi('sendMessage', [
       'chat_id' => $targetChatId,
-      'text' => "🔔 <b>የሜሽ ቴሌግራም ቦት የሙከራ መልዕክት (Test Alert)</b>\n\n✅ ቦቱ ከ Render Cloud Webhook ጋር በትክክል ተገናኝቷል!\n⏰ ሰዓት፡ " . now()->toDateTimeString() . "\n🏢 MEASH CLEANING SOLUTION",
+      'text' => " <b>የሜሽ ቴሌግራም ቦት የሙከራ መልዕክት (Test Alert)</b>\n\n ቦቱ ከ Render Cloud Webhook ጋር በትክክል ተገናኝቷል!\n ሰዓት፡ " . now()->toDateTimeString() . "\n MEASH CLEANING SOLUTION",
       'parse_mode' => 'HTML',
     ]);
 

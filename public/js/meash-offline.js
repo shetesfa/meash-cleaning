@@ -41,7 +41,7 @@ class MeashOfflineEngine {
             banner.className = 'fixed top-0 left-0 right-0 z-50 bg-red-600 text-white p-3 text-xs font-bold text-center shadow-lg';
             document.body.prepend(banner);
         }
-        banner.innerText = '⚠️ ' + msg;
+        banner.innerText = ' ' + msg;
         banner.classList.remove('hidden');
     }
 
@@ -138,8 +138,8 @@ class MeashOfflineEngine {
             pendingCount: counts.pending,
             failedCount: counts.failed,
             label: this.isOnline
-                ? (this.isSyncing ? `🔄 Syncing (${counts.pending})...` : (counts.failed > 0 ? `⚠️ ${counts.failed} failed items` : (counts.pending > 0 ? `🟢 Online (${counts.pending} queued)` : '🟢 Online')))
-                : `🟠 Offline (${counts.pending} saved locally)`,
+                ? (this.isSyncing ? ` Syncing (${counts.pending})...` : (counts.failed > 0 ? ` ${counts.failed} failed items` : (counts.pending > 0 ? ` Online (${counts.pending} queued)` : ' Online')))
+                : ` Offline (${counts.pending} saved locally)`,
         };
 
         if (cb) {
@@ -381,10 +381,10 @@ class MeashOfflineEngine {
             <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-white shadow-2xl">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-bold flex items-center gap-2 text-red-400">
-                        <span>⚠️</span>
+                        <span></span>
                         <span>ያልተመሳሰሉ መረጃዎች (${failed.length} Failed Items)</span>
                     </h3>
-                    <button onclick="document.getElementById('failed-sync-items-modal').remove()" class="text-slate-400 hover:text-white">✕</button>
+                    <button onclick="document.getElementById('failed-sync-items-modal').remove()" class="text-slate-400 hover:text-white"></button>
                 </div>
                 <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
                     ${failed.length === 0 ? '<p class="text-xs text-slate-400">ምንም ስህተት ያለበት መረጃ የለም (No failed items)</p>' : failed.map(item => `
