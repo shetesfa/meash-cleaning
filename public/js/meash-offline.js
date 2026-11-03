@@ -451,6 +451,28 @@ class MeashOfflineEngine {
             }
         });
     }
+
+    async cacheItems(storeName, items) {
+        if (!this.db || !Array.isArray(items)) return;
+        return new Promise((resolve) => {
+            try {
+                const tx = this.db.transaction([storeName], 'readwrite');
+                const store = tx.objectStore(storeName);
+                for (const item of items) {
+                    try {
+                        store.put(item);
+                    } catch (e) {
+                        // ignore individual item error
+                    }
+                }
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(false);
+            } catch (err) {
+                console.warn('cacheItems transaction error on store ' + storeName, err);
+                resolve(false);
+            }
+        });
+    }
 }
 
 window.meashOffline = new MeashOfflineEngine();

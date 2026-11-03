@@ -48,6 +48,9 @@ Route::prefix('public')->group(function () {
 Route::prefix('telegram')->group(function () {
     Route::post('/webhook', [TelegramController::class, 'webhook'])->middleware('throttle:120,1');
     Route::post('/miniapp/book', [TelegramController::class, 'miniAppBooking'])->middleware('throttle:5,1');
+    Route::get('/status', [TelegramController::class, 'getWebhookStatus']);
+    Route::post('/set-webhook', [TelegramController::class, 'setRenderWebhook'])->middleware('role:owner,reception');
+    Route::post('/send-test', [TelegramController::class, 'sendTestMessage'])->middleware('role:owner,reception');
 });
 
 // 3. AUTHENTICATION

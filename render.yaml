@@ -5,6 +5,7 @@ services:
     plan: free
     region: frankfurt
     branch: main
+    autoDeploy: true
     envVars:
       - key: APP_NAME
         value: "Meash Cleaning Solution"
@@ -21,9 +22,11 @@ services:
       - key: DB_DATABASE
         value: /var/www/html/database/database.sqlite
       - key: TELEGRAM_BOT_TOKEN
-        value: "8797114776:AAEaNUnduUjTTyBJ-63FiPx8lNhDgqohjbU"
+        sync: false
       - key: TELEGRAM_BOT_USERNAME
         value: "meash_cleaning_solution_bot"
+      - key: TELEGRAM_WEBHOOK_URL
+        value: "https://meash-cleaning-gy5x.onrender.com/api/telegram/webhook"
       - key: TELEGRAM_WEBHOOK_SECRET
         generateValue: true
       - key: TELEGRAM_MINIAPP_URL
@@ -32,3 +35,7 @@ services:
         value: "owner@meash.com"
       - key: MEASH_OWNER_PHONE
         value: "0911000001"
+      - key: MEASH_OWNER_PASSWORD
+        value: "password"
+      - key: MEASH_SEED_DEMO_DATA
+        value: "true"
