@@ -54,6 +54,8 @@ class SyncController extends Controller
             }
 
             try {
+                $user = $request->user();
+
                 if ($entityType === 'order' && $action === 'create') {
                     // Create Order
                     DB::transaction(function () use ($payload, $uuid, $request, &$synced) {
@@ -114,6 +116,21 @@ class SyncController extends Controller
                             'error' => 'Order not found on server',
                         ];
                         continue;
+                    }
+
+                    // Enforce cleaner team isolation
+                    if ($user && $user->isCleaner()) {
+                        $cleanerTeamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
+                            ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
+                            ->unique();
+
+                        if (!$order->assigned_team_id || !$cleanerTeamIds->contains($order->assigned_team_id)) {
+                            $errors[] = [
+                                'client_uuid' => $uuid,
+                                'error' => 'Unauthorized. Cleaners cannot modify orders belonging to another team.',
+                            ];
+                            continue;
+                        }
                     }
 
                     // Conflict Detection: check if server order version or status changed divergently

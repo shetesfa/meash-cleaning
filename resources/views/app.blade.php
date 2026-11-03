@@ -77,45 +77,23 @@
 
             <form onsubmit="handleAppLoginSubmit(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">የተጠቃሚ ስም ወይም ስልክ ቁጥር</label>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">ኢሜይል ወይም ስልክ ቁጥር (Email or Phone)</label>
                     <div class="relative">
                         <i data-lucide="user" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="app-login-input" required placeholder="ስምዎን ያስገቡ (ለምሳሌ፦ Meash General Manager ወይም 0911000001)" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="text" id="app-login-input" required placeholder="ኢሜይል ወይም ስልክ ቁጥር ያስገቡ (ምሳሌ፦ owner@meash.com ወይም 0911000001)" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
                     </div>
+                    <p class="text-[11px] text-slate-500 mt-1">የስራ አስኪያጅ መለያ፦ <code class="text-cyan-400">owner@meash.com</code> ወይም <code class="text-cyan-400">0911000001</code></p>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">የይለፍ ቃል (Password)</label>
                     <div class="relative">
                         <i data-lucide="lock" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="password" id="app-password-input" required placeholder="••••••••" class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="password" id="app-password-input" required placeholder="••••••••••••" class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
                         <button type="button" onclick="togglePasswordVisibility('app-password-input')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
                             <i data-lucide="eye" class="w-4 h-4"></i>
                         </button>
                     </div>
-                </div>
-
-                <!-- Quick Role Selector Buttons for Fast Access -->
-                <div class="pt-1">
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">ፈጣን ምርጫ (Quick Access)፦</p>
-                    <div class="grid grid-cols-3 gap-2 text-xs">
-                        <button type="button" onclick="fillTestAccount('owner@meash.com')" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 rounded-xl p-2.5 text-center cursor-pointer transition">
-              <span class="block text-base mb-0.5"></span>
-                            <span class="block font-bold text-cyan-400 text-xs">ዋና ስራ አስኪያጅ</span>
-                            <span class="block text-[9px] text-slate-400">Owner</span>
-                        </button>
-                        <button type="button" onclick="fillTestAccount('reception@meash.com')" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 rounded-xl p-2.5 text-center cursor-pointer transition">
-              <span class="block text-base mb-0.5"></span>
-                            <span class="block font-bold text-cyan-400 text-xs">ሪሴፕሽን</span>
-                            <span class="block text-[9px] text-slate-400">Reception</span>
-                        </button>
-                        <button type="button" onclick="fillTestAccount('cleaner1@meash.com')" class="bg-slate-800/90 hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 rounded-xl p-2.5 text-center cursor-pointer transition">
-              <span class="block text-base mb-0.5"></span>
-                            <span class="block font-bold text-cyan-400 text-xs">ፅዳት ሰራተኛ</span>
-                            <span class="block text-[9px] text-slate-400">Cleaner</span>
-                        </button>
-                    </div>
-          <p class="text-[10px] text-slate-400 mt-2 text-center"> የይለፍ ቃል፦ <code class="text-cyan-400 font-bold bg-slate-800 px-1.5 py-0.5 rounded">password</code></p>
                 </div>
 
                 <button type="submit" id="btn-app-login" class="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
@@ -483,15 +461,6 @@
             }
         }
 
-        function fillTestAccount(email) {
-            const loginInput = document.getElementById('app-login-input');
-            const pwdInput = document.getElementById('app-password-input');
-            if (loginInput) loginInput.value = email;
-            if (pwdInput) {
-                pwdInput.value = 'password';
-                pwdInput.focus();
-            }
-        }
 
         async function handleAppLoginSubmit(e) {
             e.preventDefault();
@@ -545,10 +514,36 @@
             }
         } catch(e) {}
 
-        function logoutUser() {
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        window.escapeHtml = escapeHtml;
+
+        async function logoutUser() {
+            try {
+                await apiFetch('/api/auth/logout', { method: 'POST' });
+            } catch (e) {}
             localStorage.removeItem('meash_token');
             localStorage.removeItem('meash_user');
             checkAuthStatus();
+        }
+
+        function showLoginScreen(msg = '') {
+            localStorage.removeItem('meash_token');
+            const loginScreen = document.getElementById('app-login-screen');
+            const appWrapper = document.getElementById('app-authenticated-wrapper');
+            if (loginScreen) loginScreen.classList.remove('hidden');
+            if (appWrapper) appWrapper.classList.add('hidden');
+            const errBanner = document.getElementById('login-error-banner');
+            const errText = document.getElementById('login-error-text');
+            if (errText && msg) errText.innerText = msg;
+            if (errBanner && msg) errBanner.classList.remove('hidden');
         }
 
         async function getAuthToken() {
@@ -568,12 +563,10 @@
 
             let res = await fetch(url, { ...options, headers });
 
-            // CRITICAL ZERO-LOGOUT RULE: Never kick employees out on 401
-            // They open the app many times a day and must stay logged in forever without writing passwords!
+            // CRITICAL ZERO-LOGOUT RULE: Never break script on 401
             if (res.status === 401) {
                 console.warn('API 401 Unauthorized for ' + url + ' - session expired');
                 localStorage.removeItem('meash_token');
-                currentUser = null;
                 showLoginScreen('የሴሽን ጊዜዎ አልቋል፤ እባክዎ እንደገና ይግቡ (Session expired. Please login again.)');
             }
             return res;
@@ -1863,28 +1856,28 @@
                                     <tbody class="divide-y divide-slate-800">
                                         ${orders.map(o => `
                                             <tr class="hover:bg-slate-800/40">
-                                                <td class="p-4 font-bold text-cyan-400">${o.order_number}</td>
+                                                <td class="p-4 font-bold text-cyan-400">${escapeHtml(o.order_number)}</td>
                                                 <td class="p-4">
-                                                    <span class="font-bold text-white block">${o.customer?.full_name}</span>
-                                                    <span class="text-slate-400 text-[11px]">${o.customer?.phone}</span>
+                                                    <span class="font-bold text-white block">${escapeHtml(o.customer?.full_name || '')}</span>
+                                                    <span class="text-slate-400 text-[11px]">${escapeHtml(o.customer?.phone || '')}</span>
                                                 </td>
                                                 <td class="p-4">
                           <span class="font-bold text-white block text-xs"> ${o.eth_appointment_date || (o.appointment_date ? EC.formatEth(o.appointment_date) : '—')}</span>
-                          <span class="text-slate-400 text-[10px] block"> ${o.appointment_date || '—'}</span>
+                          <span class="text-slate-400 text-[10px] block"> ${escapeHtml(o.appointment_date || '—')}</span>
                                                     <span class="text-[10px] font-semibold text-cyan-400 block mt-0.5">
-                                                        ${formatTimeSlot(o.appointment_time_slot)}
+                                                        ${escapeHtml(formatTimeSlot(o.appointment_time_slot))}
                                                     </span>
                                                 </td>
-                        <td class="p-4 text-slate-300 font-semibold">${(o.assigned_team?.team_name || o.assignedTeam?.team_name) ? `<span class="px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-bold text-xs inline-flex items-center gap-1 shadow-sm"> ${(o.assigned_team?.team_name || o.assignedTeam?.team_name).split('(')[0]}</span>` : '<span class="px-2.5 py-1 rounded-xl bg-amber-950/60 text-amber-400 border border-amber-900/60 text-[11px] font-bold">ቡድን አልተመደበም</span>'}</td>
-                                                <td class="p-4 font-extrabold text-white">${parseFloat(o.total).toLocaleString()} ETB</td>
+                        <td class="p-4 text-slate-300 font-semibold">${(o.assigned_team?.team_name || o.assignedTeam?.team_name) ? `<span class="px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-bold text-xs inline-flex items-center gap-1 shadow-sm"> ${escapeHtml((o.assigned_team?.team_name || o.assignedTeam?.team_name).split('(')[0])}</span>` : '<span class="px-2.5 py-1 rounded-xl bg-amber-950/60 text-amber-400 border border-amber-900/60 text-[11px] font-bold">ቡድን አልተመደበም</span>'}</td>
+                                                <td class="p-4 font-extrabold text-white">${parseFloat(o.total || 0).toLocaleString()} ETB</td>
                                                 <td class="p-4">
                                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${o.order_status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}">
-                                                        ${o.order_status}
+                                                        ${escapeHtml(o.order_status || '')}
                                                     </span>
                                                 </td>
                                                 <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
                           <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ሰራተኛ መድብ"> ሰራተኛ መድብ</button>
-                          <button onclick="openDirectSmsModal('${o.customer?.phone || ''}', '${o.customer?.full_name || ''}')" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30"> SMS</button>
+                          <button data-phone="${escapeHtml(o.customer?.phone || '')}" data-name="${escapeHtml(o.customer?.full_name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30"> SMS</button>
                                                     <button onclick="openOrderDetailsModal(${o.id})" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር</button>
                                                 </td>
                                             </tr>
@@ -1995,7 +1988,7 @@
                                                     </span>
                                                 </td>
                                                 <td class="p-4 text-right space-x-1.5">
-                          <button onclick="openDirectSmsModal('${s.customer?.phone || ''}', '${s.customer?.full_name || ''}')" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30"> SMS</button>
+                          <button data-phone="${escapeHtml(s.customer?.phone || '')}" data-name="${escapeHtml(s.customer?.full_name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30"> SMS</button>
                                                     ${s.status === 'active' ? `
                                                         <button onclick="updateSubscriptionStatus(${s.id}, 'paused')" class="px-2.5 py-1 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-500/30">አቁም (Pause)</button>
                                                     ` : (s.status === 'paused' ? `
@@ -2301,14 +2294,14 @@
                                 <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-3">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">${c.customer_code}</span>
-                                            <h3 class="text-base font-bold text-white">${c.full_name}</h3>
+                                            <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">${escapeHtml(c.customer_code)}</span>
+                                            <h3 class="text-base font-bold text-white">${escapeHtml(c.full_name)}</h3>
                                         </div>
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-800 text-slate-300">${c.customer_type}</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-800 text-slate-300">${escapeHtml(c.customer_type)}</span>
                                     </div>
-                  <p class="text-xs text-slate-400"> ${c.phone} | ${c.subcity || 'Addis Ababa'}</p>
+                  <p class="text-xs text-slate-400"> ${escapeHtml(c.phone)} | ${escapeHtml(c.subcity || 'Addis Ababa')}</p>
                                     <div class="pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
-                                        <button onclick="openDirectSmsModal('${c.phone}', '${c.full_name}')" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30 flex items-center gap-1">
+                                        <button data-phone="${escapeHtml(c.phone)}" data-name="${escapeHtml(c.full_name)}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30 flex items-center gap-1">
                                             <i data-lucide="send" class="w-3 h-3"></i>
                       <span> SMS</span>
                                         </button>
@@ -3428,13 +3421,13 @@
                                     ${followups.map(f => `
                                         <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between gap-2">
                                             <div>
-                                                <h4 class="text-xs font-bold text-white">${f.customer?.full_name}</h4>
-                        <p class="text-[11px] text-slate-400"> ${f.customer?.phone}</p>
-                                                <span class="text-[9px] px-2 py-0.5 rounded-full uppercase font-bold ${f.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}">${f.status}</span>
+                                                <h4 class="text-xs font-bold text-white">${escapeHtml(f.customer?.full_name || '')}</h4>
+                        <p class="text-[11px] text-slate-400"> ${escapeHtml(f.customer?.phone || '')}</p>
+                                                <span class="text-[9px] px-2 py-0.5 rounded-full uppercase font-bold ${f.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}">${escapeHtml(f.status || '')}</span>
                                             </div>
                                             <div class="flex items-center gap-1 shrink-0">
-                        <button onclick="openDirectSmsModal('${f.customer?.phone || ''}', '${f.customer?.full_name || ''}')" class="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold"></button>
-                                                <button onclick="openFollowupCallModal(${f.id}, '${f.customer?.full_name}', '${f.customer?.phone}')" class="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold">መዝግብ</button>
+                        <button data-phone="${escapeHtml(f.customer?.phone || '')}" data-name="${escapeHtml(f.customer?.full_name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold"> SMS</button>
+                                                <button data-name="${escapeHtml(f.customer?.full_name || '')}" data-phone="${escapeHtml(f.customer?.phone || '')}" onclick="openFollowupCallModal(${f.id}, this.dataset.name, this.dataset.phone)" class="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold">መዝግብ</button>
                                             </div>
                                         </div>
                                     `).join('')}
@@ -3455,13 +3448,13 @@
                                         <div class="p-3.5 rounded-2xl bg-slate-800/80 border ${c.status === 'resolved' ? 'border-slate-700' : 'border-red-500/40'} flex items-center justify-between gap-2">
                                             <div>
                                                 <div class="flex items-center gap-1.5">
-                                                    <h4 class="text-xs font-bold text-white">${c.customer?.full_name}</h4>
-                                                    <span class="text-[9px] px-1.5 py-0.5 rounded-full uppercase font-bold ${c.status === 'resolved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}">${c.status}</span>
+                                                    <h4 class="text-xs font-bold text-white">${escapeHtml(c.customer?.full_name || '')}</h4>
+                                                    <span class="text-[9px] px-1.5 py-0.5 rounded-full uppercase font-bold ${c.status === 'resolved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}">${escapeHtml(c.status || '')}</span>
                                                 </div>
-                                                <p class="text-[10px] text-red-300 font-semibold mt-0.5">${c.category}: ${c.description}</p>
+                                                <p class="text-[10px] text-red-300 font-semibold mt-0.5">${escapeHtml(c.category || '')}: ${escapeHtml(c.description || '')}</p>
                                             </div>
                                             <div class="flex items-center gap-1 shrink-0">
-                        <button onclick="openDirectSmsModal('${c.customer?.phone || ''}', '${c.customer?.full_name || ''}')" class="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold"></button>
+                        <button data-phone="${escapeHtml(c.customer?.phone || '')}" data-name="${escapeHtml(c.customer?.full_name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold"> SMS</button>
                                                 ${c.status !== 'resolved' ? `
                                                     <button onclick="openResolveComplaintModal(${c.id})" class="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-[11px] font-bold">መፍትሄ</button>
                         ` : '<span class="text-[11px] text-emerald-400 font-bold"></span>'}
@@ -5494,11 +5487,11 @@
                                                 ${tierLabels[currentTier] || c.customer_type || 'አዲስ ደንበኛ'}
                                             </span>
                                         </div>
-                                        <h3 class="text-xl font-black text-white mt-1">${c.full_name || 'ደንበኛ'}</h3>
+                                        <h3 class="text-xl font-black text-white mt-1">${escapeHtml(c.full_name || 'ደንበኛ')}</h3>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <button onclick="openDirectSmsModal('${c.phone || ''}', '${(c.full_name || '').replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer" title="ቀጥታ SMS ላክ">
+                                    <button data-phone="${escapeHtml(c.phone || '')}" data-name="${escapeHtml(c.full_name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-3 py-1.5 rounded-xl bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer" title="ቀጥታ SMS ላክ">
                                         <i data-lucide="message-square" class="w-3.5 h-3.5 text-cyan-400"></i>
                                         <span>SMS ላክ</span>
                                     </button>

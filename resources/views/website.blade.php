@@ -1420,28 +1420,23 @@
     <div class="mt-4">
       <div class="mb-3 p-2.5 rounded-xl bg-slate-50 border border-navy/10 flex items-center gap-2">
         <i data-lucide="lock" class="w-4 h-4 text-teal shrink-0"></i>
-        <p class="text-[11px] text-navy/70 leading-tight">ደህንነቱ የተጠበቀ የአስተዳዳሪ እና ሰራተኞች መግቢያ። እባክዎ የስራ ሚናዎን መርጠው የይለፍ ቃልዎን ያስገቡ።</p>
+        <p class="text-[11px] text-navy/70 leading-tight">ደህንነቱ የተጠበቀ የአስተዳዳሪ እና ሰራተኞች መግቢያ። እባክዎ ኢሜይል/ስልክ ቁጥርዎን እና የይለፍ ቃልዎን ያስገቡ።</p>
       </div>
 
       <form onsubmit="handleStaffLogin(event)" class="space-y-3.5">
         <div>
-          <label class="block text-[11px] font-bold text-navy/70 mb-1">የስራ ዘርፍ / ሚና (Staff Role)</label>
-          <select id="staff-role-select" class="w-full px-3 py-2.5 rounded-lg border border-navy/20 bg-fog text-navy text-xs font-semibold focus:outline-none focus:border-teal cursor-pointer">
-            <option value="owner@meash.com">1. ዋና ስራ አስኪያጅ (General Manager / Owner)</option>
-            <option value="reception@meash.com">2. ሪሴፕሽን እና ኦፕሬሽን (Operations &amp; Reception)</option>
-            <option value="cleaner1@meash.com">3. የቴክኒክና ፅዳት ባለሙያ (Cleaning Specialist)</option>
-          </select>
+          <label class="block text-[11px] font-bold text-navy/70 mb-1">ኢሜይል ወይም ስልክ ቁጥር (Email or Phone)</label>
+          <input type="text" id="staff-login-input" required placeholder="ምሳሌ፦ 0911000001" class="w-full px-3.5 py-2.5 rounded-lg border border-navy/20 bg-fog text-navy text-xs font-semibold focus:outline-none focus:border-teal">
         </div>
 
         <div>
           <label class="block text-[11px] font-bold text-navy/70 mb-1">የይለፍ ቃል (Password)</label>
           <div class="relative">
-            <input type="password" id="staff-password-input" required placeholder="••••••••" class="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-navy/20 bg-fog text-navy text-xs focus:outline-none focus:border-teal">
+            <input type="password" id="staff-password-input" required placeholder="••••••••••••" class="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-navy/20 bg-fog text-navy text-xs focus:outline-none focus:border-teal">
             <button type="button" onclick="toggleStaffPasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-teal transition cursor-pointer">
               <i id="staff-pwd-eye" data-lucide="eye" class="w-4 h-4"></i>
             </button>
           </div>
-          <p class="text-[10px] text-teal-dark font-medium mt-1">የመግቢያ የይለፍ ቃል፦ <code class="font-bold bg-teal-light px-1.5 py-0.5 rounded">password</code></p>
         </div>
 
         <div class="flex items-center gap-2 pt-2">
@@ -1467,6 +1462,17 @@
   // ============================================================
   // ETHIOPIAN CALENDAR UTILITY (Full Bidirectional Converter)
   // ============================================================
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+  window.escapeHtml = escapeHtml;
+
   const EC = {
     months: ['መስከረም','ጥቅምት','ህዳር','ታህሳስ','ጥር','የካቲት','መጋቢት','ሚያዚያ','ግንቦት','ሰኔ','ሐምሌ','ነሐሴ','ጳጉሜ'],
     monthsEn: ['Meskerem','Tikimt','Hidar','Tahsas','Tir','Yekatit','Megabit','Miyazia','Ginbot','Sene','Hamle','Nehase','Pagume'],
@@ -1735,8 +1741,8 @@
               <div class="flex text-amber-400 mb-2">
                 ${'<i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>'.repeat(r.rating || 5)}
               </div>
-              <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed">"${r.comment || ''}"</p>
-              <p class="mt-4 font-bold text-sm text-teal-dark">${r.customer ? r.customer.full_name : 'Verified Customer'}</p>
+              <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed">"${escapeHtml(r.comment || '')}"</p>
+              <p class="mt-4 font-bold text-sm text-teal-dark">${escapeHtml(r.customer ? r.customer.full_name : 'Verified Customer')}</p>
             </div>
           `).join('');
           if (window.lucide) lucide.createIcons();
@@ -2145,7 +2151,7 @@
             <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
               <div>
                 <span class="text-xs text-navy/40 font-bold uppercase block">የትዕዛዝ ቁጥር</span>
-                <span class="font-serif text-lg font-bold text-navy">${ord.order_number}</span>
+                <span class="font-serif text-lg font-bold text-navy">${escapeHtml(ord.order_number)}</span>
               </div>
               <span class="text-xs font-extrabold px-3 py-1.5 rounded-full ${isCompleted ? 'bg-emerald-100 text-emerald-800' : (isEnRoute ? 'bg-amber-100 text-amber-800 animate-pulse' : 'bg-teal-light text-teal-dark')}">
                 ${isEnRoute ? 'ቡድኑ በመጓዝ ላይ ይገኛል (On The Way)' : (isCleaning ? 'ፅዳት በመከናወን ላይ' : (isCompleted ? 'ተጠናቋል' : 'የተመዘገበ (' + ord.status + ')'))}
@@ -2155,7 +2161,7 @@
             <div class="grid grid-cols-2 gap-3 text-xs py-3 border-y border-navy/10">
               <div>
                 <span class="text-navy/50 block">ደንበኛ:</span>
-                <span class="font-bold text-navy">${ord.customer_name} (${ord.subcity || ''})</span>
+                <span class="font-bold text-navy">${escapeHtml(ord.customer_name)} (${escapeHtml(ord.subcity || '')})</span>
               </div>
               <div>
                 <span class="text-navy/50 block mb-0.5">የቀጠሮ ቀንና ሰዓት:</span>
@@ -2239,14 +2245,24 @@
 
   async function handleStaffLogin(e) {
     e.preventDefault();
-    const roleSelect = document.getElementById('staff-role-select');
+    const loginInput = document.getElementById('staff-login-input');
     const pwdInput = document.getElementById('staff-password-input');
     const errBox = document.getElementById('staff-login-error');
     const errText = document.getElementById('staff-login-error-text');
     const btn = document.getElementById('staff-login-btn');
     const btnText = document.getElementById('staff-login-btn-text');
 
-    if (!pwdInput.value.trim()) {
+    const loginVal = (loginInput?.value || '').trim();
+    const pwdVal = (pwdInput?.value || '').trim();
+
+    if (!loginVal) {
+      errBox.classList.remove('hidden');
+      errText.innerText = 'እባክዎ ኢሜይል ወይም ስልክ ቁጥር ያስገቡ!';
+      loginInput?.focus();
+      return;
+    }
+
+    if (!pwdVal) {
       errBox.classList.remove('hidden');
       errText.innerText = 'እባክዎ የይለፍ ቃልዎን ያስገቡ!';
       pwdInput.focus();
@@ -2262,8 +2278,8 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-          login: roleSelect.value,
-          password: pwdInput.value,
+          login: loginVal,
+          password: pwdVal,
         })
       });
 
@@ -2271,7 +2287,7 @@
       try {
         data = await res.json();
       } catch (jsonErr) {
-        data = { message: 'የተሳሳተ የይለፍ ቃል ነው፤ እባክዎ በትክክል ያስገቡ!' };
+        data = { message: 'የተሳሳተ ኢሜይል/ስልክ ወይም የይለፍ ቃል ነው፤ እባክዎ በትክክል ያስገቡ!' };
       }
 
       if (res.ok && data.token) {
@@ -2285,7 +2301,7 @@
         }, 300);
       } else {
         errBox.classList.remove('hidden');
-        let errorMsg = data.message || 'የተሳሳተ የይለፍ ቃል ነው፤ እባክዎ በትክክል ያስገቡ!';
+        let errorMsg = data.message || 'የተሳሳተ ኢሜይል/ስልክ ወይም የይለፍ ቃል ነው፤ እባክዎ በትክክል ያስገቡ!';
         if (data.errors && typeof data.errors === 'object') {
           errorMsg = Object.values(data.errors).flat().join(' ');
         }
@@ -2294,51 +2310,12 @@
         btn.disabled = false;
         btnText.innerText = 'ግባ (Login)';
         pwdInput.focus();
-        pwdInput.select();
       }
     } catch (err) {
       errBox.classList.remove('hidden');
       errText.innerText = 'የሰርቨር ግንኙነት ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ።';
       btn.disabled = false;
       btnText.innerText = 'ግባ (Login)';
-    }
-  }
-
-  async function quickStaffLogin(email) {
-    const errBox = document.getElementById('staff-login-error');
-    const errText = document.getElementById('staff-login-error-text');
-    if (errBox) errBox.classList.add('hidden');
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ login: email, password: 'password' })
-      });
-      const data = await res.json();
-
-      if (res.ok && data.token) {
-        localStorage.setItem('meash_token', data.token);
-        localStorage.setItem('meash_user', JSON.stringify(data.user));
-        closeStaffModal();
-        // Brief loading flash then redirect
-        document.body.insertAdjacentHTML('afterbegin', `
-          <div id="quick-login-flash" class="fixed inset-0 z-[999] flex items-center justify-center bg-navy/90 backdrop-blur-sm">
-            <div class="flex flex-col items-center gap-3 text-white">
-              <div class="w-12 h-12 rounded-2xl bg-teal/20 flex items-center justify-center text-teal">
-                <i data-lucide="${email.startsWith('owner') ? 'shield-check' : (email.startsWith('reception') ? 'headphones' : 'sparkles')}" class="w-6 h-6"></i>
-              </div>
-              <p class="text-sm font-bold">ወደ ሲስተሙ እየገቡ ነው...</p>
-              <div class="w-32 h-1 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-teal animate-pulse" style="width:70%"></div></div>
-            </div>
-          </div>`);
-        if (window.lucide) lucide.createIcons();
-        setTimeout(() => { window.location.href = '/app'; }, 600);
-      } else {
-        if (errBox) { errBox.classList.remove('hidden'); errText.innerText = data.message || 'መግባት አልተቻለም!'; }
-      }
-    } catch (err) {
-      if (errBox) { errBox.classList.remove('hidden'); errText.innerText = 'የሰርቨር ግንኙነት ችግር!'; }
     }
   }
 

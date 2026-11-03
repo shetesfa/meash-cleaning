@@ -31,27 +31,11 @@ class AuthController extends Controller
             ]);
         }
 
-        // Allow login by email, phone, name, or role shortcut
+        // Enforce strict login by exact email, phone number, or full username with password
         $user = User::where('phone', $login)
             ->orWhere('email', $login)
             ->orWhere('name', $login)
             ->first();
-
-        // If not found by direct match, check if $login is a role shortcut (e.g. 'owner', 'reception', 'cleaner', 'admin')
-        if (! $user) {
-            $roleMap = [
-                'owner' => 'owner',
-                'admin' => 'owner',
-                'manager' => 'owner',
-                'reception' => 'reception',
-                'cleaner' => 'cleaner',
-                'sales' => 'sales',
-            ];
-            $roleKey = strtolower($login);
-            if (isset($roleMap[$roleKey])) {
-                $user = User::where('role', $roleMap[$roleKey])->where('is_active', true)->first();
-            }
-        }
 
         if (! $user || ! Hash::check($request->input('password'), $user->password)) {
             RateLimiter::hit($throttleKey, 60);
@@ -69,11 +53,13 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $token = $user->createToken('meash-pwa-token')->plainTextToken;
+        // Secure expiring token (8 hours / 480 minutes)
+        $tokenResult = $user->createToken('meash-pwa-token', ['*'], now()->addMinutes(480));
+        $plainToken = $tokenResult->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',
-            'token' => $token,
+            'token' => $plainToken,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -102,9 +88,50 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        if ($request->user()) {
+            $request->user()->currentAccessToken()?->delete();
+        }
         return response()->json([
+            'success' => true,
             'message' => 'Logged out successfully',
+        ]);
+    }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rules\Password::min(12)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($request->input('current_password'), $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['የአሁኑ የይለፍ ቃል ትክክል አይደለም።'],
+            ]);
+        }
+
+        $user->password = Hash::make($request->input('new_password'));
+        $user->save();
+
+        // Revoke all existing tokens on password change
+        $user->tokens()->delete();
+
+        $newToken = $user->createToken('meash-pwa-token', ['*'], now()->addMinutes(480))->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል! የቆዩ ሴሽኖች በሙሉ ተዘግተዋል።',
+            'token' => $newToken,
         ]);
     }
 }

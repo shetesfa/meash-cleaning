@@ -83,6 +83,13 @@ class MeashOrderTest extends TestCase
             ]
         );
 
+        $cleanerTeamId = \Illuminate\Support\Facades\DB::table('team_members')->where('user_id', $cleaner->id)->value('cleaning_team_id')
+            ?: \App\Models\CleaningTeam::where('team_leader_id', $cleaner->id)->value('id');
+        if ($cleanerTeamId) {
+            $order->assigned_team_id = $cleanerTeamId;
+            $order->save();
+        }
+
         $response = $this->actingAs($cleaner)->postJson("/api/teams/jobs/{$order->id}/action", [
             'action' => 'complete',
             'notes' => 'Job done with steam extraction.',

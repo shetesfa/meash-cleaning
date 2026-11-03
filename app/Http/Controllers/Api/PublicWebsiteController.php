@@ -12,6 +12,7 @@ use App\Models\Service;
 use App\Models\Subscription;
 use App\Models\WebsiteSetting;
 use App\Services\EthiopianCalendarService;
+use App\Services\SecurityTokenService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -65,13 +66,14 @@ class PublicWebsiteController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated) {
+            $phone = SecurityTokenService::normalizePhone($validated['customer_phone']);
             // Find or create customer
-            $customer = Customer::where('phone', $validated['customer_phone'])->first();
+            $customer = Customer::where('phone', $phone)->first();
             if (!$customer) {
                 $customer = Customer::create([
                     'customer_code' => Customer::generateNextCode(),
                     'full_name' => $validated['customer_name'],
-                    'phone' => $validated['customer_phone'],
+                    'phone' => $phone,
                     'address' => $validated['address'],
                     'subcity' => $validated['subcity'],
                     'woreda' => $validated['woreda'] ?? null,
@@ -125,27 +127,40 @@ class PublicWebsiteController extends Controller
             $subtotalCalc = 0;
             $itemsSummary = [];
             foreach ($validated['items'] as $it) {
-                $sub = (float)$it['quantity'] * (float)$it['unit_price'];
+                // Server-side catalogue lookup - never trust client unit_price
+                $service = null;
+                if (!empty($it['service_id'])) {
+                    $service = Service::find($it['service_id']);
+                } elseif (!empty($it['item_name'])) {
+                    $service = Service::where('name_en', $it['item_name'])->orWhere('name_am', $it['item_name'])->first();
+                }
+
+                $unitPrice = $service ? (float)$service->base_price : 0;
+                $itemName = $service ? ($service->name_am ?: $service->name_en) : ($it['item_name'] ?? 'የፅዳት አገልግሎት');
+                $sub = round((float)$it['quantity'] * $unitPrice, 2);
                 $subtotalCalc += $sub;
-                $itemsSummary[] = "{$it['item_name']} (x{$it['quantity']})";
+                $itemsSummary[] = "{$itemName} (x{$it['quantity']})";
+
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'service_id' => $it['service_id'] ?? null,
-                    'item_name' => $it['item_name'],
+                    'service_id' => $service?->id ?? ($it['service_id'] ?? null),
+                    'item_name' => $itemName,
                     'quantity' => $it['quantity'],
-                    'unit_price' => $it['unit_price'],
+                    'unit_price' => $unitPrice,
                     'subtotal' => $sub,
                 ]);
             }
 
+            // Update order financial figures strictly from server recalculation
+            $order->subtotal = $subtotalCalc;
+            $order->total = $subtotalCalc;
+
             // Apply subscription recurring discount if selected
             if ($discPercent > 0) {
-                $subDiscount = ($subtotalCalc * $discPercent) / 100.0;
-                $order->update([
-                    'subscription_discount' => $subDiscount,
-                    'discount' => $order->discount + $subDiscount,
-                    'total' => max(0, $subtotalCalc - ($order->discount + $subDiscount)),
-                ]);
+                $subDiscount = round(($subtotalCalc * $discPercent) / 100.0, 2);
+                $order->subscription_discount = $subDiscount;
+                $order->discount = $subDiscount;
+                $order->total = max(0, $subtotalCalc - $subDiscount);
 
                 // Create recurring subscription profile
                 $startDate = Carbon::parse($order->appointment_date);
@@ -163,6 +178,7 @@ class PublicWebsiteController extends Controller
                     'service_summary' => implode(', ', $itemsSummary),
                     'base_price' => $subtotalCalc,
                     'discounted_price' => max(0, $subtotalCalc - $subDiscount),
+                    'billing_cycle' => $plan,
                     'preferred_day' => $startDate->format('l'),
                     'preferred_time_slot' => $order->appointment_time_slot,
                     'start_date' => $startDate,
@@ -171,6 +187,7 @@ class PublicWebsiteController extends Controller
                     'notes' => "Auto-created from website booking #{$orderNumber}",
                 ]);
             }
+            $order->save();
 
             // Create notification for Reception & Owner
             Notification::create([
@@ -188,11 +205,16 @@ class PublicWebsiteController extends Controller
 
             $eth = EthiopianCalendarService::toEthiopian($order->appointment_date);
 
+            $trackingToken = SecurityTokenService::generateTrackingToken($order);
+            $actionToken = SecurityTokenService::generateActionToken($order, 'reschedule');
+
             return response()->json([
                 'success' => true,
                 'message' => 'BOOKING RECEIVED. Our receptionist will call to confirm your appointment shortly.',
                 'booking_id' => $order->order_number,
                 'order_number' => $order->order_number,
+                'tracking_token' => $trackingToken,
+                'action_token' => $actionToken,
                 'eth_date' => $eth['formatted_am'],
                 'eth_date_en' => $eth['formatted_en'],
                 'subscription_plan' => $plan,
@@ -205,24 +227,33 @@ class PublicWebsiteController extends Controller
     public function trackOrder(Request $request): JsonResponse
     {
         try {
+            $token = trim($request->input('token', $request->input('tracking_token', '')));
             $search = trim($request->input('tracking_id', $request->input('query', '')));
 
-            if (empty($search)) {
-                return response()->json(['success' => false, 'message' => 'Please provide an Order ID or Phone number.'], 422);
+            $verifiedPayload = SecurityTokenService::verifyTrackingToken($token);
+            if (!$verifiedPayload && !empty($search)) {
+                $verifiedPayload = SecurityTokenService::verifyTrackingToken($search);
             }
 
-            $order = Order::with(['customer:id,full_name,subcity,latitude,longitude', 'items.service:id,name_en,name_am', 'assignedTeam'])
-                ->where('order_number', $search)
-                ->orWhereHas('customer', function ($q) use ($search) {
-                    $q->where('phone', $search);
-                })
-                ->latest()
-                ->first();
+            $order = null;
+            $hasValidToken = false;
+
+            if ($verifiedPayload) {
+                $order = Order::with(['customer:id,full_name,subcity', 'items.service:id,name_en,name_am', 'assignedTeam'])
+                    ->find($verifiedPayload['order_id']);
+                $hasValidToken = true;
+            } elseif (!empty($search)) {
+                // Public lookup without token: find by order_number only (not open by arbitrary phone)
+                $order = Order::with(['customer:id,full_name,subcity', 'items.service:id,name_en,name_am', 'assignedTeam'])
+                    ->where('order_number', $search)
+                    ->latest()
+                    ->first();
+            }
 
             if (!$order) {
                 return response()->json([
                     'found' => false,
-                    'message' => 'No booking found with this ID or phone number.',
+                    'message' => 'ትክክለኛ ትዕዛዝ ወይም የማረጋገጫ ማስረጃ አልተገኘም። እባክዎን የትዕዛዝ ቁጥርዎን ወይም የተሰጠዎትን ሊንክ ያረጋግጡ።',
                 ], 404);
             }
 
@@ -232,75 +263,55 @@ class PublicWebsiteController extends Controller
 
             $isCompletedOrCancelled = in_array($order->order_status, ['completed', 'cancelled']);
 
-            $teamLocation = null;
-            if ($order->assignedTeam && !$isCompletedOrCancelled) {
-                $team = $order->assignedTeam;
-                $updatedAtHuman = 'በቅርቡ';
-                if (!empty($team->location_updated_at)) {
-                    try {
-                        $updatedAtHuman = is_object($team->location_updated_at)
-                            ? $team->location_updated_at->diffForHumans()
-                            : Carbon::parse($team->location_updated_at)->diffForHumans();
-                    } catch (\Throwable $th) {
-                        $updatedAtHuman = 'በቅርቡ';
-                    }
-                }
-
-                $teamLocation = [
-                    'team_name' => $team->team_name ?? 'የሜሽ የፅዳት ቡድን',
-                    'phone' => $team->phone,
-                    'vehicle_plate' => $team->vehicle_plate,
-                    'latitude' => $team->current_latitude ? (float)$team->current_latitude : null,
-                    'longitude' => $team->current_longitude ? (float)$team->current_longitude : null,
-                    'status' => $team->status,
-                    'updated_at' => $updatedAtHuman,
-                ];
-            }
-
-            $custLat = $order->latitude !== null ? (float)$order->latitude : null;
-            $custLng = $order->longitude !== null ? (float)$order->longitude : null;
-
-            $customerLocation = ($custLat !== null && $custLng !== null) ? [
-                'latitude' => $custLat,
-                'longitude' => $custLng,
-            ] : null;
-
             $apptDateStr = !empty($order->appointment_date)
                 ? (is_object($order->appointment_date) ? $order->appointment_date->toDateString() : substr((string)$order->appointment_date, 0, 10))
                 : now()->toDateString();
 
+            // Mask customer name for privacy (e.g. "Abebe K***")
+            $rawName = $order->customer?->full_name ?? 'ውድ ደንበኛችን';
+            $nameParts = explode(' ', trim($rawName));
+            $maskedName = $nameParts[0] . (count($nameParts) > 1 ? ' ' . mb_substr($nameParts[1], 0, 1) . '***' : '');
+
+            // Non-sensitive sanitized items
+            $safeItems = $order->items->map(function ($item) {
+                return [
+                    'item_name' => $item->item_name,
+                    'quantity' => (float)$item->quantity,
+                ];
+            });
+
+            // If request has a verified token, provide authorized status details
+            // Never expose live GPS, exact house numbers, or financial details publicly
+            $orderData = [
+                'order_number' => $order->order_number,
+                'customer_name' => $hasValidToken ? $rawName : $maskedName,
+                'subcity' => $order->subcity,
+                'status' => $order->order_status,
+                'appointment_date' => $apptDateStr,
+                'eth_appointment_date' => $eth['formatted_am'] ?? $apptDateStr,
+                'appointment_time_slot' => $order->appointment_time_slot,
+                'subscription_plan' => $order->subscription_plan ?? 'one_time',
+                'team_assigned' => $order->assignedTeam ? 'የተመደበ የሜሽ ቡድን' : 'Pending Assignment',
+                'items' => $safeItems,
+                'has_secure_token' => $hasValidToken,
+                'is_tracking_expired' => $isCompletedOrCancelled,
+                'privacy_notice' => 'ለደንበኞች እና ለሰራተኞች ደህንነት ሲባል ትክክለኛ አድራሻ፣ የክፍያ ዝርዝር እና የቀጥታ GPS በይፋ አይጋለጡም።',
+            ];
+
+            if ($hasValidToken) {
+                $orderData['reschedule_token'] = SecurityTokenService::generateActionToken($order, 'reschedule');
+            }
+
             return response()->json([
                 'success' => true,
                 'found' => true,
-                'order' => [
-                    'order_number' => $order->order_number,
-                    'customer_name' => $order->customer?->full_name ?? 'ውድ ደንበኛችን',
-                    'address' => $order->address,
-                    'subcity' => $order->subcity,
-                    'status' => $order->order_status,
-                    'payment_status' => $order->payment_status,
-                    'appointment_date' => $apptDateStr,
-                    'eth_appointment_date' => $eth['formatted_am'] ?? $apptDateStr,
-                    'appointment_time_slot' => $order->appointment_time_slot,
-                    'subscription_plan' => $order->subscription_plan ?? 'one_time',
-                    'subscription_discount' => (float)($order->subscription_discount ?? 0),
-                    'total' => (float) $order->total,
-                    'team_assigned' => $order->assignedTeam ? $order->assignedTeam->team_name : 'Pending Assignment',
-                    'team_location' => $teamLocation,
-                    'customer_location' => $customerLocation,
-                    'items' => $order->items,
-                    'is_postponed' => (str_contains((string)$order->notes, 'ቀጠሮ ተላልፏል') || $order->order_status === 'rescheduled'),
-                    'postpone_notes' => (str_contains((string)$order->notes, 'ቀጠሮ ተላልፏል') || $order->order_status === 'rescheduled') ? $order->notes : null,
-                    'is_tracking_expired' => $isCompletedOrCancelled,
-                    'expired_message' => $isCompletedOrCancelled ? 'የዚህ ትዕዛዝ የፅዳት ስራ ተጠናቋል! ለሰራተኞች ደህንነት እና ግላዊነት ጥበቃ የቀጥታ መገኛ መከታተያ ተዘግቷል። (Link expired for privacy)' : null,
-                ],
+                'order' => $orderData,
             ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Track order error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
             return response()->json([
                 'success' => false,
-                'message' => 'ትዕዛዙን በመፈለግ ላይ ስህተት ተፈጥሯል። እባክዎን በስልክ (0970075509) ይደውሉልን።',
-                'error' => $e->getMessage(),
+                'message' => 'ትዕዛዙን በመፈለግ ላይ ስህተት ተፈጥሯል። እባክዎን በስልክ ይደውሉልን።',
             ], 500);
         }
     }
@@ -318,28 +329,50 @@ class PublicWebsiteController extends Controller
 
     /**
      * Customer Self-Reschedule / Postpone Request from Website or Bot
+     * Strictly requires a valid expiring signed action token.
      */
     public function rescheduleOrder(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'order_number' => 'required|string',
-            'phone' => 'required|string',
+            'token' => 'nullable|string',
+            'action_token' => 'nullable|string',
             'new_appointment_date' => 'required|date|after_or_equal:today',
             'new_time_slot' => 'nullable|string',
             'reason' => 'nullable|string',
         ]);
 
-        $order = Order::with('customer')->where('order_number', trim($validated['order_number']))->first();
-        if (!$order) {
-            return response()->json(['success' => false, 'message' => 'በትዕዛዝ ቁጥር ' . $validated['order_number'] . ' የተመዘገበ ትዕዛዝ አልተገኘም::'], 404);
+        $token = $request->input('action_token', $request->input('token', ''));
+
+        // Verify cryptographic token
+        $orderId = SecurityTokenService::verifyActionToken($token, 'reschedule');
+        if (!$orderId) {
+            $trackingPayload = SecurityTokenService::verifyTrackingToken($token);
+            if ($trackingPayload && ($trackingPayload['order_number'] ?? '') === trim($validated['order_number'])) {
+                $orderId = (int)$trackingPayload['order_id'];
+            }
         }
 
-        $cleanPhone = preg_replace('/\D+/', '', $validated['phone']);
-        $custPhone = preg_replace('/\D+/', '', $order->customer?->phone ?? '');
-        if (!empty($cleanPhone) && !empty($custPhone)) {
-            if (!str_ends_with($custPhone, substr($cleanPhone, -8)) && !str_ends_with($cleanPhone, substr($custPhone, -8))) {
-                return response()->json(['success' => false, 'message' => 'የስልክ ቁጥሩ ከትዕዛዙ መዝገብ ጋር አይዛመድም:: እባክዎ በትዕዛዙ ጊዜ የተጠቀሙትን ስልክ ያስገቡ::'], 403);
-            }
+        if (!$orderId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ቀጠሮ ለማዛወር የተፈረመና ጊዜው ያላለፈ የማረጋገጫ ማስረጃ (Valid action token) ያስፈልጋል። እባክዎ በትዕዛዝ ማረጋገጫዎ ላይ ያለውን ሊንክ ይጠቀሙ ወይም በስልክ ይደውሉልን።',
+            ], 403);
+        }
+
+        $order = Order::with('customer')->where('id', $orderId)->first();
+        if (!$order || $order->order_number !== trim($validated['order_number'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'የትዕዛዝ ቁጥሩ እና የማረጋገጫ ማስረጃው አይዛመዱም።',
+            ], 403);
+        }
+
+        if (in_array($order->order_status, ['completed', 'cancelled'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'የተጠናቀቀ ወይም የተሰረዘ ትዕዛዝ ቀጠሮ ማዛወር አይቻልም።',
+            ], 422);
         }
 
         $oldDate = $order->appointment_date ? (is_string($order->appointment_date) ? $order->appointment_date : $order->appointment_date->format('Y-m-d')) : 'ያልተገለጸ';

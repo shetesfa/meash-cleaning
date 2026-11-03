@@ -59,11 +59,16 @@ class OutdoorSalesController extends Controller
 
     public function visits(Request $request): JsonResponse
     {
+        $user = $request->user();
         $query = SalesVisit::with([
             'organization',
             'salesperson:id,name,phone',
             'proformas',
         ]);
+
+        if ($user && $user->isSales()) {
+            $query->where('user_id', $user->id);
+        }
 
         if ($stage = $request->input('stage')) {
             $query->where('stage', $stage);
@@ -174,6 +179,13 @@ class OutdoorSalesController extends Controller
 
     public function updateVisitStage(Request $request, SalesVisit $visit): JsonResponse
     {
+        $user = $request->user();
+        if ($user && $user->isSales() && $visit->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'Unauthorized. Sales reps can only update stages of their own visits.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'stage' => 'required|string|in:new_lead,visited,contact_established,interested,proforma_requested,proforma_sent,negotiation,won,lost,followup_later',
             'notes' => 'nullable|string',
@@ -213,7 +225,7 @@ class OutdoorSalesController extends Controller
         ]);
     }
 
-    public function pipeline(): JsonResponse
+    public function pipeline(Request $request): JsonResponse
     {
         $stages = [
             'new_lead' => 'New Lead',
@@ -228,7 +240,12 @@ class OutdoorSalesController extends Controller
             'followup_later' => 'Follow-up Later',
         ];
 
-        $allVisits = SalesVisit::with(['organization', 'salesperson:id,name'])->get();
+        $query = SalesVisit::with(['organization', 'salesperson:id,name']);
+        $user = $request->user();
+        if ($user && $user->isSales()) {
+            $query->where('user_id', $user->id);
+        }
+        $allVisits = $query->get();
 
         $pipeline = [];
         foreach ($stages as $key => $title) {
@@ -243,11 +260,14 @@ class OutdoorSalesController extends Controller
         return response()->json($pipeline);
     }
 
-    public function proformas(): JsonResponse
+    public function proformas(Request $request): JsonResponse
     {
-        $proformas = Proforma::with(['organization', 'preparedBy:id,name', 'items.service'])
-            ->latest()
-            ->paginate(20);
+        $user = $request->user();
+        $query = Proforma::with(['organization', 'preparedBy:id,name', 'items.service']);
+        if ($user && $user->isSales()) {
+            $query->where('prepared_by_user_id', $user->id);
+        }
+        $proformas = $query->latest()->paginate(20);
 
         return response()->json($proformas);
     }
@@ -306,11 +326,14 @@ class OutdoorSalesController extends Controller
         });
     }
 
-    public function contracts(): JsonResponse
+    public function contracts(Request $request): JsonResponse
     {
-        $contracts = Contract::with(['organization', 'responsiblePerson:id,name', 'proforma'])
-            ->latest('start_date')
-            ->paginate(20);
+        $user = $request->user();
+        $query = Contract::with(['organization', 'responsiblePerson:id,name', 'proforma']);
+        if ($user && $user->isSales()) {
+            $query->where('responsible_person_id', $user->id);
+        }
+        $contracts = $query->latest('start_date')->paginate(20);
 
         return response()->json($contracts);
     }

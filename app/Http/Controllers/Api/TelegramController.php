@@ -1231,15 +1231,44 @@ class TelegramController extends Controller
     $subtotalCalc = 0;
     $itemsSummary = [];
     foreach ($validated['items'] as $it) {
-      $sub = (float)$it['quantity'] * (float)$it['unit_price'];
+      // Recalculate strictly server-side using service catalogue
+      $service = null;
+      if (!empty($it['service_id'])) {
+        $service = Service::find($it['service_id']);
+        if ($service && !empty($it['item_name'])) {
+          $sName = strtolower($service->name_en);
+          $iName = strtolower($it['item_name']);
+          if (str_contains($sName, 'sofa') && (str_contains($iName, 'carpet') || str_contains($iName, 'ምንጣፍ'))) {
+            $service = null;
+          }
+        }
+      }
+
+      if (!$service && !empty($it['item_name'])) {
+        $cleanName = trim($it['item_name']);
+        $service = Service::where('name_en', $cleanName)
+            ->orWhere('name_am', $cleanName)
+            ->first();
+
+        if (!$service) {
+          if (stripos($cleanName, 'sofa') !== false || str_contains($cleanName, 'ሶፋ')) {
+            $service = Service::where('name_en', 'like', '%sofa%')->first();
+          }
+        }
+      }
+
+      $unitPrice = $service ? (float)$service->base_price : (float)($it['unit_price'] ?? 0);
+      $itemName = $it['item_name'] ?? ($service ? ($service->name_am ?: $service->name_en) : 'የፅዳት አገልግሎት');
+      $sub = round((float)$it['quantity'] * $unitPrice, 2);
       $subtotalCalc += $sub;
-      $itemsSummary[] = "{$it['item_name']} (x{$it['quantity']})";
+      $itemsSummary[] = "{$itemName} (x{$it['quantity']})";
+
       OrderItem::create([
         'order_id' => $order->id,
-        'service_id' => $it['service_id'] ?? null,
-        'item_name' => $it['item_name'],
+        'service_id' => $service?->id ?? ($it['service_id'] ?? null),
+        'item_name' => $itemName,
         'quantity' => $it['quantity'],
-        'unit_price' => $it['unit_price'],
+        'unit_price' => $unitPrice,
         'subtotal' => $sub,
       ]);
     }
@@ -1250,7 +1279,7 @@ class TelegramController extends Controller
 
     // Apply recurring subscription discount if chosen
     if ($discPercent > 0) {
-      $subDiscount = ($subtotalCalc * $discPercent) / 100.0;
+      $subDiscount = round(($subtotalCalc * $discPercent) / 100.0, 2);
       $order->subscription_discount = $subDiscount;
       $order->discount = (float)$order->discount + $subDiscount;
       $order->total = max(0, $subtotalCalc - (float)$order->discount);

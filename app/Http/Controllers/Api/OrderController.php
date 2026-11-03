@@ -131,6 +131,13 @@ class OrderController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->isOwner() && !$user->isReception()) {
+            return response()->json([
+                'message' => 'Unauthorized. Only owner or reception may create orders.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'customer_id' => 'nullable|exists:customers,id',
             // Or create customer inline:
@@ -266,6 +273,28 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, Order $order): JsonResponse
     {
+        $user = $request->user();
+
+        // Enforce cleaner team isolation and permissible statuses
+        if ($user && $user->isCleaner()) {
+            $cleanerTeamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
+                ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
+                ->unique();
+
+            if (!$order->assigned_team_id || !$cleanerTeamIds->contains($order->assigned_team_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only update jobs assigned to your team.',
+                ], 403);
+            }
+
+            $allowedCleanerStatuses = ['on_the_way', 'cleaning', 'completed', 'problem_reported'];
+            if (!in_array($request->input('order_status'), $allowedCleanerStatuses)) {
+                return response()->json([
+                    'message' => 'Unauthorized. Cleaners cannot set status to ' . $request->input('order_status'),
+                ], 403);
+            }
+        }
+
         $validated = $request->validate([
             'order_status' => 'required|string|in:new,pending_confirmation,confirmed,assigned,on_the_way,cleaning,completed,paid,follow_up,cancelled,rescheduled,no_show,problem_reported',
             'notes' => 'nullable|string',
@@ -471,6 +500,13 @@ class OrderController extends Controller
      */
     public function postpone(Request $request, Order $order): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->isOwner() && !$user->isReception()) {
+            return response()->json([
+                'message' => 'Unauthorized. Only owner or reception may postpone or reschedule orders.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'new_appointment_date' => 'required|date',
             'new_time_slot' => 'nullable|string',

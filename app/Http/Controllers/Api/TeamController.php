@@ -32,24 +32,40 @@ class TeamController extends Controller
     {
         $user = $request->user();
 
-        // Allow explicit team selection (e.g. from UI team dropdown or role switcher)
-        $explicitTeamId = $request->query('team_id');
-        if ($explicitTeamId && CleaningTeam::where('id', $explicitTeamId)->exists()) {
-            $teamId = $explicitTeamId;
+        // Enforce strict cleaner team isolation
+        if ($user->isCleaner()) {
+            $cleanerTeamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
+                ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
+                ->unique();
+
+            if ($cleanerTeamIds->isEmpty()) {
+                return response()->json([
+                    'team' => null,
+                    'teams_list' => [],
+                    'today_jobs' => [],
+                    'upcoming_jobs' => [],
+                    'completed_today' => [],
+                ]);
+            }
+
+            $explicitTeamId = $request->query('team_id');
+            if ($explicitTeamId && !$cleanerTeamIds->contains((int)$explicitTeamId)) {
+                return response()->json([
+                    'message' => 'Unauthorized. You may only view jobs assigned to your own team.',
+                ], 403);
+            }
+
+            $teamId = $explicitTeamId ? (int)$explicitTeamId : $cleanerTeamIds->first();
+            $allTeams = CleaningTeam::whereIn('id', $cleanerTeamIds)->get(['id', 'team_name', 'phone', 'status']);
         } else {
-            // Find which team this cleaner belongs to
-            $member = TeamMember::where('user_id', $user->id)->first();
-            $leaderTeam = CleaningTeam::where('team_leader_id', $user->id)->first();
-            $teamId = $member?->cleaning_team_id ?? $leaderTeam?->id;
-        }
+            // Owner and Reception may inspect any team
+            $explicitTeamId = $request->query('team_id');
+            $teamId = ($explicitTeamId && CleaningTeam::where('id', $explicitTeamId)->exists())
+                ? (int)$explicitTeamId
+                : CleaningTeam::first()?->id;
 
-        if (!$teamId && ($user->isOwner() || $user->isReception())) {
-            // Default to first cleaning team for owner/reception inspection
-            $firstTeam = CleaningTeam::first();
-            $teamId = $firstTeam?->id;
+            $allTeams = CleaningTeam::all(['id', 'team_name', 'phone', 'status']);
         }
-
-        $allTeams = CleaningTeam::all(['id', 'team_name', 'phone', 'status']);
 
         if (!$teamId) {
             return response()->json([
@@ -119,6 +135,22 @@ class TeamController extends Controller
 
     public function handleJobAction(Request $request, Order $order): JsonResponse
     {
+        $user = $request->user();
+
+        // Verify cleaner ownership and team assignment
+        if ($user->isCleaner()) {
+            $cleanerTeamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
+                ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
+                ->unique();
+
+            // Prevent cross-team access (IDOR)
+            if ($cleanerTeamIds->isNotEmpty() && $order->assigned_team_id && !$cleanerTeamIds->contains($order->assigned_team_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only perform actions on jobs assigned to your team.',
+                ], 403);
+            }
+        }
+
         $validated = $request->validate([
             'action' => 'required|string|in:start,complete,on_the_way,report_problem',
             'notes' => 'nullable|string',
@@ -127,6 +159,21 @@ class TeamController extends Controller
             'problem_category' => 'nullable|string',
             'problem_description' => 'nullable|string',
         ]);
+
+        // Enforce valid state transitions
+        if ($user->isCleaner()) {
+            if ($validated['action'] === 'start' && !in_array($order->order_status, ['assigned', 'on_the_way'])) {
+                return response()->json([
+                    'message' => 'Invalid state transition. Job must be assigned or on the way before starting cleaning.',
+                ], 422);
+            }
+
+            if ($validated['action'] === 'complete' && !in_array($order->order_status, ['cleaning', 'assigned', 'on_the_way'])) {
+                return response()->json([
+                    'message' => 'Invalid state transition. Job must be in active cleaning or assigned status before completing.',
+                ], 422);
+            }
+        }
 
         $oldStatus = $order->order_status;
 
@@ -206,16 +253,32 @@ class TeamController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
-        $teamId = $validated['team_id'];
-        if (!$teamId) {
-            $user = $request->user();
-            $member = TeamMember::where('user_id', $user->id)->first();
-            $leaderTeam = CleaningTeam::where('team_leader_id', $user->id)->first();
-            $teamId = $member?->cleaning_team_id ?? $leaderTeam?->id;
+        $user = $request->user();
+
+        if ($user->isCleaner()) {
+            $cleanerTeamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
+                ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
+                ->unique();
+
+            if ($cleanerTeamIds->isEmpty()) {
+                return response()->json(['message' => 'No active cleaning team associated with user.'], 403);
+            }
+
+            // Cleaners may ONLY update their own team location
+            if (!empty($validated['team_id']) && !$cleanerTeamIds->contains((int)$validated['team_id'])) {
+                return response()->json(['message' => 'Unauthorized. You can only update GPS for your own team.'], 403);
+            }
+
+            $teamId = $cleanerTeamIds->first();
+        } else {
+            $teamId = $validated['team_id'];
+            if (!$teamId) {
+                $teamId = CleaningTeam::first()?->id;
+            }
         }
 
         if (!$teamId) {
-            return response()->json(['message' => 'No active cleaning team associated with user.'], 422);
+            return response()->json(['message' => 'No active cleaning team found.'], 422);
         }
 
         $team = CleaningTeam::find($teamId);
@@ -303,7 +366,15 @@ class TeamController extends Controller
             'email' => 'required|email|max:255|unique:users,email',
             'phone' => 'nullable|string|max:32',
             'role' => 'required|string|in:owner,reception,cleaner,sales,finance',
-            'password' => 'required|string|min:6',
+            'password' => [
+                'required',
+                'string',
+                \Illuminate\Validation\Rules\Password::min(12)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
         ]);
 
         $user = \App\Models\User::create([

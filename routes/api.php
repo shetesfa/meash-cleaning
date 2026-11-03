@@ -35,19 +35,19 @@ Route::get('/ping', function () {
 
 // 1. PUBLIC WEBSITE & CUSTOMER BOOKING
 Route::prefix('public')->group(function () {
-    Route::get('/settings', [PublicWebsiteController::class, 'settings']);
-    Route::get('/services', [PublicWebsiteController::class, 'services']);
-    Route::post('/book', [PublicWebsiteController::class, 'book']);
-    Route::get('/track-order', [PublicWebsiteController::class, 'trackOrder']);
-    Route::post('/reschedule-order', [PublicWebsiteController::class, 'rescheduleOrder']);
-    Route::get('/reviews', [PublicWebsiteController::class, 'publicReviews']);
-    Route::post('/quick-message', [PublicWebsiteController::class, 'quickMessage']);
+    Route::get('/settings', [PublicWebsiteController::class, 'settings'])->middleware('throttle:60,1');
+    Route::get('/services', [PublicWebsiteController::class, 'services'])->middleware('throttle:60,1');
+    Route::post('/book', [PublicWebsiteController::class, 'book'])->middleware('throttle:5,1');
+    Route::match(['get', 'post'], '/track-order', [PublicWebsiteController::class, 'trackOrder'])->middleware('throttle:10,1');
+    Route::post('/reschedule-order', [PublicWebsiteController::class, 'rescheduleOrder'])->middleware('throttle:5,1');
+    Route::get('/reviews', [PublicWebsiteController::class, 'publicReviews'])->middleware('throttle:60,1');
+    Route::post('/quick-message', [PublicWebsiteController::class, 'quickMessage'])->middleware('throttle:5,1');
 });
 
 // 2. TELEGRAM ENGINE (Bot, Inline Query @meash, Mini App)
 Route::prefix('telegram')->group(function () {
-    Route::post('/webhook', [TelegramController::class, 'webhook']);
-    Route::post('/miniapp/book', [TelegramController::class, 'miniAppBooking']);
+    Route::post('/webhook', [TelegramController::class, 'webhook'])->middleware('throttle:120,1');
+    Route::post('/miniapp/book', [TelegramController::class, 'miniAppBooking'])->middleware('throttle:5,1');
 });
 
 // 3. AUTHENTICATION
@@ -57,6 +57,7 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('throttle:5,1');
     });
 });
 
@@ -70,7 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // B. Customers
-    Route::apiResource('customers', CustomerController::class)->except(['destroy']);
+    Route::apiResource('customers', CustomerController::class)->except(['destroy'])->middleware('role:owner,reception');
 
     // C. Services
     Route::get('/services', [ServiceController::class, 'index']);
@@ -79,11 +80,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/services/{service}', [ServiceController::class, 'update'])->middleware('role:owner,reception');
 
     // D. Orders (Multi-item)
-    Route::apiResource('orders', OrderController::class)->only(['index', 'show', 'store']);
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{order}', [OrderController::class, 'show']);
+    Route::post('/orders', [OrderController::class, 'store'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{order}/assign-team', [OrderController::class, 'assignTeam'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/payment', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception');
-    Route::post('/orders/{order}/postpone', [OrderController::class, 'postpone']);
+    Route::post('/orders/{order}/postpone', [OrderController::class, 'postpone'])->middleware('role:owner,reception');
 
     // E. Appointments & Calendar
     Route::get('/appointments', [AppointmentController::class, 'index']);
@@ -122,23 +125,23 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // H. Finance & Reports
     Route::prefix('finance')->group(function () {
-        Route::get('/expenses', [FinanceController::class, 'expenses']);
-        Route::post('/expenses', [FinanceController::class, 'storeExpense']);
+        Route::get('/expenses', [FinanceController::class, 'expenses'])->middleware('role:owner,finance');
+        Route::post('/expenses', [FinanceController::class, 'storeExpense'])->middleware('role:owner,finance');
         Route::post('/payroll', [FinanceController::class, 'recordPayroll'])->middleware('role:owner,finance');
-        Route::get('/payments', [FinanceController::class, 'payments'])->middleware('role:owner,reception');
+        Route::get('/payments', [FinanceController::class, 'payments'])->middleware('role:owner,reception,finance');
         Route::get('/profit-report', [FinanceController::class, 'profitReport'])->middleware('role:owner');
     });
 
     // I. Customer Care (Follow-ups, Feedback, Complaints)
-    Route::prefix('care')->group(function () {
+    Route::prefix('care')->middleware('role:owner,reception')->group(function () {
         Route::get('/followups', [CustomerCareController::class, 'followups']);
         Route::put('/followups/{followup}', [CustomerCareController::class, 'updateFollowup']);
         Route::get('/feedbacks', [CustomerCareController::class, 'feedbacks']);
         Route::post('/feedbacks', [CustomerCareController::class, 'storeFeedback']);
-        Route::post('/feedbacks/{feedback}/approve', [CustomerCareController::class, 'approveFeedback'])->middleware('role:owner,reception');
+        Route::post('/feedbacks/{feedback}/approve', [CustomerCareController::class, 'approveFeedback']);
         Route::get('/complaints', [CustomerCareController::class, 'complaints']);
         Route::post('/complaints', [CustomerCareController::class, 'storeComplaint']);
-        Route::post('/complaints/{complaint}/resolve', [CustomerCareController::class, 'resolveComplaint'])->middleware('role:owner,reception');
+        Route::post('/complaints/{complaint}/resolve', [CustomerCareController::class, 'resolveComplaint']);
     });
 
     // J. Notifications & Marketing
