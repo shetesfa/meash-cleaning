@@ -516,6 +516,8 @@
         notes: currentLang === 'am' ? 'በቴሌግራም ሚኒ አፕ የተመዘገበ' : 'Booked via Telegram Mini App',
         items: [
           {
+            service_id: Number.isInteger(Number(currentSvc.code)) ? Number(currentSvc.code) : null,
+            service_code: String(currentSvc.code),
             item_name: currentLang === 'am' ? currentSvc.nameAm : currentSvc.nameEn,
             quantity: qty,
             unit_price: currentSvc.price,

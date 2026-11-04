@@ -101,6 +101,20 @@
   /* Active Language Button Styles */
   .lang-btn.active-lang, .lang-btn.bg-teal, .lang-btn.bg-navy { background-color: #0E7C7B !important; color: #FFFFFF !important; }
   html.dark .lang-btn.active-lang, html.dark .lang-btn.bg-teal, html.dark .lang-btn.bg-navy { background-color: #0E7C7B !important; color: #FFFFFF !important; }
+
+  /* Keep the public website usable on narrow phone screens. */
+  @media (max-width: 480px) {
+    html, body { overflow-x: hidden; }
+    header > div { padding-left: .75rem !important; padding-right: .75rem !important; gap: .375rem !important; }
+    header a[href="#top"] { gap: .375rem !important; }
+    header a[href="#top"] .leading-tight > span,
+    header a[href="#top"] .leading-tight > div > span:last-child { display: none; }
+    header a[href="#top"] .font-serif { font-size: 1rem !important; }
+    header a[href="#book"] { padding: .5rem !important; }
+    header a[href="#book"] span { display: none !important; }
+    header a[href="#book"] i { display: block !important; margin: 0 !important; }
+    #mobile-menu-btn { padding: .5rem !important; }
+  }
 </style>
 </head>
 <body class="antialiased">

@@ -467,32 +467,46 @@ class OrderController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $payment = Payment::create([
-            'payment_number' => Payment::generateNextNumber(),
-            'order_id' => $order->id,
-            'customer_id' => $order->customer_id,
-            'amount' => $validated['amount'],
-            'payment_method' => $validated['payment_method'],
-            'reference_number' => $validated['reference_number'] ?? null,
-            'payment_date' => $validated['payment_date'] ?? Carbon::today(),
-            'recorded_by_user_id' => $request->user()?->id,
-            'notes' => $validated['notes'] ?? null,
-        ]);
+        return DB::transaction(function () use ($request, $order, $validated) {
+            // Serialise payment creation for this order, preventing two devices
+            // from both accepting the same remaining balance at once.
+            $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
+            $alreadyPaid = (float)$lockedOrder->payments()->sum('amount');
+            $remaining = max(0, (float)$lockedOrder->total - $alreadyPaid);
+            if ((float)$validated['amount'] > $remaining + 0.00001) {
+                return response()->json([
+                    'message' => 'Payment exceeds the outstanding balance.',
+                    'outstanding_balance' => round($remaining, 2),
+                ], 422);
+            }
 
-        AuditLog::logAction(
-            $request->user()?->id,
-            'payment_recorded',
-            Payment::class,
-            $payment->id,
-            null,
-            $payment->toArray()
-        );
+            $payment = Payment::create([
+                'payment_number' => Payment::generateNextNumber(),
+                'order_id' => $lockedOrder->id,
+                'customer_id' => $lockedOrder->customer_id,
+                'amount' => $validated['amount'],
+                'payment_method' => $validated['payment_method'],
+                'reference_number' => $validated['reference_number'] ?? null,
+                'payment_date' => $validated['payment_date'] ?? Carbon::today(),
+                'recorded_by_user_id' => $request->user()?->id,
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
-        return response()->json([
-            'message' => 'Payment recorded successfully',
-            'payment' => $payment,
-            'order' => $order->fresh(['payments']),
-        ], 201);
+            AuditLog::logAction(
+                $request->user()?->id,
+                'payment_recorded',
+                Payment::class,
+                $payment->id,
+                null,
+                $payment->toArray()
+            );
+
+            return response()->json([
+                'message' => 'Payment recorded successfully',
+                'payment' => $payment,
+                'order' => $lockedOrder->fresh(['payments']),
+            ], 201);
+        });
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\Api\TelegramController;
 use App\Models\Order;
+use App\Models\Service;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -36,6 +37,7 @@ class MeashTelegramTest extends TestCase
 
     public function test_telegram_mini_app_booking_creates_central_order(): void
     {
+        $service = Service::where('code', 'sofa')->firstOrFail();
         $payload = [
             'customer_name' => 'Kidus Tesfaye',
             'customer_phone' => '0911998877',
@@ -46,6 +48,7 @@ class MeashTelegramTest extends TestCase
             'telegram_user_id' => '123456789',
             'items' => [
                 [
+                    'service_id' => $service->id,
                     'item_name' => 'Sofa Deep Cleaning',
                     'quantity' => 5,
                     'unit_price' => 350.00,
@@ -62,6 +65,6 @@ class MeashTelegramTest extends TestCase
         $order = Order::where('order_number', $bookingId)->first();
         $this->assertNotNull($order);
         $this->assertEquals('telegram_miniapp', $order->source);
-        $this->assertEquals(1750.00, (float)$order->total);
+        $this->assertEquals((float)$service->base_price * 5, (float)$order->total);
     }
 }

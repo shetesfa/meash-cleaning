@@ -104,7 +104,7 @@ class RealDataEndToEndTest extends TestCase
         $this->assertNotNull($order, 'MiniApp Order must exist in database');
         $this->assertEquals('telegram_miniapp', $order->source);
         $this->assertEquals('0922334455', $order->customer->phone);
-        $this->assertEquals(1200.00, (float)$order->total);
+        $this->assertEquals((float)$sofa->base_price * 12, (float)$order->total);
         $this->assertEquals('afternoon', $order->appointment_time_slot);
     }
 
@@ -149,6 +149,7 @@ class RealDataEndToEndTest extends TestCase
                         'notes' => 'መኝታ ቤት እና ሳሎን ጥልቅ እጥበት',
                         'items' => [
                             [
+                                'service_code' => 'sofa',
                                 'item_name' => 'የሶፋ ጥልቅ እጥበት',
                                 'quantity' => 2,
                                 'unit_price' => 350.00
@@ -194,6 +195,69 @@ class RealDataEndToEndTest extends TestCase
         $receptionRes->assertStatus(200);
         $receptionOrders = $receptionRes->json('data') ?: $receptionRes->json();
         $this->assertNotEmpty($receptionOrders, 'Receptionist must see orders');
+    }
+
+    /**
+     * A customer booking must be visible to operations, retain its server price,
+     * and reconcile correctly through partial and final payment.
+     */
+    public function test_website_order_is_visible_and_reconciles_through_payment(): void
+    {
+        $service = Service::where('is_active', true)->firstOrFail();
+        $owner = User::where('role', 'owner')->firstOrFail();
+        $reception = User::where('role', 'reception')->firstOrFail();
+
+        $booking = $this->postJson('/api/public/book', [
+            'customer_name' => 'End To End Payment Customer',
+            'customer_phone' => '0955667788',
+            'address' => 'Bole, Addis Ababa',
+            'subcity' => 'Bole',
+            'appointment_date' => now()->addDays(2)->toDateString(),
+            'appointment_time_slot' => 'morning',
+            'items' => [[
+                'service_id' => $service->id,
+                'item_name' => 'Ignored forged label',
+                'quantity' => 2,
+                'unit_price' => 1.00,
+            ]],
+        ]);
+
+        $booking->assertCreated();
+        $order = Order::where('order_number', $booking->json('order_number'))->firstOrFail();
+        $this->assertEquals((float)$service->base_price * 2, (float)$order->total);
+
+        $this->actingAs($owner)->getJson('/api/orders?search=' . urlencode($order->order_number))
+            ->assertOk()
+            ->assertJsonPath('data.0.order_number', $order->order_number);
+        $this->actingAs($reception)->getJson("/api/orders/{$order->id}")
+            ->assertOk()
+            ->assertJsonPath('customer.phone', '0955667788');
+
+        $half = (float)$order->total / 2;
+        $this->actingAs($reception)->postJson("/api/orders/{$order->id}/payment", [
+            'amount' => $half,
+            'payment_method' => 'telebirr',
+            'reference_number' => 'E2E-PARTIAL-001',
+        ])->assertCreated();
+        $order->refresh();
+        $this->assertEquals('partially_paid', $order->payment_status);
+
+        $this->actingAs($owner)->postJson("/api/orders/{$order->id}/payment", [
+            'amount' => $half,
+            'payment_method' => 'cash',
+            'reference_number' => 'E2E-FINAL-001',
+        ])->assertCreated();
+        $order->refresh();
+        $this->assertEquals('paid', $order->payment_status);
+
+        $this->actingAs($reception)->getJson('/api/finance/payments')
+            ->assertOk()
+            ->assertJsonPath('data.0.order_id', $order->id);
+
+        $this->actingAs($owner)->postJson("/api/orders/{$order->id}/payment", [
+            'amount' => 1,
+            'payment_method' => 'cash',
+        ])->assertStatus(422);
     }
 
     /**
@@ -257,4 +321,3 @@ class RealDataEndToEndTest extends TestCase
         $this->assertEquals('Bole', $order->subcity);
     }
 }
-

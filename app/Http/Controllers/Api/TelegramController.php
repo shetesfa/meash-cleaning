@@ -18,6 +18,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class TelegramController extends Controller
 {
@@ -1194,10 +1195,23 @@ class TelegramController extends Controller
       'notes' => 'nullable|string',
       'items' => 'required|array|min:1',
       'items.*.service_id' => 'nullable|exists:services,id',
+      'items.*.service_code' => 'nullable|string|max:64',
       'items.*.item_name' => 'required|string',
       'items.*.quantity' => 'required|numeric|min:0.1',
       'items.*.unit_price' => 'required|numeric|min:0',
     ]);
+
+    // Resolve every item before creating records. The browser never controls a price.
+    $catalogServices = [];
+    foreach ($validated['items'] as $index => $item) {
+      $service = $this->resolveMiniAppService($item);
+      if (!$service) {
+        throw ValidationException::withMessages([
+          "items.{$index}.service_id" => ['Selected service is unavailable. Please refresh the Mini App and try again.'],
+        ]);
+      }
+      $catalogServices[$index] = $service;
+    }
 
     $plan = $validated['subscription_plan'] ?? 'one_time';
     $discRates = ['weekly' => 15.0, 'biweekly' => 10.0, 'monthly' => 5.0, 'one_time' => 0.0];
@@ -1245,42 +1259,17 @@ class TelegramController extends Controller
 
     $subtotalCalc = 0;
     $itemsSummary = [];
-    foreach ($validated['items'] as $it) {
-      // Recalculate strictly server-side using service catalogue
-      $service = null;
-      if (!empty($it['service_id'])) {
-        $service = Service::find($it['service_id']);
-        if ($service && !empty($it['item_name'])) {
-          $sName = strtolower($service->name_en);
-          $iName = strtolower($it['item_name']);
-          if (str_contains($sName, 'sofa') && (str_contains($iName, 'carpet') || str_contains($iName, 'ምንጣፍ'))) {
-            $service = null;
-          }
-        }
-      }
-
-      if (!$service && !empty($it['item_name'])) {
-        $cleanName = trim($it['item_name']);
-        $service = Service::where('name_en', $cleanName)
-            ->orWhere('name_am', $cleanName)
-            ->first();
-
-        if (!$service) {
-          if (stripos($cleanName, 'sofa') !== false || str_contains($cleanName, 'ሶፋ')) {
-            $service = Service::where('name_en', 'like', '%sofa%')->first();
-          }
-        }
-      }
-
-      $unitPrice = $service ? (float)$service->base_price : (float)($it['unit_price'] ?? 0);
-      $itemName = $it['item_name'] ?? ($service ? ($service->name_am ?: $service->name_en) : 'የፅዳት አገልግሎት');
+    foreach ($validated['items'] as $index => $it) {
+      $service = $catalogServices[$index];
+      $unitPrice = (float)$service->base_price;
+      $itemName = $service->name_am ?: $service->name_en;
       $sub = round((float)$it['quantity'] * $unitPrice, 2);
       $subtotalCalc += $sub;
       $itemsSummary[] = "{$itemName} (x{$it['quantity']})";
 
       OrderItem::create([
         'order_id' => $order->id,
-        'service_id' => $service?->id ?? ($it['service_id'] ?? null),
+        'service_id' => $service->id,
         'item_name' => $itemName,
         'quantity' => $it['quantity'],
         'unit_price' => $unitPrice,
@@ -1352,6 +1341,27 @@ class TelegramController extends Controller
       'booking_id' => $order->order_number,
       'order' => $order->fresh(['items', 'customer']),
     ], 201);
+  }
+
+  private function resolveMiniAppService(array $item): ?Service
+  {
+    $query = Service::query()->where('is_active', true);
+
+    if (!empty($item['service_id'])) {
+      return $query->whereKey($item['service_id'])->first();
+    }
+
+    if (!empty($item['service_code'])) {
+      return $query->where('code', $item['service_code'])->first();
+    }
+
+    if (!empty($item['item_name'])) {
+      return $query->where(function ($q) use ($item) {
+        $q->where('name_en', $item['item_name'])->orWhere('name_am', $item['item_name']);
+      })->first();
+    }
+
+    return null;
   }
 
   private function telegramApi(string $method, array $params = []): array
@@ -2255,6 +2265,34 @@ class TelegramController extends Controller
       return;
     }
 
+    if (!is_array($items) || count($items) === 0) {
+      $this->telegramApi('sendMessage', [
+        'chat_id' => $chatId,
+        'text' => " <b>እባክዎ ቢያንስ አንድ አገልግሎት ይምረጡ::</b>",
+        'parse_mode' => 'HTML',
+      ]);
+      return;
+    }
+
+    // Resolve all services first so a request cannot create an order with a
+    // client-controlled or unknown price.
+    $catalogItems = [];
+    foreach ($items as $item) {
+      $service = $this->resolveMiniAppService(is_array($item) ? $item : []);
+      if (!$service) {
+        $this->telegramApi('sendMessage', [
+          'chat_id' => $chatId,
+          'text' => " <b>የተመረጠው አገልግሎት አልተገኘም::</b> እባክዎ ሚኒ አፑን አድስና እንደገና ይሞክሩ::",
+          'parse_mode' => 'HTML',
+        ]);
+        return;
+      }
+      $catalogItems[] = [
+        'service' => $service,
+        'quantity' => max(0.1, (float)($item['quantity'] ?? 1)),
+      ];
+    }
+
     // Normalize Ethiopian phone number
     if (str_starts_with($phone, '+251')) {
       $phone = '0' . substr($phone, 4);
@@ -2306,37 +2344,19 @@ class TelegramController extends Controller
 
     // 3. Order Items
     $calculatedTotal = 0;
-    if (!empty($items)) {
-      foreach ($items as $item) {
-        $itemName = $item['item_name'] ?? 'የሶፋ ጥልቅ እጥበት';
-        $qty = max(1, (int)($item['quantity'] ?? 1));
-        $unitPrice = (float)($item['unit_price'] ?? 350);
-        $subtotal = $qty * $unitPrice;
-        $calculatedTotal += $subtotal;
-
-        $svc = Service::where('name_am', 'like', "%{$itemName}%")
-          ->orWhere('name_en', 'like', "%{$itemName}%")
-          ->orWhere('code', 'like', "%{$itemName}%")
-          ->first();
-        OrderItem::create([
-          'order_id' => $order->id,
-          'service_id' => $svc?->id,
-          'item_name' => $itemName,
-          'quantity' => $qty,
-          'unit_price' => $unitPrice,
-          'subtotal' => $subtotal,
-        ]);
-      }
-    } else {
-      $calculatedTotal = 1750;
-      $svc = Service::where('code', 'sofa')->first() ?: Service::first();
+    foreach ($catalogItems as $catalogItem) {
+      $svc = $catalogItem['service'];
+      $qty = $catalogItem['quantity'];
+      $unitPrice = (float)$svc->base_price;
+      $subtotal = round($qty * $unitPrice, 2);
+      $calculatedTotal += $subtotal;
       OrderItem::create([
         'order_id' => $order->id,
-        'service_id' => $svc?->id,
-        'item_name' => 'የሶፋ ጥልቅ እጥበት',
-        'quantity' => 5,
-        'unit_price' => 350,
-        'subtotal' => 1750,
+        'service_id' => $svc->id,
+        'item_name' => $svc->name_am ?: $svc->name_en,
+        'quantity' => $qty,
+        'unit_price' => $unitPrice,
+        'subtotal' => $subtotal,
       ]);
     }
 

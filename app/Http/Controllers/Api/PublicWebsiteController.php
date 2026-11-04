@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PublicWebsiteController extends Controller
 {
@@ -59,7 +60,7 @@ class PublicWebsiteController extends Controller
             'notes' => 'nullable|string',
             'marketing_consent' => 'nullable|boolean',
             'items' => 'required|array|min:1',
-            'items.*.service_id' => 'nullable|exists:services,id',
+            'items.*.service_id' => 'required|exists:services,id',
             'items.*.item_name' => 'required|string',
             'items.*.quantity' => 'required|numeric|min:0.1',
             'items.*.unit_price' => 'required|numeric|min:0',
@@ -128,22 +129,22 @@ class PublicWebsiteController extends Controller
             $itemsSummary = [];
             foreach ($validated['items'] as $it) {
                 // Server-side catalogue lookup - never trust client unit_price
-                $service = null;
-                if (!empty($it['service_id'])) {
-                    $service = Service::find($it['service_id']);
-                } elseif (!empty($it['item_name'])) {
-                    $service = Service::where('name_en', $it['item_name'])->orWhere('name_am', $it['item_name'])->first();
+                $service = Service::whereKey($it['service_id'])->where('is_active', true)->first();
+                if (!$service) {
+                    throw ValidationException::withMessages([
+                        'items' => ['One or more selected services are unavailable. Please refresh and try again.'],
+                    ]);
                 }
 
-                $unitPrice = $service ? (float)$service->base_price : 0;
-                $itemName = $service ? ($service->name_am ?: $service->name_en) : ($it['item_name'] ?? 'የፅዳት አገልግሎት');
+                $unitPrice = (float)$service->base_price;
+                $itemName = $service->name_am ?: $service->name_en;
                 $sub = round((float)$it['quantity'] * $unitPrice, 2);
                 $subtotalCalc += $sub;
                 $itemsSummary[] = "{$itemName} (x{$it['quantity']})";
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'service_id' => $service?->id ?? ($it['service_id'] ?? null),
+                    'service_id' => $service->id,
                     'item_name' => $itemName,
                     'quantity' => $it['quantity'],
                     'unit_price' => $unitPrice,
