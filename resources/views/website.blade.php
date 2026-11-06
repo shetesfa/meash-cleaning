@@ -1,4 +1,18 @@
 <!DOCTYPE html>
+@php
+  $activeServices = collect();
+  $websiteSettings = [];
+  try {
+    if (\Illuminate\Support\Facades\Schema::hasTable('services')) {
+      $activeServices = \App\Models\Service::where('is_active', true)->orderBy('sort_order')->get();
+    }
+    if (\Illuminate\Support\Facades\Schema::hasTable('website_settings')) {
+      $websiteSettings = \App\Models\WebsiteSetting::getAllKeyValue();
+    }
+  } catch (\Throwable $e) {
+    // Graceful fallback for pre-migration or isolated test runs
+  }
+@endphp
 <html lang="am" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
@@ -1040,30 +1054,40 @@
 
           <p class="font-semibold mb-3 text-sm text-navy"><span data-lang-block="am">የጽዳት አገልግሎት ይምረጡ</span><span data-lang-block="en">Choose cleaning service</span></p>
           <div class="grid grid-cols-2 gap-2.5 mb-2">
-            <button type="button" onclick="selectServiceForBooking('sofa',1)" class="svc-btn border-2 border-navy rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
-              <i data-lucide="sofa" class="w-5 h-5 text-teal-dark shrink-0"></i>
-              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">ሶፋ</span><span data-lang-block="en">Sofa</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="1">350 ETB / seat</span></span>
-            </button>
-            <button type="button" onclick="selectServiceForBooking('carpet',2)" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
-              <i data-lucide="layout-grid" class="w-5 h-5 text-teal-dark shrink-0"></i>
-              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">ምንጣፍ</span><span data-lang-block="en">Carpet</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="2">80 ETB / sqm</span></span>
-            </button>
-            <button type="button" onclick="selectServiceForBooking('mattress',3)" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
-              <i data-lucide="bed" class="w-5 h-5 text-teal-dark shrink-0"></i>
-              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">ፍራሽ</span><span data-lang-block="en">Mattress</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="3">600 ETB / unit</span></span>
-            </button>
-            <button type="button" onclick="selectServiceForBooking('glass',4)" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
-              <i data-lucide="square" class="w-5 h-5 text-teal-dark shrink-0"></i>
-              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">መስታወት</span><span data-lang-block="en">Glass</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="4">70 ETB / sqm</span></span>
-            </button>
-            <button type="button" onclick="selectServiceForBooking('floor_ceramic',8)" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
-              <i data-lucide="sparkles" class="w-5 h-5 text-teal-dark shrink-0"></i>
-              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">ሴራሚክ/ወለል</span><span data-lang-block="en">Floor Scrub</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="8">50 ETB / sqm</span></span>
-            </button>
-            <button type="button" onclick="selectServiceForBooking('office',6)" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
-              <i data-lucide="building-2" class="w-5 h-5 text-teal-dark shrink-0"></i>
-              <span><span class="font-semibold text-xs sm:text-sm block"><span data-lang-block="am">ቢሮ / ተቋም</span><span data-lang-block="en">Office/Facility</span></span><span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="6">3,500 ETB</span></span>
-            </button>
+            @php
+              $wizardServices = $activeServices->take(8);
+              $iconList = [
+                'sofa' => 'sofa',
+                'carpet' => 'layout-grid',
+                'mattress' => 'bed',
+                'glass' => 'square',
+                'floor_ceramic' => 'sparkles',
+                'office' => 'building-2',
+                'residential_deep' => 'home',
+                'commercial' => 'briefcase',
+              ];
+            @endphp
+            @foreach($wizardServices as $idx => $ws)
+              @php
+                $wIcon = $iconList[$ws->code] ?? 'sparkles';
+                $wPrice = (float)$ws->base_price;
+                $wUnit = $ws->pricing_unit_am ?: ($ws->unit ?: 'unit');
+                $wNameAm = $ws->name_am ?: $ws->name_en;
+                $wNameEn = $ws->name_en ?: $ws->name_am;
+              @endphp
+              <button type="button" onclick="selectServiceForBooking('{{ $ws->code }}', {{ $ws->id }})" class="svc-btn border-2 {{ $idx === 0 ? 'border-navy' : 'border-navy/10' }} rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
+                <i data-lucide="{{ $wIcon }}" class="w-5 h-5 text-teal-dark shrink-0"></i>
+                <span>
+                  <span class="font-semibold text-xs sm:text-sm block">
+                    <span data-lang-block="am">{{ $wNameAm }}</span>
+                    <span data-lang-block="en">{{ $wNameEn }}</span>
+                  </span>
+                  <span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="{{ $ws->id }}">
+                    {{ number_format($wPrice) }} ETB / {{ $wUnit }}
+                  </span>
+                </span>
+              </button>
+            @endforeach
           </div>
           <label class="text-xs font-semibold block mt-4 text-navy"><span data-lang-block="am">ብዛት / መጠን (Quantity / Units)</span><span data-lang-block="en">Quantity</span></label>
           <div class="flex items-center gap-3 mt-1.5 mb-2">
@@ -1073,7 +1097,7 @@
           </div>
           <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-5 flex items-center justify-between">
             <span class="text-xs sm:text-sm font-semibold text-teal-dark"><span data-lang-block="am">የግምት ድምር (Estimated Price)</span><span data-lang-block="en">Estimated total</span></span>
-            <span id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">350 ETB</span>
+            <span id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">{{ number_format((float)($activeServices->firstWhere('id', 1)?->base_price ?? 350)) }} ETB</span>
           </div>
           <button type="button" onclick="showWizardStep(2)" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-2">
             <span data-lang-block="am">ቀጣይ: አድራሻ ያስገቡ</span><span data-lang-block="en">Next: Address &amp; Location</span>
@@ -1298,6 +1322,32 @@
               <i data-lucide="tag" class="w-3.5 h-3.5 text-teal"></i>
               <span id="sub-discount-text"></span>
             </p>
+          </div>
+
+          <!-- Payment Method Selector -->
+          <div class="mb-4 p-3.5 rounded-xl bg-fog border border-navy/15">
+            <label class="block text-xs font-bold text-navy uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <i data-lucide="credit-card" class="w-3.5 h-3.5 text-teal"></i>
+              <span data-lang-block="am">የክፍያ መንገድ (Payment Method)</span>
+              <span data-lang-block="en">Preferred Payment Method</span>
+            </label>
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <label class="flex flex-col items-center text-center p-2 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
+                <input type="radio" name="web_payment_method" value="cash" checked class="text-teal focus:ring-teal mb-1">
+                <span class="font-bold block text-navy text-[11px]"><span data-lang-block="am">ጥሬ ገንዘብ</span><span data-lang-block="en">Cash</span></span>
+                <span class="text-[9px] text-navy/50">በቦታው</span>
+              </label>
+              <label class="flex flex-col items-center text-center p-2 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
+                <input type="radio" name="web_payment_method" value="telebirr" class="text-teal focus:ring-teal mb-1">
+                <span class="font-bold block text-teal-dark text-[11px]">ቴሌብር</span>
+                <span class="text-[9px] text-navy/50">Telebirr</span>
+              </label>
+              <label class="flex flex-col items-center text-center p-2 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
+                <input type="radio" name="web_payment_method" value="cbe" class="text-teal focus:ring-teal mb-1">
+                <span class="font-bold block text-purple-700 text-[11px]">ንግድ ባንክ</span>
+                <span class="text-[9px] text-navy/50">CBE / CBE Birr</span>
+              </label>
+            </div>
           </div>
 
           <div class="bg-fog rounded-md px-4 py-3 mb-5 flex items-center justify-between border border-navy/10">
@@ -1938,7 +1988,16 @@
   })();
 
   // ---- Live prices from backend ----
-  let servicePrices = { 1: 350, 2: 80, 3: 600, 4: 70 };
+  const initialLiveServices = @json($activeServices);
+  let servicePrices = {};
+  initialLiveServices.forEach(svc => {
+    if (svc.id != null && svc.base_price != null) {
+      servicePrices[svc.id] = parseFloat(svc.base_price);
+    }
+  });
+  if (Object.keys(servicePrices).length === 0) {
+    servicePrices = { 1: 350, 2: 80, 3: 600, 4: 70, 8: 50, 6: 3500 };
+  }
   let currency = 'ETB';
 
   async function loadServicePrices(){
@@ -2005,6 +2064,8 @@
       if (servicePrices[id] != null) el.textContent = servicePrices[id].toLocaleString() + ' ' + currency + ' / unit';
     });
   }
+  renderPrices();
+  updateWizardTotal();
 
   // ---- Booking wizard state ----
   const svcMap = { 
@@ -2123,6 +2184,7 @@
     btn.disabled = true;
     const unitPrice = servicePrices[selectedSvcId] || 0;
     const plan = document.querySelector('input[name="sub_plan"]:checked')?.value || 'one_time';
+    const payMethod = document.querySelector('input[name="web_payment_method"]:checked')?.value || 'cash';
     const payload = {
       customer_name: document.getElementById('book-name').value,
       customer_phone: document.getElementById('book-phone').value,
@@ -2134,6 +2196,7 @@
       appointment_date: document.getElementById('book-date').value,
       appointment_time_slot: document.getElementById('book-time-slot').value,
       subscription_plan: plan,
+      payment_method: payMethod,
       notes: (document.getElementById('book-notes').value || 'Website booking') + ' | Property: ' + (document.getElementById('book-property-type')?.value || 'residential'),
       items: [{
         service_id: selectedSvcId,

@@ -127,12 +127,16 @@ class FinanceController extends Controller
     {
         $query = Payment::with([
             'customer:id,customer_code,full_name,phone',
-            'order:id,order_number,total,payment_status',
+            'order:id,order_number,total,payment_status,source',
             'recordedBy:id,name',
         ]);
 
         if ($method = $request->input('payment_method')) {
-            $query->where('payment_method', $method);
+            if ($method === 'cbe' || $method === 'cbe_birr') {
+                $query->whereIn('payment_method', ['cbe', 'cbe_birr']);
+            } else {
+                $query->where('payment_method', $method);
+            }
         }
 
         $payments = $query->latest('payment_date')->paginate(20);
@@ -210,6 +214,28 @@ class FinanceController extends Controller
         $conversionRate = $totalVisits > 0 ? round(($wonVisits / $totalVisits) * 100, 1) : 0;
         $pendingProformas = Proforma::where('status', 'draft')->orWhere('status', 'sent')->count();
 
+        // Payment method breakdown
+        $paymentMethodsBreakdown = (clone $paymentQuery)
+            ->select('payment_method', DB::raw('SUM(amount) as total_amount'), DB::raw('COUNT(*) as count'))
+            ->groupBy('payment_method')
+            ->get()
+            ->map(function ($p) {
+                $labels = [
+                    'cash' => 'ጥሬ ገንዘብ (Cash)',
+                    'telebirr' => 'ቴሌብር (Telebirr)',
+                    'cbe' => 'የኢትዮጵያ ንግድ ባንክ (CBE)',
+                    'cbe_birr' => 'የኢትዮጵያ ንግድ ባንክ (CBE)',
+                    'bank_transfer' => 'የባንክ ዝውውር (Bank Transfer)',
+                    'check' => 'ቼክ (Check)',
+                ];
+                return [
+                    'method' => ($p->payment_method === 'cbe_birr') ? 'cbe' : $p->payment_method,
+                    'label' => $labels[$p->payment_method] ?? ucfirst($p->payment_method),
+                    'total_amount' => (float)$p->total_amount,
+                    'count' => (int)$p->count,
+                ];
+            });
+
         return response()->json([
             'period' => $period,
             'revenue' => $totalRevenue,
@@ -230,6 +256,7 @@ class FinanceController extends Controller
                 'pending_proformas' => $pendingProformas,
             ],
             'expense_breakdown' => $expenseBreakdown,
+            'payment_breakdown' => $paymentMethodsBreakdown,
         ]);
     }
 }

@@ -32,7 +32,7 @@ Meash Cleaning Solution is an enterprise-grade business operating platform and c
 - **Testing**: PHPUnit 11 with SQLite `:memory:` isolated test database.
 - **Frontend**: Blade Views, Vanilla JS PWA with Service Worker + IndexedDB, Tailwind CSS v3 CLI (self-hosted).
 - **Vendor Libraries (Self-Hosted)**: Lucide Icons, Chart.js, Leaflet 1.9.4.
-- **Integrations**: Telegram Bot API, AfroMessage SMS Gateway, Ethiopian Calendar Engine.
+- **Integrations**: Telegram Bot API, Direct Phone SMS Dispatch, Ethiopian Calendar Engine.
 
 ---
 
@@ -114,9 +114,8 @@ docker compose exec app php artisan migrate --force
 | `TELEGRAM_BOT_USERNAME` | Bot handle without @ | `meash_cleaning_solution_bot` |
 | `TELEGRAM_WEBHOOK_SECRET` | Secret token to secure webhooks | Random 32+ character string |
 | `TELEGRAM_MINIAPP_URL` | URL of the Telegram Mini App | `https://shetesfa.github.io/meash-mini-app/` |
-| `SMS_PROVIDER` | Active SMS provider | `afromessage` or `gateway` |
-| `AFROMESSAGE_TOKEN` | API token from AfroMessage | Bearer token for Ethiopian carrier delivery |
-| `SMS_GATEWAY_URL` | Fallback custom SMS HTTP URL | `https://your-sms-gateway.com/send` |
+| `SMS_PROVIDER` | Active SMS notification mode | `direct_phone` or `gateway` |
+| `SMS_GATEWAY_URL` | Optional custom SMS HTTP URL | `https://your-sms-gateway.com/send` |
 | `SMS_SENDER_ID` | Approved SMS alphanumeric sender ID | `MESH` |
 | `MEASH_OWNER_EMAIL` | Initial owner account email | `owner@meash.com` |
 | `MEASH_OWNER_PASSWORD` | Initial owner account password | Strong password for first setup |

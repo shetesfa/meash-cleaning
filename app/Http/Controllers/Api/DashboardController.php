@@ -17,6 +17,7 @@ use App\Services\EthiopianCalendarService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -54,13 +55,72 @@ class DashboardController extends Controller
         $monthExpenses = (float) Expense::where('date', '>=', $monthStart)->sum('amount');
         $monthNet = $monthIncome - $monthExpenses;
 
+        // Channel Source Breakdown & Statistics
+        $channelStats = Order::select('source', DB::raw('count(*) as count'), DB::raw('sum(total) as revenue'))
+            ->groupBy('source')
+            ->get()
+            ->keyBy(function ($item) {
+                return ($item->source === 'walkin') ? 'walk_in' : $item->source;
+            });
+
+        $channelDefinitions = [
+            'website' => ['label_am' => 'ድረ-ገጽ', 'label_en' => 'Website', 'icon' => 'globe', 'color' => 'indigo'],
+            'telegram_miniapp' => ['label_am' => 'ቴሌግራም ሚኒአፕ', 'label_en' => 'Telegram MiniApp', 'icon' => 'smartphone', 'color' => 'sky'],
+            'telegram_bot' => ['label_am' => 'ቴሌግራም ቦት', 'label_en' => 'Telegram Bot', 'icon' => 'bot', 'color' => 'cyan'],
+            'phone' => ['label_am' => 'ስልክ ጥሪ', 'label_en' => 'Phone Call', 'icon' => 'phone', 'color' => 'emerald'],
+            'walk_in' => ['label_am' => 'በአካል የመጣ', 'label_en' => 'Walk-in', 'icon' => 'footprints', 'color' => 'purple'],
+            'internal' => ['label_am' => 'ውስጣዊ / ሪሴፕሽን', 'label_en' => 'Internal', 'icon' => 'building', 'color' => 'slate'],
+            'corporate_contract' => ['label_am' => 'ኮርፖሬት ውል', 'label_en' => 'Corporate', 'icon' => 'briefcase', 'color' => 'amber'],
+        ];
+
+        $channelBreakdown = [];
+        foreach ($channelDefinitions as $key => $meta) {
+            $stat = $channelStats->get($key);
+            $channelBreakdown[$key] = [
+                'source' => $key,
+                'label_am' => $meta['label_am'],
+                'label_en' => $meta['label_en'],
+                'icon' => $meta['icon'],
+                'color' => $meta['color'],
+                'orders_count' => $stat ? (int)$stat->count : 0,
+                'total_revenue' => $stat ? (float)$stat->revenue : 0.0,
+            ];
+        }
+
+        // Payment Method breakdown
+        $paymentMethodStats = Payment::select('payment_method', DB::raw('count(*) as count'), DB::raw('sum(amount) as total_amount'))
+            ->groupBy('payment_method')
+            ->get()
+            ->keyBy(function ($item) {
+                return ($item->payment_method === 'cbe_birr') ? 'cbe' : $item->payment_method;
+            });
+
+        $paymentMethodDefs = [
+            'cash' => ['label_am' => 'ጥሬ ገንዘብ', 'label_en' => 'Cash'],
+            'telebirr' => ['label_am' => 'ቴሌብር', 'label_en' => 'Telebirr'],
+            'cbe' => ['label_am' => 'የኢትዮጵያ ንግድ ባንክ (CBE)', 'label_en' => 'Commercial Bank of Ethiopia'],
+            'bank_transfer' => ['label_am' => 'የባንክ ዝውውር', 'label_en' => 'Bank Transfer'],
+        ];
+
+        $paymentBreakdown = [];
+        foreach ($paymentMethodDefs as $pmKey => $pmMeta) {
+            $pStat = $paymentMethodStats->get($pmKey);
+            $paymentBreakdown[$pmKey] = [
+                'method' => $pmKey,
+                'label_am' => $pmMeta['label_am'],
+                'label_en' => $pmMeta['label_en'],
+                'count' => $pStat ? (int)$pStat->count : 0,
+                'total_amount' => $pStat ? (float)$pStat->total_amount : 0.0,
+            ];
+        }
+
         // Ethiopian date display
         $ethDate = EthiopianCalendarService::toEthiopian($today);
 
         // Recent activity
         $recentOrders = Order::with(['customer:id,full_name,phone,subcity', 'assignedTeam:id,team_name'])
             ->latest()
-            ->limit(5)
+            ->limit(8)
             ->get();
 
         return response()->json([
@@ -84,6 +144,8 @@ class DashboardController extends Controller
                 'expenses' => $monthExpenses,
                 'net_profit' => $monthNet,
             ],
+            'channel_breakdown' => $channelBreakdown,
+            'payment_breakdown' => $paymentBreakdown,
             'recent_orders' => $recentOrders,
         ]);
     }
@@ -92,14 +154,14 @@ class DashboardController extends Controller
     {
         $today = Carbon::today();
 
-        // Actionable queues for reception
-        $newBookings = Order::with(['customer', 'items.service'])
+        // Actionable queues for reception - ordered by latest so incoming Website/MiniApp/Bot bookings appear on top
+        $newBookings = Order::with(['customer', 'items.service', 'assignedTeam'])
             ->whereIn('order_status', ['new', 'pending_confirmation'])
-            ->orderBy('appointment_date')
-            ->limit(10)
+            ->latest('created_at')
+            ->limit(20)
             ->get();
 
-        $todaySchedule = Order::with(['customer', 'assignedTeam', 'items.service'])
+        $todaySchedule = Order::with(['customer', 'assignedTeam', 'items.service', 'appointments'])
             ->whereDate('appointment_date', $today)
             ->orderBy('appointment_time_slot')
             ->get();
@@ -120,6 +182,16 @@ class DashboardController extends Controller
             ->where('status', 'active')
             ->get();
 
+        // Source distribution for pending queue
+        $newBookingsBySource = Order::whereIn('order_status', ['new', 'pending_confirmation'])
+            ->select('source', DB::raw('count(*) as count'))
+            ->groupBy('source')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                $src = ($item->source === 'walkin') ? 'walk_in' : $item->source;
+                return [$src => (int)$item->count];
+            });
+
         $ethDate = EthiopianCalendarService::toEthiopian($today);
 
         return response()->json([
@@ -130,6 +202,7 @@ class DashboardController extends Controller
             'due_followups' => $dueFollowups,
             'urgent_complaints' => $urgentComplaints,
             'active_teams' => $activeTeams,
+            'channel_counts' => $newBookingsBySource,
             'counts' => [
                 'new_bookings' => Order::whereIn('order_status', ['new', 'pending_confirmation'])->count(),
                 'today_jobs' => $todaySchedule->count(),

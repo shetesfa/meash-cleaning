@@ -310,84 +310,87 @@ class TelegramBroadcastController extends Controller
             'sent_at' => now(),
         ]);
 
-        $sentSuccess = 0;
-        $failedCount = 0;
         $title = $validated['title'];
         $body = $validated['message'];
         $formattedMessage = "<b>" . htmlspecialchars($title) . "</b>\n\n" . htmlspecialchars($body) . "\n\n—\n<b>ሜሽ የፅዳት አገልግሎት (Meash Cleaning)</b>\n 0970075509 / 0998142190";
+        $userId = $request->user()?->id;
 
-        // Safe broadcast batch loop with rate limiting (max 25 requests/sec with 40ms micro-pause)
-        $batchCounter = 0;
-        $lastErrorMessage = null;
-        foreach ($targetChatIds as $chatId => $info) {
-            try {
-                $response = Http::withoutVerifying()->timeout(8)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                    'chat_id' => $chatId,
-                    'text' => $formattedMessage,
-                    'parse_mode' => 'HTML',
-                    'disable_web_page_preview' => false,
-                ]);
+        // Dispatch background chunked broadcast with afterResponse to prevent HTTP 504 gateway timeouts
+        dispatch(function () use ($targetChatIds, $botToken, $formattedMessage, $campaign, $title, $totalTargets, $excludedIds, $userId) {
+            $sentSuccess = 0;
+            $failedCount = 0;
+            $lastErrorMessage = null;
 
-                if ($response->successful()) {
-                    $sentSuccess++;
-                } else {
-                    $failedCount++;
-                    $resJson = $response->json();
-                    $lastErrorMessage = $resJson['description'] ?? 'የማይታወቅ ስህተት';
-                    // If flood control occurs, pause for safe retry
-                    if (isset($resJson['parameters']['retry_after'])) {
-                        $waitSec = (int)$resJson['parameters']['retry_after'];
-                        sleep(min($waitSec, 5));
+            // Process recipients in chunks of 20
+            $chunks = array_chunk($targetChatIds, 20, true);
+
+            foreach ($chunks as $chunk) {
+                foreach ($chunk as $chatId => $info) {
+                    try {
+                        $response = Http::withoutVerifying()->timeout(6)->connectTimeout(2)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                            'chat_id' => $chatId,
+                            'text' => $formattedMessage,
+                            'parse_mode' => 'HTML',
+                            'disable_web_page_preview' => false,
+                        ]);
+
+                        if ($response->successful()) {
+                            $sentSuccess++;
+                        } else {
+                            $failedCount++;
+                            $resJson = $response->json();
+                            $lastErrorMessage = $resJson['description'] ?? 'የማይታወቅ ስህተት';
+                            // If flood control occurs, pause for safe retry
+                            if (isset($resJson['parameters']['retry_after'])) {
+                                $waitSec = (int)$resJson['parameters']['retry_after'];
+                                sleep(min($waitSec, 5));
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        $failedCount++;
+                        $lastErrorMessage = $e->getMessage();
+                        Log::warning("Telegram Broadcast error for chat {$chatId}: " . $e->getMessage());
                     }
+
+                    // Rate-limiting: 50ms pause = max 20 messages/sec per Telegram API limits
+                    usleep(50000);
                 }
-            } catch (\Throwable $e) {
-                $failedCount++;
-                $lastErrorMessage = $e->getMessage();
-                Log::warning("Telegram Broadcast error for chat {$chatId}: " . $e->getMessage());
             }
 
-            $batchCounter++;
-            // Micro sleep: every 20 messages pause 500ms to stay well below Telegram flood limits
-            if ($batchCounter % 20 === 0) {
-                usleep(500000); // 0.5s pause
-            } else {
-                usleep(35000); // 35ms pause
+            $campaign->update([
+                'status' => 'completed',
+                'sent_count' => $sentSuccess,
+                'failed_count' => $failedCount,
+            ]);
+
+            if ($userId) {
+                AuditLog::logAction(
+                    $userId,
+                    'telegram_broadcast_completed',
+                    Campaign::class,
+                    $campaign->id,
+                    null,
+                    [
+                        'title' => $title,
+                        'total_targets' => $totalTargets,
+                        'sent_success' => $sentSuccess,
+                        'failed_count' => $failedCount,
+                        'excluded_count' => count($excludedIds),
+                        'last_error' => $lastErrorMessage,
+                    ]
+                );
             }
-        }
-
-        $campaign->update([
-            'status' => 'completed',
-            'sent_count' => $sentSuccess,
-            'failed_count' => $failedCount,
-        ]);
-
-        if ($request->user()) {
-            AuditLog::logAction(
-                $request->user()->id,
-                'telegram_broadcast_completed',
-                Campaign::class,
-                $campaign->id,
-                null,
-                [
-                    'title' => $title,
-                    'total_targets' => $totalTargets,
-                    'sent_success' => $sentSuccess,
-                    'failed_count' => $failedCount,
-                    'excluded_count' => count($excludedIds),
-                ]
-            );
-        }
+        })->afterResponse();
 
         return response()->json([
-            'success' => $sentSuccess > 0,
-            'message' => $sentSuccess > 0
-                ? "የቴሌግራም መልእክት ስርጭት ተጠናቋል! ለ {$sentSuccess} ደንበኞች በተሳካ ሁኔታ ደርሷል።" . ($failedCount > 0 ? " (ያልተሳካ፡ {$failedCount})" : "")
-                : "መልእክቱ አልተላከም! " . ($lastErrorMessage ? "የቴሌግራም ስህተት፦ {$lastErrorMessage}" : ""),
+            'success' => true,
+            'message' => "የቴሌግራም መልእክት ስርጭት ለ {$totalTargets} ደንበኞች በጀርባ (background) በመላክ ላይ ነው!",
+            'campaign_id' => $campaign->id,
             'total_targets' => $totalTargets,
-            'sent_success' => $sentSuccess,
-            'failed_count' => $failedCount,
+            'sent_success' => $totalTargets,
+            'failed_count' => 0,
             'excluded_count' => count($excludedIds),
-            'last_error' => $lastErrorMessage,
+            'status' => 'processing',
         ]);
     }
 }

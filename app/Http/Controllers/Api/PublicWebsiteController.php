@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\Feedback;
 use App\Models\Notification;
@@ -57,6 +58,7 @@ class PublicWebsiteController extends Controller
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time_slot' => 'required|string|max:64',
             'subscription_plan' => 'nullable|string|in:one_time,weekly,biweekly,monthly',
+            'payment_method' => 'nullable|string|in:cash,telebirr,cbe,cbe_birr,bank_transfer',
             'notes' => 'nullable|string',
             'marketing_consent' => 'nullable|boolean',
             'items' => 'required|array|min:1',
@@ -99,6 +101,13 @@ class PublicWebsiteController extends Controller
             $discRates = ['weekly' => 15.0, 'biweekly' => 10.0, 'monthly' => 5.0, 'one_time' => 0.0];
             $discPercent = $discRates[$plan] ?? 0.0;
 
+            $payMethod = ($validated['payment_method'] ?? 'cash') === 'cbe_birr' ? 'cbe' : ($validated['payment_method'] ?? 'cash');
+            $notes = $validated['notes'] ?? '';
+            if (!empty($validated['payment_method'])) {
+                $payLabels = ['cash' => 'ጥሬ ገንዘብ (Cash)', 'telebirr' => 'ቴሌብር (Telebirr)', 'cbe' => 'የኢትዮጵያ ንግድ ባንክ (CBE)', 'bank_transfer' => 'የባንክ ዝውውር (Bank Transfer)'];
+                $notes = ($notes ? $notes . ' | ' : '') . 'የተመረጠ የክፍያ መንገድ: ' . ($payLabels[$payMethod] ?? $payMethod);
+            }
+
             $orderNumber = Order::generateNextNumber();
             $order = Order::create([
                 'order_number' => $orderNumber,
@@ -121,7 +130,7 @@ class PublicWebsiteController extends Controller
                 'landmark' => $validated['landmark'] ?? null,
                 'latitude' => $validated['latitude'] ?? null,
                 'longitude' => $validated['longitude'] ?? null,
-                'notes' => $validated['notes'] ?? null,
+                'notes' => $notes ?: null,
                 'version' => 1,
             ]);
 
@@ -189,6 +198,32 @@ class PublicWebsiteController extends Controller
                 ]);
             }
             $order->save();
+
+            // Create corresponding Appointment record for Dispatch Calendar & Dashboard Metrics
+            [$startTime, $endTime] = $this->parseTimeSlot($order->appointment_time_slot);
+
+            $notesParts = [];
+            if (!empty($order->appointment_time_slot)) {
+                $notesParts[] = "Slot: {$order->appointment_time_slot}";
+            }
+            $location = trim(($order->subcity ? "{$order->subcity}, " : '') . ($order->address ?? ''));
+            if ($location) {
+                $notesParts[] = "Location: {$location}";
+            }
+            if (!empty($order->notes)) {
+                $notesParts[] = "Notes: {$order->notes}";
+            }
+
+            Appointment::create([
+                'order_id' => $order->id,
+                'customer_id' => $customer->id,
+                'cleaning_team_id' => null,
+                'appointment_date' => $order->appointment_date,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'status' => 'scheduled',
+                'notes' => !empty($notesParts) ? implode(' | ', $notesParts) : 'Booked via Website',
+            ]);
 
             // Create notification for Reception & Owner
             Notification::create([
@@ -474,5 +509,32 @@ class PublicWebsiteController extends Controller
             'success' => true,
             'message' => 'መልእክትዎ በተሳካ ሁኔታ ደርሶናል! የሪሴፕሽን ሰራተኞቻችን በጥቂት ደቂቃዎች ውስጥ በስልክ ይደውሉልዎታል::',
         ]);
+    }
+
+    /**
+     * Parse human or standard time slots into start_time and end_time (H:i:s).
+     */
+    private function parseTimeSlot(?string $slot): array
+    {
+        if (!$slot) {
+            return [null, null];
+        }
+        $slotLower = strtolower(trim($slot));
+        if ($slotLower === 'morning') {
+            return ['09:00:00', '12:00:00'];
+        }
+        if ($slotLower === 'afternoon') {
+            return ['14:00:00', '17:00:00'];
+        }
+        if (preg_match('/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/', $slot, $matches)) {
+            $start = date('H:i:s', strtotime($matches[1]));
+            $end = date('H:i:s', strtotime($matches[2]));
+            return [$start, $end];
+        }
+        $parsed = strtotime($slot);
+        if ($parsed !== false) {
+            return [date('H:i:s', $parsed), null];
+        }
+        return [null, null];
     }
 }

@@ -16,6 +16,8 @@ use App\Services\SmsService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -41,19 +43,24 @@ class TelegramController extends Controller
 
   public function getMiniAppHttpsUrl(): ?string
   {
-    $miniAppUrl = config('services.telegram.miniapp_url') ?: env('TELEGRAM_MINIAPP_URL', 'https://shetesfa.github.io/meash-mini-app/');
-    if (!empty($miniAppUrl) && str_starts_with($miniAppUrl, 'https://')) {
+    $miniAppUrl = config('services.telegram.miniapp_url') ?: env('TELEGRAM_MINIAPP_URL');
+    if (!empty($miniAppUrl) && str_starts_with($miniAppUrl, 'https://') && !str_contains($miniAppUrl, 'shetesfa.github.io')) {
       return rtrim($miniAppUrl, '/');
     }
 
     $url = config('app.url');
-    if (!empty($url) && str_starts_with($url, 'https://')) {
+    if (!empty($url)) {
       return rtrim($url, '/') . '/telegram-miniapp';
     }
-    return null;
+    return '/telegram-miniapp';
   }
 
   public function webhook(Request $request): JsonResponse
+  {
+    return $this->handleWebhook($request);
+  }
+
+  public function handleWebhook(Request $request): JsonResponse
   {
     try {
       $secretToken = config('services.telegram.webhook_secret') ?: env('TELEGRAM_WEBHOOK_SECRET');
@@ -63,6 +70,11 @@ class TelegramController extends Controller
           Log::warning('Telegram webhook request rejected: Secret token missing or mismatch.');
           return response()->json(['error' => 'Unauthorized'], 401);
         }
+      }
+
+      $updateId = $request->input('update_id');
+      if ($updateId && !Cache::add("tg_update_{$updateId}", true, now()->addMinutes(10))) {
+        return response()->json(['ok' => true]);
       }
 
       $update = $request->all();
@@ -132,6 +144,13 @@ class TelegramController extends Controller
       ? ['text' => ' ቦታ ያስይዙ | Book Now (1 min)', 'web_app' => ['url' => $httpsMiniApp]]
       : ['text' => ' ቦታ ያስይዙ | Book Now', 'url' => "https://t.me/{$this->botUsername}?start=book"];
 
+    $servicesMap = Service::where('is_active', true)->get()->keyBy('code');
+    $sofaP = number_format((float)($servicesMap->get('sofa')?->base_price ?? 350));
+    $carpetP = number_format((float)($servicesMap->get('carpet')?->base_price ?? 80));
+    $mattressP = number_format((float)($servicesMap->get('mattress')?->base_price ?? 600));
+    $glassP = number_format((float)($servicesMap->get('glass')?->base_price ?? 70));
+    $homeP = number_format((float)($servicesMap->get('residential_deep')?->base_price ?? ($servicesMap->get('residential')?->base_price ?? 2500)));
+
     $allCards = [
       // CARD 1: All-in-One Official Showcase (Shown first on empty search)
       [
@@ -144,11 +163,11 @@ class TelegramController extends Controller
           "<i>(Professional Cleaning. Fresh. Clean. Reliable.)</i>\n\n" .
           "በአዲስ አበባ እና አካባቢው ዓለም አቀፍ ደረጃቸውን በጠበቁ የኢንዱስትሪ ማሽኖች፣ በስቲም (Steam) እና በደህንነታቸው በተረጋገጡ ኬሚካሎች አስተማማኝ የፅዳት አገልግሎት እንሰጣለን::\n\n" .
           " <b>የምንሰጣቸው 6ቱ ዋና ዋና አገልግሎቶች እና ዋጋ:</b>\n" .
-          "1. <b>የሶፋ እጥበት:</b> 350 ብር / ወንበር (ጥልቅ አረፋና ስቲም)\n" .
-          "2. <b>የምንጣፍ እጥበት:</b> 80 ብር / ካሬ ሜትር (ሮተሪ ማሽን)\n" .
-          "3. <b>የፍራሽ ሳኒታይዜሽን:</b> 600 ብር / ፍራሽ (ፀረ-ተባይና አቧራ ትል)\n" .
-          "4. <b>የመስታወት ፅዳት:</b> 70 ብር / ካሬ ሜትር (አያንጸባርቅም)\n" .
-          "5. <b>የመኖሪያ ቤት ጥልቅ ፅዳት:</b> ከ 2,500 ብር ጀምሮ\n" .
+          "1. <b>የሶፋ እጥበት:</b> {$sofaP} ብር / ወንበር (ጥልቅ አረፋና ስቲም)\n" .
+          "2. <b>የምንጣፍ እጥበት:</b> {$carpetP} ብር / ካሬ ሜትር (ሮተሪ ማሽን)\n" .
+          "3. <b>የፍራሽ ሳኒታይዜሽን:</b> {$mattressP} ብር / ፍራሽ (ፀረ-ተባይና አቧራ ትል)\n" .
+          "4. <b>የመስታወት ፅዳት:</b> {$glassP} ብር / ካሬ ሜትር (አያንጸባርቅም)\n" .
+          "5. <b>የመኖሪያ ቤት ጥልቅ ፅዳት:</b> ከ {$homeP} ብር ጀምሮ\n" .
           "6. <b>የቢሮ እና የተቋማት ፅዳት:</b> በኮንትራት ወይም በፕሮፎርማ\n\n" .
           " <b>ማህበራዊ ሚዲያ (Social Media):</b>\n" .
           "• ቴሌግራም ቻናል: @meashdeepcleaning\n" .
@@ -182,24 +201,24 @@ class TelegramController extends Controller
       [
         'id' => 'meash_services_rates',
         'title' => ' 6ቱ አገልግሎቶች እና የዋጋ ዝርዝር | Services & Rates',
-        'description' => 'ሶፋ 350 ብር | ምንጣፍ 80 ብር | ፍራሽ 600 ብር | መስታወት 70 ብር | ቤት 2,500 ብር',
+        'description' => "ሶፋ {$sofaP} ብር | ምንጣፍ {$carpetP} ብር | ፍራሽ {$mattressP} ብር | መስታወት {$glassP} ብር | ቤት {$homeP} ብር",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=240&h=240&fit=crop',
         'message_text' => " <b>የሜሽ የፅዳት አገልግሎቶች እና የዋጋ ዝርዝር</b>\n" .
           "<i>(Meash Cleaning Services & Official Price List)</i>\n\n" .
           "1. <b>የሶፋ እና ወንበር ጥልቅ አረፋ እጥበት</b>\n" .
-          "  • ዋጋ: <b>350 ብር</b> / በአንድ መቀመጫ ወንበር\n" .
+          "  • ዋጋ: <b>{$sofaP} ብር</b> / በአንድ መቀመጫ ወንበር\n" .
           "  • በኃይለኛ ቫኪዩም አቧራ ማውጣት፣ በአረፋ ማጠብ፣ በስቲም ማድረቅ\n\n" .
           "2. <b>የምንጣፍ ማጠብ እና ስቲም እጥበት</b>\n" .
-          "  • ዋጋ: <b>80 ብር</b> / በአንድ ካሬ ሜትር\n" .
+          "  • ዋጋ: <b>{$carpetP} ብር</b> / በአንድ ካሬ ሜትር\n" .
           "  • በሮተሪ ማሽን ማሸት፣ ጀርም ማጥፋትና ወስደን አድርቀን የማምጣት አማራጭ\n\n" .
           "3. <b>የፍራሽ ሳኒታይዜሽን እና እጥበት</b>\n" .
-          "  • ዋጋ: <b>600 ብር</b> / በአንድ ፍራሽ\n" .
+          "  • ዋጋ: <b>{$mattressP} ብር</b> / በአንድ ፍራሽ\n" .
           "  • ፀረ-አለርጂ፣ የአቧራ ትሎችን በሙቅ ስቲም 99.9% ማጥፋት\n\n" .
           "4. <b>የመስታወት እና የፊት ለፊት ህንፃ ፅዳት</b>\n" .
-          "  • ዋጋ: <b>70 ብር</b> / በአንድ ካሬ ሜትር\n" .
+          "  • ዋጋ: <b>{$glassP} ብር</b> / በአንድ ካሬ ሜትር\n" .
           "  • ምንም አይነት የውሃ ነጠብጣብ የሌለው የሚያንጸባርቅ እጥበት\n\n" .
           "5. <b>የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት</b>\n" .
-          "  • ዋጋ: <b>ከ 2,500 ብር</b> ጀምሮ\n" .
+          "  • ዋጋ: <b>ከ {$homeP} ብር</b> ጀምሮ\n" .
           "  • ከግንባታ በኋላ፣ የኩሽና ቅባት፣ ሽንት ቤት ሳኒታይዜሽንና ወለል ፖሊሽ\n\n" .
           "6. <b>የቢሮ እና የተቋማት ፅዳት</b>\n" .
           "  • በስምምነት እና በወርሃዊ ኮንትራት (ከህጋዊ ደረሰኝ ጋር)\n\n" .
@@ -709,39 +728,36 @@ class TelegramController extends Controller
       $name = trim(($from['first_name'] ?? '') . ' ' . ($from['last_name'] ?? '')) ?: 'ውድ ደንበኛችን';
     }
 
-    // Detect Service
-    $lowerText = mb_strtolower($text, 'UTF-8');
-    $serviceCode = 'sofa';
-    $serviceNameAm = 'የሶፋ ጥልቅ አረፋ እጥበት';
-    $unitPrice = 350;
+    // Detect Service dynamically from database
+    $activeServices = Service::where('is_active', true)->get();
+    $matchedService = $activeServices->firstWhere('code', 'sofa') ?: $activeServices->first();
     $qty = 5;
 
+    $lowerText = mb_strtolower($text, 'UTF-8');
+
     if (str_contains($lowerText, 'ምንጣፍ') || str_contains($lowerText, 'carpet')) {
-      $serviceCode = 'carpet';
-      $serviceNameAm = 'የምንጣፍ ማጠብና ስቲም እጥበት';
-      $unitPrice = 80;
-      $qty = 20;
+      $found = $activeServices->firstWhere('code', 'carpet');
+      if ($found) { $matchedService = $found; $qty = 20; }
     } elseif (str_contains($lowerText, 'ፍራሽ') || str_contains($lowerText, 'mattress')) {
-      $serviceCode = 'mattress';
-      $serviceNameAm = 'የፍራሽ ሳኒታይዜሽን';
-      $unitPrice = 600;
-      $qty = 2;
+      $found = $activeServices->firstWhere('code', 'mattress');
+      if ($found) { $matchedService = $found; $qty = 2; }
     } elseif (str_contains($lowerText, 'መስታወት') || str_contains($lowerText, 'glass')) {
-      $serviceCode = 'glass';
-      $serviceNameAm = 'የመስታወት ፅዳት';
-      $unitPrice = 70;
-      $qty = 15;
-    } elseif (str_contains($lowerText, 'ቤት') || str_contains($lowerText, 'home')) {
-      $serviceCode = 'residential_deep';
-      $serviceNameAm = 'የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት';
-      $unitPrice = 2500;
-      $qty = 1;
-    } elseif (str_contains($lowerText, 'ቢሮ') || str_contains($lowerText, 'office')) {
-      $serviceCode = 'commercial';
-      $serviceNameAm = 'የቢሮ እና የተቋማት ፅዳት';
-      $unitPrice = 3500;
-      $qty = 1;
+      $found = $activeServices->firstWhere('code', 'glass');
+      if ($found) { $matchedService = $found; $qty = 15; }
+    } elseif (str_contains($lowerText, 'ቤት') || str_contains($lowerText, 'መኖሪያ') || str_contains($lowerText, 'home') || str_contains($lowerText, 'residential')) {
+      $found = $activeServices->firstWhere('code', 'residential_deep') ?: $activeServices->firstWhere('code', 'residential');
+      if ($found) { $matchedService = $found; $qty = 1; }
+    } elseif (str_contains($lowerText, 'ቢሮ') || str_contains($lowerText, 'ተቋም') || str_contains($lowerText, 'office') || str_contains($lowerText, 'commercial')) {
+      $found = $activeServices->firstWhere('code', 'commercial') ?: $activeServices->firstWhere('code', 'office');
+      if ($found) { $matchedService = $found; $qty = 1; }
+    } elseif (str_contains($lowerText, 'ሶፋ') || str_contains($lowerText, 'sofa') || str_contains($lowerText, 'ወንበር')) {
+      $found = $activeServices->firstWhere('code', 'sofa');
+      if ($found) { $matchedService = $found; $qty = 5; }
     }
+
+    $serviceCode = $matchedService?->code ?? 'sofa';
+    $serviceNameAm = $matchedService?->name_am ?: ($matchedService?->name_en ?: 'የሶፋ ጥልቅ አረፋ እጥበት');
+    $unitPrice = (float)($matchedService?->base_price ?? 350.0);
 
     // Subcity / address detection
     $subcities = [
@@ -811,7 +827,8 @@ class TelegramController extends Controller
       'version' => 1,
     ]);
 
-    $service = Service::where('code', $serviceCode)->first();
+    $service = $matchedService ?: Service::where('code', $serviceCode)->first();
+    $unitPrice = $service ? (float)$service->base_price : $unitPrice;
     OrderItem::create([
       'order_id' => $order->id,
       'service_id' => $service?->id,
@@ -829,12 +846,8 @@ class TelegramController extends Controller
       'notes' => 'Direct Telegram booking',
     ]);
 
-    // Send instant booking confirmation SMS to customer's mobile phone
-    try {
-      SmsService::sendBookingConfirmation($order);
-    } catch (\Throwable $th) {
-      Log::warning('Direct SMS confirmation failed: ' . $th->getMessage());
-    }
+    // Dispatch non-critical side effects (SMS, Admin alert) after response to guarantee sub-2s response
+    $this->dispatchPostBookingSideEffects($order, 'telegram_direct');
 
     // Send instant Telegram confirmation
     $totalEst = $order->fresh()->total_amount;
@@ -1192,6 +1205,7 @@ class TelegramController extends Controller
       'appointment_time_slot' => 'nullable|string',
       'subscription_plan' => 'nullable|string|in:one_time,weekly,biweekly,monthly',
       'telegram_user_id' => 'nullable|string',
+      'init_data' => 'nullable|string',
       'notes' => 'nullable|string',
       'items' => 'required|array|min:1',
       'items.*.service_id' => 'nullable|exists:services,id',
@@ -1200,6 +1214,30 @@ class TelegramController extends Controller
       'items.*.quantity' => 'required|numeric|min:0.1',
       'items.*.unit_price' => 'required|numeric|min:0',
     ]);
+
+    // Cryptographic validation of Telegram WebApp initData
+    $initData = $request->input('init_data');
+    $enforceInitData = filter_var(env('TELEGRAM_ENFORCE_INITDATA', false), FILTER_VALIDATE_BOOLEAN);
+
+    if (!empty($initData)) {
+      $extractedUser = null;
+      $isValid = $this->verifyTelegramInitData((string)$initData, $this->botToken, $extractedUser);
+      if (!$isValid) {
+        if ($enforceInitData) {
+          throw ValidationException::withMessages([
+            'init_data' => ['Invalid or untrusted Telegram WebApp signature.'],
+          ]);
+        }
+        Log::warning('Telegram MiniApp initData signature mismatch.');
+      } elseif (!empty($extractedUser['id'])) {
+        // Authoritative override of telegram_user_id from cryptographically verified Telegram payload
+        $validated['telegram_user_id'] = (string)$extractedUser['id'];
+      }
+    } elseif ($enforceInitData) {
+      throw ValidationException::withMessages([
+        'init_data' => ['Telegram WebApp initData is strictly required for booking.'],
+      ]);
+    }
 
     // Resolve every item before creating records. The browser never controls a price.
     $catalogServices = [];
@@ -1217,101 +1255,140 @@ class TelegramController extends Controller
     $discRates = ['weekly' => 15.0, 'biweekly' => 10.0, 'monthly' => 5.0, 'one_time' => 0.0];
     $discPercent = $discRates[$plan] ?? 0.0;
 
-    // Find or create customer
-    $customer = Customer::where('phone', $validated['customer_phone'])->first();
-    if (!$customer) {
-      $customer = Customer::create([
-        'customer_code' => Customer::generateNextCode(),
-        'full_name' => $validated['customer_name'],
-        'phone' => $validated['customer_phone'],
+    $order = DB::transaction(function () use ($validated, $catalogServices, $plan, $discPercent) {
+      // Find or create customer
+      $customer = Customer::where('phone', $validated['customer_phone'])->first();
+      if (!$customer) {
+        $customer = Customer::create([
+          'customer_code' => Customer::generateNextCode(),
+          'full_name' => $validated['customer_name'],
+          'phone' => $validated['customer_phone'],
+          'address' => $validated['address'],
+          'subcity' => $validated['subcity'] ?? null,
+          'latitude' => $validated['latitude'] ?? null,
+          'longitude' => $validated['longitude'] ?? null,
+          'telegram_user_id' => $validated['telegram_user_id'] ?? null,
+          'marketing_consent' => true,
+          'consent_timestamp' => now(),
+        ]);
+      } else {
+        if (!empty($validated['latitude']) && !empty($validated['longitude'])) {
+          $customer->update([
+            'latitude' => $validated['latitude'],
+            'longitude' => $validated['longitude'],
+          ]);
+        }
+      }
+
+      $orderNumber = Order::generateNextNumber();
+      $order = Order::create([
+        'order_number' => $orderNumber,
+        'customer_id' => $customer->id,
+        'source' => 'telegram_miniapp',
+        'subscription_plan' => $plan,
+        'order_status' => 'new',
+        'payment_status' => 'unpaid',
+        'subtotal' => 0,
+        'discount' => 0,
+        'subscription_discount' => 0,
+        'tax' => 0,
+        'total' => 0,
+        'appointment_date' => $validated['appointment_date'],
+        'appointment_time_slot' => $validated['appointment_time_slot'] ?? 'morning',
         'address' => $validated['address'],
-        'subcity' => $validated['subcity'] ?? null,
+        'subcity' => $validated['subcity'] ?? $customer->subcity,
         'latitude' => $validated['latitude'] ?? null,
         'longitude' => $validated['longitude'] ?? null,
-        'telegram_user_id' => $validated['telegram_user_id'] ?? null,
-        'marketing_consent' => true,
-        'consent_timestamp' => now(),
+        'notes' => $validated['notes'] ?? 'Booked via Telegram Mini App',
+        'version' => 1,
       ]);
-    }
 
-    $orderNumber = Order::generateNextNumber();
-    $order = Order::create([
-      'order_number' => $orderNumber,
-      'customer_id' => $customer->id,
-      'source' => 'telegram_miniapp',
-      'subscription_plan' => $plan,
-      'order_status' => 'new',
-      'payment_status' => 'unpaid',
-      'subtotal' => 0,
-      'discount' => 0,
-      'subscription_discount' => 0,
-      'tax' => 0,
-      'total' => 0,
-      'appointment_date' => $validated['appointment_date'],
-      'appointment_time_slot' => $validated['appointment_time_slot'] ?? 'morning',
-      'address' => $validated['address'],
-      'subcity' => $validated['subcity'] ?? $customer->subcity,
-      'latitude' => $validated['latitude'] ?? null,
-      'longitude' => $validated['longitude'] ?? null,
-      'notes' => $validated['notes'] ?? 'Booked via Telegram Mini App',
-      'version' => 1,
-    ]);
+      $subtotalCalc = 0;
+      $itemsSummary = [];
+      foreach ($validated['items'] as $index => $it) {
+        $service = $catalogServices[$index];
+        $unitPrice = (float)$service->base_price;
+        $itemName = $service->name_am ?: $service->name_en;
+        $sub = round((float)$it['quantity'] * $unitPrice, 2);
+        $subtotalCalc += $sub;
+        $itemsSummary[] = "{$itemName} (x{$it['quantity']})";
 
-    $subtotalCalc = 0;
-    $itemsSummary = [];
-    foreach ($validated['items'] as $index => $it) {
-      $service = $catalogServices[$index];
-      $unitPrice = (float)$service->base_price;
-      $itemName = $service->name_am ?: $service->name_en;
-      $sub = round((float)$it['quantity'] * $unitPrice, 2);
-      $subtotalCalc += $sub;
-      $itemsSummary[] = "{$itemName} (x{$it['quantity']})";
+        OrderItem::create([
+          'order_id' => $order->id,
+          'service_id' => $service->id,
+          'item_name' => $itemName,
+          'quantity' => $it['quantity'],
+          'unit_price' => $unitPrice,
+          'subtotal' => $sub,
+        ]);
+      }
 
-      OrderItem::create([
+      // Update order subtotal and total
+      $order->subtotal = $subtotalCalc;
+      $order->total = $subtotalCalc;
+
+      // Apply recurring subscription discount if chosen
+      if ($discPercent > 0) {
+        $subDiscount = round(($subtotalCalc * $discPercent) / 100.0, 2);
+        $order->subscription_discount = $subDiscount;
+        $order->discount = (float)$order->discount + $subDiscount;
+        $order->total = max(0, $subtotalCalc - (float)$order->discount);
+
+        $startDate = Carbon::parse($order->appointment_date);
+        $nextDate = match ($plan) {
+          'weekly' => $startDate->copy()->addWeek(),
+          'biweekly' => $startDate->copy()->addWeeks(2),
+          'monthly' => $startDate->copy()->addMonth(),
+          default => null,
+        };
+
+        Subscription::create([
+          'customer_id' => $customer->id,
+          'plan_type' => $plan,
+          'discount_percent' => $discPercent,
+          'service_summary' => implode(', ', $itemsSummary),
+          'base_price' => $subtotalCalc,
+          'discounted_price' => max(0, $subtotalCalc - $subDiscount),
+          'preferred_day' => $startDate->format('l'),
+          'preferred_time_slot' => $order->appointment_time_slot,
+          'start_date' => $startDate,
+          'next_service_date' => $nextDate,
+          'status' => 'active',
+          'notes' => "Auto-created from Telegram Mini App booking #{$orderNumber}",
+        ]);
+      }
+      $order->save();
+
+      // Create corresponding Appointment record for Reception Dispatch Calendar and Metrics
+      [$startTime, $endTime] = $this->parseTimeSlot($order->appointment_time_slot);
+
+      $notesParts = [];
+      if (!empty($order->appointment_time_slot)) {
+        $notesParts[] = "Slot: {$order->appointment_time_slot}";
+      }
+      $location = trim(($order->subcity ? "{$order->subcity}, " : '') . ($order->address ?? ''));
+      if ($location) {
+        $notesParts[] = "Location: {$location}";
+      }
+      if (!empty($order->notes) && $order->notes !== 'Booked via Telegram Mini App') {
+        $notesParts[] = "Notes: {$order->notes}";
+      } else {
+        $notesParts[] = "Source: Telegram MiniApp";
+      }
+
+      Appointment::create([
         'order_id' => $order->id,
-        'service_id' => $service->id,
-        'item_name' => $itemName,
-        'quantity' => $it['quantity'],
-        'unit_price' => $unitPrice,
-        'subtotal' => $sub,
-      ]);
-    }
-
-    // Update order subtotal and total
-    $order->subtotal = $subtotalCalc;
-    $order->total = $subtotalCalc;
-
-    // Apply recurring subscription discount if chosen
-    if ($discPercent > 0) {
-      $subDiscount = round(($subtotalCalc * $discPercent) / 100.0, 2);
-      $order->subscription_discount = $subDiscount;
-      $order->discount = (float)$order->discount + $subDiscount;
-      $order->total = max(0, $subtotalCalc - (float)$order->discount);
-
-      $startDate = Carbon::parse($order->appointment_date);
-      $nextDate = match ($plan) {
-        'weekly' => $startDate->copy()->addWeek(),
-        'biweekly' => $startDate->copy()->addWeeks(2),
-        'monthly' => $startDate->copy()->addMonth(),
-        default => null,
-      };
-
-      Subscription::create([
         'customer_id' => $customer->id,
-        'plan_type' => $plan,
-        'discount_percent' => $discPercent,
-        'service_summary' => implode(', ', $itemsSummary),
-        'base_price' => $subtotalCalc,
-        'discounted_price' => max(0, $subtotalCalc - $subDiscount),
-        'preferred_day' => $startDate->format('l'),
-        'preferred_time_slot' => $order->appointment_time_slot,
-        'start_date' => $startDate,
-        'next_service_date' => $nextDate,
-        'status' => 'active',
-        'notes' => "Auto-created from Telegram Mini App booking #{$orderNumber}",
+        'cleaning_team_id' => null,
+        'appointment_date' => $order->appointment_date,
+        'start_time' => $startTime,
+        'end_time' => $endTime,
+        'status' => 'scheduled',
+        'notes' => implode(' | ', $notesParts),
       ]);
-    }
-    $order->save();
+
+      return $order;
+    });
 
     // Send instant notification in Amharic to customer if booked through Telegram
     if (!empty($validated['telegram_user_id'])) {
@@ -1329,12 +1406,8 @@ class TelegramController extends Controller
       ]);
     }
 
-    // Send instant SMS confirmation to customer's mobile phone
-    try {
-      SmsService::sendBookingConfirmation($order);
-    } catch (\Throwable $th) {
-      Log::warning('MiniApp SMS confirmation failed: ' . $th->getMessage());
-    }
+    // Dispatch non-critical side effects (SMS, Admin alert) after response to guarantee sub-2s response
+    $this->dispatchPostBookingSideEffects($order, 'telegram_miniapp_api');
 
     return response()->json([
       'message' => 'ቀጠሮዎ በተሳካ ሁኔታ ተመዝግቧል! የሪሴፕሽን ሰራተኞቻችን በቅርቡ ያረጋግጡልዎታል::',
@@ -1364,6 +1437,89 @@ class TelegramController extends Controller
     return null;
   }
 
+  /**
+   * Alias for miniAppBooking endpoint
+   */
+  public function miniAppBook(Request $request): JsonResponse
+  {
+    return $this->miniAppBooking($request);
+  }
+
+  /**
+   * Cryptographically verifies Telegram WebApp initData using HMAC-SHA256
+   * as specified in the official Telegram Bot API WebApp documentation:
+   * secret_key = HMAC_SHA256(key = "WebAppData", data = bot_token)
+   * data_check_string = key=value pairs sorted alphabetically, joined with "\n"
+   */
+  public function verifyTelegramInitData(string $initData, string $botToken, ?array &$extractedUser = null): bool
+  {
+    if (empty($initData) || empty($botToken)) {
+      return false;
+    }
+
+    parse_str($initData, $params);
+    if (empty($params['hash'])) {
+      return false;
+    }
+
+    $hash = $params['hash'];
+    unset($params['hash']);
+
+    // Sort parameters alphabetically by key
+    ksort($params);
+
+    // Build data-check-string (key=value separated by \n)
+    $dataCheckArr = [];
+    foreach ($params as $k => $v) {
+      $dataCheckArr[] = "{$k}={$v}";
+    }
+    $dataCheckString = implode("\n", $dataCheckArr);
+
+    // HMAC-SHA256 of botToken with key "WebAppData"
+    $secretKey = hash_hmac('sha256', $botToken, 'WebAppData', true);
+    $calculatedHash = hash_hmac('sha256', $dataCheckString, $secretKey);
+
+    if (!hash_equals($calculatedHash, $hash)) {
+      return false;
+    }
+
+    if (!empty($params['user'])) {
+      $userObj = json_decode($params['user'], true);
+      if (is_array($userObj)) {
+        $extractedUser = $userObj;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Parse human or standard time slots into start_time and end_time (H:i:s).
+   */
+  private function parseTimeSlot(?string $slot): array
+  {
+    if (!$slot) {
+      return [null, null];
+    }
+    $slotLower = strtolower(trim($slot));
+    if ($slotLower === 'morning') {
+      return ['09:00:00', '12:00:00'];
+    }
+    if ($slotLower === 'afternoon') {
+      return ['14:00:00', '17:00:00'];
+    }
+    if (preg_match('/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/', $slot, $matches)) {
+      $start = date('H:i:s', strtotime($matches[1]));
+      $end = date('H:i:s', strtotime($matches[2]));
+      return [$start, $end];
+    }
+    $parsed = strtotime($slot);
+    if ($parsed !== false) {
+      return [date('H:i:s', $parsed), null];
+    }
+    return [null, null];
+  }
+
   private function telegramApi(string $method, array $params = []): array
   {
     if (empty($this->botToken)) {
@@ -1373,33 +1529,69 @@ class TelegramController extends Controller
 
     $url = "https://api.telegram.org/bot{$this->botToken}/{$method}";
     try {
-      $ch = curl_init($url);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($ch, CURLOPT_POST, true);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
-      curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-      curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-      curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-      curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-      $res = curl_exec($ch);
-      $err = curl_error($ch);
-      curl_close($ch);
+      $response = Http::withoutVerifying()
+        ->timeout(4)
+        ->connectTimeout(2)
+        ->post($url, $params);
 
-      if ($err) {
-        Log::error("Telegram API cURL error [{$method}]: {$err}");
-        return ['ok' => false, 'error' => $err];
-      }
-
-      $data = json_decode($res, true);
+      $data = $response->json();
       if (!($data['ok'] ?? false)) {
-        Log::warning("Telegram API non-ok [{$method}]: " . $res);
+        Log::warning("Telegram API non-ok [{$method}]: " . $response->body());
       }
       return $data ?? [];
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
       Log::error("Telegram API exception [{$method}]: " . $e->getMessage());
       return ['ok' => false, 'error' => $e->getMessage()];
     }
+  }
+
+  /**
+   * Safely dispatch non-critical post-booking side effects (SMS, Admin alert, audit logs)
+   * in the background after the HTTP 200 response returns to the client/Telegram in <2 seconds.
+   */
+  private function dispatchPostBookingSideEffects(Order $order, string $channel = 'telegram'): void
+  {
+    dispatch(function () use ($order, $channel) {
+      // 1. Customer confirmation SMS via SmsService
+      try {
+        SmsService::sendBookingConfirmation($order);
+      } catch (\Throwable $th) {
+        Log::warning("[{$channel}] Post-booking SMS failed safely: " . $th->getMessage());
+      }
+
+      // 2. Admin group / reception alert on Telegram
+      try {
+        $adminChatId = null;
+        if (class_exists(WebsiteSetting::class)) {
+          $adminChatId = WebsiteSetting::getVal('telegram_admin_chat_id');
+        }
+        $adminChatId = $adminChatId ?: (config('services.telegram.admin_chat_id') ?: env('TELEGRAM_ADMIN_CHAT_ID'));
+
+        if (!empty($adminChatId) && !empty($this->botToken)) {
+          $order->loadMissing(['customer', 'items']);
+          $custName = $order->customer ? $order->customer->full_name : 'ደንበኛ';
+          $custPhone = $order->customer ? $order->customer->phone : 'ያልታወቀ';
+          $total = number_format((float)($order->total_amount ?: $order->total), 2);
+          $adminText = "🔔 <b>አዲስ የፅዳት ቀጠሮ ተመዝግቧል!</b>\n\n" .
+            "📦 <b>ትዕዛዝ #:</b> <code>{$order->order_number}</code>\n" .
+            "👤 <b>ደንበኛ:</b> {$custName}\n" .
+            "📞 <b>ስልክ:</b> <code>{$custPhone}</code>\n" .
+            "📍 <b>አድራሻ:</b> {$order->address} " . ($order->subcity ? "({$order->subcity})" : "") . "\n" .
+            "📅 <b>ቀን:</b> " . ($order->appointment_date ? (is_string($order->appointment_date) ? $order->appointment_date : $order->appointment_date->format('Y-m-d')) : 'ያልተገለጸ') . " ({$order->appointment_time_slot})\n" .
+            "💰 <b>ጠቅላላ ዋጋ:</b> {$total} ብር\n" .
+            "🌐 <b>ሰርጥ:</b> {$order->source}\n\n" .
+            "እባክዎ በሪሴፕሽን ዳሽቦርድ ያረጋግጡ!";
+
+          $this->telegramApi('sendMessage', [
+            'chat_id' => $adminChatId,
+            'text' => $adminText,
+            'parse_mode' => 'HTML',
+          ]);
+        }
+      } catch (\Throwable $th) {
+        Log::warning("[{$channel}] Post-booking admin notification failed safely: " . $th->getMessage());
+      }
+    })->afterResponse();
   }
 
   /**
@@ -2151,6 +2343,7 @@ class TelegramController extends Controller
 
     // 3. Order Items
     $service = Service::where('code', $svcCode)->first();
+    $unitPrice = $service ? (float)$service->base_price : (float)($payload['unit_price'] ?? 0);
     OrderItem::create([
       'order_id' => $order->id,
       'service_id' => $service?->id,
@@ -2173,12 +2366,8 @@ class TelegramController extends Controller
       'notes' => 'Booked via interactive Telegram Bot wizard',
     ]);
 
-    // 5. Send SMS
-    try {
-      SmsService::sendBookingConfirmation($order);
-    } catch (\Throwable $th) {
-      Log::warning('SMS confirmation failed: ' . $th->getMessage());
-    }
+    // 5. Dispatch non-critical side effects (SMS, Admin alert) after response to guarantee sub-2s response
+    $this->dispatchPostBookingSideEffects($order, 'telegram_bot_wizard');
 
     // 6. Send Rich Confirmation Card
     $totalEst = (float)$order->total;
@@ -2254,6 +2443,12 @@ class TelegramController extends Controller
     $apptDate = !empty($data['appointment_date']) ? $data['appointment_date'] : now()->addDay()->toDateString();
     $timeSlot = trim($data['appointment_time_slot'] ?? 'ጠዋት (ከ 3:00 - 6:00)');
     $notes = trim($data['notes'] ?? 'በሜሽ ቴሌግራም ሚኒ አፕ የተመዘገበ');
+    if (!empty($data['payment_method'])) {
+      $rawPayMethod = $data['payment_method'];
+      $payMethod = ($rawPayMethod === 'cbe_birr') ? 'cbe' : $rawPayMethod;
+      $payLabels = ['cash' => 'ጥሬ ገንዘብ (Cash)', 'telebirr' => 'ቴሌብር (Telebirr)', 'cbe' => 'የኢትዮጵያ ንግድ ባንክ (CBE)', 'bank_transfer' => 'የባንክ ዝውውር (Bank Transfer)'];
+      $notes = ($notes ? $notes . ' | ' : '') . 'የተመረጠ የክፍያ መንገድ: ' . ($payLabels[$payMethod] ?? $payMethod);
+    }
     $items = $data['items'] ?? [];
 
     if (empty($phone)) {
@@ -2375,12 +2570,8 @@ class TelegramController extends Controller
       'notes' => 'Booked via Meash Telegram Mini App',
     ]);
 
-    // 5. Send SMS
-    try {
-      SmsService::sendBookingConfirmation($order);
-    } catch (\Throwable $th) {
-      Log::warning('SMS confirmation failed: ' . $th->getMessage());
-    }
+    // 5. Dispatch non-critical side effects (SMS, Admin alert) after response to guarantee sub-2s response
+    $this->dispatchPostBookingSideEffects($order, 'telegram_miniapp_web_app');
 
     // 6. Send Rich Confirmation Card
     $totalEst = $calculatedTotal;

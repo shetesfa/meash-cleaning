@@ -24,8 +24,12 @@ Homestead.yaml
 Thumbs.db
 *.zip
 *.sql
+*.sql.gz
 *.sqlite
 /database/*.sqlite
 /database/*.db
 /database/*.sql
+/database/*.sql.gz
+database/*.sql
+database/*.sql.gz
 cloudflared.exe

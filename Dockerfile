@@ -1,7 +1,9 @@
-FROM php:8.2-apache
+FROM php:8.2-fpm
 
-# Install system dependencies & PHP extensions
+# 1. Install System Dependencies & Tools
 RUN apt-get update && apt-get install -y \
+    nginx \
+    supervisor \
     git \
     curl \
     ca-certificates \
@@ -12,36 +14,49 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     libpq-dev \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip opcache \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# 2. Install Node.js 20.x & npm for Vite asset compilation
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy Apache configuration
-COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
-
-# Install Composer
+# 3. Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
+# 4. Copy Server Configurations (Nginx, PHP-FPM, OPcache, Supervisor)
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY docker/www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY docker/nginx.conf /etc/nginx/sites-available/default
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# 5. Set Working Directory
 WORKDIR /var/www/html
 
-# Copy application files
+# 6. Copy Dependency Manifests First (Leverages Docker Layer Caching)
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction
+
+COPY package*.json ./
+RUN npm ci
+
+# 7. Copy Application Source Code
 COPY . /var/www/html
 
-# Install Composer dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# 8. Finalize Composer Autoloader and Compile Vite Frontend Assets
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative \
+    && npm run build \
+    && rm -rf node_modules \
+    && rm -rf ~/.npm
 
-# Set proper permissions for storage and bootstrap cache
+# 9. Set Permissions for Storage and Cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod +x /var/www/html/docker/entrypoint.sh
 
-# Make entrypoint executable
-RUN chmod +x /var/www/html/docker/entrypoint.sh
-
-# Expose HTTP port
+# 10. Expose HTTP Port
 EXPOSE 80
 
-# Run entrypoint script
+# 11. Run High-Performance Production Entrypoint
 ENTRYPOINT ["/var/www/html/docker/entrypoint.sh"]

@@ -10,6 +10,7 @@ use App\Models\Followup;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\Service;
 use App\Services\EthiopianCalendarService;
 use App\Services\SmsService;
 use Carbon\Carbon;
@@ -58,6 +59,14 @@ class OrderController extends Controller
         // Filters
         if ($status = $request->input('status')) {
             $query->where('order_status', $status);
+        }
+
+        if ($source = $request->input('source')) {
+            if ($source === 'walk_in' || $source === 'walkin') {
+                $query->whereIn('source', ['walk_in', 'walkin']);
+            } else {
+                $query->where('source', $source);
+            }
         }
 
         if ($paymentStatus = $request->input('payment_status')) {
@@ -147,8 +156,8 @@ class OrderController extends Controller
             'customer_subcity' => 'nullable|string|max:64',
             
             // Order details
-            'source' => 'nullable|string|in:website,telegram_bot,telegram_inline,telegram_miniapp,phone,walkin,corporate_contract',
-            'appointment_date' => 'required|date',
+            'source' => 'nullable|string|in:website,telegram_bot,telegram_inline,telegram_miniapp,phone,walkin,walk_in,internal,corporate_contract',
+            'appointment_date' => 'nullable|date',
             'appointment_time_slot' => 'nullable|string|max:64',
             'address' => 'required|string',
             'subcity' => 'nullable|string|max:64',
@@ -160,17 +169,21 @@ class OrderController extends Controller
             'notes' => 'nullable|string',
             'discount' => 'nullable|numeric|min:0',
             'assigned_team_id' => 'nullable|exists:cleaning_teams,id',
+            'allow_price_override' => 'nullable|boolean',
+            'price_override' => 'nullable|boolean',
             
             // MULTI-ITEM SUPPORT (Array of items)
             'items' => 'required|array|min:1',
-            'items.*.service_id' => 'nullable|exists:services,id',
-            'items.*.item_name' => 'required|string',
+            'items.*.service_id' => 'required|exists:services,id',
+            'items.*.item_name' => 'nullable|string',
             'items.*.quantity' => 'required|numeric|min:0.1',
-            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.unit_price' => 'nullable|numeric|min:0',
+            'items.*.price_override' => 'nullable|boolean',
             'items.*.notes' => 'nullable|string',
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
+            $user = $request->user();
             // 1. Resolve or create customer
             if (!empty($validated['customer_id'])) {
                 $customer = Customer::findOrFail($validated['customer_id']);
@@ -197,7 +210,7 @@ class OrderController extends Controller
                 'customer_id' => $customer->id,
                 'created_by_user_id' => $request->user()?->id,
                 'assigned_team_id' => $validated['assigned_team_id'] ?? null,
-                'source' => $validated['source'] ?? 'phone',
+                'source' => in_array($validated['source'] ?? '', ['walkin', 'walk_in']) ? 'walk_in' : ($validated['source'] ?? 'phone'),
                 'order_status' => $status,
                 'payment_status' => 'unpaid',
                 'subtotal' => 0,
@@ -224,29 +237,90 @@ class OrderController extends Controller
                 ]);
             }
 
-            // 3. Create Order Items (Calculates subtotals & order totals automatically)
+            // 3. Create Order Items (Authoritative service lookup with owner override check)
+            $isOwner = $user && method_exists($user, 'isOwner') && $user->isOwner();
+            $globalOverride = $request->boolean('allow_price_override') || $request->boolean('price_override');
+
             foreach ($validated['items'] as $itemData) {
-                $subtotal = (float)$itemData['quantity'] * (float)$itemData['unit_price'];
-                OrderItem::create([
+                $service = Service::whereKey($itemData['service_id'])->where('is_active', true)->firstOrFail();
+                $authoritativeUnitPrice = (float)$service->base_price;
+                $clientUnitPrice = isset($itemData['unit_price']) ? (float)$itemData['unit_price'] : $authoritativeUnitPrice;
+
+                $itemOverride = !empty($itemData['price_override']);
+                $hasOverrideFlag = $globalOverride || $itemOverride;
+
+                $finalUnitPrice = $authoritativeUnitPrice;
+                $isPriceOverridden = false;
+
+                if ($isOwner && $hasOverrideFlag && abs($clientUnitPrice - $authoritativeUnitPrice) > 0.001) {
+                    $finalUnitPrice = $clientUnitPrice;
+                    $isPriceOverridden = true;
+                }
+
+                $subtotal = round((float)$itemData['quantity'] * $finalUnitPrice, 2);
+                $itemName = !empty($itemData['item_name']) ? $itemData['item_name'] : ($service->name_am ?: $service->name_en);
+
+                $orderItem = OrderItem::create([
                     'order_id' => $order->id,
-                    'service_id' => $itemData['service_id'] ?? null,
-                    'item_name' => $itemData['item_name'],
+                    'service_id' => $service->id,
+                    'item_name' => $itemName,
                     'quantity' => $itemData['quantity'],
-                    'unit_price' => $itemData['unit_price'],
+                    'unit_price' => $finalUnitPrice,
                     'subtotal' => $subtotal,
                     'notes' => $itemData['notes'] ?? null,
                 ]);
+
+                if ($isPriceOverridden) {
+                    AuditLog::logAction(
+                        $user?->id,
+                        'price_override',
+                        OrderItem::class,
+                        $orderItem->id,
+                        ['base_price' => $authoritativeUnitPrice],
+                        [
+                            'order_id' => $order->id,
+                            'order_number' => $order->order_number,
+                            'service_id' => $service->id,
+                            'service_name' => $service->name_en,
+                            'base_price' => $authoritativeUnitPrice,
+                            'overridden_unit_price' => $finalUnitPrice,
+                            'quantity' => $itemData['quantity'],
+                            'reason' => 'Authorized owner price override applied during order creation',
+                        ]
+                    );
+                }
             }
 
-            // 4. Create Appointment
-            Appointment::create([
-                'order_id' => $order->id,
-                'customer_id' => $customer->id,
-                'cleaning_team_id' => $order->assigned_team_id,
-                'appointment_date' => $order->appointment_date,
-                'status' => 'scheduled',
-                'notes' => "Slot: {$order->appointment_time_slot}",
-            ]);
+            // 4. Create Appointment if appointment_date is provided and one does not already exist
+            if (!empty($order->appointment_date)) {
+                $existingAppointment = Appointment::where('order_id', $order->id)->first();
+                if (!$existingAppointment) {
+                    [$startTime, $endTime] = $this->parseTimeSlot($order->appointment_time_slot);
+
+                    $notesParts = [];
+                    if (!empty($order->appointment_time_slot)) {
+                        $notesParts[] = "Slot: {$order->appointment_time_slot}";
+                    }
+                    $location = trim(($order->subcity ? "{$order->subcity}, " : '') . ($order->address ?? ''));
+                    if ($location) {
+                        $notesParts[] = "Location: {$location}";
+                    }
+                    if (!empty($order->notes)) {
+                        $notesParts[] = "Notes: {$order->notes}";
+                    }
+
+                    Appointment::create([
+                        'order_id' => $order->id,
+                        'customer_id' => $customer->id,
+                        'cleaning_team_id' => $order->assigned_team_id,
+                        'appointment_date' => $order->appointment_date,
+                        'start_time' => $startTime,
+                        'end_time' => $endTime,
+                        'status' => 'scheduled',
+                        'notes' => !empty($notesParts) ? implode(' | ', $notesParts) : "Slot: {$order->appointment_time_slot}",
+                    ]);
+                }
+            }
 
             AuditLog::logAction(
                 $request->user()?->id,
@@ -461,7 +535,7 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
-            'payment_method' => 'required|string|in:cash,telebirr,cbe_birr,bank_transfer,check',
+            'payment_method' => 'required|string|in:cash,telebirr,cbe,cbe_birr,bank_transfer,check',
             'reference_number' => 'nullable|string|max:64',
             'payment_date' => 'nullable|date',
             'notes' => 'nullable|string',
@@ -480,17 +554,28 @@ class OrderController extends Controller
                 ], 422);
             }
 
+            $method = ($validated['payment_method'] === 'cbe_birr') ? 'cbe' : $validated['payment_method'];
+
             $payment = Payment::create([
                 'payment_number' => Payment::generateNextNumber(),
                 'order_id' => $lockedOrder->id,
                 'customer_id' => $lockedOrder->customer_id,
                 'amount' => $validated['amount'],
-                'payment_method' => $validated['payment_method'],
+                'payment_method' => $method,
                 'reference_number' => $validated['reference_number'] ?? null,
                 'payment_date' => $validated['payment_date'] ?? Carbon::today(),
                 'recorded_by_user_id' => $request->user()?->id,
                 'notes' => $validated['notes'] ?? null,
             ]);
+
+            // Automatically synchronize order payment status
+            $newTotalPaid = $alreadyPaid + (float)$validated['amount'];
+            if ($newTotalPaid >= (float)$lockedOrder->total - 0.01) {
+                $lockedOrder->payment_status = 'paid';
+            } elseif ($newTotalPaid > 0) {
+                $lockedOrder->payment_status = 'partially_paid';
+            }
+            $lockedOrder->save();
 
             AuditLog::logAction(
                 $request->user()?->id,
@@ -594,5 +679,32 @@ class OrderController extends Controller
             'sms_sent' => $smsResult['ok'] ?? false,
             'telegram_sent' => $tgResult,
         ]);
+    }
+
+    /**
+     * Parse human or standard time slots into start_time and end_time (H:i:s).
+     */
+    private function parseTimeSlot(?string $slot): array
+    {
+        if (!$slot) {
+            return [null, null];
+        }
+        $slotLower = strtolower(trim($slot));
+        if ($slotLower === 'morning') {
+            return ['09:00:00', '12:00:00'];
+        }
+        if ($slotLower === 'afternoon') {
+            return ['14:00:00', '17:00:00'];
+        }
+        if (preg_match('/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/', $slot, $matches)) {
+            $start = date('H:i:s', strtotime($matches[1]));
+            $end = date('H:i:s', strtotime($matches[2]));
+            return [$start, $end];
+        }
+        $parsed = strtotime($slot);
+        if ($parsed !== false) {
+            return [date('H:i:s', $parsed), null];
+        }
+        return [null, null];
     }
 }

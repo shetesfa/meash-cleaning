@@ -1,4 +1,14 @@
 <!DOCTYPE html>
+@php
+  $activeServices = collect();
+  try {
+    if (\Illuminate\Support\Facades\Schema::hasTable('services')) {
+      $activeServices = \App\Models\Service::where('is_active', true)->orderBy('sort_order')->get();
+    }
+  } catch (\Throwable $e) {
+    // Graceful fallback
+  }
+@endphp
 <html lang="am">
 <head>
   <meta charset="UTF-8">
@@ -67,28 +77,36 @@
     <form id="tma-form" onsubmit="submitTmaBooking(event)" class="space-y-4">
       <!-- 1. Service Selection -->
       <div>
-        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" id="lbl-step1">1. አገልግሎት ይምረጡ (Choose Service)</label>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" id="lbl-step1">1. ስራዎቻችንን ይምረጡ (Choose Service)</label>
         <div class="grid grid-cols-2 gap-2" id="tma-services-grid">
-          <button type="button" onclick="selectTmaService('sofa', 350, 'መቀመጫ / seats', 'የሶፋ ጥልቅ እጥበት', 'Sofa Deep Cleaning')" class="tma-svc-btn p-3 rounded-xl border border-cyan-500 bg-cyan-950/40 text-left transition-all">
-            <i data-lucide="sofa" class="w-5 h-5 text-cyan-400 mb-1"></i>
-            <span class="text-xs font-bold text-white block svc-title">የሶፋ ጥልቅ እጥበት</span>
-            <span class="text-[10px] text-cyan-400 font-semibold svc-price">350 ብር / መቀመጫ</span>
-          </button>
-          <button type="button" onclick="selectTmaService('carpet', 80, 'ካሬ / sqm', 'የምንጣፍ ማጠብና ስቲም', 'Carpet Washing')" class="tma-svc-btn p-3 rounded-xl border border-slate-700 bg-slate-900 text-left transition-all">
-            <i data-lucide="layers" class="w-5 h-5 text-cyan-400 mb-1"></i>
-            <span class="text-xs font-bold text-white block svc-title">የምንጣፍ ማጠብ</span>
-            <span class="text-[10px] text-cyan-400 font-semibold svc-price">80 ብር / ካሬ</span>
-          </button>
-          <button type="button" onclick="selectTmaService('mattress', 600, 'ፍራሽ / piece', 'የፍራሽ ሳኒታይዜሽን', 'Mattress Sanitization')" class="tma-svc-btn p-3 rounded-xl border border-slate-700 bg-slate-900 text-left transition-all">
-            <i data-lucide="bed" class="w-5 h-5 text-cyan-400 mb-1"></i>
-            <span class="text-xs font-bold text-white block svc-title">የፍራሽ ሳኒታይዜሽን</span>
-            <span class="text-[10px] text-cyan-400 font-semibold svc-price">600 ብር / ፍራሽ</span>
-          </button>
-          <button type="button" onclick="selectTmaService('glass', 70, 'ካሬ / sqm', 'የመስታወት ፅዳት', 'Glass Cleaning')" class="tma-svc-btn p-3 rounded-xl border border-slate-700 bg-slate-900 text-left transition-all">
-            <i data-lucide="square" class="w-5 h-5 text-cyan-400 mb-1"></i>
-            <span class="text-xs font-bold text-white block svc-title">የመስታወት ፅዳት</span>
-            <span class="text-[10px] text-cyan-400 font-semibold svc-price">70 ብር / ካሬ</span>
-          </button>
+          @forelse($activeServices as $index => $svc)
+            @php
+              $iconMap = [
+                'sofa' => 'sofa',
+                'carpet' => 'layers',
+                'mattress' => 'bed',
+                'glass' => 'square',
+                'residential_deep' => 'home',
+                'commercial' => 'building-2',
+                'floor_ceramic' => 'sparkles',
+              ];
+              $lucideIcon = $iconMap[$svc->code] ?? 'sparkles';
+              $pUnit = $svc->pricing_unit_am ?: ($svc->unit ?: 'ስራ');
+              $nameAm = $svc->name_am ?: $svc->name_en;
+              $nameEn = $svc->name_en ?: $svc->name_am;
+              $priceVal = (float)$svc->base_price;
+            @endphp
+            <button type="button"
+              onclick="selectTmaService({{ $svc->id }}, {{ $priceVal }}, '{{ addslashes($pUnit) }}', '{{ addslashes($nameAm) }}', '{{ addslashes($nameEn) }}', '{{ addslashes($svc->code) }}')"
+              class="tma-svc-btn p-3 rounded-xl border {{ $index === 0 ? 'border-cyan-500 bg-cyan-950/40' : 'border-slate-700 bg-slate-900' }} text-left transition-all"
+              data-service-id="{{ $svc->id }}">
+              <i data-lucide="{{ $lucideIcon }}" class="w-5 h-5 text-cyan-400 mb-1"></i>
+              <span class="text-xs font-bold text-white block svc-title">{{ $nameAm }}</span>
+              <span class="text-[10px] text-cyan-400 font-semibold svc-price">{{ number_format($priceVal) }} ብር / {{ $pUnit }}</span>
+            </button>
+          @empty
+            <div class="col-span-2 text-center text-xs text-slate-400 py-4">ስራዎቻችን በመጫን ላይ ናቸው...</div>
+          @endforelse
         </div>
       </div>
 
@@ -192,6 +210,28 @@
         <input type="tel" id="tma-phone" required placeholder="ስልክ ቁጥር (ለምሳሌ 0911223344)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500">
       </div>
 
+      <!-- 6. Payment Method -->
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" id="lbl-step-payment">5. የክፍያ መንገድ (Payment Method)</label>
+        <div class="grid grid-cols-3 gap-2">
+          <label class="p-2.5 rounded-xl bg-slate-900 border border-slate-700 flex flex-col items-center text-center cursor-pointer hover:border-cyan-500 transition-all">
+            <input type="radio" name="tma_payment_method" value="cash" checked class="text-cyan-500 mb-1">
+            <span class="text-xs font-bold text-white block">ጥሬ ገንዘብ</span>
+            <span class="text-[9px] text-slate-400">Cash on Service</span>
+          </label>
+          <label class="p-2.5 rounded-xl bg-slate-900 border border-slate-700 flex flex-col items-center text-center cursor-pointer hover:border-cyan-500 transition-all">
+            <input type="radio" name="tma_payment_method" value="telebirr" class="text-cyan-500 mb-1">
+            <span class="text-xs font-bold text-cyan-400 block">ቴሌብር</span>
+            <span class="text-[9px] text-slate-400">Telebirr</span>
+          </label>
+          <label class="p-2.5 rounded-xl bg-slate-900 border border-slate-700 flex flex-col items-center text-center cursor-pointer hover:border-cyan-500 transition-all">
+            <input type="radio" name="tma_payment_method" value="cbe" class="text-cyan-500 mb-1">
+            <span class="text-xs font-bold text-purple-400 block">ንግድ ባንክ</span>
+            <span class="text-[9px] text-slate-400">CBE / CBE Birr</span>
+          </label>
+        </div>
+      </div>
+
       <button type="submit" id="tma-submit-btn" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-xl shadow-cyan-500/25 flex items-center justify-center gap-2 active:scale-98 transition-all">
         <i data-lucide="check" class="w-4 h-4"></i>
         <span id="txt-submit-btn">ቀጠሮውን አረጋግጥ (Submit Booking)</span>
@@ -218,16 +258,24 @@
   </div>
 
   <script>
+    const initialLiveServices = @json($activeServices);
     let currentLang = localStorage.getItem('tma_lang') || 'am';
-    let currentSvc = { code: 'sofa', price: 350, unit: 'መቀመጫ / seats', nameAm: 'የሶፋ ጥልቅ እጥበት', nameEn: 'Sofa Deep Cleaning' };
-    let qty = 5;
+    let currentSvc = initialLiveServices.length > 0 ? {
+      id: Number(initialLiveServices[0].id),
+      code: initialLiveServices[0].code,
+      price: parseFloat(initialLiveServices[0].base_price || 0),
+      unit: initialLiveServices[0].pricing_unit_am || initialLiveServices[0].unit || 'መቀመጫ',
+      nameAm: initialLiveServices[0].name_am || initialLiveServices[0].name_en,
+      nameEn: initialLiveServices[0].name_en || initialLiveServices[0].name_am
+    } : { id: 1, code: 'sofa', price: 350, unit: 'መቀመጫ / seats', nameAm: 'የሶፋ ጥልቅ እጥበት', nameEn: 'Sofa Deep Cleaning' };
+    let qty = (currentSvc.code === 'carpet' || currentSvc.id === 2) ? 10 : ((currentSvc.code === 'sofa' || currentSvc.id === 1) ? 5 : 1);
     let tgUser = null;
 
     const i18nDict = {
       am: {
         appTitle: 'ሜሽ የፅዳት አገልግሎት',
         greetingDefault: 'እንኳን ደህና መጡ ',
-        step1: '1. አገልግሎት ይምረጡ',
+        step1: '1. ስራዎቻችንን ይምረጡ',
         step2: '2. አድራሻ በአዲስ አበባ',
         step3: '4. የእርስዎ መረጃ',
         stepDate: '3. የቀጠሮ ቀን',
@@ -320,12 +368,15 @@
         }
       }
 
-      // Check URL query parameter (e.g. ?service=carpet)
+      // Check URL query parameter (e.g. ?service=carpet or ?service=2)
       const urlParams = new URLSearchParams(window.location.search);
       const svcParam = urlParams.get('service');
-      if (svcParam === 'carpet') selectTmaService('carpet', 80, 'ካሬ / sqm', 'የምንጣፍ ማጠብና ስቲም', 'Carpet Washing');
-      else if (svcParam === 'mattress') selectTmaService('mattress', 600, 'ፍራሽ / piece', 'የፍራሽ ሳኒታይዜሽን', 'Mattress Sanitization');
-      else if (svcParam === 'glass') selectTmaService('glass', 70, 'ካሬ / sqm', 'የመስታወት ፅዳት', 'Glass Cleaning');
+      if (svcParam && initialLiveServices.length > 0) {
+        const found = initialLiveServices.find(s => String(s.id) === svcParam || s.code === svcParam);
+        if (found) {
+          selectTmaService(found.id, parseFloat(found.base_price || 0), found.pricing_unit_am || found.unit || 'ስራ', found.name_am || found.name_en, found.name_en || found.name_am, found.code);
+        }
+      }
 
       // Default date tomorrow
       const tomorrow = new Date();
@@ -354,14 +405,14 @@
               const nameAm = svc.name_am || svc.name_en;
               const nameEn = svc.name_en || svc.name_am;
               const icon = svc.icon || (svc.category === 'furniture' ? '' : (svc.category === 'carpet' ? '' : (svc.category === 'mattress' ? '' : (svc.category === 'glass' ? '' : ''))));
-              const isSelected = i === 0;
+              const isSelected = String(currentSvc.id) === String(svc.id) || (!currentSvc.id && i === 0);
               if (isSelected) {
-                currentSvc = { code: svc.id, price, unit, nameAm, nameEn };
+                currentSvc = { id: Number(svc.id), code: svc.code, price, unit, nameAm, nameEn };
                 document.getElementById('tma-selected-service-name').innerText = currentLang === 'am' ? nameAm : nameEn;
                 document.getElementById('tma-unit-desc').innerText = unit.toUpperCase();
               }
               return `
-                <button type="button" onclick="selectTmaService('${svc.id}', ${price}, '${unit}', '${nameAm.replace(/'/g, "\\'")}', '${nameEn.replace(/'/g, "\\'")}')" class="tma-svc-btn p-3 rounded-xl border ${isSelected ? 'border-cyan-500 bg-cyan-950/40' : 'border-slate-700 bg-slate-900'} text-left transition-all">
+                <button type="button" onclick="selectTmaService(${svc.id}, ${price}, '${unit.replace(/'/g, "\\'")}', '${nameAm.replace(/'/g, "\\'")}', '${nameEn.replace(/'/g, "\\'")}', '${(svc.code || '').replace(/'/g, "\\'")}')" class="tma-svc-btn p-3 rounded-xl border ${isSelected ? 'border-cyan-500 bg-cyan-950/40' : 'border-slate-700 bg-slate-900'} text-left transition-all" data-service-id="${svc.id}">
                   <span class="text-xl block mb-1">${icon}</span>
                   <span class="text-xs font-bold text-white block svc-title">${nameAm}</span>
                   <span class="text-[10px] text-cyan-400 font-semibold svc-price">${price.toLocaleString()} ብር / ${unit}</span>
@@ -414,9 +465,11 @@
       updateTotal();
     }
 
-    function selectTmaService(code, price, unit, nameAm, nameEn) {
-      currentSvc = { code, price, unit, nameAm, nameEn };
-      qty = code === 'carpet' ? 10 : (code === 'sofa' ? 5 : 1);
+    function selectTmaService(idOrCode, price, unit, nameAm, nameEn, code) {
+      const numericId = Number.isInteger(Number(idOrCode)) ? Number(idOrCode) : (initialLiveServices.find(s => s.code === idOrCode)?.id || null);
+      const finalCode = code || (numericId ? (initialLiveServices.find(s => s.id === numericId)?.code || '') : String(idOrCode));
+      currentSvc = { id: numericId, code: finalCode, price: Number(price), unit, nameAm, nameEn };
+      qty = (finalCode === 'carpet' || numericId === 2) ? 10 : ((finalCode === 'sofa' || numericId === 1) ? 5 : 1);
       document.getElementById('tma-qty').innerText = qty;
       document.getElementById('tma-selected-service-name').innerText = currentLang === 'am' ? nameAm : nameEn;
       document.getElementById('tma-unit-desc').innerText = unit.toUpperCase();
@@ -424,6 +477,9 @@
       document.querySelectorAll('.tma-svc-btn').forEach(btn => {
         btn.classList.remove('border-cyan-500', 'bg-cyan-950/40');
         btn.classList.add('border-slate-700', 'bg-slate-900');
+        if (btn.getAttribute('data-service-id') == numericId) {
+          btn.classList.add('border-cyan-500', 'bg-cyan-950/40');
+        }
       });
       event?.currentTarget?.classList?.add('border-cyan-500', 'bg-cyan-950/40');
       updateTotal();
@@ -501,6 +557,7 @@
       btn.innerText = currentLang === 'am' ? 'በመመዝገብ ላይ...' : 'Submitting...';
 
       const plan = document.querySelector('input[name="tma_sub_plan"]:checked')?.value || 'one_time';
+      const payMethod = document.querySelector('input[name="tma_payment_method"]:checked')?.value || 'cash';
 
       const payload = {
         customer_name: document.getElementById('tma-name').value,
@@ -512,12 +569,14 @@
         appointment_date: document.getElementById('tma-date').value,
         appointment_time_slot: document.getElementById('tma-slot').value,
         subscription_plan: plan,
+        payment_method: payMethod,
         telegram_user_id: tgUser ? String(tgUser.id) : null,
+        init_data: window.Telegram?.WebApp?.initData || '',
         notes: currentLang === 'am' ? 'በቴሌግራም ሚኒ አፕ የተመዘገበ' : 'Booked via Telegram Mini App',
         items: [
           {
-            service_id: Number.isInteger(Number(currentSvc.code)) ? Number(currentSvc.code) : null,
-            service_code: String(currentSvc.code),
+            service_id: currentSvc.id ? Number(currentSvc.id) : (Number.isInteger(Number(currentSvc.code)) ? Number(currentSvc.code) : null),
+            service_code: String(currentSvc.code || ''),
             item_name: currentLang === 'am' ? currentSvc.nameAm : currentSvc.nameEn,
             quantity: qty,
             unit_price: currentSvc.price,

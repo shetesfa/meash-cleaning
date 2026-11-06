@@ -23,12 +23,12 @@ class AuthController extends Controller
         $login = trim($request->input('login'));
         $throttleKey = Str::transliterate(Str::lower($login) . '|' . $request->ip());
 
-        // Throttle check: Max 5 attempts per minute
+        // Throttle check: Max 5 attempts per minute per account
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
-            throw ValidationException::withMessages([
-                'login' => ["Too many login attempts. Please try again in {$seconds} seconds."],
-            ]);
+            return response()->json([
+                'message' => "Too many login attempts. Please try again in {$seconds} seconds.",
+            ], 429);
         }
 
         // Enforce strict login by exact email, phone number, or full username with password

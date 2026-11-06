@@ -14,6 +14,7 @@ class AppointmentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Appointment::with([
+            'order:id,order_number,source,order_status,payment_status,total,customer_id',
             'order.customer:id,customer_code,full_name,phone,address,subcity',
             'order.items.service:id,name_en,name_am',
             'team:id,team_name,phone',
@@ -35,6 +36,16 @@ class AppointmentController extends Controller
             }
         } elseif ($date = $request->input('date')) {
             $query->whereDate('appointment_date', $date);
+        }
+
+        if ($source = $request->input('source')) {
+            $query->whereHas('order', function ($oq) use ($source) {
+                if ($source === 'walk_in' || $source === 'walkin') {
+                    $oq->whereIn('source', ['walk_in', 'walkin']);
+                } else {
+                    $oq->where('source', $source);
+                }
+            });
         }
 
         if ($teamId = $request->input('team_id')) {

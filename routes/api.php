@@ -37,25 +37,23 @@ Route::get('/ping', function () {
 Route::prefix('public')->group(function () {
     Route::get('/settings', [PublicWebsiteController::class, 'settings'])->middleware('throttle:60,1');
     Route::get('/services', [PublicWebsiteController::class, 'services'])->middleware('throttle:60,1');
-    Route::post('/book', [PublicWebsiteController::class, 'book'])->middleware('throttle:5,1');
+    Route::post('/book', [PublicWebsiteController::class, 'book'])->middleware('throttle:15,1');
     Route::match(['get', 'post'], '/track-order', [PublicWebsiteController::class, 'trackOrder'])->middleware('throttle:10,1');
-    Route::post('/reschedule-order', [PublicWebsiteController::class, 'rescheduleOrder'])->middleware('throttle:5,1');
+    Route::post('/reschedule-order', [PublicWebsiteController::class, 'rescheduleOrder'])->middleware('throttle:15,1');
     Route::get('/reviews', [PublicWebsiteController::class, 'publicReviews'])->middleware('throttle:60,1');
-    Route::post('/quick-message', [PublicWebsiteController::class, 'quickMessage'])->middleware('throttle:5,1');
+    Route::post('/quick-message', [PublicWebsiteController::class, 'quickMessage'])->middleware('throttle:15,1');
 });
 
 // 2. TELEGRAM ENGINE (Bot, Inline Query @meash, Mini App)
 Route::prefix('telegram')->group(function () {
     Route::post('/webhook', [TelegramController::class, 'webhook'])->middleware('throttle:120,1');
-    Route::post('/miniapp/book', [TelegramController::class, 'miniAppBooking'])->middleware('throttle:5,1');
+    Route::post('/miniapp/book', [TelegramController::class, 'miniAppBooking'])->middleware('throttle:15,1');
     Route::get('/status', [TelegramController::class, 'getWebhookStatus']);
-    Route::post('/set-webhook', [TelegramController::class, 'setRenderWebhook'])->middleware('role:owner,reception');
-    Route::post('/send-test', [TelegramController::class, 'sendTestMessage'])->middleware('role:owner,reception');
 });
 
 // 3. AUTHENTICATION
 Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
@@ -89,6 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{order}/assign-team', [OrderController::class, 'assignTeam'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/payment', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception');
+    Route::post('/orders/{order}/payments', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/postpone', [OrderController::class, 'postpone'])->middleware('role:owner,reception');
 
     // E. Appointments & Calendar
@@ -179,5 +178,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/batch', [SyncController::class, 'batchSync']);
         Route::get('/conflicts', [SyncController::class, 'listConflicts'])->middleware('role:owner,reception');
         Route::post('/conflicts/{conflict}/resolve', [SyncController::class, 'resolveConflict'])->middleware('role:owner,reception');
+    });
+
+    // L. Telegram Administrative Operations (Owner/Reception)
+    Route::prefix('telegram')->group(function () {
+        Route::post('/set-webhook', [TelegramController::class, 'setRenderWebhook'])->middleware('role:owner,reception');
+        Route::post('/send-test', [TelegramController::class, 'sendTestMessage'])->middleware('role:owner,reception');
     });
 });
