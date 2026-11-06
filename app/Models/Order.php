@@ -36,6 +36,12 @@ class Order extends Model
         'completion_notes',
         'cancellation_reason',
         'completed_at',
+        'payment_method',
+        'payment_reference',
+        'payment_submitted_at',
+        'payment_submitted_by_user_id',
+        'payment_approved_at',
+        'payment_approved_by_user_id',
         'version',
     ];
 
@@ -46,6 +52,8 @@ class Order extends Model
         'total' => 'decimal:2',
         'appointment_date' => 'date',
         'completed_at' => 'datetime',
+        'payment_submitted_at' => 'datetime',
+        'payment_approved_at' => 'datetime',
         'version' => 'integer',
         'latitude' => 'float',
         'longitude' => 'float',
@@ -58,7 +66,19 @@ class Order extends Model
         'customer_phone',
         'status',
         'team_id',
+        'pending_payment_method',
+        'pending_payment_reference',
     ];
+
+    public function getPendingPaymentMethodAttribute(): ?string
+    {
+        return $this->payment_method;
+    }
+
+    public function getPendingPaymentReferenceAttribute(): ?string
+    {
+        return $this->payment_reference;
+    }
 
     public function getCustomerNameAttribute(): string
     {
@@ -100,6 +120,16 @@ class Order extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    public function paymentSubmittedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'payment_submitted_by_user_id');
+    }
+
+    public function paymentApprovedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'payment_approved_by_user_id');
     }
 
     public function assignedTeam(): BelongsTo

@@ -620,15 +620,23 @@
         }
         window.getChannelBadge = getChannelBadge;
 
-        function getPaymentBadge(status) {
+        function getPaymentBadge(status, order = null) {
             const s = String(status || 'unpaid').toLowerCase();
             if (s === 'paid') {
                 return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">የተከፈለ (Paid)</span>`;
             }
+            if (s === 'pending_approval') {
+                const method = order?.pending_payment_method || order?.payment_method || 'cash';
+                const ref = order?.pending_payment_reference || order?.payment_reference || '';
+                const isCash = method === 'cash';
+                const methodLabel = isCash ? 'Cash' : (method === 'telebirr' ? 'Telebirr' : (method === 'cbe' ? 'CBE' : (getPaymentMethodName(method) || 'Transfer')));
+                const refLabel = (!isCash && ref) ? ` [${escapeHtml(ref)}]` : '';
+                return `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/25 text-amber-300 border border-amber-500/50 inline-flex items-center gap-1 shadow-sm" title="ማጽደቅ የሚጠብቅ ክፍያ">⏳ Pending Approval - ${methodLabel}${refLabel}</span>`;
+            }
             if (s === 'partially_paid') {
                 return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-500/20 text-blue-400 border border-blue-500/30">በከፊል (Partial)</span>`;
             }
-            return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30">ያልተከፈለ (Unpaid)</span>`;
+            return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-700/60 text-slate-300 border border-slate-600">ያልተከፈለ (Unpaid)</span>`;
         }
         window.getPaymentBadge = getPaymentBadge;
 
@@ -1300,11 +1308,24 @@
                                             </div>
                                             <p class="text-xs text-slate-400 mt-1">የተመደበለት ቡድን: <strong>${o.assigned_team?.team_name || 'ቡድን አልተመደበም'}</strong></p>
                                         </div>
-                                        <div class="text-right">
-                                            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase ${o.order_status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : (o.order_status === 'assigned' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400')}">
-                                                ${o.order_status}
-                                            </span>
-                                            <p class="text-xs font-black text-white mt-1">${parseFloat(o.total).toLocaleString()} ETB</p>
+                                        <div class="text-right flex flex-col items-end gap-1">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${o.order_status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : (o.order_status === 'assigned' ? 'bg-blue-500/20 text-blue-400' : 'bg-amber-500/20 text-amber-400')}">
+                                                    ${o.order_status}
+                                                </span>
+                                                ${getPaymentBadge(o.payment_status, o)}
+                                            </div>
+                                            <div class="flex items-center gap-2 mt-0.5">
+                                                <span class="text-xs font-black text-white">${parseFloat(o.total || 0).toLocaleString()} ETB</span>
+                                                ${o.payment_status === 'pending_approval' ? `
+                                                    <button onclick="openApprovePaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, '${escapeHtml(o.pending_payment_method || o.payment_method || 'cash')}', '${escapeHtml(o.pending_payment_reference || o.payment_reference || '')}')" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] rounded-lg shadow-sm cursor-pointer" title="ክፍያ አጽድቅ">
+                                                        ✓ አጽድቅ
+                                                    </button>
+                                                    <button onclick="openRejectPaymentModal(${o.id}, '${escapeHtml(o.order_number)}')" class="px-1.5 py-0.5 bg-red-950/80 hover:bg-red-900 text-red-300 font-bold text-[10px] rounded-lg border border-red-500/30 cursor-pointer" title="ክፍያ ውድቅ አድርግ">
+                                                        ውድቅ
+                                                    </button>
+                                                ` : ''}
+                                            </div>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -1393,15 +1414,19 @@
                                         <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                             <div>
                                                 <div class="flex flex-wrap items-center gap-2">
-                                                    <span class="text-xs font-bold text-cyan-400">${b.order_number}</span>
+                                                    <span class="text-xs font-bold text-cyan-400 font-mono">${b.order_number}</span>
                                                     <span class="text-xs font-bold text-white">${b.customer?.full_name}</span>
                                                     ${getChannelBadge(b.source)}
-                                                    ${getPaymentBadge(b.payment_status)}
+                                                    ${getPaymentBadge(b.payment_status, b)}
                                                 </div>
                                                 <p class="text-[11px] text-slate-400 mt-0.5">${b.customer?.phone} | ${b.subcity || 'Addis Ababa'}</p>
                                                 <p class="text-[10px] text-slate-500">${b.items?.map(i => i.item_name).join(', ')}</p>
                                             </div>
-                                            <div class="flex items-center gap-1.5 self-end sm:self-auto">
+                                            <div class="flex flex-wrap items-center gap-1.5 self-end sm:self-auto">
+                                                ${b.payment_status === 'pending_approval' ? `
+                                                    <button onclick="openApprovePaymentModal(${b.id}, '${escapeHtml(b.order_number)}', ${parseFloat(b.total || 0)}, '${escapeHtml(b.pending_payment_method || b.payment_method || 'cash')}', '${escapeHtml(b.pending_payment_reference || b.payment_reference || '')}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow cursor-pointer" title="ክፍያ አጽድቅ">✓ አጽድቅ</button>
+                                                    <button onclick="openRejectPaymentModal(${b.id}, '${escapeHtml(b.order_number)}')" class="px-2 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-500/40 text-xs font-bold cursor-pointer" title="ክፍያ ውድቅ አድርግ">ውድቅ</button>
+                                                ` : ''}
                                                 <button onclick="confirmAndAssignOrder(${b.id})" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition">ሰራተኛ መድብ</button>
                                                 <button onclick="openOrderDetailsModal(${b.id})" class="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold">ዝርዝር</button>
                                                 <button onclick="openPostponeOrderModal(${b.id}, '${b.order_number}', '${b.customer?.full_name}')" class="px-2 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-500/40 text-xs font-bold" title="ቀጠሮ አስተላልፍ">አስተላልፍ</button>
@@ -1430,10 +1455,15 @@
                                                     <span class="text-xs font-bold text-white">${s.customer?.full_name}</span>
                                                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 font-bold">${formatTimeSlot(s.appointment_time_slot)}</span>
                                                     ${getChannelBadge(s.source)}
+                                                    ${getPaymentBadge(s.payment_status, s)}
                                                 </div>
                                                 <p class="text-[11px] text-slate-400 mt-0.5">የተመደበ ቡድን: <strong>${s.assigned_team?.team_name || 'ቡድን አልተመደበም'}</strong></p>
                                             </div>
-                                            <div class="flex items-center gap-2 self-end sm:self-auto">
+                                            <div class="flex flex-wrap items-center gap-1.5 self-end sm:self-auto">
+                                                ${s.payment_status === 'pending_approval' ? `
+                                                    <button onclick="openApprovePaymentModal(${s.id}, '${escapeHtml(s.order_number)}', ${parseFloat(s.total || 0)}, '${escapeHtml(s.pending_payment_method || s.payment_method || 'cash')}', '${escapeHtml(s.pending_payment_reference || s.payment_reference || '')}')" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-extrabold shadow cursor-pointer" title="ክፍያ አጽድቅ">✓ አጽድቅ</button>
+                                                    <button onclick="openRejectPaymentModal(${s.id}, '${escapeHtml(s.order_number)}')" class="px-1.5 py-1 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-500/40 text-[10px] font-bold cursor-pointer" title="ክፍያ ውድቅ አድርግ">ውድቅ</button>
+                                                ` : ''}
                                                 <span class="text-xs font-bold ${s.order_status === 'completed' ? 'text-emerald-400' : 'text-cyan-400'} uppercase">${s.order_status}</span>
                                                 ${s.order_status !== 'completed' ? `
                                                     <button onclick="openPostponeOrderModal(${s.id}, '${s.order_number}', '${s.customer?.full_name}')" class="px-2 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 text-[10px] font-bold">አስተላልፍ</button>
@@ -1705,9 +1735,18 @@
                                     <!-- Action Buttons -->
                                     ${job.order_status === 'completed' ? `
                                         <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-slate-800/80">
-                                            <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
-                                                <span>ይህ ስራ በተሳካ ሁኔታ ተጠናቋል!</span>
+                                            <div class="flex items-center gap-2 text-xs">
+                                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                                                <span class="text-emerald-400 font-bold">ስራው ተጠናቋል!</span>
+                                                ${job.payment_status === 'paid' ? `
+                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">የተከፈለ (Paid)</span>
+                                                ` : (job.payment_status === 'pending_approval' ? `
+                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">⏳ ክፍያ ለመጽደቅ ቀርቧል</span>
+                                                ` : `
+                                                    <button onclick="openCleanerPaymentModal(${job.id}, '${escapeHtml(job.order_number || '')}', ${parseFloat(job.total || job.total_amount || 0)})" class="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shadow cursor-pointer flex items-center gap-1">
+                                                        <span>💰 ክፍያ አስገባ</span>
+                                                    </button>
+                                                `)}
                                             </div>
                                             <div class="flex items-center gap-2 w-full sm:w-auto">
                                                 <a href="tel:${job.customer?.phone || ''}" class="flex-1 sm:flex-initial py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 border border-slate-700">
@@ -1742,9 +1781,9 @@
                                                     <span>ስራ ጀምር</span>
                                                 </button>
                                             ` : (job.order_status === 'cleaning' ? `
-                                                <button onclick="cleanerJobAction(${job.id}, 'complete')" class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg cursor-pointer">
+                                                <button onclick="openCleanerPaymentModal(${job.id}, '${escapeHtml(job.order_number || '')}', ${parseFloat(job.total || job.total_amount || 0)})" class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg cursor-pointer">
                                                     <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                                                    <span>ስራ ጨርስ</span>
+                                                    <span>ስራ ጨርስና ክፍያ አስገባ</span>
                                                 </button>
                                             ` : `
                                                 <span class="py-2.5 text-center text-xs font-bold text-emerald-400 col-span-2">ተጠናቋል</span>
@@ -2231,6 +2270,7 @@
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">የክፍያ ሁኔታ (Payment Status)</label>
                                 <select onchange="window._ordersFilterPayment = this.value; window._ordersPage = 1; renderOrdersModule(document.getElementById('app-viewport'));" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
                                     <option value="" ${window._ordersFilterPayment === '' ? 'selected' : ''}>-- ሁሉም የክፍያ ሁኔታ --</option>
+                                    <option value="pending_approval" ${window._ordersFilterPayment === 'pending_approval' ? 'selected' : ''}>⏳ ማጽደቅ የሚጠብቅ (Pending Approval)</option>
                                     <option value="unpaid" ${window._ordersFilterPayment === 'unpaid' ? 'selected' : ''}>ያልተከፈለ (Unpaid)</option>
                                     <option value="partially_paid" ${window._ordersFilterPayment === 'partially_paid' ? 'selected' : ''}>በከፊል የተከፈለ (Partial)</option>
                                     <option value="paid" ${window._ordersFilterPayment === 'paid' ? 'selected' : ''}>የተከፈለ (Paid)</option>
@@ -2278,7 +2318,7 @@
                                                 <td class="p-4 text-slate-300 font-semibold">${(o.assigned_team?.team_name || o.assignedTeam?.team_name) ? `<span class="px-2.5 py-1 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-800 font-bold text-xs inline-flex items-center gap-1 shadow-sm"> ${escapeHtml((o.assigned_team?.team_name || o.assignedTeam?.team_name).split('(')[0])}</span>` : '<span class="px-2.5 py-1 rounded-xl bg-amber-950/60 text-amber-400 border border-amber-900/60 text-[11px] font-bold">ቡድን አልተመደበም</span>'}</td>
                                                 <td class="p-4">
                                                     <span class="font-extrabold text-white block">${parseFloat(o.total || 0).toLocaleString()} ETB</span>
-                                                    <div class="mt-0.5">${getPaymentBadge(o.payment_status)}</div>
+                                                    <div class="mt-0.5">${getPaymentBadge(o.payment_status, o)}</div>
                                                 </td>
                                                 <td class="p-4">
                                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${o.order_status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}">
@@ -2286,11 +2326,18 @@
                                                     </span>
                                                 </td>
                                                 <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
-                                                    ${o.payment_status !== 'paid' ? `
+                                                    ${o.payment_status === 'pending_approval' ? `
+                                                        <button onclick="openApprovePaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, '${escapeHtml(o.pending_payment_method || o.payment_method || 'cash')}', '${escapeHtml(o.pending_payment_reference || o.payment_reference || '')}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] rounded-lg shadow-sm transition" title="ክፍያ አጽድቅ (Approve)">
+                                                            ✓ አጽድቅ
+                                                        </button>
+                                                        <button onclick="openRejectPaymentModal(${o.id}, '${escapeHtml(o.order_number)}')" class="px-2 py-1 bg-red-950/80 hover:bg-red-900 text-red-300 font-bold text-[11px] rounded-lg border border-red-500/40 transition" title="ክፍያ ውድቅ አድርግ / አጣራ">
+                                                            ውድቅ
+                                                        </button>
+                                                    ` : (o.payment_status !== 'paid' ? `
                                                         <button onclick="openRecordOrderPaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, 0)" class="px-2.5 py-1 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 font-bold text-[11px] rounded-lg border border-emerald-500/40 transition" title="ክፍያ መዝግብ">
                                                             ክፍያ
                                                         </button>
-                                                    ` : ''}
+                                                    ` : '')}
                                                     <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ሰራተኛ መድብ">ሰራተኛ</button>
                                                     <button data-phone="${escapeHtml(o.customer_phone || o.customer?.phone || '')}" data-name="${escapeHtml(o.customer_name || o.customer?.full_name || o.customer?.name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">SMS</button>
                                                     <button onclick="openOrderDetailsModal(${o.id})" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር</button>
@@ -3476,6 +3523,304 @@
             }
         }
         window.submitOrderPayment = submitOrderPayment;
+
+        // ==========================================
+        // TWO-STEP PAYMENT REPORTING & APPROVAL WORKFLOW
+        // ==========================================
+        function openCleanerPaymentModal(orderId, orderNumber, totalAmount) {
+            const container = document.getElementById('generic-modal-container');
+            const total = parseFloat(totalAmount || 0);
+
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white">💰 የክፍያ መሰብሰቢያ (Collect Payment)</h3>
+                                <p class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(orderNumber)} • ${total.toLocaleString()} ETB</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+
+                        <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+                            <i data-lucide="info" class="w-4 h-4 shrink-0 text-amber-400"></i>
+                            <span>ማሳሰቢያ፡ ክፍያው በካሽም ሆነ በባንክ/ቴሌብር ሲቀርብ በባለቤት ወይም በሪሴፕሽን መጽደቅ አለበት።</span>
+                        </div>
+
+                        <form onsubmit="submitCleanerPayment(event, ${orderId})" class="space-y-3.5 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የክፍያ መንገድ (Payment Method) *</label>
+                                <select id="cl-pay-method" required onchange="onCleanerPaymentMethodChange(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
+                                    <option value="cash">💵 ጥሬ ገንዘብ (Cash)</option>
+                                    <option value="telebirr">📱 ቴሌብር (Telebirr)</option>
+                                    <option value="cbe">🏦 የኢትዮጵያ ንግድ ባንክ (CBE)</option>
+                                    <option value="bank_transfer">🏛️ የባንክ ዝውውር (Bank Transfer)</option>
+                                </select>
+                            </div>
+
+                            <div id="cl-ref-group" class="hidden">
+                                <label class="block text-slate-300 font-bold mb-1">የትራንዛክሽን ማጣቀሻ / Transaction Ref (ለቴሌብር / CBE) *</label>
+                                <input type="text" id="cl-pay-ref" placeholder="ምሳሌ፡ TXN-998877 ወይም የላኪ ስም" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የተሰበሰበው የብር መጠን (Amount in ETB) *</label>
+                                <input type="number" id="cl-pay-amount" step="any" min="0" value="${total}" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold font-mono">
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ተጨማሪ ማስታወሻ (Optional Note)</label>
+                                <textarea id="cl-pay-notes" rows="2" placeholder="ለምሳሌ፡ ከባለቤቱ በእጅ ተቀብያለሁ / ቴሌብር ደርሶታል..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
+                            </div>
+
+                            <div class="flex items-center gap-2 pt-2">
+                                <button type="button" onclick="closeModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
+                                <button type="submit" id="cl-pay-btn" class="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>ክፍያውን ለመጽደቅ ላክ</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+        window.openCleanerPaymentModal = openCleanerPaymentModal;
+
+        function onCleanerPaymentMethodChange(val) {
+            const refGrp = document.getElementById('cl-ref-group');
+            const refInp = document.getElementById('cl-pay-ref');
+            if (!refGrp) return;
+            if (val === 'cash') {
+                refGrp.classList.add('hidden');
+                if (refInp) refInp.removeAttribute('required');
+            } else {
+                refGrp.classList.remove('hidden');
+                if (refInp) refInp.setAttribute('required', 'required');
+            }
+        }
+        window.onCleanerPaymentMethodChange = onCleanerPaymentMethodChange;
+
+        async function submitCleanerPayment(e, orderId) {
+            e.preventDefault();
+            const btn = document.getElementById('cl-pay-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'በመላክ ላይ...';
+            }
+
+            const method = document.getElementById('cl-pay-method').value;
+            const ref = document.getElementById('cl-pay-ref')?.value || '';
+            const amount = parseFloat(document.getElementById('cl-pay-amount').value) || 0;
+            const notes = document.getElementById('cl-pay-notes')?.value || '';
+
+            const payload = {
+                payment_method: method,
+                payment_reference: ref,
+                reference_number: ref,
+                amount: amount,
+                notes: notes,
+            };
+
+            try {
+                // Ensure order is completed if still in progress
+                try {
+                    await apiFetch(`/api/orders/${orderId}/status`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ status: 'completed' })
+                    });
+                } catch (stErr) {
+                    console.warn('Status completion auto-call:', stErr);
+                }
+
+                const res = await apiFetch(`/api/orders/${orderId}/submit-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+
+                if (res.ok && result.success) {
+                    alert('✓ የክፍያ መረጃው በተሳካ ሁኔታ ተልኳል! ባለቤት ወይም ሪሴፕሽን እስኪያጸድቁት ድረስ በ "Pending Approval" ይቆያል።');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    throw new Error(result.message || 'ስህተት ተከስቷል');
+                }
+            } catch (err) {
+                alert('ስህተት፡ ' + err.message);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'ክፍያውን ለመጽደቅ ላክ';
+                }
+            }
+        }
+        window.submitCleanerPayment = submitCleanerPayment;
+
+        function openApprovePaymentModal(orderId, orderNumber, totalAmount, currentMethod, currentRef) {
+            const container = document.getElementById('generic-modal-container');
+            const total = parseFloat(totalAmount || 0);
+            const method = currentMethod || 'cash';
+            const ref = currentRef || '';
+
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white">✅ ክፍያ ማጽደቂያ (Approve Payment)</h3>
+                                <p class="text-xs font-mono text-cyan-400 mt-0.5">${escapeHtml(orderNumber)} • ${total.toLocaleString()} ETB</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+
+                        <form onsubmit="submitApprovePayment(event, ${orderId})" class="space-y-3.5 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የተከፈለበት መንገድ (Payment Method) *</label>
+                                <select id="appr-pay-method" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
+                                    <option value="cash" ${method === 'cash' ? 'selected' : ''}>💵 ጥሬ ገንዘብ (Cash)</option>
+                                    <option value="telebirr" ${method === 'telebirr' ? 'selected' : ''}>📱 ቴሌብር (Telebirr)</option>
+                                    <option value="cbe" ${method === 'cbe' ? 'selected' : ''}>🏦 የኢትዮጵያ ንግድ ባንክ (CBE)</option>
+                                    <option value="bank_transfer" ${method === 'bank_transfer' ? 'selected' : ''}>🏛️ የባንክ ዝውውር (Bank Transfer)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የትራንዛክሽን ማጣቀሻ / Transaction Ref</label>
+                                <input type="text" id="appr-pay-ref" value="${escapeHtml(ref)}" placeholder="TXN-..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የጸደቀው የብር መጠን (Amount in ETB) *</label>
+                                <input type="number" id="appr-pay-amount" step="any" min="0.01" value="${total}" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold font-mono">
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ማስታወሻ</label>
+                                <input type="text" id="appr-pay-notes" placeholder="የማረጋገጫ ማስታወሻ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                            </div>
+
+                            <div class="flex items-center gap-2 pt-2">
+                                <button type="button" onclick="closeModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
+                                <button type="submit" id="appr-btn" class="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>✓ አጽድቅ (Approve)</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+        window.openApprovePaymentModal = openApprovePaymentModal;
+
+        async function submitApprovePayment(e, orderId) {
+            e.preventDefault();
+            const btn = document.getElementById('appr-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'በማጽደቅ ላይ...';
+            }
+
+            const method = document.getElementById('appr-pay-method').value;
+            const ref = document.getElementById('appr-pay-ref').value;
+            const amount = parseFloat(document.getElementById('appr-pay-amount').value);
+            const notes = document.getElementById('appr-pay-notes').value;
+
+            try {
+                const res = await apiFetch(`/api/orders/${orderId}/approve-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        payment_method: method,
+                        reference_number: ref,
+                        amount: amount,
+                        notes: notes
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert('✓ ክፍያው በተሳካ ሁኔታ ጸድቋል! ወደ ገቢ መዝገብ ገብቷል።');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    throw new Error(data.message || 'ማጽደቅ አልተቻለም');
+                }
+            } catch (err) {
+                alert('ስህተት፡ ' + err.message);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '✓ አጽድቅ (Approve)';
+                }
+            }
+        }
+        window.submitApprovePayment = submitApprovePayment;
+
+        function openRejectPaymentModal(orderId, orderNumber) {
+            const container = document.getElementById('generic-modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-red-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white">⚠️ ክፍያ ውድቅ ማድረጊያ / ማጣሪያ</h3>
+                                <p class="text-xs font-mono text-slate-400 mt-0.5">${escapeHtml(orderNumber)}</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+
+                        <form onsubmit="submitRejectPayment(event, ${orderId})" class="space-y-3.5 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ውድቅ የተደረገበት ወይም እንደገና የሚጣራበት ምክንያት *</label>
+                                <textarea id="rej-reason" required rows="3" placeholder="ለምሳሌ፡ የቴሌብር ክፍያ አልደረሰም / ሂሳቡ አልተገኘም..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
+                            </div>
+
+                            <div class="flex items-center gap-2 pt-2">
+                                <button type="button" onclick="closeModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl">ተመለስ</button>
+                                <button type="submit" id="rej-btn" class="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white font-black rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>ውድቅ አድርግ (Reject)</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+        window.openRejectPaymentModal = openRejectPaymentModal;
+
+        async function submitRejectPayment(e, orderId) {
+            e.preventDefault();
+            const btn = document.getElementById('rej-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'በማስኬድ ላይ...';
+            }
+            const reason = document.getElementById('rej-reason').value;
+
+            try {
+                const res = await apiFetch(`/api/orders/${orderId}/reject-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert('ክፍያው ውድቅ ተደርጓል፤ ወደ ያልተከፈለ ሁኔታ ተመልሷል።');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    throw new Error(data.message || 'ማስኬድ አልተቻለም');
+                }
+            } catch (err) {
+                alert('ስህተት፡ ' + err.message);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'ውድቅ አድርግ (Reject)';
+                }
+            }
+        }
+        window.submitRejectPayment = submitRejectPayment;
 
         function openRecordExpenseModal() {
             const container = document.getElementById('generic-modal-container');

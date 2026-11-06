@@ -726,6 +726,206 @@ class OrderController extends Controller
     }
 
     /**
+     * Cleaner team submits collected payment for Owner/Reception approval.
+     * Both Cash and Transfer MUST result in payment_status = 'pending_approval'.
+     */
+    public function submitPayment(Request $request, Order $order): JsonResponse
+    {
+        $user = $request->user();
+
+        // Enforce cleaner team isolation if caller is cleaner
+        if ($user && $user->isCleaner()) {
+            $cleanerTeamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
+                ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
+                ->unique();
+
+            if (!$order->assigned_team_id || !$cleanerTeamIds->contains($order->assigned_team_id)) {
+                return response()->json([
+                    'message' => 'Unauthorized. You can only submit payment for jobs assigned to your team.',
+                ], 403);
+            }
+        }
+
+        $validated = $request->validate([
+            'payment_method' => 'required|string|in:cash,telebirr,cbe,cbe_birr,bank_transfer',
+            'payment_reference' => 'nullable|string|max:64',
+            'reference_number' => 'nullable|string|max:64',
+            'amount' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        $method = ($validated['payment_method'] === 'cbe_birr') ? 'cbe' : $validated['payment_method'];
+        $ref = $validated['payment_reference'] ?? $validated['reference_number'] ?? null;
+        $amount = !empty($validated['amount']) ? (float)$validated['amount'] : (float)$order->total;
+
+        $old = $order->toArray();
+
+        // CRITICAL: Regardless of cash or transfer, payment_status is ALWAYS pending_approval!
+        $order->payment_status = 'pending_approval';
+        $order->payment_method = $method;
+        $order->payment_reference = $ref;
+        $order->payment_submitted_at = now();
+        $order->payment_submitted_by_user_id = $user?->id;
+
+        $methodLabel = $method === 'cash' ? 'ጥሬ ገንዘብ (Cash)' : strtoupper($method);
+        $noteText = "ክፍያ ለመጽደቅ ቀርቧል: {$methodLabel}" . ($ref ? " [Ref: {$ref}]" : '') . " - " . number_format($amount, 2) . " ETB";
+        if (!empty($validated['notes'])) {
+            $noteText .= " | " . $validated['notes'];
+        }
+        $order->notes = ($order->notes ? $order->notes . "\n" : '') . $noteText;
+        $order->version += 1;
+        $order->save();
+
+        AuditLog::logAction(
+            $user?->id,
+            'payment_submitted_for_approval',
+            Order::class,
+            $order->id,
+            $old,
+            [
+                'payment_status' => 'pending_approval',
+                'payment_method' => $method,
+                'payment_reference' => $ref,
+                'amount' => $amount,
+                'submitted_by' => $user?->name,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'የክፍያ መረጃው በተሳካ ሁኔታ ለመጽደቅ ተልኳል (Payment submitted for approval).',
+            'order' => $order->fresh(['customer', 'assignedTeam', 'items']),
+        ]);
+    }
+
+    /**
+     * Owner & Reception approve a pending payment (or record verified direct payment).
+     * Sets payment_status = 'paid' and creates the official Payment record.
+     */
+    public function approvePayment(Request $request, Order $order): JsonResponse
+    {
+        $user = $request->user();
+        if ($user && !$user->isOwner() && !$user->isReception()) {
+            return response()->json([
+                'message' => 'Unauthorized. Only owner or reception may approve payments.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'payment_method' => 'nullable|string|in:cash,telebirr,cbe,cbe_birr,bank_transfer,check',
+            'reference_number' => 'nullable|string|max:64',
+            'payment_reference' => 'nullable|string|max:64',
+            'amount' => 'nullable|numeric|min:0.01',
+            'payment_date' => 'nullable|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        return DB::transaction(function () use ($request, $order, $validated, $user) {
+            $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
+
+            $alreadyPaid = (float)$lockedOrder->payments()->sum('amount');
+            $remaining = max(0, (float)$lockedOrder->total - $alreadyPaid);
+
+            $amount = !empty($validated['amount']) ? (float)$validated['amount'] : ($remaining > 0 ? $remaining : (float)$lockedOrder->total);
+            $method = $validated['payment_method'] ?? $lockedOrder->payment_method ?? 'cash';
+            if ($method === 'cbe_birr') {
+                $method = 'cbe';
+            }
+            $ref = $validated['reference_number'] ?? $validated['payment_reference'] ?? $lockedOrder->payment_reference ?? null;
+
+            // Create the official Payment record that impacts FinanceController revenue immediately
+            $payment = Payment::create([
+                'payment_number' => Payment::generateNextNumber(),
+                'order_id' => $lockedOrder->id,
+                'customer_id' => $lockedOrder->customer_id,
+                'amount' => $amount,
+                'payment_method' => $method,
+                'reference_number' => $ref,
+                'payment_date' => $validated['payment_date'] ?? Carbon::today(),
+                'recorded_by_user_id' => $user?->id,
+                'notes' => $validated['notes'] ?? ("በ{$user?->name} የጸደቀ ክፍያ"),
+            ]);
+
+            $old = $lockedOrder->toArray();
+
+            $lockedOrder->payment_status = 'paid';
+            $lockedOrder->payment_method = $method;
+            $lockedOrder->payment_reference = $ref;
+            $lockedOrder->payment_approved_at = now();
+            $lockedOrder->payment_approved_by_user_id = $user?->id;
+            $lockedOrder->version += 1;
+            $lockedOrder->save();
+
+            AuditLog::logAction(
+                $user?->id,
+                'payment_approved',
+                Order::class,
+                $lockedOrder->id,
+                $old,
+                [
+                    'payment_id' => $payment->id,
+                    'payment_number' => $payment->payment_number,
+                    'payment_status' => 'paid',
+                    'payment_method' => $method,
+                    'amount' => $amount,
+                    'approved_by' => $user?->name,
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'ክፍያው በተሳካ ሁኔታ ጸድቋል (Payment approved and recorded).',
+                'order' => $lockedOrder->fresh(['customer', 'assignedTeam', 'items', 'payments']),
+                'payment' => $payment,
+            ]);
+        });
+    }
+
+    /**
+     * Owner & Reception reject a pending payment and request recheck.
+     */
+    public function rejectPayment(Request $request, Order $order): JsonResponse
+    {
+        $user = $request->user();
+        if ($user && !$user->isOwner() && !$user->isReception()) {
+            return response()->json([
+                'message' => 'Unauthorized. Only owner or reception may reject payments.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $old = $order->toArray();
+        $reason = $validated['reason'] ?? 'ክፍያው እንደገና እንዲጣራ ተመልሷል (Recheck requested)';
+
+        $order->payment_status = 'unpaid';
+        $order->notes = ($order->notes ? $order->notes . "\n" : '') . "[ክፍያ ውድቅ የተደረገበት ምክንያት: {$reason} - በ{$user?->name}]";
+        $order->version += 1;
+        $order->save();
+
+        AuditLog::logAction(
+            $user?->id,
+            'payment_rejected',
+            Order::class,
+            $order->id,
+            $old,
+            [
+                'payment_status' => 'unpaid',
+                'reason' => $reason,
+                'rejected_by' => $user?->name,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ክፍያው ውድቅ ተደርጓል፤ እንደገና እንዲጣራ ተመልሷል::',
+            'order' => $order->fresh(['customer', 'assignedTeam', 'items']),
+        ]);
+    }
+
+    /**
      * Postpones / Reschedules an order with SMS & Telegram notifications to the customer
      */
     public function postpone(Request $request, Order $order): JsonResponse
