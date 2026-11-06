@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\CleaningTeam;
 use App\Models\Complaint;
+use App\Models\Feedback;
 use App\Models\Followup;
 use App\Models\Order;
 use App\Models\TeamMember;
@@ -24,6 +25,16 @@ class TeamController extends Controller
                 $q->whereIn('order_status', ['assigned', 'on_the_way', 'cleaning']);
             }])
             ->get();
+
+        $teams->transform(function ($team) {
+            $totalAssigned = Order::where('assigned_team_id', $team->id)->count();
+            $completed = Order::where('assigned_team_id', $team->id)->where('order_status', 'completed')->count();
+            $team->total_jobs_count = $totalAssigned;
+            $team->completed_jobs_count = $completed;
+            $team->completion_rate = $totalAssigned > 0 ? round(($completed / $totalAssigned) * 100) : 100;
+            $team->avg_rating = round((float) Feedback::whereHas('order', fn($q) => $q->where('assigned_team_id', $team->id))->avg('rating') ?: 5.0, 1);
+            return $team;
+        });
 
         return response()->json($teams);
     }
@@ -133,9 +144,23 @@ class TeamController extends Controller
             return $order;
         };
 
+        $totalCompleted = $teamId ? Order::where('assigned_team_id', $teamId)->where('order_status', 'completed')->count() : 0;
+        $totalAssigned = $teamId ? Order::where('assigned_team_id', $teamId)->count() : 0;
+        $completionRate = $totalAssigned > 0 ? round(($totalCompleted / $totalAssigned) * 100) : 100;
+        $teamAvgRating = $teamId ? round((float) Feedback::whereHas('order', fn($q) => $q->where('assigned_team_id', $teamId))->avg('rating') ?: 5.0, 1) : 5.0;
+
+        $teamStats = [
+            'total_completed' => $totalCompleted,
+            'total_assigned' => $totalAssigned,
+            'completion_rate' => $completionRate,
+            'avg_rating' => $teamAvgRating,
+            'active_jobs_count' => $todayJobs->count(),
+        ];
+
         return response()->json([
             'team' => $team,
             'teams_list' => $allTeams,
+            'stats' => $teamStats,
             'today_jobs' => $todayJobs->map($formatJob),
             'completed_today' => $completedToday->map($formatJob),
             'completed_jobs' => $completedHistory->map($formatJob),
@@ -164,6 +189,7 @@ class TeamController extends Controller
         $validated = $request->validate([
             'action' => 'required|string|in:start,complete,on_the_way,report_problem',
             'notes' => 'nullable|string',
+            'checklist' => 'nullable|array',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'problem_category' => 'nullable|string',
@@ -205,8 +231,15 @@ class TeamController extends Controller
         } elseif ($validated['action'] === 'complete') {
             $order->order_status = 'completed';
             $order->completed_at = now();
+            $notesParts = [];
             if (!empty($validated['notes'])) {
-                $order->completion_notes = $validated['notes'];
+                $notesParts[] = $validated['notes'];
+            }
+            if (!empty($validated['checklist']) && is_array($validated['checklist'])) {
+                $notesParts[] = "የተከናወኑ ስራዎች ዝርዝር (Checklist):\n- " . implode("\n- ", $validated['checklist']);
+            }
+            if (!empty($notesParts)) {
+                $order->completion_notes = implode("\n\n", $notesParts);
             }
 
             // Create next-day follow-up

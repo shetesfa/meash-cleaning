@@ -8,11 +8,13 @@ use App\Models\CleaningTeam;
 use App\Models\Complaint;
 use App\Models\Customer;
 use App\Models\Expense;
+use App\Models\Feedback;
 use App\Models\Followup;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Proforma;
 use App\Models\SalesVisit;
+use App\Models\Subscription;
 use App\Services\EthiopianCalendarService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -123,6 +125,69 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
+        // 1. Rating & Customer Satisfaction Stats
+        $totalFeedbacks = Feedback::count();
+        $avgRating = (float) Feedback::avg('rating') ?: 5.0;
+        $starCounts = Feedback::select('rating', DB::raw('count(*) as count'))
+            ->groupBy('rating')
+            ->pluck('count', 'rating');
+
+        $ratingDistribution = [];
+        for ($s = 5; $s >= 1; $s--) {
+            $c = (int)($starCounts[$s] ?? 0);
+            $ratingDistribution[$s] = [
+                'stars' => $s,
+                'count' => $c,
+                'percentage' => $totalFeedbacks > 0 ? round(($c / $totalFeedbacks) * 100) : 0,
+            ];
+        }
+
+        // 2. Team Performance Metrics
+        $teams = CleaningTeam::where('status', 'active')->with('leader:id,name')->get();
+        $teamPerformance = $teams->map(function ($t) {
+            $totalAssigned = Order::where('assigned_team_id', $t->id)->count();
+            $completed = Order::where('assigned_team_id', $t->id)->where('order_status', 'completed')->count();
+            $rate = $totalAssigned > 0 ? round(($completed / $totalAssigned) * 100) : 100;
+            return [
+                'id' => $t->id,
+                'name' => $t->team_name,
+                'leader' => $t->leader?->name ?? 'N/A',
+                'total_assigned' => $totalAssigned,
+                'completed' => $completed,
+                'completion_rate' => $rate,
+            ];
+        });
+
+        // 3. Subscriptions MRR
+        $activeSubs = Subscription::where('status', 'active')->get();
+        $mrr = 0.0;
+        foreach ($activeSubs as $sub) {
+            $price = (float)($sub->discounted_price ?: $sub->base_price);
+            $mrr += match ($sub->plan_type) {
+                'weekly' => $price * 4.0,
+                'biweekly' => $price * 2.0,
+                default => $price,
+            };
+        }
+
+        // 4. Daily trend (past 7 days)
+        $dailyTrend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $d = Carbon::today()->subDays($i);
+            $dStr = $d->toDateString();
+            $eth = EthiopianCalendarService::toEthiopian($d);
+            $inc = (float) Payment::whereDate('payment_date', $dStr)->sum('amount');
+            $exp = (float) Expense::whereDate('date', $dStr)->sum('amount');
+            $dailyTrend[] = [
+                'date' => $dStr,
+                'eth_date' => $eth['formatted_am'] ?? $dStr,
+                'day_name' => $d->format('D'),
+                'income' => $inc,
+                'expense' => $exp,
+                'net' => $inc - $exp,
+            ];
+        }
+
         return response()->json([
             'today' => [
                 'eth_date' => $ethDate['formatted_am'],
@@ -144,6 +209,17 @@ class DashboardController extends Controller
                 'expenses' => $monthExpenses,
                 'net_profit' => $monthNet,
             ],
+            'satisfaction' => [
+                'avg_rating' => round($avgRating, 1),
+                'total_feedbacks' => $totalFeedbacks,
+                'rating_distribution' => $ratingDistribution,
+            ],
+            'team_performance' => $teamPerformance,
+            'subscriptions' => [
+                'active_count' => $activeSubs->count(),
+                'mrr' => round($mrr, 2),
+            ],
+            'daily_trend' => $dailyTrend,
             'channel_breakdown' => $channelBreakdown,
             'payment_breakdown' => $paymentBreakdown,
             'recent_orders' => $recentOrders,

@@ -168,6 +168,8 @@ class OrderController extends Controller
             
             // Order details
             'source' => 'nullable|string|in:website,telegram_bot,telegram_inline,telegram_miniapp,phone,walkin,walk_in,internal,corporate_contract',
+            'order_status' => 'nullable|string|in:new,pending_confirmation,confirmed,assigned,draft',
+            'is_draft' => 'nullable|boolean',
             'appointment_date' => 'nullable|date',
             'appointment_time_slot' => 'nullable|string|max:64',
             'address' => 'nullable|string',
@@ -232,6 +234,9 @@ class OrderController extends Controller
             $teamId = $validated['assigned_team_id'] ?? $validated['team_id'] ?? $request->input('assigned_team_id') ?? $request->input('team_id');
             $orderNumber = Order::generateNextNumber();
             $status = !empty($teamId) ? 'assigned' : 'new';
+            if ($request->boolean('is_draft') || in_array($request->input('order_status'), ['draft', 'pending_confirmation'])) {
+                $status = 'pending_confirmation';
+            }
             $orderSource = in_array($validated['source'] ?? '', ['walkin', 'walk_in']) ? 'walk_in' : ($validated['source'] ?? 'phone');
 
             $order = Order::create([
@@ -246,7 +251,7 @@ class OrderController extends Controller
                 'discount' => $validated['discount'] ?? 0,
                 'tax' => 0,
                 'total' => 0,
-                'appointment_date' => $validated['appointment_date'] ?? null,
+                'appointment_date' => $validated['appointment_date'] ?? Carbon::today(),
                 'appointment_time_slot' => $validated['appointment_time_slot'] ?? 'morning',
                 'address' => $address,
                 'subcity' => $subcity ?? $customer->subcity,

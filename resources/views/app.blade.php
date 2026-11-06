@@ -1290,6 +1290,103 @@
                             </div>
                         </div>
 
+                        <!-- 7-Day Financial Trend Chart (Real Database Numbers) -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                <div>
+                                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                        <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+                                        <span>የባለፉት 7 ቀናት የቀን-በቀን ገቢ እና ወጪ (7-Day Financial Trend)</span>
+                                    </h3>
+                                    <p class="text-xs text-slate-400">በእያንዳንዱ ቀን የተሰበሰበ ገቢ እና የወጣ ወጪ ንጽጽር (ከተረጋገጡ ክፍያዎች እና ወጪዎች)።</p>
+                                </div>
+                                <div class="flex items-center gap-3 text-xs">
+                                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-md bg-emerald-500"></span><span class="text-slate-300">ገቢ</span></span>
+                                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-md bg-red-500"></span><span class="text-slate-300">ወጪ</span></span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-7 gap-2 pt-2 items-end min-h-[140px]">
+                                ${(data.daily_trend || []).map(day => {
+                                    const maxVal = Math.max(...(data.daily_trend || []).map(d => Math.max(d.income || 0, d.expense || 0)), 1000);
+                                    const incPct = Math.min(100, Math.round(((day.income || 0) / maxVal) * 100));
+                                    const expPct = Math.min(100, Math.round(((day.expense || 0) / maxVal) * 100));
+                                    return `
+                                        <div class="flex flex-col items-center gap-1.5 h-full justify-end">
+                                            <div class="flex items-end gap-1 w-full justify-center h-28 bg-slate-950/40 rounded-xl p-1">
+                                                <div class="w-1/2 bg-emerald-500 rounded-t-md transition-all hover:bg-emerald-400" style="height: ${Math.max(4, incPct)}%;" title="ገቢ፡ ${parseFloat(day.income || 0).toLocaleString()} ETB"></div>
+                                                <div class="w-1/2 bg-red-500 rounded-t-md transition-all hover:bg-red-400" style="height: ${Math.max(4, expPct)}%;" title="ወጪ፡ ${parseFloat(day.expense || 0).toLocaleString()} ETB"></div>
+                                            </div>
+                                            <span class="text-[10px] font-bold text-slate-400 font-mono">${day.day_name || day.date.slice(5)}</span>
+                                            <span class="text-[9px] font-bold ${day.net >= 0 ? 'text-emerald-400' : 'text-red-400'}">${day.net >= 0 ? '+' : ''}${Math.round(day.net / 1000)}k</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Customer Satisfaction & Team Performance Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <!-- Real Customer Satisfaction Card -->
+                            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-4">
+                                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                        <i data-lucide="star" class="w-4 h-4 text-amber-400"></i>
+                                        <span>የደንበኞች እርካታ እና ደረጃ (Customer Satisfaction)</span>
+                                    </h3>
+                                    <span class="text-xs text-slate-400 font-bold">${data.satisfaction?.total_feedbacks || 0} አስተያየቶች</span>
+                                </div>
+                                <div class="flex items-center gap-6">
+                                    <div class="text-center p-4 bg-slate-800/80 rounded-2xl border border-slate-700">
+                                        <span class="text-4xl font-black text-amber-400 block">${data.satisfaction?.avg_rating || 5.0}</span>
+                                        <span class="text-xs text-slate-400">ከ 5.0 ኮከቦች</span>
+                                        <div class="flex items-center justify-center gap-0.5 text-amber-400 mt-1">
+                                            ${'★'.repeat(Math.round(data.satisfaction?.avg_rating || 5))}${'☆'.repeat(5 - Math.round(data.satisfaction?.avg_rating || 5))}
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 space-y-1.5">
+                                        ${[5, 4, 3, 2, 1].map(stars => {
+                                            const item = (data.satisfaction?.rating_distribution && data.satisfaction.rating_distribution[stars]) || { count: 0, percentage: 0 };
+                                            return `
+                                                <div class="flex items-center gap-2 text-xs">
+                                                    <span class="w-8 text-[11px] text-slate-400 font-bold">${stars} ★</span>
+                                                    <div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                                        <div class="h-full bg-amber-400 rounded-full transition-all" style="width: ${item.percentage}%;"></div>
+                                                    </div>
+                                                    <span class="w-8 text-right text-[10px] text-slate-400">${item.count}</span>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Real Team Performance Card -->
+                            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-4">
+                                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                    <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                        <i data-lucide="award" class="w-4 h-4 text-cyan-400"></i>
+                                        <span>የቡድኖች ስራ ማጠናቀቂያ (Team Completion Rate)</span>
+                                    </h3>
+                                    <span class="text-xs text-emerald-400 font-bold">MRR: ${parseFloat(data.subscriptions?.mrr || 0).toLocaleString()} ETB</span>
+                                </div>
+                                <div class="space-y-3">
+                                    ${(data.team_performance || []).length === 0 ? '<p class="text-xs text-slate-500 py-4 text-center">እስካሁን የተፈጠረ ንቁ ቡድን የለም።</p>' : (data.team_performance || []).map(tp => `
+                                        <div class="p-3 bg-slate-800/80 rounded-2xl border border-slate-700/80 flex items-center justify-between gap-3">
+                                            <div>
+                                                <span class="text-xs font-bold text-white block">${tp.name}</span>
+                                                <span class="text-[10px] text-slate-400">መሪ፡ ${tp.leader} • የተጠናቀቀ፡ <strong>${tp.completed}/${tp.total_assigned}</strong></span>
+                                            </div>
+                                            <div class="text-right">
+                                                <span class="px-2.5 py-1 rounded-xl text-xs font-black ${tp.completion_rate >= 80 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
+                                                    ${tp.completion_rate}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Recent Orders Feed -->
                         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6">
                             <div class="flex items-center justify-between mb-6">
@@ -1421,6 +1518,13 @@
                                                 </div>
                                                 <p class="text-[11px] text-slate-400 mt-0.5">${b.customer?.phone} | ${b.subcity || 'Addis Ababa'}</p>
                                                 <p class="text-[10px] text-slate-500">${b.items?.map(i => i.item_name).join(', ')}</p>
+                                                <div class="flex items-center gap-1.5 mt-2">
+                                                    <span class="text-[10px] text-slate-400 font-bold">ቡድን ፈጥነህ መድብ፡</span>
+                                                    <select onchange="quickAssignTeam(${b.id}, this.value)" class="bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-[10px] rounded-lg px-2 py-1 focus:outline-none cursor-pointer">
+                                                        <option value="">-- ቡድን ምረጥ --</option>
+                                                        ${(data.active_teams || []).map(t => `<option value="${t.id}" ${b.assigned_team_id == t.id ? 'selected' : ''}>${t.team_name}</option>`).join('')}
+                                                    </select>
+                                                </div>
                                             </div>
                                             <div class="flex flex-wrap items-center gap-1.5 self-end sm:self-auto">
                                                 ${b.payment_status === 'pending_approval' ? `
@@ -1458,6 +1562,13 @@
                                                     ${getPaymentBadge(s.payment_status, s)}
                                                 </div>
                                                 <p class="text-[11px] text-slate-400 mt-0.5">የተመደበ ቡድን: <strong>${s.assigned_team?.team_name || 'ቡድን አልተመደበም'}</strong></p>
+                                                <div class="flex items-center gap-1.5 mt-1.5">
+                                                    <span class="text-[10px] text-slate-400 font-bold">ቡድን ቀይር፡</span>
+                                                    <select onchange="quickAssignTeam(${s.id}, this.value)" class="bg-slate-900 border border-slate-700 text-cyan-300 font-bold text-[10px] rounded-lg px-2 py-1 focus:outline-none cursor-pointer">
+                                                        <option value="">-- ቡድን ምረጥ --</option>
+                                                        ${(data.active_teams || []).map(t => `<option value="${t.id}" ${s.assigned_team_id == t.id ? 'selected' : ''}>${t.team_name}</option>`).join('')}
+                                                    </select>
+                                                </div>
                                             </div>
                                             <div class="flex flex-wrap items-center gap-1.5 self-end sm:self-auto">
                                                 ${s.payment_status === 'pending_approval' ? `
@@ -1665,6 +1776,22 @@
                                     </select>
                                 </div>
                                 <span class="px-3 py-1.5 rounded-xl ${activeTab === 'cleaner_history' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'} text-xs font-black shrink-0">${tabBadge}</span>
+                            </div>
+                        </div>
+
+                        <!-- Cleaner Team Real Performance Stats Strip (from DB) -->
+                        <div class="grid grid-cols-3 gap-2 p-3 bg-slate-900 border border-slate-800 rounded-2xl text-center shadow-lg">
+                            <div>
+                                <span class="text-[10px] text-slate-400 block font-semibold">የተጠናቀቁ ስራዎች</span>
+                                <span class="text-base font-black text-emerald-400 mt-0.5 block">${data.stats?.total_completed || 0}</span>
+                            </div>
+                            <div class="border-x border-slate-800">
+                                <span class="text-[10px] text-slate-400 block font-semibold">ስራ ማጠናቀቅ</span>
+                                <span class="text-base font-black text-cyan-300 mt-0.5 block">${data.stats?.completion_rate || 100}%</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block font-semibold">አማካይ እርካታ</span>
+                                <span class="text-base font-black text-amber-400 mt-0.5 block">${data.stats?.avg_rating || 5.0} ★</span>
                             </div>
                         </div>
 
@@ -2210,6 +2337,10 @@
                                 <p class="text-xs text-slate-400 mt-1">ሁሉንም የፅዳት ትዕዛዞች በሰርጥ፣ በሁኔታ እና በክፍያ ማጣራትና ማስተዳደር።</p>
                             </div>
                             <div class="flex items-center gap-2">
+                                <button onclick="downloadOrdersCsv()" class="px-3.5 py-2.5 bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer transition">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                    <span>CSV አውርድ</span>
+                                </button>
                                 <button onclick="renderOrdersModule(document.getElementById('app-viewport'))" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 flex items-center gap-1.5 transition cursor-pointer" title="ዳታውን አድስ">
                                     <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-cyan-400"></i>
                                     <span class="hidden sm:inline">አድስ (Refresh)</span>
@@ -2339,6 +2470,7 @@
                                                         </button>
                                                     ` : '')}
                                                     <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ሰራተኛ መድብ">ሰራተኛ</button>
+                                                    <button onclick="printOrderInvoice(${o.id})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-500/40 transition" title="ደረሰኝ አትም (Print Invoice)">🖨️ ደረሰኝ</button>
                                                     <button data-phone="${escapeHtml(o.customer_phone || o.customer?.phone || '')}" data-name="${escapeHtml(o.customer_name || o.customer?.full_name || o.customer?.name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">SMS</button>
                                                     <button onclick="openOrderDetailsModal(${o.id})" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር</button>
                                                 </td>
@@ -2394,12 +2526,14 @@
             try {
                 const res = await apiFetch('/api/subscriptions');
                 const data = await res.json();
-                const subs = data.data || [];
+                const subs = (data.subscriptions && data.subscriptions.data) ? data.subscriptions.data : (data.data || (Array.isArray(data) ? data : []));
+                const stats = data.stats || {};
 
-                const activeCount = subs.filter(s => s.status === 'active').length;
-                const weeklyCount = subs.filter(s => s.plan_type === 'weekly').length;
-                const biweeklyCount = subs.filter(s => s.plan_type === 'biweekly').length;
-                const monthlyCount = subs.filter(s => s.plan_type === 'monthly').length;
+                const activeCount = stats.total_active !== undefined ? stats.total_active : subs.filter(s => s.status === 'active').length;
+                const weeklyCount = stats.weekly_active !== undefined ? stats.weekly_active : subs.filter(s => s.plan_type === 'weekly').length;
+                const biweeklyCount = stats.biweekly_active !== undefined ? stats.biweekly_active : subs.filter(s => s.plan_type === 'biweekly').length;
+                const monthlyCount = stats.monthly_active !== undefined ? stats.monthly_active : subs.filter(s => s.plan_type === 'monthly').length;
+                const mrr = stats.mrr !== undefined ? stats.mrr : 0;
 
                 container.innerHTML = `
                     <div class="max-w-7xl mx-auto space-y-6">
@@ -2409,9 +2543,13 @@
                                 <p class="text-xs text-slate-400 mt-1">ተደጋጋሚ የጽዳት ውሎችን፣ ሳምንታዊ፣ የሁለት ሳምንት እና ወርሃዊ እቅዶችን ማስተዳደር።</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="px-3 py-1.5 rounded-xl bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 text-xs font-bold">
-                   ${activeCount} ንቁ የደንበኝነት ተጠቃሚዎች
+                                <span class="px-3 py-2 rounded-xl bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+                                    MRR: ${parseFloat(mrr).toLocaleString()} ETB
                                 </span>
+                                <button onclick="openCreateSubscriptionModal()" class="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition">
+                                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                    <span>+ አዲስ ደንበኝነት መዝግብ</span>
+                                </button>
                             </div>
                         </div>
 
@@ -2857,6 +2995,10 @@
                                         <option value="this_year" ${currentPeriod === 'this_year' ? 'selected' : ''}>የዚህ ዓመት</option>
                                     </select>
                                 </div>
+                                <button onclick="downloadFinanceCsv()" class="px-3.5 py-2.5 bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer transition">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                    <span>CSV አውርድ</span>
+                                </button>
                                 <button onclick="openPayrollModal()" class="px-4 py-2.5 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all shadow-amber-950/40">
                                     <i data-lucide="banknote" class="w-4 h-4"></i>
                   <span> ደመወዝ ክፈል (Payroll)</span>
@@ -3569,6 +3711,16 @@
                             </div>
 
                             <div>
+                                <label class="block text-slate-300 font-bold mb-1.5">የተከናወኑ ስራዎች ዝርዝር (Service Checklist):</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 p-2.5 bg-slate-950/60 rounded-xl border border-slate-800 text-[11px] text-slate-300">
+                                    <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="cl-chk" value="ጥልቅ ጽዳት ተጠናቋል" checked class="rounded text-cyan-500"> ጥልቅ ጽዳት ተጠናቋል</label>
+                                    <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="cl-chk" value="መስተዋትና መስኮት ጽዳት" checked class="rounded text-cyan-500"> መስተዋትና መስኮት ጽዳት</label>
+                                    <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="cl-chk" value="ፎቅ ማጠብና ቫኪዩም" checked class="rounded text-cyan-500"> ፎቅ ማጠብና ቫኪዩም</label>
+                                    <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" name="cl-chk" value="ደንበኛ ስራውን አይቶ አጽድቋል" checked class="rounded text-cyan-500"> ደንበኛ ስራውን አይቷል</label>
+                                </div>
+                            </div>
+
+                            <div>
                                 <label class="block text-slate-300 font-bold mb-1">ተጨማሪ ማስታወሻ (Optional Note)</label>
                                 <textarea id="cl-pay-notes" rows="2" placeholder="ለምሳሌ፡ ከባለቤቱ በእጅ ተቀብያለሁ / ቴሌብር ደርሶታል..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
                             </div>
@@ -3614,20 +3766,24 @@
             const amount = parseFloat(document.getElementById('cl-pay-amount').value) || 0;
             const notes = document.getElementById('cl-pay-notes')?.value || '';
 
+            const checkedBoxes = Array.from(document.querySelectorAll('input[name="cl-chk"]:checked')).map(c => c.value);
+            const checklistSummary = checkedBoxes.length > 0 ? "Checklist: " + checkedBoxes.join(', ') : '';
+            const finalNotes = [notes, checklistSummary].filter(Boolean).join(' | ');
+
             const payload = {
                 payment_method: method,
                 payment_reference: ref,
                 reference_number: ref,
                 amount: amount,
-                notes: notes,
+                notes: finalNotes,
             };
 
             try {
-                // Ensure order is completed if still in progress
+                // Ensure order is completed if still in progress with full checklist notes
                 try {
                     await apiFetch(`/api/orders/${orderId}/status`, {
                         method: 'PATCH',
-                        body: JSON.stringify({ status: 'completed' })
+                        body: JSON.stringify({ status: 'completed', notes: finalNotes, checklist: checkedBoxes })
                     });
                 } catch (stErr) {
                     console.warn('Status completion auto-call:', stErr);
@@ -3865,15 +4021,39 @@
 
         async function submitExpense(e) {
             e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            if (btn) btn.disabled = true;
             const payload = {
                 category: document.getElementById('exp-category').value,
                 amount: parseFloat(document.getElementById('exp-amount').value),
                 description: document.getElementById('exp-desc').value,
                 date: new Date().toISOString().split('T')[0],
             };
-            await window.meashOffline.enqueue('expense', 'create', payload);
-            closeModal();
-            loadActiveTab();
+            try {
+                const res = await apiFetch('/api/finance/expenses', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('ወጪው በተሳካ ሁኔታ በዳታቤዝ ተመዝግቧል!');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት: ' + (data.message || 'ወጪውን መመዝገብ አልተቻለም'));
+                }
+            } catch (err) {
+                if (window.meashOffline && typeof window.meashOffline.enqueue === 'function') {
+                    await window.meashOffline.enqueue('expense', 'create', payload);
+                    alert('ከመስመር ውጭ ስለሆኑ ወጪው በስልክዎ ላይ ተቀምጧል፤ ኢንተርኔት ሲመጣ ወደ ዳታቤዝ ይገባል::');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('የግንኙነት ስህተት: ' + err.message);
+                }
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         function closeModal() {
@@ -3999,6 +4179,14 @@
                                                 <div class="flex items-center justify-between">
                           <span> አባላት:</span>
                                                     <span class="text-cyan-400 font-bold">${t.members?.length || 1} አባላት</span>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                          <span> ስራ ማጠናቀቅ:</span>
+                                                    <span class="text-emerald-400 font-bold">${t.completion_rate || 100}% (${t.completed_jobs_count || 0} የተጠናቀቁ)</span>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                          <span> አማካይ እርካታ:</span>
+                                                    <span class="text-amber-400 font-bold">${t.avg_rating || 5.0} ★</span>
                                                 </div>
                                             </div>
                                             <div class="pt-2 flex items-center justify-between text-xs">
@@ -7165,7 +7353,7 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-          alert(' ' + (data.message || 'ቡድኑ ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል!'));
+                    alert('ቡድኑ ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል!');
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -7173,6 +7361,29 @@
                 }
             } catch (err) {
                 alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+            }
+        }
+
+        async function quickAssignTeam(orderId, teamId) {
+            if (!teamId) return;
+            try {
+                const res = await apiFetch(`/api/orders/${orderId}/assign-team`, {
+                    method: 'POST',
+                    body: JSON.stringify({ team_id: parseInt(teamId) })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert('ቡድኑ ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል!');
+                    if (activeTab === 'reception') {
+                        renderReceptionView(document.getElementById('app-viewport'));
+                    } else {
+                        loadActiveTab();
+                    }
+                } else {
+                    alert('ስህተት: ' + (data.message || 'ቡድን መመደብ አልተቻለም'));
+                }
+            } catch (e) {
+                alert('የግንኙነት ችግር: ' + e.message);
             }
         }
 
@@ -8150,6 +8361,395 @@
         alert(' ማሳወቂያዎች አልተፈቀዱም። እባክዎ በብሮውዘር ቅንብር ውስጥ ይፍቀዱ።');
             }
         }
+
+        // ==========================================
+        // REAL DATA UTILITIES: CSV EXPORT & PRINT INVOICE
+        // ==========================================
+        async function downloadOrdersCsv() {
+            try {
+                const res = await apiFetch('/api/orders?per_page=1000');
+                const data = await res.json();
+                const orders = data.data || [];
+                if (orders.length === 0) return alert('ምንም የሚወርድ የትዕዛዝ መረጃ የለም።');
+
+                const headers = ['Order Number', 'Customer Name', 'Phone', 'Subcity', 'Appointment Date', 'Time Slot', 'Assigned Team', 'Total (ETB)', 'Payment Status', 'Order Status', 'Source'];
+                const rows = orders.map(o => [
+                    `"${o.order_number || ''}"`,
+                    `"${(o.customer?.full_name || o.customer_name || '').replace(/"/g, '""')}"`,
+                    `"${o.customer?.phone || o.customer_phone || ''}"`,
+                    `"${(o.subcity || o.customer?.subcity || '').replace(/"/g, '""')}"`,
+                    `"${o.eth_appointment_date || o.appointment_date || ''}"`,
+                    `"${o.appointment_time_slot || ''}"`,
+                    `"${(o.assigned_team?.team_name || o.assignedTeam?.team_name || 'Unassigned').replace(/"/g, '""')}"`,
+                    parseFloat(o.total || 0),
+                    `"${o.payment_status || 'unpaid'}"`,
+                    `"${o.order_status || 'new'}"`,
+                    `"${o.source || 'website'}"`
+                ]);
+
+                const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', `meash_orders_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('CSV ማውረድ አልተቻለም: ' + e.message);
+            }
+        }
+        window.downloadOrdersCsv = downloadOrdersCsv;
+
+        async function downloadFinanceCsv() {
+            try {
+                const [expRes, payRes] = await Promise.all([
+                    apiFetch('/api/finance/expenses?per_page=1000'),
+                    apiFetch('/api/finance/payments?per_page=1000')
+                ]);
+                const expData = await expRes.json();
+                const payData = await payRes.json();
+                const expenses = expData.data || (Array.isArray(expData) ? expData : []);
+                const payments = payData.data || (Array.isArray(payData) ? payData : []);
+
+                const headers = ['Type', 'Date', 'Reference / Order', 'Category / Method', 'Description / Customer', 'Amount (ETB)'];
+                const rows = [];
+
+                payments.forEach(p => {
+                    rows.push([
+                        '"INCOME (ገቢ)"',
+                        `"${p.eth_date || p.payment_date || ''}"`,
+                        `"${p.order?.order_number || p.reference_number || ''}"`,
+                        `"${p.payment_method || ''}"`,
+                        `"${(p.customer?.full_name || 'Customer').replace(/"/g, '""')}"`,
+                        parseFloat(p.amount || 0)
+                    ]);
+                });
+
+                expenses.forEach(e => {
+                    rows.push([
+                        '"EXPENSE (ወጪ)"',
+                        `"${e.eth_date || e.date || ''}"`,
+                        `"${e.expense_number || e.reference_number || ''}"`,
+                        `"${e.category || ''}"`,
+                        `"${(e.description || '').replace(/"/g, '""')}"`,
+                        -parseFloat(e.amount || 0)
+                    ]);
+                });
+
+                const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', `meash_financial_report_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('ፋይናንስ CSV ማውረድ አልተቻለም: ' + e.message);
+            }
+        }
+        window.downloadFinanceCsv = downloadFinanceCsv;
+
+        async function printOrderInvoice(orderId) {
+            const container = document.getElementById('generic-modal-container');
+            container.innerHTML = '<div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center text-white"><i data-lucide="loader-2" class="w-8 h-8 animate-spin text-cyan-400"></i></div>';
+            lucide.createIcons();
+
+            try {
+                const res = await apiFetch(`/api/orders/${orderId}`);
+                const data = await res.json();
+                const o = data.data || data;
+
+                const customerName = o.customer?.full_name || o.customer_name || 'ውድ ደንበኛ';
+                const customerPhone = o.customer?.phone || o.customer_phone || '—';
+                const customerAddress = o.address || o.customer?.address || 'አዲስ አበባ';
+                const orderNum = o.order_number || ('ORD-' + o.id);
+                const apptDate = o.eth_appointment_date || o.appointment_date || '—';
+                const items = o.items || [];
+                const total = parseFloat(o.total || 0);
+                const paymentStatus = o.payment_status === 'paid' ? 'የተከፈለ (PAID)' : (o.payment_status === 'pending_approval' ? 'ለመጽደቅ የቀረበ' : 'ያልተከፈለ (UNPAID)');
+
+                container.innerHTML = `
+                    <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+                        <div class="bg-white text-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 my-8 print:p-0 print:m-0 print:shadow-none print:w-full print:max-w-none">
+                            <!-- Top Controls (Hidden during print) -->
+                            <div class="flex items-center justify-between pb-4 border-b border-slate-200 print:hidden">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded-lg border border-cyan-200">የክፍያ ደረሰኝ (Tax Invoice)</span>
+                                    <span class="text-xs font-mono text-slate-500">${escapeHtml(orderNum)}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="window.print()" class="px-4 py-2 bg-gradient-to-r from-blue-700 to-cyan-600 hover:from-blue-600 hover:to-cyan-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition">
+                                        <i data-lucide="printer" class="w-4 h-4"></i>
+                                        <span>አትም (Print Invoice)</span>
+                                    </button>
+                                    <button onclick="closeModal()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl cursor-pointer">ዝጋ</button>
+                                </div>
+                            </div>
+
+                            <!-- Printable Invoice Area -->
+                            <div id="printable-order-invoice" class="space-y-6">
+                                <!-- Header & Logo -->
+                                <div class="flex items-start justify-between border-b-2 border-cyan-800 pb-5">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-10 h-10 rounded-xl bg-cyan-700 text-white flex items-center justify-center font-black text-xl">M</div>
+                                            <div>
+                                                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900">MEASH DEEP CLEANING</h1>
+                                                <p class="text-[11px] font-bold text-cyan-700 tracking-wide">ሜሽ ጥልቅ የጽዳት አገልግሎት</p>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-2">ስልክ፡ 0970075509 / 0998142190 | አዲስ አበባ፣ ኢትዮጵያ</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest block">ደረሰኝ / INVOICE</span>
+                                        <span class="text-base font-black text-cyan-800 font-mono block mt-1">${escapeHtml(orderNum)}</span>
+                                        <span class="text-xs text-slate-500 block mt-1">ቀን፡ ${apptDate}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Customer & Order Meta -->
+                                <div class="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+                                    <div>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">ለተገልጋይ (Billed To):</span>
+                                        <strong class="text-sm font-black text-slate-900 block mt-0.5">${escapeHtml(customerName)}</strong>
+                                        <span class="text-slate-600 block mt-0.5">ስልክ፡ ${escapeHtml(customerPhone)}</span>
+                                        <span class="text-slate-600 block">አድራሻ፡ ${escapeHtml(customerAddress)}</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">የክፍያ ሁኔታ (Status):</span>
+                                        <span class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-black ${o.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                                            ${paymentStatus}
+                                        </span>
+                                        <span class="text-[11px] text-slate-500 block mt-1.5">ቡድን፡ ${escapeHtml(o.assigned_team?.team_name || o.assignedTeam?.team_name || 'መደበኛ')}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Items Table -->
+                                <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                                    <table class="w-full text-left text-xs">
+                                        <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                            <tr>
+                                                <th class="p-3">ተ.ቁ</th>
+                                                <th class="p-3">የአገልግሎት ዝርዝር</th>
+                                                <th class="p-3 text-center">መጠን (Qty)</th>
+                                                <th class="p-3 text-right">የአንዱ ዋጋ (ETB)</th>
+                                                <th class="p-3 text-right">ጠቅላላ ዋጋ (ETB)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            ${items.length === 0 ? `
+                                                <tr>
+                                                    <td colspan="5" class="p-4 text-center text-slate-400 italic">መደበኛ ጥልቅ የጽዳት አገልግሎት</td>
+                                                </tr>
+                                            ` : items.map((it, idx) => `
+                                                <tr>
+                                                    <td class="p-3 text-slate-400 font-mono">${idx + 1}</td>
+                                                    <td class="p-3 font-bold text-slate-800">${escapeHtml(it.service?.name_am || it.item_name || 'የጽዳት አገልግሎት')}</td>
+                                                    <td class="p-3 text-center font-bold text-slate-700">${parseFloat(it.quantity || 1)}</td>
+                                                    <td class="p-3 text-right font-mono text-slate-700">${parseFloat(it.unit_price || 0).toLocaleString()}</td>
+                                                    <td class="p-3 text-right font-black text-slate-900">${parseFloat(it.subtotal || 0).toLocaleString()}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                        <tfoot class="bg-slate-50 border-t-2 border-slate-300 text-xs">
+                                            <tr>
+                                                <td colspan="4" class="p-3 text-right font-black text-slate-900">ጠቅላላ ክፍያ (Total Amount):</td>
+                                                <td class="p-3 text-right font-black text-cyan-800 text-sm font-mono">${total.toLocaleString()} ETB</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+
+                                <!-- Footer Signatures -->
+                                <div class="pt-6 border-t border-slate-200 flex justify-between items-end text-xs text-slate-500">
+                                    <div>
+                                        <p class="font-bold text-slate-700">ሜሽ ጥልቅ የጽዳት አገልግሎት</p>
+                                        <p class="text-[10px] mt-0.5">አገልግሎታችንን ስለመረጡ እናመሰግናለን!</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="w-36 border-b border-slate-400 mb-1"></div>
+                                        <span class="text-[10px] text-slate-400">የተረካቢ / የተከፋይ ፊርማ</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+            } catch (e) {
+                alert('ደረሰኝ መክፈት አልተቻለም: ' + e.message);
+                closeModal();
+            }
+        }
+        window.printOrderInvoice = printOrderInvoice;
+
+        // ==========================================
+        // CREATE SUBSCRIPTION MODAL & SUBMIT
+        // ==========================================
+        async function openCreateSubscriptionModal() {
+            const container = document.getElementById('generic-modal-container');
+            const custRes = await apiFetch('/api/customers?per_page=50');
+            const custData = await custRes.json();
+            const customers = custData.data || [];
+
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-8">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="repeat" class="w-5 h-5 text-cyan-400"></i>
+                                    <span>አዲስ የደንበኝነት እቅድ መዝግብ (New Subscription)</span>
+                                </h3>
+                                <p class="text-xs text-slate-400">ሳምንታዊ፣ የሁለት ሳምንት ወይም ወርሃዊ ተደጋጋሚ የጽዳት ውል ይመዝገቡ።</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white font-bold text-lg">&times;</button>
+                        </div>
+
+                        <form onsubmit="submitNewSubscription(event)" class="space-y-3.5 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ደንበኛ ይምረጡ *</label>
+                                <select id="sub-cust-id" onchange="toggleInlineCustSub(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+                                    <option value="">-- ከነባር ደንበኞች ይምረጡ --</option>
+                                    ${customers.map(c => `<option value="${c.id}">${c.full_name} (${c.phone}) - ${c.subcity || ''}</option>`).join('')}
+                                    <option value="new">+ አዲስ ደንበኛ አስገባ</option>
+                                </select>
+                            </div>
+
+                            <div id="sub-inline-cust" class="hidden p-3 bg-slate-950/60 rounded-xl border border-slate-800 space-y-2">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[11px] text-slate-400 font-bold mb-0.5">የደንበኛ ሙሉ ስም *</label>
+                                        <input type="text" id="sub-inline-name" placeholder="ሙሉ ስም" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] text-slate-400 font-bold mb-0.5">ስልክ ቁጥር *</label>
+                                        <input type="tel" id="sub-inline-phone" placeholder="0911000000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">የእቅድ ዓይነት (Plan) *</label>
+                                    <select id="sub-plan-type" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+                                        <option value="weekly">ሳምንታዊ (Weekly - 15% ቅናሽ)</option>
+                                        <option value="biweekly">የሁለት ሳምንት (Bi-Weekly - 10% ቅናሽ)</option>
+                                        <option value="monthly">ወርሃዊ (Monthly - 5% ቅናሽ)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">የመነሻ ዋጋ (Base Price) *</label>
+                                    <input type="number" id="sub-base-price" required min="100" placeholder="ለምሳሌ፡ 2000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የአገልግሎቱ ዝርዝር (Service Summary) *</label>
+                                <input type="text" id="sub-service-summary" required placeholder="ምሳሌ፡ መደበኛ የሳሎን እና የመኝታ ቤት ጽዳት" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">ስራ የሚጀምርበት ቀን *</label>
+                                    <input type="date" id="sub-start-date" required value="${new Date().toISOString().split('T')[0]}" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">ተመራጭ ሰዓት</label>
+                                    <select id="sub-time-slot" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                                        <option value="morning">ጠዋት (Morning 8:30 AM - 12:30 PM)</option>
+                                        <option value="afternoon">ከሰዓት (Afternoon 1:30 PM - 5:30 PM)</option>
+                                        <option value="full_day">ሙሉ ቀን (Full Day)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ተጨማሪ ማስታወሻ</label>
+                                <textarea id="sub-notes" rows="2" placeholder="ልዩ ትዕዛዝ ወይም መመሪያ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
+                            </div>
+
+                            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
+                                <button type="submit" id="btn-save-sub" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-lg">
+                                    <span>ደንበኝነት መዝግብ</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+        window.openCreateSubscriptionModal = openCreateSubscriptionModal;
+
+        function toggleInlineCustSub(val) {
+            const el = document.getElementById('sub-inline-cust');
+            if (!el) return;
+            if (val === 'new') {
+                el.classList.remove('hidden');
+                document.getElementById('sub-inline-name').setAttribute('required', 'required');
+                document.getElementById('sub-inline-phone').setAttribute('required', 'required');
+            } else {
+                el.classList.add('hidden');
+                document.getElementById('sub-inline-name')?.removeAttribute('required');
+                document.getElementById('sub-inline-phone')?.removeAttribute('required');
+            }
+        }
+        window.toggleInlineCustSub = toggleInlineCustSub;
+
+        async function submitNewSubscription(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-sub');
+            if (btn) { btn.disabled = true; btn.innerText = 'በመመዝገብ ላይ...'; }
+
+            const custSelect = document.getElementById('sub-cust-id').value;
+            const payload = {
+                plan_type: document.getElementById('sub-plan-type').value,
+                base_price: parseFloat(document.getElementById('sub-base-price').value),
+                service_summary: document.getElementById('sub-service-summary').value,
+                start_date: document.getElementById('sub-start-date').value,
+                preferred_time_slot: document.getElementById('sub-time-slot').value,
+                notes: document.getElementById('sub-notes').value || null,
+            };
+
+            if (custSelect === 'new') {
+                payload.customer_name = document.getElementById('sub-inline-name').value.trim();
+                payload.phone = document.getElementById('sub-inline-phone').value.trim();
+            } else if (custSelect) {
+                payload.customer_id = parseInt(custSelect);
+            } else {
+                alert('እባክዎ ደንበኛ ይምረጡ!');
+                if (btn) { btn.disabled = false; btn.innerText = 'ደንበኝነት መዝግብ'; }
+                return;
+            }
+
+            try {
+                const res = await apiFetch('/api/subscriptions', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('የደንበኝነት እቅዱ በተሳካ ሁኔታ በዳታቤዝ ተመዝግቧል!');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት: ' + (data.message || 'መመዝገብ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የሰርቨር ችግር: ' + err.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = 'ደንበኝነት መዝግብ'; }
+            }
+        }
+        window.submitNewSubscription = submitNewSubscription;
 
         async function forcePurgePwaCache() {
             try {

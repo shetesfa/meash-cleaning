@@ -236,6 +236,41 @@ class FinanceController extends Controller
                 ];
             });
 
+        // Time-series (last 7 days daily breakdown)
+        $dailySeries = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i);
+            $dateStr = $date->toDateString();
+            $eth = EthiopianCalendarService::toEthiopian($date);
+            $dayIncome = (float) Payment::whereDate('payment_date', $dateStr)->sum('amount');
+            $dayExpense = (float) Expense::whereDate('date', $dateStr)->sum('amount');
+            $dailySeries[] = [
+                'date' => $dateStr,
+                'eth_date' => $eth['formatted_am'] ?? $dateStr,
+                'day_name' => $date->format('D'),
+                'income' => $dayIncome,
+                'expense' => $dayExpense,
+                'net' => $dayIncome - $dayExpense,
+            ];
+        }
+
+        // Monthly series (last 6 months)
+        $monthlySeries = [];
+        for ($m = 5; $m >= 0; $m--) {
+            $monthDate = Carbon::today()->startOfMonth()->subMonths($m);
+            $mStart = $monthDate->copy()->startOfMonth();
+            $mEnd = $monthDate->copy()->endOfMonth();
+            $mIncome = (float) Payment::whereBetween('payment_date', [$mStart, $mEnd])->sum('amount');
+            $mExpense = (float) Expense::whereBetween('date', [$mStart, $mEnd])->sum('amount');
+            $monthlySeries[] = [
+                'month' => $monthDate->format('M Y'),
+                'month_key' => $monthDate->format('Y-m'),
+                'income' => $mIncome,
+                'expense' => $mExpense,
+                'net' => $mIncome - $mExpense,
+            ];
+        }
+
         return response()->json([
             'period' => $period,
             'revenue' => $totalRevenue,
@@ -257,6 +292,10 @@ class FinanceController extends Controller
             ],
             'expense_breakdown' => $expenseBreakdown,
             'payment_breakdown' => $paymentMethodsBreakdown,
+            'time_series' => [
+                'daily' => $dailySeries,
+                'monthly' => $monthlySeries,
+            ],
         ]);
     }
 }

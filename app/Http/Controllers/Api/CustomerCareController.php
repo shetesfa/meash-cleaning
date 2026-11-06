@@ -11,6 +11,7 @@ use App\Services\EthiopianCalendarService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomerCareController extends Controller
 {
@@ -115,7 +116,32 @@ class CustomerCareController extends Controller
         ]);
 
         $feedbacks = $query->latest()->paginate(20);
-        return response()->json($feedbacks);
+
+        $totalFeedbacks = Feedback::count();
+        $avgRating = round((float) Feedback::avg('rating') ?: 5.0, 1);
+        $starCounts = Feedback::select('rating', DB::raw('count(*) as count'))
+            ->groupBy('rating')
+            ->pluck('count', 'rating');
+
+        $ratingDistribution = [];
+        for ($s = 5; $s >= 1; $s--) {
+            $c = (int)($starCounts[$s] ?? 0);
+            $ratingDistribution[$s] = [
+                'stars' => $s,
+                'count' => $c,
+                'percentage' => $totalFeedbacks > 0 ? round(($c / $totalFeedbacks) * 100) : 0,
+            ];
+        }
+
+        return response()->json([
+            'avg_rating' => $avgRating,
+            'total_feedbacks' => $totalFeedbacks,
+            'rating_distribution' => $ratingDistribution,
+            'feedbacks' => $feedbacks,
+            'data' => $feedbacks->items(),
+            'current_page' => $feedbacks->currentPage(),
+            'last_page' => $feedbacks->lastPage(),
+        ]);
     }
 
     public function storeFeedback(Request $request): JsonResponse

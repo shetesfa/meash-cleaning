@@ -23,11 +23,24 @@ class SubscriptionController extends Controller
 
         $subscriptions = $query->latest()->paginate(25);
 
+        $activeSubs = Subscription::where('status', 'active')->get();
+        $mrr = 0.0;
+        foreach ($activeSubs as $sub) {
+            $price = (float)($sub->discounted_price ?: $sub->base_price);
+            $mrr += match ($sub->plan_type) {
+                'weekly' => $price * 4.0,
+                'biweekly' => $price * 2.0,
+                default => $price,
+            };
+        }
+
         $stats = [
-            'total_active' => Subscription::where('status', 'active')->count(),
-            'weekly_active' => Subscription::where('status', 'active')->where('plan_type', 'weekly')->count(),
-            'biweekly_active' => Subscription::where('status', 'active')->where('plan_type', 'biweekly')->count(),
-            'monthly_active' => Subscription::where('status', 'active')->where('plan_type', 'monthly')->count(),
+            'total_active' => $activeSubs->count(),
+            'weekly_active' => $activeSubs->where('plan_type', 'weekly')->count(),
+            'biweekly_active' => $activeSubs->where('plan_type', 'biweekly')->count(),
+            'monthly_active' => $activeSubs->where('plan_type', 'monthly')->count(),
+            'mrr' => round($mrr, 2),
+            'arr' => round($mrr * 12, 2),
         ];
 
         return response()->json([
@@ -38,6 +51,21 @@ class SubscriptionController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (!$request->filled('customer_id') && ($request->filled('phone') || $request->filled('customer_phone'))) {
+            $phone = $request->input('phone') ?: $request->input('customer_phone');
+            $name = $request->input('customer_name') ?: $request->input('full_name') ?: 'ውድ ደንበኛ';
+            $cust = Customer::firstOrCreate(
+                ['phone' => $phone],
+                [
+                    'customer_code' => Customer::generateNextCode(),
+                    'full_name' => $name,
+                    'address' => $request->input('address', 'Addis Ababa'),
+                    'subcity' => $request->input('subcity', 'Bole'),
+                ]
+            );
+            $request->merge(['customer_id' => $cust->id]);
+        }
+
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'plan_type' => 'required|in:weekly,biweekly,monthly',
