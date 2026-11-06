@@ -84,6 +84,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
     Route::post('/orders', [OrderController::class, 'store'])->middleware('role:owner,reception');
+    Route::match(['put', 'patch'], '/orders/{order}', [OrderController::class, 'update'])->middleware('role:owner,reception');
+    Route::match(['put', 'patch', 'post'], '/orders/{order}/update', [OrderController::class, 'update'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{order}/assign-team', [OrderController::class, 'assignTeam'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/payment', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception');

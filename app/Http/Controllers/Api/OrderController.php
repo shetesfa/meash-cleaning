@@ -12,6 +12,7 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Service;
 use App\Services\EthiopianCalendarService;
+use App\Services\SecurityTokenService;
 use App\Services\SmsService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -30,6 +31,8 @@ class OrderController extends Controller
             'items.service:id,name_en,name_am,code',
         ]);
 
+        $filterTeamId = $request->input('assigned_team_id') ?: $request->input('team_id');
+
         // Cleaners: Strict access limit to ONLY their own team's jobs
         $user = $request->user();
         if ($user && $user->isCleaner()) {
@@ -41,8 +44,8 @@ class OrderController extends Controller
             } else {
                 $query->whereIn('assigned_team_id', $teamIds);
             }
-        } elseif ($teamId = $request->input('team_id')) {
-            $query->where('assigned_team_id', $teamId);
+        } elseif ($filterTeamId) {
+            $query->where('assigned_team_id', $filterTeamId);
         }
 
         // Search
@@ -57,7 +60,8 @@ class OrderController extends Controller
         }
 
         // Filters
-        if ($status = $request->input('status')) {
+        $status = $request->input('status') ?: $request->input('order_status');
+        if ($status) {
             $query->where('order_status', $status);
         }
 
@@ -73,10 +77,6 @@ class OrderController extends Controller
             $query->where('payment_status', $paymentStatus);
         }
 
-        if ($teamId = $request->input('assigned_team_id')) {
-            $query->where('assigned_team_id', $teamId);
-        }
-
         if ($dateFilter = $request->input('date')) {
             if ($dateFilter === 'today') {
                 $query->whereDate('appointment_date', Carbon::today());
@@ -89,13 +89,18 @@ class OrderController extends Controller
             }
         }
 
-        $orders = $query->latest('appointment_date')->paginate($request->input('per_page', 20));
+        $perPage = $request->boolean('all') ? 200 : min(max((int)$request->input('per_page', 20), 1), 200);
+        $orders = $query->latest('appointment_date')->paginate($perPage);
 
-        // Append Ethiopian calendar formatted strings
+        // Append Ethiopian calendar formatted strings and alias fields
         $orders->getCollection()->transform(function ($order) {
             $eth = EthiopianCalendarService::toEthiopian($order->appointment_date);
             $order->eth_appointment_date = $eth['formatted_am'];
             $order->eth_appointment_en = $eth['formatted_en'];
+            $order->customer_name = $order->customer?->full_name ?? $order->customer?->name ?? 'ደንበኛ';
+            $order->customer_phone = $order->customer?->phone ?? '';
+            $order->status = $order->order_status;
+            $order->team_id = $order->assigned_team_id;
             return $order;
         });
 
@@ -149,17 +154,23 @@ class OrderController extends Controller
 
         $validated = $request->validate([
             'customer_id' => 'nullable|exists:customers,id',
-            // Or create customer inline:
-            'customer_name' => 'required_without:customer_id|string|max:255',
-            'customer_phone' => 'required_without:customer_id|string|max:32',
+            // Inline customer attributes (aliases supported)
+            'customer_name' => 'nullable|string|max:255',
+            'full_name' => 'nullable|string|max:255',
+            'name' => 'nullable|string|max:255',
+            'customer_phone' => 'nullable|string|max:32',
+            'phone' => 'nullable|string|max:32',
             'customer_address' => 'nullable|string',
             'customer_subcity' => 'nullable|string|max:64',
+            'customer_woreda' => 'nullable|string|max:32',
+            'customer_house_no' => 'nullable|string|max:32',
+            'customer_landmark' => 'nullable|string',
             
             // Order details
             'source' => 'nullable|string|in:website,telegram_bot,telegram_inline,telegram_miniapp,phone,walkin,walk_in,internal,corporate_contract',
             'appointment_date' => 'nullable|date',
             'appointment_time_slot' => 'nullable|string|max:64',
-            'address' => 'required|string',
+            'address' => 'nullable|string',
             'subcity' => 'nullable|string|max:64',
             'woreda' => 'nullable|string|max:32',
             'house_no' => 'nullable|string|max:32',
@@ -169,6 +180,7 @@ class OrderController extends Controller
             'notes' => 'nullable|string',
             'discount' => 'nullable|numeric|min:0',
             'assigned_team_id' => 'nullable|exists:cleaning_teams,id',
+            'team_id' => 'nullable|exists:cleaning_teams,id',
             'allow_price_override' => 'nullable|boolean',
             'price_override' => 'nullable|boolean',
             
@@ -184,46 +196,63 @@ class OrderController extends Controller
 
         return DB::transaction(function () use ($validated, $request) {
             $user = $request->user();
-            // 1. Resolve or create customer
+
+            // 1. Resolve or create customer reliably
+            $rawPhone = $validated['customer_phone'] ?? $validated['phone'] ?? $request->input('phone') ?? $request->input('customer_phone');
+            $customerName = $validated['customer_name'] ?? $validated['full_name'] ?? $validated['name'] ?? $request->input('customer_name') ?? $request->input('full_name') ?? 'ደንበኛ';
+            $address = $validated['address'] ?? $validated['customer_address'] ?? $request->input('address') ?? $request->input('customer_address') ?? 'አዲስ አበባ';
+            $subcity = $validated['subcity'] ?? $validated['customer_subcity'] ?? $request->input('subcity') ?? $request->input('customer_subcity') ?? null;
+            $woreda = $validated['woreda'] ?? $validated['customer_woreda'] ?? $request->input('woreda') ?? null;
+            $houseNo = $validated['house_no'] ?? $validated['customer_house_no'] ?? $request->input('house_no') ?? null;
+            $landmark = $validated['landmark'] ?? $validated['customer_landmark'] ?? $request->input('landmark') ?? null;
+
             if (!empty($validated['customer_id'])) {
                 $customer = Customer::findOrFail($validated['customer_id']);
             } else {
-                // Check if existing phone exists to avoid duplicates
-                $customer = Customer::where('phone', $validated['customer_phone'])->first();
-                if (!$customer) {
-                    $customer = Customer::create([
+                $normalizedPhone = $rawPhone ? SecurityTokenService::normalizePhone($rawPhone) : '0900000000';
+                $customer = Customer::firstOrCreate(
+                    ['phone' => $normalizedPhone],
+                    [
                         'customer_code' => Customer::generateNextCode(),
-                        'full_name' => $validated['customer_name'],
-                        'phone' => $validated['customer_phone'],
-                        'address' => $validated['customer_address'] ?? $validated['address'],
-                        'subcity' => $validated['customer_subcity'] ?? $validated['subcity'] ?? null,
-                    ]);
+                        'full_name' => $customerName,
+                        'address' => $address,
+                        'subcity' => $subcity,
+                        'woreda' => $woreda,
+                        'house_no' => $houseNo,
+                        'landmark' => $landmark,
+                    ]
+                );
+
+                if (($customer->full_name === 'ደንበኛ' || empty($customer->full_name)) && $customerName !== 'ደንበኛ') {
+                    $customer->update(['full_name' => $customerName]);
                 }
             }
 
-            // 2. Create Order
+            // 2. Resolve team assignment
+            $teamId = $validated['assigned_team_id'] ?? $validated['team_id'] ?? $request->input('assigned_team_id') ?? $request->input('team_id');
             $orderNumber = Order::generateNextNumber();
-            $status = !empty($validated['assigned_team_id']) ? 'assigned' : 'new';
+            $status = !empty($teamId) ? 'assigned' : 'new';
+            $orderSource = in_array($validated['source'] ?? '', ['walkin', 'walk_in']) ? 'walk_in' : ($validated['source'] ?? 'phone');
 
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'customer_id' => $customer->id,
                 'created_by_user_id' => $request->user()?->id,
-                'assigned_team_id' => $validated['assigned_team_id'] ?? null,
-                'source' => in_array($validated['source'] ?? '', ['walkin', 'walk_in']) ? 'walk_in' : ($validated['source'] ?? 'phone'),
+                'assigned_team_id' => $teamId ?: null,
+                'source' => $orderSource,
                 'order_status' => $status,
                 'payment_status' => 'unpaid',
                 'subtotal' => 0,
                 'discount' => $validated['discount'] ?? 0,
                 'tax' => 0,
                 'total' => 0,
-                'appointment_date' => $validated['appointment_date'],
+                'appointment_date' => $validated['appointment_date'] ?? null,
                 'appointment_time_slot' => $validated['appointment_time_slot'] ?? 'morning',
-                'address' => $validated['address'],
-                'subcity' => $validated['subcity'] ?? $customer->subcity,
-                'woreda' => $validated['woreda'] ?? null,
-                'house_no' => $validated['house_no'] ?? null,
-                'landmark' => $validated['landmark'] ?? null,
+                'address' => $address,
+                'subcity' => $subcity ?? $customer->subcity,
+                'woreda' => $woreda,
+                'house_no' => $houseNo,
+                'landmark' => $landmark,
                 'latitude' => $validated['latitude'] ?? null,
                 'longitude' => $validated['longitude'] ?? null,
                 'notes' => $validated['notes'] ?? null,
@@ -338,11 +367,113 @@ class OrderController extends Controller
                 Log::warning('Booking confirmation SMS failed: ' . $th->getMessage());
             }
 
+            // If a cleaning team was assigned right away, notify the team
+            if ($order->assigned_team_id) {
+                try {
+                    SmsService::sendTeamDispatched($order);
+                } catch (\Throwable $th) {
+                    Log::warning('Team dispatched notification failed: ' . $th->getMessage());
+                }
+            }
+
             return response()->json([
                 'message' => 'Order created successfully',
                 'order' => $order->fresh(['customer', 'items', 'assignedTeam']),
             ], 201);
         });
+    }
+
+    public function update(Request $request, Order $order): JsonResponse
+    {
+        $user = $request->user();
+        if ($user && !$user->isOwner() && !$user->isReception()) {
+            return response()->json([
+                'message' => 'Unauthorized. Only owner or reception may update orders.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'assigned_team_id' => 'nullable|exists:cleaning_teams,id',
+            'team_id' => 'nullable|exists:cleaning_teams,id',
+            'order_status' => 'nullable|string',
+            'status' => 'nullable|string',
+            'appointment_date' => 'nullable|date',
+            'appointment_time_slot' => 'nullable|string',
+            'notes' => 'nullable|string',
+            'address' => 'nullable|string',
+            'subcity' => 'nullable|string',
+        ]);
+
+        $teamId = $validated['assigned_team_id'] ?? $validated['team_id'] ?? $request->input('assigned_team_id') ?? $request->input('team_id');
+        $status = $validated['order_status'] ?? $validated['status'] ?? $request->input('order_status') ?? $request->input('status');
+
+        $old = $order->toArray();
+
+        if ($teamId !== null) {
+            $order->assigned_team_id = $teamId ?: null;
+            if ($teamId && in_array($order->order_status, ['new', 'pending_confirmation', 'confirmed'])) {
+                $order->order_status = 'assigned';
+            }
+        }
+
+        if ($status !== null) {
+            $order->order_status = $status;
+        }
+
+        if (!empty($validated['appointment_date'])) {
+            $order->appointment_date = $validated['appointment_date'];
+        }
+
+        if (!empty($validated['appointment_time_slot'])) {
+            $order->appointment_time_slot = $validated['appointment_time_slot'];
+        }
+
+        if (isset($validated['notes'])) {
+            $order->notes = $validated['notes'];
+        }
+
+        if (isset($validated['address'])) {
+            $order->address = $validated['address'];
+        }
+
+        if (isset($validated['subcity'])) {
+            $order->subcity = $validated['subcity'];
+        }
+
+        $order->version += 1;
+        $order->save();
+
+        if ($order->assigned_team_id) {
+            Appointment::updateOrCreate(
+                ['order_id' => $order->id],
+                [
+                    'customer_id' => $order->customer_id,
+                    'cleaning_team_id' => $order->assigned_team_id,
+                    'appointment_date' => $order->appointment_date,
+                    'status' => 'scheduled',
+                ]
+            );
+
+            try {
+                SmsService::sendTeamDispatched($order);
+            } catch (\Throwable $th) {
+                Log::warning('Team dispatched notification failed: ' . $th->getMessage());
+            }
+        }
+
+        AuditLog::logAction(
+            $request->user()?->id,
+            'updated',
+            Order::class,
+            $order->id,
+            $old,
+            $order->toArray()
+        );
+
+        return response()->json([
+            'message' => 'Order updated successfully',
+            'order' => $order->fresh(['customer', 'assignedTeam', 'items']),
+        ]);
     }
 
     public function updateStatus(Request $request, Order $order): JsonResponse

@@ -2143,6 +2143,8 @@
         window._ordersFilterStatus = window._ordersFilterStatus || '';
         window._ordersFilterPayment = window._ordersFilterPayment || '';
         window._ordersSearchQuery = window._ordersSearchQuery || '';
+        window._ordersPage = window._ordersPage || 1;
+        window._ordersPerPage = window._ordersPerPage || 50;
 
         async function renderOrdersModule(container, isSilent = false) {
             try {
@@ -2151,10 +2153,15 @@
                 if (window._ordersFilterStatus) queryParams.set('status', window._ordersFilterStatus);
                 if (window._ordersFilterPayment) queryParams.set('payment_status', window._ordersFilterPayment);
                 if (window._ordersSearchQuery) queryParams.set('search', window._ordersSearchQuery);
+                queryParams.set('page', window._ordersPage || 1);
+                queryParams.set('per_page', window._ordersPerPage || 50);
 
                 const res = await apiFetch('/api/orders?' + queryParams.toString());
                 const data = await res.json();
                 const orders = data.data || [];
+                const totalOrders = data.total !== undefined ? data.total : orders.length;
+                const lastPage = data.last_page || 1;
+                const currentPage = data.current_page || 1;
 
                 container.innerHTML = `
                     <div class="max-w-7xl mx-auto space-y-6">
@@ -2181,8 +2188,8 @@
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">ፍለጋ (ስም፣ ስልክ፣ ወይም #)</label>
                                 <div class="relative">
-                                    <input type="text" id="order-search-input" value="${escapeHtml(window._ordersSearchQuery)}" placeholder="ፈልግ..." onkeydown="if(event.key==='Enter'){ window._ordersSearchQuery = this.value; renderOrdersModule(document.getElementById('app-viewport')); }" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-500 pr-8">
-                                    <button onclick="window._ordersSearchQuery = document.getElementById('order-search-input').value; renderOrdersModule(document.getElementById('app-viewport'));" class="absolute right-2 top-2.5 text-slate-400 hover:text-white">
+                                    <input type="text" id="order-search-input" value="${escapeHtml(window._ordersSearchQuery)}" placeholder="ፈልግ..." onkeydown="if(event.key==='Enter'){ window._ordersSearchQuery = this.value; window._ordersPage = 1; renderOrdersModule(document.getElementById('app-viewport')); }" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-cyan-500 pr-8">
+                                    <button onclick="window._ordersSearchQuery = document.getElementById('order-search-input').value; window._ordersPage = 1; renderOrdersModule(document.getElementById('app-viewport'));" class="absolute right-2 top-2.5 text-slate-400 hover:text-white">
                                         <i data-lucide="search" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </div>
@@ -2191,7 +2198,7 @@
                             <!-- Channel Source Filter -->
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">የትዕዛዝ ሰርጥ / ምንጭ (Channel Source)</label>
-                                <select onchange="window._ordersFilterSource = this.value; renderOrdersModule(document.getElementById('app-viewport'));" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
+                                <select onchange="window._ordersFilterSource = this.value; window._ordersPage = 1; renderOrdersModule(document.getElementById('app-viewport'));" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
                                     <option value="" ${window._ordersFilterSource === '' ? 'selected' : ''}>-- ሁሉም ሰርጦች (All Channels) --</option>
                                     <option value="website" ${window._ordersFilterSource === 'website' ? 'selected' : ''}>🌐 ድረ-ገጽ (Website)</option>
                                     <option value="telegram_miniapp" ${window._ordersFilterSource === 'telegram_miniapp' ? 'selected' : ''}>📱 ቴሌግራም ሚኒአፕ (MiniApp)</option>
@@ -2206,7 +2213,7 @@
                             <!-- Order Status Filter -->
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">የትዕዛዝ ሁኔታ (Order Status)</label>
-                                <select onchange="window._ordersFilterStatus = this.value; renderOrdersModule(document.getElementById('app-viewport'));" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
+                                <select onchange="window._ordersFilterStatus = this.value; window._ordersPage = 1; renderOrdersModule(document.getElementById('app-viewport'));" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
                                     <option value="" ${window._ordersFilterStatus === '' ? 'selected' : ''}>-- ሁሉም ሁኔታዎች (All Statuses) --</option>
                                     <option value="new" ${window._ordersFilterStatus === 'new' ? 'selected' : ''}>አዲስ (New)</option>
                                     <option value="pending_confirmation" ${window._ordersFilterStatus === 'pending_confirmation' ? 'selected' : ''}>ማረጋገጫ የሚጠብቅ</option>
@@ -2222,7 +2229,7 @@
                             <!-- Payment Status Filter -->
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">የክፍያ ሁኔታ (Payment Status)</label>
-                                <select onchange="window._ordersFilterPayment = this.value; renderOrdersModule(document.getElementById('app-viewport'));" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
+                                <select onchange="window._ordersFilterPayment = this.value; window._ordersPage = 1; renderOrdersModule(document.getElementById('app-viewport'));" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
                                     <option value="" ${window._ordersFilterPayment === '' ? 'selected' : ''}>-- ሁሉም የክፍያ ሁኔታ --</option>
                                     <option value="unpaid" ${window._ordersFilterPayment === 'unpaid' ? 'selected' : ''}>ያልተከፈለ (Unpaid)</option>
                                     <option value="partially_paid" ${window._ordersFilterPayment === 'partially_paid' ? 'selected' : ''}>በከፊል የተከፈለ (Partial)</option>
@@ -2255,8 +2262,8 @@
                                             <tr class="hover:bg-slate-800/40 transition">
                                                 <td class="p-4 font-bold text-cyan-400 font-mono">${escapeHtml(o.order_number)}</td>
                                                 <td class="p-4">
-                                                    <span class="font-bold text-white block">${escapeHtml(o.customer?.full_name || '')}</span>
-                                                    <span class="text-slate-400 text-[11px]">${escapeHtml(o.customer?.phone || '')}</span>
+                                                    <span class="font-bold text-white block">${escapeHtml(o.customer_name || o.customer?.full_name || o.customer?.name || 'ደንበኛ')}</span>
+                                                    <span class="text-slate-400 text-[11px]">${escapeHtml(o.customer_phone || o.customer?.phone || '')}</span>
                                                 </td>
                                                 <td class="p-4 whitespace-nowrap">
                                                     ${getChannelBadge(o.source)}
@@ -2275,7 +2282,7 @@
                                                 </td>
                                                 <td class="p-4">
                                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${o.order_status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}">
-                                                        ${escapeHtml(o.order_status || '')}
+                                                        ${escapeHtml(o.order_status || o.status || '')}
                                                     </span>
                                                 </td>
                                                 <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
@@ -2285,13 +2292,35 @@
                                                         </button>
                                                     ` : ''}
                                                     <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ሰራተኛ መድብ">ሰራተኛ</button>
-                                                    <button data-phone="${escapeHtml(o.customer?.phone || '')}" data-name="${escapeHtml(o.customer?.full_name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">SMS</button>
+                                                    <button data-phone="${escapeHtml(o.customer_phone || o.customer?.phone || '')}" data-name="${escapeHtml(o.customer_name || o.customer?.full_name || o.customer?.name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">SMS</button>
                                                     <button onclick="openOrderDetailsModal(${o.id})" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር</button>
                                                 </td>
                                             </tr>
                                         `).join('')}
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        <!-- Pagination Controls Bar -->
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-xs">
+                            <div class="text-slate-400 text-xs">
+                                ጠቅላላ <span class="font-bold text-white">${totalOrders}</span> ትዕዛዞች • ገጽ <span class="font-bold text-cyan-400">${currentPage}</span> ከ <span class="font-bold text-white">${lastPage}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-[11px] text-slate-400">በአንድ ገጽ፡</label>
+                                <select onchange="window._ordersPerPage = parseInt(this.value); window._ordersPage = 1; renderOrdersModule(document.getElementById('app-viewport'));" class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-white text-xs cursor-pointer focus:outline-none focus:border-cyan-500">
+                                    <option value="20" ${window._ordersPerPage == 20 ? 'selected' : ''}>20</option>
+                                    <option value="50" ${window._ordersPerPage == 50 ? 'selected' : ''}>50</option>
+                                    <option value="100" ${window._ordersPerPage == 100 ? 'selected' : ''}>100</option>
+                                    <option value="200" ${window._ordersPerPage == 200 ? 'selected' : ''}>200</option>
+                                </select>
+                                <button ${currentPage <= 1 ? 'disabled class="px-3 py-1.5 rounded-lg bg-slate-800/40 text-slate-600 cursor-not-allowed text-xs font-semibold"' : 'onclick="window._ordersPage = ' + (currentPage - 1) + '; renderOrdersModule(document.getElementById(\'app-viewport\'));" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer text-xs font-semibold"'}">
+                                    &larr; ቀዳሚ
+                                </button>
+                                <button ${currentPage >= lastPage ? 'disabled class="px-3 py-1.5 rounded-lg bg-slate-800/40 text-slate-600 cursor-not-allowed text-xs font-semibold"' : 'onclick="window._ordersPage = ' + (currentPage + 1) + '; renderOrdersModule(document.getElementById(\'app-viewport\'));" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 cursor-pointer text-xs font-semibold"'}">
+                                    ቀጣይ &rarr;
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -3213,55 +3242,102 @@
 
         async function submitAdminOrder(e) {
             e.preventDefault();
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'በመመዝገብ ላይ...';
+            }
+
             const teamVal = document.getElementById('mo-team-id')?.value;
             const svcId = parseInt(document.getElementById('mo-service-select')?.value) || 1;
             const payMethod = document.getElementById('mo-payment-method')?.value || 'cash';
             const src = document.getElementById('mo-source')?.value || 'phone';
             const payLabels = { cash: 'ጥሬ ገንዘብ (Cash)', telebirr: 'ቴሌብር (Telebirr)', cbe: 'የኢትዮጵያ ንግድ ባንክ (CBE)', bank_transfer: 'የባንክ ዝውውር (Bank Transfer)' };
 
+            const custName = (document.getElementById('mo-cust-name')?.value || '').trim();
+            const custPhone = (document.getElementById('mo-cust-phone')?.value || '').trim();
+            const subcity = document.getElementById('mo-subcity')?.value || '';
+            const address = (document.getElementById('mo-address')?.value || '').trim();
+            const apptDate = document.getElementById('mo-date')?.value || '';
+            const apptSlot = document.getElementById('mo-slot')?.value || 'morning';
+            const teamId = teamVal ? parseInt(teamVal) : null;
+
             const payload = {
-                customer_name: document.getElementById('mo-cust-name').value,
-                customer_phone: document.getElementById('mo-cust-phone').value,
-                subcity: document.getElementById('mo-subcity').value,
-                address: document.getElementById('mo-address').value,
+                customer_name: custName,
+                full_name: custName,
+                customer_phone: custPhone,
+                phone: custPhone,
+                subcity: subcity,
+                address: address,
                 source: src,
                 notes: 'የተመረጠ የክፍያ መንገድ: ' + (payLabels[payMethod] || payMethod),
-                appointment_date: document.getElementById('mo-date').value,
-                appointment_time_slot: document.getElementById('mo-slot').value,
-                assigned_team_id: teamVal ? parseInt(teamVal) : null,
+                appointment_date: apptDate,
+                appointment_time_slot: apptSlot,
+                assigned_team_id: teamId,
+                team_id: teamId,
                 items: [
                     {
                         service_id: svcId,
-                        item_name: document.getElementById('mo-item-name').value,
-                        quantity: parseFloat(document.getElementById('mo-item-qty').value),
-                        unit_price: parseFloat(document.getElementById('mo-item-price').value),
+                        item_name: document.getElementById('mo-item-name')?.value || 'የፅዳት አገልግሎት',
+                        quantity: parseFloat(document.getElementById('mo-item-qty')?.value) || 1,
+                        unit_price: parseFloat(document.getElementById('mo-item-price')?.value) || 0,
                     }
                 ]
             };
 
-            // Enqueue via offline engine (optimistic save + sync)
-            await window.meashOffline.enqueue('order', 'create', payload);
-            loadActiveTab();
-            showOrderCreatedSuccessModal(payload);
+            try {
+                // Try live API first for authoritative database save
+                const res = await apiFetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+
+                if (res.ok && result.order) {
+                    const createdOrder = result.order;
+                    payload.order_number = createdOrder.order_number;
+                    loadActiveTab();
+                    showOrderCreatedSuccessModal(payload, createdOrder);
+                    return;
+                } else {
+                    throw new Error(result.message || JSON.stringify(result.errors || 'ትዕዛዙ አልተመዘገበም'));
+                }
+            } catch (netErr) {
+                console.warn('Live order creation failed or offline, falling back to offline queue:', netErr);
+                if (window.meashOffline && typeof window.meashOffline.enqueue === 'function') {
+                    await window.meashOffline.enqueue('order', 'create', payload);
+                    loadActiveTab();
+                    showOrderCreatedSuccessModal(payload, null);
+                } else {
+                    alert('ስህተት፡ ' + netErr.message);
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'ትዕዛዝ መዝግብ';
+                    }
+                }
+            }
         }
 
-        function showOrderCreatedSuccessModal(payload) {
+        function showOrderCreatedSuccessModal(payload, createdOrder = null) {
             const container = document.getElementById('generic-modal-container');
             const custName = payload.customer_name || 'ደንበኛ';
             const custPhone = (payload.customer_phone || '').replace(/\D+/g, '');
             const cleanPhone = custPhone;
             const slotAm = payload.appointment_time_slot === 'morning' ? 'ጥዋት' : 'ከሰዓት';
-            const msg = `ሰላም ${custName}፣ የሜሽ ክሊኒንግ የፅዳት ቀጠሮዎ በትክክል ተመዝግቧል። ቀን፡ ${EC.formatEth(payload.appointment_date)} (${slotAm})። በሰዓቱ እንገኛለን! ስልክ፡ 0970075509`;
+            const orderNum = createdOrder?.order_number || payload.order_number || 'በመጠባበቅ ላይ (Queue)';
+            const msg = `ሰላም ${custName}፣ የሜሽ ክሊኒንግ የፅዳት ቀጠሮዎ በትክክል ተመዝግቧል። ትዕዛዝ #: ${orderNum}፣ ቀን፡ ${EC.formatEth(payload.appointment_date)} (${slotAm})። በሰዓቱ እንገኛለን! ስልክ፡ 0970075509`;
             const qrData = encodeURIComponent(`SMSTO:${cleanPhone}:${msg}`);
 
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
                     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl text-center space-y-4">
                         <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-black">
-              
+                            ✓
                         </div>
                         <div>
                             <h3 class="text-base font-bold text-white">ትዕዛዙ በተሳካ ሁኔታ ተመዝግቧል!</h3>
+                            <p class="text-xs font-mono font-bold text-cyan-400 mt-1">${escapeHtml(orderNum)}</p>
                             <p class="text-xs text-slate-400 mt-1">ለደንበኛው (${custName} - ${payload.customer_phone}) የማረጋገጫ SMS ይላኩ</p>
                         </div>
 
@@ -3270,7 +3346,7 @@
                                 አሁን ዝጋ
                             </button>
                             <a href="sms:${cleanPhone}?&body=${encodeURIComponent(msg)}" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer">
-                <span> በስልክ SIM ላክ</span>
+                                <span>በስልክ SIM ላክ</span>
                             </a>
                         </div>
                     </div>

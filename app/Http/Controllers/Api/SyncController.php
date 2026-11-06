@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
 use App\Models\AuditLog;
+use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -60,24 +62,51 @@ class SyncController extends Controller
                     // Create Order
                     DB::transaction(function () use ($payload, $uuid, $request, &$synced) {
                         $orderNumber = Order::generateNextNumber();
-                        $assignedTeam = !empty($payload['assigned_team_id']) ? $payload['assigned_team_id'] : null;
+                        $assignedTeam = !empty($payload['assigned_team_id']) ? $payload['assigned_team_id'] : (!empty($payload['team_id']) ? $payload['team_id'] : null);
                         $orderStatus = $assignedTeam ? 'assigned' : ($payload['order_status'] ?? 'new');
+
+                        $customerId = $payload['customer_id'] ?? null;
+                        if (!$customerId) {
+                            $rawPhone = $payload['customer_phone'] ?? $payload['phone'] ?? null;
+                            $normPhone = $rawPhone ? \App\Services\SecurityTokenService::normalizePhone($rawPhone) : '0900000000';
+                            $cust = Customer::firstOrCreate(
+                                ['phone' => $normPhone],
+                                [
+                                    'customer_code' => Customer::generateNextCode(),
+                                    'full_name' => $payload['customer_name'] ?? $payload['full_name'] ?? 'ደንበኛ',
+                                    'address' => $payload['address'] ?? 'አዲስ አበባ',
+                                    'subcity' => $payload['subcity'] ?? null,
+                                ]
+                            );
+                            $customerId = $cust->id;
+                        }
 
                         $order = Order::create([
                             'order_number' => $orderNumber,
-                            'customer_id' => $payload['customer_id'],
+                            'customer_id' => $customerId,
                             'created_by_user_id' => $request->user()?->id,
                             'assigned_team_id' => $assignedTeam,
                             'source' => $payload['source'] ?? 'phone',
                             'order_status' => $orderStatus,
                             'payment_status' => 'unpaid',
-                            'appointment_date' => $payload['appointment_date'],
+                            'appointment_date' => $payload['appointment_date'] ?? null,
                             'appointment_time_slot' => $payload['appointment_time_slot'] ?? 'morning',
-                            'address' => $payload['address'],
+                            'address' => $payload['address'] ?? 'አዲስ አበባ',
                             'subcity' => $payload['subcity'] ?? null,
                             'notes' => ($payload['notes'] ?? '') . " [Synced from offline, UUID: {$uuid}]",
                             'version' => 1,
                         ]);
+
+                        if ($order->appointment_date) {
+                            Appointment::create([
+                                'order_id' => $order->id,
+                                'customer_id' => $customerId,
+                                'cleaning_team_id' => $assignedTeam,
+                                'appointment_date' => $order->appointment_date,
+                                'status' => 'scheduled',
+                                'notes' => "Slot: {$order->appointment_time_slot}",
+                            ]);
+                        }
 
                         if (!empty($payload['items'])) {
                             foreach ($payload['items'] as $it) {

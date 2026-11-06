@@ -51,6 +51,35 @@ class Order extends Model
         'longitude' => 'float',
     ];
 
+    protected $appends = [
+        'google_maps_url',
+        'total_amount',
+        'customer_name',
+        'customer_phone',
+        'status',
+        'team_id',
+    ];
+
+    public function getCustomerNameAttribute(): string
+    {
+        return $this->customer?->full_name ?? $this->customer?->name ?? 'ደንበኛ';
+    }
+
+    public function getCustomerPhoneAttribute(): string
+    {
+        return $this->customer?->phone ?? '';
+    }
+
+    public function getStatusAttribute(): ?string
+    {
+        return $this->order_status;
+    }
+
+    public function getTeamIdAttribute(): ?int
+    {
+        return $this->assigned_team_id;
+    }
+
     public function getGoogleMapsUrlAttribute(): ?string
     {
         if ($this->latitude && $this->longitude) {

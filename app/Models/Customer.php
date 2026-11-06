@@ -37,6 +37,16 @@ class Customer extends Model
         'consent_timestamp' => 'datetime',
     ];
 
+    protected $appends = [
+        'name',
+        'google_maps_url',
+    ];
+
+    public function getNameAttribute(): string
+    {
+        return $this->full_name ?? '';
+    }
+
     protected static function booted(): void
     {
         static::creating(function ($customer) {
