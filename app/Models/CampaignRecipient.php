@@ -10,11 +10,14 @@ class CampaignRecipient extends Model
 {
     use HasFactory;
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'campaign_id',
         'recipient_id',
+        'phone',
+        'recipient_name',
+        'message',
         'status',
         'error_message',
         'sent_at',

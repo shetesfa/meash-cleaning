@@ -5,87 +5,108 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Campaign;
+use App\Models\CampaignRecipient;
 use App\Models\Customer;
 use App\Models\TelegramUser;
+use App\Services\SmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class TelegramBroadcastController extends Controller
 {
     /**
-     * Get all broadcast recipients (Telegram Users + Customers with telegram_user_id)
+     * Get all broadcast recipients with robust filtering, friend exclusions, and stats
      */
     public function getRecipients(Request $request): JsonResponse
     {
-        $search = $request->query('search', '');
-        
-        $tgQuery = TelegramUser::query();
+        $search = trim($request->query('search', ''));
+        $sourceFilter = $request->query('source', '');
+        $statusFilter = $request->query('status', ''); // 'all', 'excluded', 'non_excluded'
+
+        // Auto-sync any unsynced Customers into TelegramUser table so contacts are 100% unified
+        try {
+            $unsyncedCustomers = Customer::whereNotNull('phone')
+                ->where('phone', '!=', '')
+                ->limit(200)
+                ->get();
+            foreach ($unsyncedCustomers as $c) {
+                Customer::syncToBroadcastList($c);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Recipient auto-sync non-critical error: ' . $e->getMessage());
+        }
+
+        $query = TelegramUser::query();
+
         if (!empty($search)) {
-            $tgQuery->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
                   ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('username', 'like', "%{$search}%")
-                  ->orWhere('phone_number', 'like', "%{$search}%");
+                  ->orWhere('phone_number', 'like', "%{$search}%")
+                  ->orWhere('telegram_id', 'like', "%{$search}%");
             });
         }
 
-        $tgUsers = $tgQuery->orderBy('last_interaction_at', 'desc')->get()->map(function ($u) {
+        if (!empty($sourceFilter)) {
+            $query->where('source', $sourceFilter);
+        }
+
+        if ($statusFilter === 'excluded') {
+            $query->where('is_excluded', true);
+        } elseif ($statusFilter === 'non_excluded') {
+            $query->where('is_excluded', false);
+        }
+
+        $allUsers = $query->orderBy('is_excluded', 'asc')
+            ->orderBy('id', 'desc')
+            ->limit(5000)
+            ->get();
+
+        $formatted = $allUsers->map(function ($u) {
             $fullName = trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? ''));
             if (empty($fullName)) {
-                $fullName = $u->username ? '@' . $u->username : 'የቴሌግራም ደንበኛ #' . $u->telegram_id;
+                $fullName = $u->username ? '@' . ltrim($u->username, '@') : ($u->phone_number ? 'ደንበኛ (' . $u->phone_number . ')' : 'ተጠቃሚ #' . $u->id);
             }
+
             return [
-                'id' => 'tg_' . $u->id,
+                'id' => $u->id,
                 'db_id' => $u->id,
-                'source' => 'telegram_user',
-                'telegram_id' => (string)$u->telegram_id,
+                'source' => $u->source ?: 'imported',
+                'telegram_id' => $u->telegram_id ? (string)$u->telegram_id : null,
                 'name' => $fullName,
                 'username' => $u->username ? '@' . ltrim($u->username, '@') : '',
-                'phone' => $u->phone_number ?: 'ያልተመዘገበ',
-                'last_active' => $u->last_interaction_at ? $u->last_interaction_at->diffForHumans() : 'በቅርቡ',
-                'is_active' => true,
+                'phone' => $u->phone_number ?: '',
+                'is_excluded' => (bool)$u->is_excluded,
+                'is_active' => (bool)$u->is_active,
+                'last_active' => $u->last_interaction_at ? $u->last_interaction_at->diffForHumans() : ($u->updated_at ? $u->updated_at->diffForHumans() : 'በቅርቡ'),
             ];
         });
 
-        // Also merge Customers that have telegram_user_id but not in TelegramUser
-        $custWithTg = Customer::whereNotNull('telegram_user_id')
-            ->where('telegram_user_id', '!=', '')
-            ->get();
-
-        $existingTgIds = $tgUsers->pluck('telegram_id')->toArray();
-        $mergedList = $tgUsers->toArray();
-
-        foreach ($custWithTg as $c) {
-            $chatId = (string)$c->telegram_user_id;
-            if (!in_array($chatId, $existingTgIds)) {
-                $mergedList[] = [
-                    'id' => 'cust_' . $c->id,
-                    'db_id' => $c->id,
-                    'source' => 'customer_record',
-                    'telegram_id' => $chatId,
-                    'name' => $c->full_name ?: 'ደንበኛ #' . $c->id,
-                    'username' => '',
-                    'phone' => $c->phone ?: 'ያልተመዘገበ',
-                    'last_active' => $c->updated_at ? $c->updated_at->diffForHumans() : 'በቅርቡ',
-                    'is_active' => true,
-                ];
-                $existingTgIds[] = $chatId;
-            }
-        }
+        $totalCount = TelegramUser::count();
+        $excludedCount = TelegramUser::where('is_excluded', true)->count();
+        $activeNonExcluded = TelegramUser::where('is_excluded', false)->where('is_active', true)->count();
+        $withPhoneCount = TelegramUser::whereNotNull('phone_number')->where('phone_number', '!=', '')->count();
+        $withTelegramCount = TelegramUser::whereNotNull('telegram_id')->where('telegram_id', '!=', '')->count();
 
         return response()->json([
-            'total_count' => count($mergedList),
-            'users' => $mergedList,
+            'total_count' => $totalCount,
+            'active_count' => $activeNonExcluded,
+            'excluded_count' => $excludedCount,
+            'with_phone_count' => $withPhoneCount,
+            'with_telegram_count' => $withTelegramCount,
+            'users' => $formatted,
             'bot_username' => config('services.telegram.bot_username') ?: env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'),
         ]);
     }
 
     /**
-     * Add a single Telegram recipient manually
-     * Name is mandatory, Father name is optional.
-     * At least one of Username OR Phone number is mandatory.
+     * Add a single recipient manually without faking telegram_id
      */
     public function addSingleRecipient(Request $request): JsonResponse
     {
@@ -95,59 +116,68 @@ class TelegramBroadcastController extends Controller
             'username' => 'nullable|string|max:100',
             'phone_number' => 'nullable|string|max:32',
             'telegram_id' => 'nullable|numeric',
+            'is_excluded' => 'nullable|boolean',
+            'source' => 'nullable|string|max:64',
         ]);
 
         $cleanUsername = !empty($validated['username']) ? ltrim(trim($validated['username']), '@') : null;
-        $cleanPhone = !empty($validated['phone_number']) ? preg_replace('/\D+/', '', trim($validated['phone_number'])) : null;
+        $cleanPhone = !empty($validated['phone_number']) ? Customer::normalizePhone($validated['phone_number']) : null;
+        $realTgId = (!empty($validated['telegram_id']) && is_numeric($validated['telegram_id']) && strlen((string)$validated['telegram_id']) >= 5)
+            ? (int)$validated['telegram_id']
+            : null;
 
-        // Either Username OR Phone Number must be present
-        if (empty($cleanUsername) && empty($cleanPhone)) {
+        if (empty($cleanUsername) && empty($cleanPhone) && empty($realTgId)) {
             return response()->json([
                 'success' => false,
-                'message' => 'እባክዎ የቴሌግራም Username ወይም ስልክ ቁጥር ቢያንስ አንዱን ያስገቡ!',
+                'message' => 'እባክዎ ስልክ ቁጥር ወይም የቴሌግራም መለያ ቢያንስ አንዱን ያስገቡ!',
             ], 422);
         }
 
-        // Determine Telegram ID
-        $tgId = !empty($validated['telegram_id']) ? (int)$validated['telegram_id'] : null;
-        if (empty($tgId)) {
-            if (!empty($cleanPhone)) {
-                $tgId = (int)substr($cleanPhone, -9);
-            } else {
-                $tgId = (int)mt_rand(100000000, 999999999);
-            }
+        // Search existing by phone or real telegram_id
+        $user = null;
+        if ($realTgId) {
+            $user = TelegramUser::where('telegram_id', $realTgId)->first();
+        }
+        if (!$user && $cleanPhone) {
+            $suffix = substr($cleanPhone, -9);
+            $user = TelegramUser::where('phone_number', $cleanPhone)
+                ->orWhere('phone_number', 'like', "%{$suffix}")
+                ->first();
         }
 
-        // Format clean phone for Ethiopian format if applicable
-        $formattedPhone = $cleanPhone;
-        if (!empty($cleanPhone)) {
-            if (str_starts_with($cleanPhone, '00251')) {
-                $formattedPhone = '0' . substr($cleanPhone, 5);
-            } elseif (str_starts_with($cleanPhone, '251')) {
-                $formattedPhone = '0' . substr($cleanPhone, 3);
-            }
-        }
-
-        $user = TelegramUser::updateOrCreate(
-            ['telegram_id' => $tgId],
-            [
+        if ($user) {
+            $user->first_name = $validated['first_name'];
+            $user->last_name = $validated['last_name'] ?? $user->last_name;
+            $user->username = $cleanUsername ?: $user->username;
+            $user->phone_number = $cleanPhone ?: $user->phone_number;
+            if ($realTgId) $user->telegram_id = $realTgId;
+            if (isset($validated['is_excluded'])) $user->is_excluded = (bool)$validated['is_excluded'];
+            $user->is_active = true;
+            $user->last_interaction_at = now();
+            $user->save();
+        } else {
+            $user = TelegramUser::create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'] ?? null,
                 'username' => $cleanUsername,
-                'phone_number' => $formattedPhone,
+                'phone_number' => $cleanPhone,
+                'telegram_id' => $realTgId, // Real numeric ID or NULL
+                'is_excluded' => (bool)($validated['is_excluded'] ?? false),
+                'is_active' => true,
+                'source' => $validated['source'] ?? 'phone_customer',
                 'marketing_consent' => true,
                 'last_interaction_at' => now(),
-            ]
-        );
+            ]);
+        }
 
-        // Also record in Customer directory if phone is present
-        if (!empty($formattedPhone)) {
+        // Also record/sync in Customer directory if phone is present
+        if (!empty($cleanPhone)) {
             $fullName = trim($validated['first_name'] . ' ' . ($validated['last_name'] ?? ''));
             Customer::updateOrCreate(
-                ['phone' => $formattedPhone],
+                ['phone' => $cleanPhone],
                 [
                     'full_name' => $fullName,
-                    'telegram_user_id' => (string)$tgId,
+                    'telegram_user_id' => $realTgId ? (string)$realTgId : null,
                     'marketing_consent' => true,
                 ]
             );
@@ -155,76 +185,452 @@ class TelegramBroadcastController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "የቴሌግራም ደንበኛ {$user->first_name} በተሳካ ሁኔታ ተመዝግቧል!",
+            'message' => "እውቂያው {$user->first_name} በተሳካ ሁኔታ ተመዝግቧል!",
             'user' => $user,
         ]);
     }
 
     /**
-     * Bulk import recipients from text/JSON/CSV
+     * Update recipient details & friend exclusion status
+     */
+    public function updateRecipient(Request $request, $id): JsonResponse
+    {
+        $user = TelegramUser::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:150',
+            'first_name' => 'nullable|string|max:100',
+            'last_name' => 'nullable|string|max:100',
+            'phone' => 'nullable|string|max:32',
+            'phone_number' => 'nullable|string|max:32',
+            'telegram_id' => 'nullable|numeric',
+            'username' => 'nullable|string|max:100',
+            'is_excluded' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
+            'source' => 'nullable|string|max:64',
+        ]);
+
+        if (isset($validated['name'])) {
+            $parts = explode(' ', trim($validated['name']), 2);
+            $user->first_name = $parts[0] ?: $user->first_name;
+            $user->last_name = $parts[1] ?? null;
+        }
+        if (isset($validated['first_name'])) $user->first_name = $validated['first_name'];
+        if (isset($validated['last_name'])) $user->last_name = $validated['last_name'];
+
+        $phoneInput = $validated['phone'] ?? ($validated['phone_number'] ?? null);
+        if ($phoneInput !== null) {
+            $user->phone_number = !empty($phoneInput) ? Customer::normalizePhone($phoneInput) : null;
+        }
+
+        if (array_key_exists('telegram_id', $validated)) {
+            $rawTg = $validated['telegram_id'];
+            $user->telegram_id = (!empty($rawTg) && is_numeric($rawTg) && strlen((string)$rawTg) >= 5) ? (int)$rawTg : null;
+        }
+
+        if (isset($validated['username'])) {
+            $user->username = ltrim(trim($validated['username']), '@');
+        }
+
+        if (isset($validated['is_excluded'])) {
+            $user->is_excluded = (bool)$validated['is_excluded'];
+        }
+
+        if (isset($validated['is_active'])) {
+            $user->is_active = (bool)$validated['is_active'];
+        }
+
+        if (isset($validated['source'])) {
+            $user->source = $validated['source'];
+        }
+
+        $user->save();
+
+        // Also sync to Customer record if phone exists
+        if ($user->phone_number) {
+            Customer::where('phone', $user->phone_number)->update([
+                'full_name' => $user->name,
+                'telegram_user_id' => $user->telegram_id ? (string)$user->telegram_id : null,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'የእውቂያው መረጃ በተሳካ ሁኔታ ተሻሽሏል!',
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * Delete a single recipient permanently
+     */
+    public function deleteRecipient($id): JsonResponse
+    {
+        $user = TelegramUser::findOrFail($id);
+        $name = $user->name;
+        $user->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "እውቂያ \"{$name}\" በቋሚነት ተሰርዟል!",
+        ]);
+    }
+
+    /**
+     * Bulk Action on Contacts: Delete, Exclude (Friends), or Include
+     * Handles 50, 500, or 1000 contacts in 1 click!
+     */
+    public function bulkActionRecipients(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:delete,exclude,include',
+            'ids' => 'nullable|array',
+            'ids.*' => 'integer',
+            'select_all' => 'nullable|boolean',
+            'filter_status' => 'nullable|string',
+        ]);
+
+        $action = $validated['action'];
+        $ids = $validated['ids'] ?? [];
+        $selectAll = !empty($validated['select_all']);
+
+        $query = TelegramUser::query();
+        if (!$selectAll) {
+            if (empty($ids)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ምንም የተመረጠ እውቂያ የለም!',
+                ], 422);
+            }
+            $query->whereIn('id', $ids);
+        } else {
+            // Apply filter status if select all
+            if (($validated['filter_status'] ?? '') === 'excluded') {
+                $query->where('is_excluded', true);
+            } elseif (($validated['filter_status'] ?? '') === 'non_excluded') {
+                $query->where('is_excluded', false);
+            }
+        }
+
+        $count = 0;
+        if ($action === 'delete') {
+            $count = $query->delete();
+            $msg = "{$count} እውቂያዎች በቋሚነት ተሰርዘዋል!";
+        } elseif ($action === 'exclude') {
+            $count = $query->update(['is_excluded' => true]);
+            $msg = "{$count} እውቂያዎች ከስርጭት ዝርዝር ተገልለዋል (Friends Excluded)!";
+        } elseif ($action === 'include') {
+            $count = $query->update(['is_excluded' => false]);
+            $msg = "{$count} እውቂያዎች ወደ ስርጭት ዝርዝር ተመልሰዋል!";
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $msg,
+            'affected_count' => $count,
+        ]);
+    }
+
+    /**
+     * Export all active contacts as CSV or JSON
+     */
+    public function exportRecipients(Request $request)
+    {
+        $format = $request->query('format', 'csv');
+        $onlyActive = $request->query('active_only', '1') === '1';
+
+        $query = TelegramUser::query();
+        if ($onlyActive) {
+            $query->where('is_excluded', false)->where('is_active', true);
+        }
+        $users = $query->orderBy('id', 'asc')->get();
+
+        if ($format === 'json') {
+            $exportData = $users->map(function ($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'phone' => $u->phone_number,
+                    'telegram_id' => $u->telegram_id,
+                    'username' => $u->username,
+                    'source' => $u->source,
+                    'is_excluded' => $u->is_excluded,
+                ];
+            });
+
+            return response()->json($exportData)
+                ->header('Content-Disposition', 'attachment; filename="meash_contacts_' . date('Y_m_d') . '.json"');
+        }
+
+        // CSV Export
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="meash_contacts_' . date('Y_m_d') . '.csv"',
+        ];
+
+        $callback = function () use ($users) {
+            $file = fopen('php://output', 'w');
+            // Add UTF-8 BOM for Excel compatibility with Amharic
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($file, ['ID', 'Full Name', 'Phone Number', 'Telegram ID', 'Username', 'Source', 'Excluded', 'Created At']);
+
+            foreach ($users as $u) {
+                fputcsv($file, [
+                    $u->id,
+                    $u->name,
+                    $u->phone_number ?: '',
+                    $u->telegram_id ?: '',
+                    $u->username ? '@' . $u->username : '',
+                    $u->source ?: 'imported',
+                    $u->is_excluded ? 'YES' : 'NO',
+                    $u->created_at ? $u->created_at->format('Y-m-d H:i') : '',
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * High-speed bulk import from JSON or CSV
+     * Cleanly extracts Telegram User IDs without fake phone conversions
      */
     public function bulkImportRecipients(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'raw_data' => 'required|string',
-        ]);
+        $raw = null;
+        if ($request->hasFile('file')) {
+            $raw = file_get_contents($request->file('file')->getRealPath());
+        } elseif ($request->filled('raw_data')) {
+            $raw = trim($request->input('raw_data'));
+        }
 
-        $raw = trim($validated['raw_data']);
-        $lines = preg_split('/\r\n|\r|\n/', $raw);
-        $importedCount = 0;
-        $skippedCount = 0;
+        if (empty($raw)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'እባክዎ የሚጫን የቴሌግራም JSON ወይም CSV ፋይል/ጽሑፍ ያስገቡ!',
+            ], 422);
+        }
 
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
+        // Try JSON parsing first (Telegram Desktop result.json)
+        $jsonData = json_decode($raw, true);
+        if ($jsonData && (isset($jsonData['contacts']) || isset($jsonData['frequent_contacts']) || isset($jsonData['chats']))) {
+            return $this->processTelegramDesktopJson($jsonData);
+        }
 
-            // Handle formats:
-            // 1. "12345678, Abebe, Kebede, 0911223344, @username" (Comma or tab separated)
-            // 2. "12345678 Abebe Kebede" (Space separated)
-            // 3. Or JSON object
-            $parts = preg_split('/[,\t]+/', $line);
-            if (count($parts) >= 2) {
-                $tgId = preg_replace('/\D+/', '', trim($parts[0]));
-                $name = trim($parts[1] ?? 'ደንበኛ');
-                $phone = isset($parts[2]) ? preg_replace('/\D+/', '', trim($parts[2])) : null;
-                $username = isset($parts[3]) ? ltrim(trim($parts[3]), '@') : null;
-            } else {
-                // Try space separated
-                $spaceParts = preg_split('/\s+/', $line, 3);
-                $tgId = preg_replace('/\D+/', '', trim($spaceParts[0]));
-                $name = trim(($spaceParts[1] ?? 'ደንበኛ') . ' ' . ($spaceParts[2] ?? ''));
-                $phone = null;
-                $username = null;
+        // Otherwise process as plain text / CSV lines
+        return $this->processCsvTextLines($raw);
+    }
+
+    /**
+     * Parse Telegram Desktop result.json cleanly
+     */
+    protected function processTelegramDesktopJson(array $data): JsonResponse
+    {
+        $realTgMap = [];
+        $frequentList = $data['frequent_contacts']['list'] ?? [];
+        foreach ($frequentList as $fc) {
+            $type = $fc['type'] ?? '';
+            $rawId = $fc['id'] ?? null;
+            $name = trim($fc['name'] ?? '');
+            if ($type === 'user' && !empty($rawId) && is_numeric($rawId)) {
+                if (!empty($name)) $realTgMap[mb_strtolower($name)] = (int)$rawId;
             }
+        }
 
-            if (!empty($tgId) && is_numeric($tgId) && strlen($tgId) >= 5) {
-                TelegramUser::updateOrCreate(
-                    ['telegram_id' => (int)$tgId],
-                    [
-                        'first_name' => $name,
-                        'phone_number' => $phone,
-                        'username' => $username,
-                        'marketing_consent' => true,
-                        'last_interaction_at' => now(),
-                    ]
-                );
-                $importedCount++;
-            } else {
-                $skippedCount++;
+        $chatsList = $data['chats']['list'] ?? [];
+        foreach ($chatsList as $chat) {
+            $chatType = $chat['type'] ?? '';
+            $rawId = $chat['id'] ?? null;
+            $name = trim($chat['name'] ?? '');
+            if ($chatType === 'personal_chat' && !empty($rawId)) {
+                $numericId = preg_replace('/\D+/', '', (string)$rawId);
+                if (!empty($numericId) && is_numeric($numericId) && strlen($numericId) >= 5) {
+                    if (!empty($name)) $realTgMap[mb_strtolower($name)] = (int)$numericId;
+                }
+            }
+        }
+
+        $contactsList = $data['contacts']['list'] ?? [];
+        $importedCust = 0;
+        $importedTg = 0;
+
+        $chunks = array_chunk($contactsList, 500);
+        foreach ($chunks as $chunk) {
+            DB::beginTransaction();
+            try {
+                foreach ($chunk as $contact) {
+                    $rawPhone = $contact['phone_number'] ?? '';
+                    $first = trim($contact['first_name'] ?? '');
+                    $last = trim($contact['last_name'] ?? '');
+                    $fullName = trim("{$first} {$last}");
+                    $cleanPhone = !empty($rawPhone) ? Customer::normalizePhone($rawPhone) : null;
+
+                    if (empty($fullName)) {
+                        $fullName = $cleanPhone ? "ደንበኛ ({$cleanPhone})" : "ቴሌግራም ደንበኛ";
+                    }
+
+                    $matchedTgId = $realTgMap[mb_strtolower($fullName)] ?? null;
+
+                    if (!empty($cleanPhone)) {
+                        Customer::updateOrCreate(
+                            ['phone' => $cleanPhone],
+                            [
+                                'full_name' => $fullName,
+                                'customer_type' => 'individual',
+                                'telegram_user_id' => $matchedTgId ? (string)$matchedTgId : null,
+                                'marketing_consent' => true,
+                            ]
+                        );
+                        $importedCust++;
+                    }
+
+                    $tgUser = null;
+                    if ($matchedTgId) {
+                        $tgUser = TelegramUser::where('telegram_id', $matchedTgId)->first();
+                    }
+                    if (!$tgUser && !empty($cleanPhone)) {
+                        $suffix = substr($cleanPhone, -9);
+                        $tgUser = TelegramUser::where('phone_number', $cleanPhone)
+                            ->orWhere('phone_number', 'like', "%{$suffix}")
+                            ->first();
+                    }
+
+                    if ($tgUser) {
+                        $tgUser->first_name = $fullName ?: $tgUser->first_name;
+                        if (!empty($cleanPhone)) $tgUser->phone_number = $cleanPhone;
+                        if ($matchedTgId && empty($tgUser->telegram_id)) $tgUser->telegram_id = $matchedTgId;
+                        $tgUser->is_active = true;
+                        $tgUser->source = 'imported';
+                        $tgUser->save();
+                    } else {
+                        // Create cleanly with REAL matched ID or NULL (never fake numeric ID!)
+                        TelegramUser::create([
+                            'telegram_id' => $matchedTgId ?: null,
+                            'first_name' => $fullName,
+                            'phone_number' => $cleanPhone,
+                            'is_active' => true,
+                            'is_excluded' => false,
+                            'source' => 'imported',
+                            'marketing_consent' => true,
+                            'last_interaction_at' => now(),
+                        ]);
+                    }
+                    $importedTg++;
+                }
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                Log::warning('JSON chunk import error: ' . $e->getMessage());
             }
         }
 
         return response()->json([
             'success' => true,
-            'message' => "በአጠቃላይ {$importedCount} የቴሌግራም ደንበኞች በተሳካ ሁኔታ ተመዝግበዋል! (ያልተመዘገቡ፡ {$skippedCount})",
-            'imported_count' => $importedCount,
-            'skipped_count' => $skippedCount,
+            'message' => "በአጠቃላይ {$importedTg} የቴሌግራም እውቂያዎች እና {$importedCust} ደንበኞች ከ Telegram Desktop ፋይል በተሳካ ሁኔታ ተመዝግበዋል!",
+            'imported_count' => $importedTg,
         ]);
     }
 
     /**
-     * Dispatch smart safe telegram broadcast
-     * Handles batching, rate-limiting, and excludes unselected users (family/friends)
+     * Process CSV / plain text lines
+     */
+    protected function processCsvTextLines(string $raw): JsonResponse
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $raw);
+        $importedCount = 0;
+        $batch = [];
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            $parts = preg_split('/[,\t]+/', $line);
+            $name = null;
+            $phone = null;
+            $tgId = null;
+            $username = null;
+
+            if (count($parts) >= 2) {
+                // Determine which column is phone/tgId/name
+                foreach ($parts as $p) {
+                    $p = trim($p);
+                    if (str_starts_with($p, '@')) {
+                        $username = ltrim($p, '@');
+                    } elseif (preg_match('/^(09|07|\+2519|\+2517|2519|2517)\d+/', $p)) {
+                        $phone = Customer::normalizePhone($p);
+                    } elseif (is_numeric($p) && strlen($p) >= 5 && strlen($p) <= 12) {
+                        $tgId = (int)$p;
+                    } elseif (!empty($p) && empty($name)) {
+                        $name = $p;
+                    }
+                }
+            } else {
+                $name = $line;
+            }
+
+            if (!empty($phone) || !empty($tgId) || !empty($username) || !empty($name)) {
+                $batch[] = [
+                    'name' => $name ?: 'ደንበኛ',
+                    'phone' => $phone,
+                    'tg_id' => $tgId,
+                    'username' => $username,
+                ];
+            }
+        }
+
+        foreach (array_chunk($batch, 500) as $chunk) {
+            DB::beginTransaction();
+            try {
+                foreach ($chunk as $item) {
+                    $tgUser = null;
+                    if ($item['tg_id']) {
+                        $tgUser = TelegramUser::where('telegram_id', $item['tg_id'])->first();
+                    }
+                    if (!$tgUser && $item['phone']) {
+                        $suffix = substr($item['phone'], -9);
+                        $tgUser = TelegramUser::where('phone_number', $item['phone'])
+                            ->orWhere('phone_number', 'like', "%{$suffix}")
+                            ->first();
+                    }
+
+                    if ($tgUser) {
+                        $tgUser->first_name = $item['name'] ?: $tgUser->first_name;
+                        if ($item['phone']) $tgUser->phone_number = $item['phone'];
+                        if ($item['tg_id'] && empty($tgUser->telegram_id)) $tgUser->telegram_id = $item['tg_id'];
+                        if ($item['username']) $tgUser->username = $item['username'];
+                        $tgUser->is_active = true;
+                        $tgUser->save();
+                    } else {
+                        TelegramUser::create([
+                            'telegram_id' => $item['tg_id'] ?: null,
+                            'first_name' => $item['name'],
+                            'phone_number' => $item['phone'],
+                            'username' => $item['username'],
+                            'is_active' => true,
+                            'is_excluded' => false,
+                            'source' => 'imported',
+                            'marketing_consent' => true,
+                            'last_interaction_at' => now(),
+                        ]);
+                    }
+                    $importedCount++;
+                }
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "በአጠቃላይ {$importedCount} እውቂያዎች በተሳካ ሁኔታ ተመዝግበዋል!",
+            'imported_count' => $importedCount,
+        ]);
+    }
+
+    /**
+     * Dispatch 1-Click Telegram Broadcast to non-excluded users
      */
     public function dispatchBroadcast(Request $request): JsonResponse
     {
@@ -243,47 +649,21 @@ class TelegramBroadcastController extends Controller
             ], 422);
         }
 
-        // Pre-flight check: Verify bot token validity with Telegram
-        try {
-            $botCheck = Http::withoutVerifying()->timeout(6)->get("https://api.telegram.org/bot{$botToken}/getMe");
-            if (!$botCheck->successful()) {
-                $errDetail = $botCheck->json('description') ?? 'Unauthorized or invalid token';
-                return response()->json([
-                    'success' => false,
-                    'message' => "የቴሌግራም ቦት ቶከን ውድቅ ተደርጓል (Telegram Error: {$errDetail})። እባክዎ ከ @BotFather ትክክለኛውን ቶከን ያረጋግጡ!",
-                ], 422);
-            }
-        } catch (\Throwable $e) {
-            Log::warning("Telegram getMe pre-check failed: " . $e->getMessage());
-        }
+        $explicitExcluded = array_map('strval', $validated['excluded_telegram_ids'] ?? []);
 
-        $excludedIds = array_map('strval', $validated['excluded_telegram_ids'] ?? []);
-
-        // Gather all eligible recipients
-        $tgUsers = TelegramUser::all();
-        $targetChatIds = [];
-
-        foreach ($tgUsers as $u) {
-            $chatId = (string)$u->telegram_id;
-            if (!empty($chatId) && !in_array($chatId, $excludedIds)) {
-                $targetChatIds[$chatId] = [
-                    'name' => trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')),
-                    'phone' => $u->phone_number,
-                ];
-            }
-        }
-
-        // Also merge customer records with telegram_user_id
-        $custRecords = Customer::whereNotNull('telegram_user_id')
-            ->where('telegram_user_id', '!=', '')
+        // Query non-excluded users who have a valid numeric telegram_id
+        $tgUsers = TelegramUser::where('is_excluded', false)
+            ->whereNotNull('telegram_id')
+            ->where('telegram_id', '!=', '')
             ->get();
 
-        foreach ($custRecords as $c) {
-            $chatId = (string)$c->telegram_user_id;
-            if (!empty($chatId) && !in_array($chatId, $excludedIds) && !isset($targetChatIds[$chatId])) {
+        $targetChatIds = [];
+        foreach ($tgUsers as $u) {
+            $chatId = (string)$u->telegram_id;
+            if (!empty($chatId) && !in_array($chatId, $explicitExcluded)) {
                 $targetChatIds[$chatId] = [
-                    'name' => $c->full_name,
-                    'phone' => $c->phone,
+                    'name' => $u->name,
+                    'phone' => $u->phone_number,
                 ];
             }
         }
@@ -292,11 +672,10 @@ class TelegramBroadcastController extends Controller
         if ($totalTargets === 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'ምንም የሚላክለት የቴሌግራም ደንበኛ አልተመረጠም (ሁሉም ተገልለዋል)!',
+                'message' => 'ምንም የሚላክለት የቴሌግራም ደንበኛ አልተገኘም (ወይም ሁሉም ተገልለዋል)!',
             ], 422);
         }
 
-        // Log campaign in DB
         $campaign = Campaign::create([
             'title' => $validated['title'],
             'channel' => 'telegram',
@@ -315,15 +694,11 @@ class TelegramBroadcastController extends Controller
         $formattedMessage = "<b>" . htmlspecialchars($title) . "</b>\n\n" . htmlspecialchars($body) . "\n\n—\n<b>ሜሽ የፅዳት አገልግሎት (Meash Cleaning)</b>\n 0970075509 / 0998142190";
         $userId = $request->user()?->id;
 
-        // Dispatch background chunked broadcast with afterResponse to prevent HTTP 504 gateway timeouts
-        dispatch(function () use ($targetChatIds, $botToken, $formattedMessage, $campaign, $title, $totalTargets, $excludedIds, $userId) {
+        dispatch(function () use ($targetChatIds, $botToken, $formattedMessage, $campaign, $title, $totalTargets, $userId) {
             $sentSuccess = 0;
             $failedCount = 0;
-            $lastErrorMessage = null;
 
-            // Process recipients in chunks of 20
             $chunks = array_chunk($targetChatIds, 20, true);
-
             foreach ($chunks as $chunk) {
                 foreach ($chunk as $chatId => $info) {
                     try {
@@ -339,20 +714,13 @@ class TelegramBroadcastController extends Controller
                         } else {
                             $failedCount++;
                             $resJson = $response->json();
-                            $lastErrorMessage = $resJson['description'] ?? 'የማይታወቅ ስህተት';
-                            // If flood control occurs, pause for safe retry
                             if (isset($resJson['parameters']['retry_after'])) {
-                                $waitSec = (int)$resJson['parameters']['retry_after'];
-                                sleep(min($waitSec, 5));
+                                sleep(min((int)$resJson['parameters']['retry_after'], 5));
                             }
                         }
                     } catch (\Throwable $e) {
                         $failedCount++;
-                        $lastErrorMessage = $e->getMessage();
-                        Log::warning("Telegram Broadcast error for chat {$chatId}: " . $e->getMessage());
                     }
-
-                    // Rate-limiting: 50ms pause = max 20 messages/sec per Telegram API limits
                     usleep(50000);
                 }
             }
@@ -364,21 +732,12 @@ class TelegramBroadcastController extends Controller
             ]);
 
             if ($userId) {
-                AuditLog::logAction(
-                    $userId,
-                    'telegram_broadcast_completed',
-                    Campaign::class,
-                    $campaign->id,
-                    null,
-                    [
-                        'title' => $title,
-                        'total_targets' => $totalTargets,
-                        'sent_success' => $sentSuccess,
-                        'failed_count' => $failedCount,
-                        'excluded_count' => count($excludedIds),
-                        'last_error' => $lastErrorMessage,
-                    ]
-                );
+                AuditLog::logAction($userId, 'telegram_broadcast_completed', Campaign::class, $campaign->id, null, [
+                    'title' => $title,
+                    'total_targets' => $totalTargets,
+                    'sent_success' => $sentSuccess,
+                    'failed_count' => $failedCount,
+                ]);
             }
         })->afterResponse();
 
@@ -387,10 +746,277 @@ class TelegramBroadcastController extends Controller
             'message' => "የቴሌግራም መልእክት ስርጭት ለ {$totalTargets} ደንበኞች በጀርባ (background) በመላክ ላይ ነው!",
             'campaign_id' => $campaign->id,
             'total_targets' => $totalTargets,
-            'sent_success' => $totalTargets,
-            'failed_count' => 0,
-            'excluded_count' => count($excludedIds),
             'status' => 'processing',
         ]);
+    }
+
+    // =========================================================================
+    // IPHONE 1-SCAN AUTO-SMS BRIDGE & QUEUE ENGINE
+    // =========================================================================
+
+    /**
+     * Step 1: Create an SMS Session and prepare pending recipients batch
+     */
+    public function createSmsSession(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'message' => 'required|string|max:1000',
+            'title' => 'nullable|string|max:255',
+            'target' => 'nullable|string', // 'all', 'selected'
+            'selected_ids' => 'nullable|array',
+            'excluded_ids' => 'nullable|array',
+        ]);
+
+        $message = trim($validated['message']);
+        $title = $validated['title'] ?: 'የጅምላ ኤስኤምኤስ ስርጭት (SMS Campaign)';
+        $excludedIds = array_map('intval', $validated['excluded_ids'] ?? []);
+        $selectedIds = array_map('intval', $validated['selected_ids'] ?? []);
+
+        $query = TelegramUser::where('is_excluded', false)
+            ->whereNotNull('phone_number')
+            ->where('phone_number', '!=', '');
+
+        if (!empty($selectedIds)) {
+            $query->whereIn('id', $selectedIds);
+        }
+        if (!empty($excludedIds)) {
+            $query->whereNotIn('id', $excludedIds);
+        }
+
+        $recipients = $query->get();
+        if ($recipients->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ምንም ስልክ ቁጥር ያለው ንቁ ተቀባይ አልተገኘም (ወይም ሁሉም ተገልለዋል)!',
+            ], 422);
+        }
+
+        $sessionToken = Str::random(40);
+        $campaign = Campaign::create([
+            'title' => $title,
+            'channel' => 'sms',
+            'audience_filter' => 'iphone_auto_sms_bridge',
+            'message_text' => $message,
+            'status' => 'sending',
+            'session_token' => $sessionToken,
+            'total_targets' => $recipients->count(),
+            'sent_count' => 0,
+            'failed_count' => 0,
+            'created_by_user_id' => $request->user()?->id,
+            'sent_at' => now(),
+        ]);
+
+        // Insert pending recipients into campaign_recipients in chunks of 500
+        $rows = [];
+        $now = now();
+        foreach ($recipients as $r) {
+            $custPhone = Customer::normalizePhone($r->phone_number);
+            // Format for international dialing e.g. +2519...
+            $intlPhone = $custPhone;
+            if (str_starts_with($custPhone, '0')) {
+                $intlPhone = '+251' . substr($custPhone, 1);
+            } elseif (str_starts_with($custPhone, '251')) {
+                $intlPhone = '+' . $custPhone;
+            }
+
+            // Personalize message with recipient name if placeholder exists or standard
+            $personalized = str_replace(
+                ['{name}', '{ስም}', '{first_name}'],
+                $r->name,
+                $message
+            );
+
+            $rows[] = [
+                'campaign_id' => $campaign->id,
+                'recipient_id' => (string)$r->id,
+                'phone' => $intlPhone,
+                'recipient_name' => $r->name,
+                'message' => $personalized,
+                'status' => 'pending',
+                'error_message' => null,
+                'sent_at' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        foreach (array_chunk($rows, 500) as $batch) {
+            CampaignRecipient::insert($batch);
+        }
+
+        // Cache session token for fast public verification
+        Cache::put("sms_bridge_{$campaign->id}", $sessionToken, now()->addHours(24));
+
+        $baseUrl = rtrim(config('app.url') ?: env('APP_URL', $request->getSchemeAndHttpHost()), '/');
+        $launchUrl = "{$baseUrl}/api/sms-bridge/launch/{$campaign->id}?token={$sessionToken}";
+        $pullUrl = "{$baseUrl}/api/sms-bridge/pull-queue?campaign_id={$campaign->id}&token={$sessionToken}";
+        $shortcutDirectUrl = "shortcuts://run-shortcut?name=Meash%20Auto%20SMS&input=" . urlencode($pullUrl);
+
+        return response()->json([
+            'success' => true,
+            'campaign_id' => $campaign->id,
+            'session_token' => $sessionToken,
+            'total_targets' => $recipients->count(),
+            'launch_url' => $launchUrl,
+            'pull_url' => $pullUrl,
+            'shortcut_url' => $shortcutDirectUrl,
+            'message' => "የኤስኤምኤስ ክፍለ-ጊዜ ተፈጥሯል! አሁን የአይፎን ካሜራዎን በመጠቀም QR ኮዱን ስካን ያድርጉ::",
+        ]);
+    }
+
+    /**
+     * Step 2: Public token-verified endpoint for iPhone Shortcuts to pull pending recipients
+     */
+    public function pullSmsQueue(Request $request): JsonResponse
+    {
+        $campaignId = $request->query('campaign_id');
+        $token = $request->query('token');
+
+        if (!$this->verifySmsBridgeToken($campaignId, $token, $campaign)) {
+            return response()->json(['error' => 'Invalid or expired session token'], 403);
+        }
+
+        $pending = CampaignRecipient::where('campaign_id', $campaign->id)
+            ->where('status', 'pending')
+            ->orderBy('id', 'asc')
+            ->limit(3500)
+            ->get();
+
+        $items = $pending->map(function ($p) {
+            return [
+                'recipient_id' => (int)$p->id,
+                'phone' => $p->phone,
+                'name' => $p->recipient_name,
+                'message' => $p->message,
+            ];
+        });
+
+        return response()->json($items);
+    }
+
+    /**
+     * Step 3: Public token-verified endpoint for iPhone Shortcuts to report status in real-time
+     */
+    public function reportSmsStatus(Request $request): JsonResponse
+    {
+        $campaignId = $request->input('campaign_id');
+        $token = $request->input('token');
+
+        if (!$this->verifySmsBridgeToken($campaignId, $token, $campaign)) {
+            return response()->json(['error' => 'Invalid or expired session token'], 403);
+        }
+
+        $recipientIds = $request->input('recipient_ids', []);
+        if ($request->has('recipient_id')) {
+            $recipientIds[] = $request->input('recipient_id');
+        }
+        $recipientIds = array_filter(array_map('intval', (array)$recipientIds));
+
+        $status = $request->input('status', 'sent') === 'failed' ? 'failed' : 'sent';
+        $errMsg = $request->input('error_message');
+
+        if (!empty($recipientIds)) {
+            CampaignRecipient::where('campaign_id', $campaign->id)
+                ->whereIn('id', $recipientIds)
+                ->update([
+                    'status' => $status,
+                    'error_message' => $errMsg,
+                    'sent_at' => now(),
+                ]);
+        }
+
+        // Recalculate campaign statistics
+        $sentCount = CampaignRecipient::where('campaign_id', $campaign->id)->where('status', 'sent')->count();
+        $failedCount = CampaignRecipient::where('campaign_id', $campaign->id)->where('status', 'failed')->count();
+        $totalTargets = $campaign->total_targets;
+
+        $newStatus = ($sentCount + $failedCount >= $totalTargets && $totalTargets > 0) ? 'completed' : 'sending';
+
+        $campaign->update([
+            'sent_count' => $sentCount,
+            'failed_count' => $failedCount,
+            'status' => $newStatus,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'sent_count' => $sentCount,
+            'failed_count' => $failedCount,
+            'total_targets' => $totalTargets,
+            'is_completed' => ($newStatus === 'completed'),
+        ]);
+    }
+
+    /**
+     * Step 4: Mobile Safari landing page opened when iPhone scans laptop QR Code
+     */
+    public function launchSmsBridge(Request $request, $campaign_id)
+    {
+        $token = $request->query('token');
+        if (!$this->verifySmsBridgeToken($campaign_id, $token, $campaign)) {
+            return response('<h3>የኤስኤምኤስ ክፍለ-ጊዜው አልቋል ወይም ልክ ያልሆነ ቶከን ነው (Session Expired)!</h3>', 403);
+        }
+
+        $baseUrl = rtrim(config('app.url') ?: env('APP_URL', $request->getSchemeAndHttpHost()), '/');
+        $pullUrl = "{$baseUrl}/api/sms-bridge/pull-queue?campaign_id={$campaign->id}&token={$token}";
+        $reportUrl = "{$baseUrl}/api/sms-bridge/report-status";
+        $shortcutDirectUrl = "shortcuts://run-shortcut?name=Meash%20Auto%20SMS&input=" . urlencode($pullUrl);
+
+        $total = $campaign->total_targets;
+        $sent = $campaign->sent_count;
+
+        return response()->view('sms_bridge_launch', [
+            'campaign' => $campaign,
+            'token' => $token,
+            'total' => $total,
+            'sent' => $sent,
+            'pullUrl' => $pullUrl,
+            'reportUrl' => $reportUrl,
+            'shortcutDirectUrl' => $shortcutDirectUrl,
+        ]);
+    }
+
+    /**
+     * Real-time polling endpoint for laptop screen
+     */
+    public function getCampaignStatus(Request $request, $id): JsonResponse
+    {
+        $campaign = Campaign::findOrFail($id);
+        $total = max(1, $campaign->total_targets);
+        $sent = $campaign->sent_count;
+        $failed = $campaign->failed_count;
+        $percent = min(100, round(($sent / $total) * 100));
+
+        return response()->json([
+            'campaign_id' => $campaign->id,
+            'status' => $campaign->status,
+            'sent_count' => $sent,
+            'failed_count' => $failed,
+            'total_targets' => $campaign->total_targets,
+            'percentage' => $percent,
+            'is_completed' => in_array($campaign->status, ['completed', 'cancelled']),
+        ]);
+    }
+
+    /**
+     * Verify SMS session token against Cache and DB
+     */
+    protected function verifySmsBridgeToken($campaignId, $token, &$campaign): bool
+    {
+        if (empty($campaignId) || empty($token)) return false;
+
+        $campaign = Campaign::find($campaignId);
+        if (!$campaign) return false;
+
+        $cachedToken = Cache::get("sms_bridge_{$campaignId}");
+        if ($cachedToken && hash_equals($cachedToken, $token)) {
+            return true;
+        }
+
+        if (!empty($campaign->session_token) && hash_equals($campaign->session_token, $token)) {
+            return true;
+        }
+
+        return false;
     }
 }

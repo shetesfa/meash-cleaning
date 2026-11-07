@@ -54,6 +54,82 @@ class Customer extends Model
                 $customer->customer_code = static::generateNextCode();
             }
         });
+
+        static::saved(function ($customer) {
+            static::syncToBroadcastList($customer);
+        });
+    }
+
+    public static function normalizePhone(?string $phone): ?string
+    {
+        if (empty($phone)) return null;
+        $digits = preg_replace('/\D+/', '', $phone);
+        if (str_starts_with($digits, '251')) {
+            return '0' . substr($digits, 3);
+        }
+        if (str_starts_with($digits, '09') || str_starts_with($digits, '07')) {
+            return $digits;
+        }
+        if (strlen($digits) === 9 && (str_starts_with($digits, '9') || str_starts_with($digits, '7'))) {
+            return '0' . $digits;
+        }
+        return $digits;
+    }
+
+    public static function syncToBroadcastList(Customer $customer, ?string $source = null, ?int $telegramChatId = null): ?TelegramUser
+    {
+        try {
+            $cleanPhone = self::normalizePhone($customer->phone);
+            $altPhone = self::normalizePhone($customer->alt_phone);
+            $chatId = $telegramChatId ?: (!empty($customer->telegram_user_id) && is_numeric($customer->telegram_user_id) ? (int)$customer->telegram_user_id : null);
+
+            $tgUser = null;
+            if ($chatId) {
+                $tgUser = TelegramUser::where('telegram_id', $chatId)->first();
+            }
+
+            if (!$tgUser && !empty($cleanPhone)) {
+                $suffix = substr($cleanPhone, -9);
+                $tgUser = TelegramUser::where(function ($q) use ($cleanPhone, $suffix) {
+                    $q->where('phone_number', $cleanPhone)
+                      ->orWhere('phone_number', 'like', "%{$suffix}");
+                })->first();
+            }
+
+            $determinedSource = $source ?: ($tgUser?->source ?: 'website_customer');
+
+            if ($tgUser) {
+                // Update while strictly preserving friend is_excluded status!
+                $tgUser->first_name = $customer->full_name ?: $tgUser->first_name;
+                if (!empty($cleanPhone)) {
+                    $tgUser->phone_number = $cleanPhone;
+                }
+                if ($chatId && empty($tgUser->telegram_id)) {
+                    $tgUser->telegram_id = $chatId;
+                }
+                $tgUser->is_active = true;
+                $tgUser->source = $determinedSource;
+                $tgUser->marketing_consent = true;
+                $tgUser->last_interaction_at = now();
+                $tgUser->save();
+                return $tgUser;
+            }
+
+            // Create new record with real numeric telegram_id or NULL (never fake numeric ID!)
+            return TelegramUser::create([
+                'telegram_id' => $chatId ?: null,
+                'first_name' => $customer->full_name ?: 'ክቡር ደንበኛ',
+                'phone_number' => $cleanPhone ?: $altPhone,
+                'is_active' => true,
+                'is_excluded' => false,
+                'source' => $determinedSource,
+                'marketing_consent' => true,
+                'last_interaction_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Customer::syncToBroadcastList failed: ' . $e->getMessage());
+            return null;
+        }
     }
 
     public function getGoogleMapsUrlAttribute(): ?string

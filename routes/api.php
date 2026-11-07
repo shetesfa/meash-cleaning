@@ -162,12 +162,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/send-direct-sms', [NotificationMarketingController::class, 'sendDirectSms'])->middleware('role:owner,reception');
     Route::get('/sms/status', [NotificationMarketingController::class, 'smsStatus']);
 
-    // Telegram Broadcast Center (Bulk Import, Selection, Safe Dispatch)
+    // Telegram Broadcast Center (Bulk Import, Selection, Safe Dispatch, Contact Management)
     Route::prefix('telegram-broadcast')->middleware('role:owner,reception')->group(function () {
         Route::get('/recipients', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'getRecipients']);
         Route::post('/add-recipient', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'addSingleRecipient']);
+        Route::put('/recipients/{id}', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'updateRecipient']);
+        Route::delete('/recipients/{id}', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'deleteRecipient']);
+        Route::post('/recipients/bulk-action', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'bulkActionRecipients']);
+        Route::get('/export', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'exportRecipients']);
         Route::post('/import', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'bulkImportRecipients']);
         Route::post('/dispatch', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'dispatchBroadcast']);
+        Route::post('/create-sms-session', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'createSmsSession']);
+        Route::get('/campaign-status/{id}', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'getCampaignStatus']);
     });
 
     // K. Website Settings & Content CMS
@@ -193,3 +199,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/send-test', [TelegramController::class, 'sendTestMessage'])->middleware('role:owner,reception');
     });
 });
+
+// M. Public Token-Authenticated iPhone / Android SMS Bridge Endpoints
+Route::prefix('sms-bridge')->group(function () {
+    Route::get('/pull-queue', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'pullSmsQueue']);
+    Route::post('/report-status', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'reportSmsStatus']);
+    Route::get('/launch/{campaign_id}', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'launchSmsBridge']);
+});
+

@@ -17,6 +17,8 @@ class Campaign extends Model
         'audience_filter',
         'message_text',
         'status',
+        'session_token',
+        'notes',
         'total_targets',
         'sent_count',
         'failed_count',
@@ -38,5 +40,10 @@ class Campaign extends Model
     public function recipients(): HasMany
     {
         return $this->hasMany(CampaignRecipient::class);
+    }
+
+    public function getSuccessfulCountAttribute(): int
+    {
+        return (int)$this->sent_count;
     }
 }

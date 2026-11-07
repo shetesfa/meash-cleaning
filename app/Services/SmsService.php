@@ -174,8 +174,41 @@ class SmsService
         $providerResponse = 'Direct normal phone SMS: Dispatched to phone number ' . $phone;
         $isLiveCarrier = true;
 
-        // Generic Gateway URL if explicitly configured
-        if (!empty($gatewayUrl)) {
+        // Cloud SMS Gateway (AfroMessage / GeezSMS / Generic) if configured
+        $afroToken = env('AFROMESSAGE_TOKEN');
+        $geezToken = env('GEEZSMS_TOKEN');
+
+        if (!empty($afroToken)) {
+            try {
+                $sender = env('AFROMESSAGE_SENDER', $senderId);
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $afroToken,
+                ])->timeout(5)->connectTimeout(2)->post('https://api.afromessage.com/api/send', [
+                    'to' => $phone,
+                    'message' => $message,
+                    'sender' => $sender,
+                ]);
+                $deliveryStatus = $response->successful() ? 'delivered' : 'gateway_failed';
+                $providerResponse = $response->body();
+                $isLiveCarrier = $response->successful();
+            } catch (\Throwable $e) {
+                Log::warning('AfroMessage cloud dispatch error: ' . $e->getMessage());
+            }
+        } elseif (!empty($geezToken)) {
+            try {
+                $response = Http::timeout(5)->connectTimeout(2)->post('https://api.geezsms.com/api/v1/sms/send', [
+                    'token' => $geezToken,
+                    'phone' => $phone,
+                    'msg' => $message,
+                    'shortcode_id' => env('GEEZSMS_SHORTCODE'),
+                ]);
+                $deliveryStatus = $response->successful() ? 'delivered' : 'gateway_failed';
+                $providerResponse = $response->body();
+                $isLiveCarrier = $response->successful();
+            } catch (\Throwable $e) {
+                Log::warning('GeezSMS cloud dispatch error: ' . $e->getMessage());
+            }
+        } elseif (!empty($gatewayUrl)) {
             try {
                 $response = Http::timeout(5)->connectTimeout(2)->post($gatewayUrl, [
                     'to' => $phone,
