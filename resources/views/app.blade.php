@@ -75,7 +75,13 @@
             --sat: env(safe-area-inset-top, 0px);
             --sab: env(safe-area-inset-bottom, 0px);
         }
-        body {
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        html, body {
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100vw !important;
             font-family: 'Plus Jakarta Sans', 'Noto Sans Ethiopic', sans-serif;
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
@@ -87,6 +93,24 @@
         .leaflet-container {
             font-family: inherit;
             background: #0f172a;
+        }
+
+        /* Mobile Responsiveness & Modal Safety: All action buttons reachable on small screens */
+        div[class*="fixed inset-0 z-50"]:not(#mobile-sidebar-drawer) {
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        div[class*="fixed inset-0 z-50"]:not(#mobile-sidebar-drawer) > div:not(#mobile-sidebar-drawer):not(nav) {
+            max-height: 92vh !important;
+            overflow-y: auto !important;
+            margin-top: auto !important;
+            margin-bottom: auto !important;
+        }
+        @media (max-width: 640px) {
+            .overflow-x-auto {
+                -webkit-overflow-scrolling: touch !important;
+                scrollbar-width: thin;
+            }
         }
     </style>
 </head>
@@ -6714,14 +6738,14 @@
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">ይፋዊ ኢሜይል (Company Email)</label>
-                                    <input type="email" id="set-comp-email" value="${escapeHtml(s.company_email || 'info@meashcleaning.com')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    <input type="email" id="set-comp-email" value="${escapeHtml(s.company_email || 'meashcleaningsolution@gmail.com')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                 </div>
                             </div>
 
                             <div class="grid sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ መፈክር በአማርኛ (Slogan AM)</label>
-                                    <input type="text" id="set-slogan-am" value="${escapeHtml(s.company_slogan_am || 'የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት!')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ መፈክር በአማርኛ (Slogan AM — Strict English)</label>
+                                    <input type="text" id="set-slogan-am" value="${escapeHtml(s.company_slogan_am || 'Your Environment, Our Responsibility.')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ መፈክር በእንግሊዝኛ (Slogan EN)</label>
@@ -6732,22 +6756,22 @@
                             <div class="grid sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">የቢሮ አድራሻ በአማርኛ (Office Location AM)</label>
-                                    <input type="text" id="set-address-am" value="${escapeHtml(s.company_address_am || 'አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ፣ ኢትዮጵያ')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    <input type="text" id="set-address-am" value="${escapeHtml(s.company_address_am || 'አያት አደባባይ፣ አዲስ አበባ፣ ኢትዮጵያ')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">የቢሮ አድራሻ በእንግሊዝኛ (Office Location EN)</label>
-                                    <input type="text" id="set-address-en" value="${escapeHtml(s.company_address || 'Ayat, in front of Tesfu Mall, Addis Ababa, Ethiopia')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    <input type="text" id="set-address-en" value="${escapeHtml(s.company_address || 'Ayat Square, Addis Ababa, Ethiopia')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                 </div>
                             </div>
 
                             <div class="grid sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">የስራ ሰዓት በአማርኛ (Working Hours AM)</label>
-                                    <input type="text" id="set-hours-am" value="${escapeHtml(s.working_hours_am || 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ በቀጠሮ)')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    <input type="text" id="set-hours-am" value="${escapeHtml(s.working_hours_am || 'ከሰኞ እስከ እሁድ 24 ሰዓት ክፍት — የቀን እና የሌሊት ፈረቃ')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">የስራ ሰዓት በእንግሊዝኛ (Working Hours EN)</label>
-                                    <input type="text" id="set-hours-en" value="${escapeHtml(s.working_hours_en || 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday by Appointment)')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    <input type="text" id="set-hours-en" value="${escapeHtml(s.working_hours_en || '24/7 Open — Day, Evening & Night Shifts')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                 </div>
                             </div>
 
@@ -8833,14 +8857,14 @@
             if (perm === 'granted') {
                 if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
                     const reg = await navigator.serviceWorker.ready;
-                    reg.showNotification('ሜሽ የፅዳት አገልግሎት | Mesh Cleaning', {
+                    reg.showNotification('ሜአሽ የጽዳት አገልግሎት | MEASH CLEANING', {
             body: ' ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል! የትዕዛዝ እና የቀጠሮ ማንቂያዎች ይደርሱዎታል።',
                         icon: '/assets/icon-192.png',
                         badge: '/assets/icon-192.png',
                         vibrate: [200, 100, 200]
                     });
                 } else {
-                    new Notification('ሜሽ የፅዳት አገልግሎት | Mesh Cleaning', {
+                    new Notification('ሜአሽ የጽዳት አገልግሎት | MEASH CLEANING', {
             body: ' ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል!',
                         icon: '/assets/icon-192.png'
                     });

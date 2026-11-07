@@ -156,82 +156,80 @@ class TelegramController extends Controller
       // CARD 1: All-in-One Official Showcase (Shown first on empty search)
       [
         'id' => 'meash_all_in_one',
-        'title' => ' ሜሽ የፅዳት አገልግሎት | Meash Cleaning Solution',
-        'description' => ' 6ቱ አገልግሎቶች | ቦታ ማስያዣ | ሶሻል ሚዲያ | 0970075509',
+        'title' => 'ሜአሽ የጽዳት አገልግሎት | MEASH CLEANING SOLUTION',
+        'description' => '6ቱ አገልግሎቶች | "Your Environment, Our Responsibility." | 0970075509 / 0998142190',
         'thumbnail_url' => 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=240&h=240&fit=crop',
-        'message_text' => " <b>ሜሽ የፅዳት አገልግሎት | MEASH CLEANING SOLUTION</b>\n" .
-          " <b>ጥራት ያለው ፅዳት:: ንፁህ:: አስተማማኝ::</b>\n" .
-          "<i>(Professional Cleaning. Fresh. Clean. Reliable.)</i>\n\n" .
-          "በአዲስ አበባ እና አካባቢው ዓለም አቀፍ ደረጃቸውን በጠበቁ የኢንዱስትሪ ማሽኖች፣ በስቲም (Steam) እና በደህንነታቸው በተረጋገጡ ኬሚካሎች አስተማማኝ የፅዳት አገልግሎት እንሰጣለን::\n\n" .
-          " <b>የምንሰጣቸው 6ቱ ዋና ዋና አገልግሎቶች እና ዋጋ:</b>\n" .
-          "1. <b>የሶፋ እጥበት:</b> {$sofaP} ብር / ወንበር (ጥልቅ አረፋና ስቲም)\n" .
-          "2. <b>የምንጣፍ እጥበት:</b> {$carpetP} ብር / ካሬ ሜትር (ሮተሪ ማሽን)\n" .
-          "3. <b>የፍራሽ ሳኒታይዜሽን:</b> {$mattressP} ብር / ፍራሽ (ፀረ-ተባይና አቧራ ትል)\n" .
-          "4. <b>የመስታወት ፅዳት:</b> {$glassP} ብር / ካሬ ሜትር (አያንጸባርቅም)\n" .
-          "5. <b>የመኖሪያ ቤት ጥልቅ ፅዳት:</b> ከ {$homeP} ብር ጀምሮ\n" .
-          "6. <b>የቢሮ እና የተቋማት ፅዳት:</b> በኮንትራት ወይም በፕሮፎርማ\n\n" .
-          " <b>ማህበራዊ ሚዲያ (Social Media):</b>\n" .
-          "• ቴሌግራም ቻናል: @meashdeepcleaning\n" .
-          "• TikTok: @meashcleaningsolition\n" .
-          "• Facebook: facebook.com/meashclean\n" .
-          "• Instagram: @meashdeepcleaning\n\n" .
-          " <b>የሪሴፕሽን ስልክ:</b> 0970075509\n" .
-          " <b>አድራሻ:</b> አዲስ አበባ፣ ሃያት አደባባይ ተስፉ ሞል ፊትለፊት\n\n" .
-          "ቦታ ለማስያዝ ወይም ለመደወል ከታች ያሉትን አማራጮች ይጫኑ ",
+        'message_text' => "<b>ሜአሽ የጽዳት አገልግሎት | MEASH CLEANING SOLUTION</b>\n" .
+          "<b>\"Your Environment, Our Responsibility.\"</b>\n" .
+          "<i>(Premium Commercial Cleaning Solutions — Hotels | Restaurants | Cafés | Offices)</i>\n\n" .
+          "በአዲስ አበባ እና አካባቢው ዓለም አቀፍ ደረጃቸውን በጠበቁ የኢንዱስትሪ ማሽኖች፣ በስቲም (Steam) እና በደህንነታቸው በተረጋገጡ ኬሚካሎች አስተማማኝ የጽዳት አገልግሎት እንሰጣለን::\n\n" .
+          "<b>የምንሰጣቸው 6ቱ ዋና ዋና ይፋዊ አገልግሎቶች:</b>\n" .
+          "1. <b>የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት</b> (Ceramic & Hardwood Floor)\n" .
+          "2. <b>የተቋማት አጠቃላይ እና ጥልቅ ጽዳት</b> (Deep & General Facilities Cleaning)\n" .
+          "3. <b>የወጥ ቤት እና የምግብ ማስተናገጃ ቦታዎች ጽዳት</b> (Kitchen & Dining Sanitation)\n" .
+          "4. <b>ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት</b> (Post-Construction Handover)\n" .
+          "5. <b>የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት</b> (High-Rise Window & Glass)\n" .
+          "6. <b>የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ</b> (Upholstery & Carpet Deep Care)\n\n" .
+          "<b>ማህበራዊ ሚዲያ (Social Media):</b>\n" .
+          "• TikTok: @meashcleaningsolution\n" .
+          "• Instagram: @meashcleaningsolution\n" .
+          "• Facebook: @meashcleaningsolution\n" .
+          "• ቴሌግራም ቻናል: @meashdeepcleaning\n\n" .
+          "<b>የሪሴፕሽን ስልክ:</b> 0970075509 / 0998142190\n" .
+          "<b>ኢሜይል:</b> meashcleaningsolution@gmail.com\n" .
+          "<b>አድራሻ:</b> አያት አደባባይ፣ አዲስ አበባ\n\n" .
+          "ቦታ ለማስያዝ ወይም ለመደወል ከታች ያሉትን አማራጮች ይጫኑ",
         'buttons' => [
           [
             $bookingButton,
-            ['text' => ' አገልግሎቶች | Services', 'switch_inline_query_current_chat' => 'አገልግሎቶች'],
+            ['text' => 'አገልግሎቶች | Services', 'switch_inline_query_current_chat' => 'አገልግሎቶች'],
           ],
           [
-            ['text' => ' ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-            ['text' => ' TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+            ['text' => 'TikTok', 'url' => 'https://www.tiktok.com/@meashcleaningsolution'],
           ],
           [
-            ['text' => ' Facebook', 'url' => 'https://facebook.com/meashclean'],
-            ['text' => ' Instagram', 'url' => 'https://instagram.com/@meashdeepcleaning'],
+            ['text' => 'Facebook', 'url' => 'https://facebook.com/meashcleaningsolution'],
+            ['text' => 'Instagram', 'url' => 'https://instagram.com/meashcleaningsolution'],
           ],
           [
-            ['text' => ' ሪሴፕሽን ያናግሩ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => 'ሪሴፕሽን ያናግሩ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
           ],
         ],
-        'keywords' => ['all', 'official', 'about', 'meash', 'ሜሽ', 'ፅዳት', 'አዲስ አበባ', 'ዋጋ', 'ስልክ', 'ሶሻል', 'social', 'booking'],
+        'keywords' => ['all', 'official', 'about', 'meash', 'ሜአሽ', 'ሜሽ', 'ጽዳት', 'አዲስ አበባ', 'ዋጋ', 'ስልክ', 'ሶሻል', 'social', 'booking'],
       ],
 
       // CARD 2: Services & Rates Breakdown
       [
         'id' => 'meash_services_rates',
-        'title' => ' 6ቱ አገልግሎቶች እና የዋጋ ዝርዝር | Services & Rates',
-        'description' => "ሶፋ {$sofaP} ብር | ምንጣፍ {$carpetP} ብር | ፍራሽ {$mattressP} ብር | መስታወት {$glassP} ብር | ቤት {$homeP} ብር",
+        'title' => '6ቱ ይፋዊ አገልግሎቶች | Core Services & Rates',
+        'description' => 'የወለል፣ የተቋማት፣ የወጥ ቤት፣ የርክክብ፣ የመስታወት፣ የሶፋና ምንጣፍ ጥልቅ ጽዳት',
         'thumbnail_url' => 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=240&h=240&fit=crop',
-        'message_text' => " <b>የሜሽ የፅዳት አገልግሎቶች እና የዋጋ ዝርዝር</b>\n" .
-          "<i>(Meash Cleaning Services & Official Price List)</i>\n\n" .
-          "1. <b>የሶፋ እና ወንበር ጥልቅ አረፋ እጥበት</b>\n" .
-          "  • ዋጋ: <b>{$sofaP} ብር</b> / በአንድ መቀመጫ ወንበር\n" .
-          "  • በኃይለኛ ቫኪዩም አቧራ ማውጣት፣ በአረፋ ማጠብ፣ በስቲም ማድረቅ\n\n" .
-          "2. <b>የምንጣፍ ማጠብ እና ስቲም እጥበት</b>\n" .
-          "  • ዋጋ: <b>{$carpetP} ብር</b> / በአንድ ካሬ ሜትር\n" .
-          "  • በሮተሪ ማሽን ማሸት፣ ጀርም ማጥፋትና ወስደን አድርቀን የማምጣት አማራጭ\n\n" .
-          "3. <b>የፍራሽ ሳኒታይዜሽን እና እጥበት</b>\n" .
-          "  • ዋጋ: <b>{$mattressP} ብር</b> / በአንድ ፍራሽ\n" .
-          "  • ፀረ-አለርጂ፣ የአቧራ ትሎችን በሙቅ ስቲም 99.9% ማጥፋት\n\n" .
-          "4. <b>የመስታወት እና የፊት ለፊት ህንፃ ፅዳት</b>\n" .
-          "  • ዋጋ: <b>{$glassP} ብር</b> / በአንድ ካሬ ሜትር\n" .
-          "  • ምንም አይነት የውሃ ነጠብጣብ የሌለው የሚያንጸባርቅ እጥበት\n\n" .
-          "5. <b>የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት</b>\n" .
-          "  • ዋጋ: <b>ከ {$homeP} ብር</b> ጀምሮ\n" .
-          "  • ከግንባታ በኋላ፣ የኩሽና ቅባት፣ ሽንት ቤት ሳኒታይዜሽንና ወለል ፖሊሽ\n\n" .
-          "6. <b>የቢሮ እና የተቋማት ፅዳት</b>\n" .
-          "  • በስምምነት እና በወርሃዊ ኮንትራት (ከህጋዊ ደረሰኝ ጋር)\n\n" .
-          " <b>የሪሴፕሽን ስልክ:</b> 0970075509",
+        'message_text' => "<b>የሜአሽ የጽዳት አገልግሎቶች (MEASH CLEANING SOLUTION)</b>\n" .
+          "<b>\"Your Environment, Our Responsibility.\"</b>\n" .
+          "<i>(Official 6 Core Cleaning Services)</i>\n\n" .
+          "1. <b>የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት</b>\n" .
+          "  • Ceramic & Hardwood Floor Cleaning (Deep tile & grout restoration)\n\n" .
+          "2. <b>የተቋማት አጠቃላይ እና ጥልቅ ጽዳት</b>\n" .
+          "  • Deep & General Facilities Cleaning (Corporate spaces & offices)\n\n" .
+          "3. <b>የወጥ ቤት እና የምግብ ማስተናገጃ ቦታዎች ጽዳት</b>\n" .
+          "  • Kitchen & Dining Sanitation (Hotels, Cafés & Restaurants)\n\n" .
+          "4. <b>ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት</b>\n" .
+          "  • Post-Construction Handover Cleaning (For new developments)\n\n" .
+          "5. <b>የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት</b>\n" .
+          "  • High-Rise Window & Glass Cleaning\n\n" .
+          "6. <b>የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ</b>\n" .
+          "  • Upholstery & Carpet Deep Care (ቴክኖሎጂን ሳይጎዱ ማፅዳት)\n\n" .
+          "<b>የሪሴፕሽን ስልክ:</b> 0970075509 / 0998142190\n" .
+          "<b>አድራሻ:</b> አያት አደባባይ፣ አዲስ አበባ",
         'buttons' => [
           [
             $bookingButton,
-            ['text' => ' ሪሴፕሽን (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => 'ሪሴፕሽን (0970075509)', 'url' => 'https://t.me/Shetesfa'],
           ],
           [
-            ['text' => ' ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-            ['text' => ' TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+            ['text' => 'TikTok', 'url' => 'https://www.tiktok.com/@meashcleaningsolution'],
           ],
         ],
         'keywords' => ['services', 'pricing', 'rates', 'አገልግሎቶች', 'ዋጋ', 'ዝርዝር', 'ስንት', 'ምን'],
@@ -240,32 +238,33 @@ class TelegramController extends Controller
       // CARD 3: Social Media & Contacts
       [
         'id' => 'meash_social_media',
-        'title' => ' ሶሻል ሚዲያ እና የሪሴፕሽን አድራሻ | Social Media & Hotline',
-        'description' => 'ቴሌግራም ቻናል | TikTok | Facebook | Instagram | ስልክ 0970075509',
+        'title' => 'ሶሻል ሚዲያ እና አድራሻ | Social Media & Hotline',
+        'description' => 'TikTok | Instagram | Facebook: @meashcleaningsolution | ስልክ 0970075509 / 0998142190',
         'thumbnail_url' => 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=240&h=240&fit=crop',
-        'message_text' => " <b>የሜሽ የፅዳት አገልግሎት ማህበራዊ ሚዲያ እና የመገናኛ አድራሻዎች</b>\n" .
-          "<i>(Meash Cleaning Solution Social Channels & Contacts)</i>\n\n" .
-          "የስራዎቻችንን ቪዲዮዎች፣ ቅናሾችና ጠቃሚ የፅዳት ምክሮችን ለማግኘት ይከተሉን:\n\n" .
-          "• <b>ቴሌግራም ቻናል:</b> https://t.me/meashdeepcleaning\n" .
-          "• <b>TikTok:</b> https://tiktok.com/@meashcleaningsolition\n" .
-          "• <b>Facebook:</b> https://facebook.com/meashclean\n" .
-          "• <b>Instagram:</b> https://instagram.com/@meashdeepcleaning\n\n" .
-          " <b>የሪሴፕሽን ስልክ መስመሮች:</b>\n" .
+        'message_text' => "<b>ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION)</b>\n" .
+          "<b>\"Your Environment, Our Responsibility.\"</b>\n\n" .
+          "የስራዎቻችንን ቪዲዮዎች፣ ቅናሾችና ጠቃሚ የጽዳት ምክሮችን ለማግኘት ይከተሉን:\n\n" .
+          "• <b>TikTok:</b> https://www.tiktok.com/@meashcleaningsolution\n" .
+          "• <b>Instagram:</b> https://instagram.com/meashcleaningsolution\n" .
+          "• <b>Facebook:</b> https://facebook.com/meashcleaningsolution\n" .
+          "• <b>ቴሌግራም ቻናል:</b> https://t.me/meashdeepcleaning\n\n" .
+          "<b>የሪሴፕሽን ስልክ መስመሮች:</b>\n" .
           "• ዋና ስልክ: <b>0970075509</b>\n" .
-          "• ተጨማሪ ስልክ: <b>0970075509</b>\n\n" .
-          " <b>የስራ ሰዓት:</b>ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00\n" .
-          " <b>አድራሻ:</b> አዲስ አበባ፣ ሃያት አደባባይ ተስፉ ሞል ፊትለፊት",
+          "• ተጨማሪ ስልክ: <b>0998142190</b>\n" .
+          "• ኢሜይል: <b>meashcleaningsolution@gmail.com</b>\n\n" .
+          "<b>የስራ ሰዓት:</b> ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)\n" .
+          "<b>አድራሻ:</b> አያት አደባባይ፣ አዲስ አበባ",
         'buttons' => [
           [
-            ['text' => ' ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-            ['text' => ' TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
+            ['text' => 'TikTok', 'url' => 'https://www.tiktok.com/@meashcleaningsolution'],
+            ['text' => 'Instagram', 'url' => 'https://instagram.com/meashcleaningsolution'],
           ],
           [
-            ['text' => ' Facebook', 'url' => 'https://facebook.com/meashclean'],
-            ['text' => ' Instagram', 'url' => 'https://instagram.com/@meashdeepcleaning'],
+            ['text' => 'Facebook', 'url' => 'https://facebook.com/meashcleaningsolution'],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
           ],
           [
-            ['text' => ' ሪሴፕሽን: 0970075509', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => 'ሪሴፕሽን: 0970075509', 'url' => 'https://t.me/Shetesfa'],
             $bookingButton,
           ],
         ],
@@ -278,23 +277,24 @@ class TelegramController extends Controller
         'title' => ' በ 1 ደቂቃ ውስጥ ቦታ ያስይዙ | 1-Minute Booking',
         'description' => 'ሶፋ፣ ምንጣፍ፣ ፍራሽ፣ መስታወትና ቤት ፅዳት ቀጠሮ በቀላሉ ይያዙ',
         'thumbnail_url' => 'https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=240&h=240&fit=crop',
-        'message_text' => " <b>ፈጣን የቀጠሮ ማስያዣ | Fast Appointment Booking</b>\n" .
-          "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
+        'message_text' => "<b>ፈጣን የቀጠሮ ማስያዣ | Fast Appointment Booking</b>\n" .
+          "<i>ሜአሽ የጽዳት አገልግሎት — MEASH CLEANING SOLUTION</i>\n" .
+          "<b>\"Your Environment, Our Responsibility.\"</b>\n\n" .
           "በጣም ቀላል እና ፈጣን! የሚፈልጉትን አገልግሎት፣ ቀን እና አድራሻዎን በማስገባት በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዝ ይችላሉ::\n\n" .
-          "1. የሶፋ እና ወንበር እጥበት\n" .
-          "2. የምንጣፍ ማጠብና ስቲም\n" .
-          "3. የፍራሽ ሳኒታይዜሽን\n" .
-          "4. የመስታወት ፅዳት\n" .
-          "5. የመኖሪያ ቤት ጥልቅ ፅዳት\n" .
-          "6. የቢሮ እና የተቋማት ፅዳት\n\n" .
-          "ወዲያውኑ ቦታ ለማስያዝ ከታች ያለውን ቁልፍ ይጫኑ ወይም በ 0970075509 ይደውሉ::",
+          "1. የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት\n" .
+          "2. የተቋማት አጠቃላይ እና ጥልቅ ጽዳት\n" .
+          "3. የወጥ ቤት እና የምግብ ማስተናገጃ ቦታዎች ጽዳት\n" .
+          "4. ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት\n" .
+          "5. የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት\n" .
+          "6. የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ\n\n" .
+          "ወዲያውኑ ቦታ ለማስያዝ ከታች ያለውን ቁልፍ ይጫኑ ወይም በ 0970075509 / 0998142190 ይደውሉ::",
         'buttons' => [
           [
             $bookingButton,
           ],
           [
-            ['text' => ' በስልክ ለማዘዝ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
-            ['text' => ' አገልግሎቶች', 'switch_inline_query_current_chat' => 'አገልግሎቶች'],
+            ['text' => 'በስልክ ለማዘዝ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => 'አገልግሎቶች', 'switch_inline_query_current_chat' => 'አገልግሎቶች'],
           ],
         ],
         'keywords' => ['book', 'booking', 'reserve', 'appointment', 'ቦታ', 'ቀጠሮ', 'ማስያዣ'],
@@ -569,7 +569,7 @@ class TelegramController extends Controller
           [
             'customer_code' => Customer::generateNextCode(),
             'full_name' => $cName,
-            'address' => 'አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ',
+            'address' => 'አያት አደባባይ፣ አዲስ አበባ',
             'telegram_user_id' => (string)$chatId,
             'marketing_consent' => true,
             'consent_timestamp' => now(),
@@ -658,8 +658,8 @@ class TelegramController extends Controller
         return;
       }
 
-      $welcomeAm = WebsiteSetting::getVal('bot_welcome_am', "<b>እንኳን ወደ ሜሽ የፅዳት አገልግሎት በደህና መጡ!</b>\n\nጥራት ያለው ፅዳት:: ንፁህ:: አስተማማኝ::\n\nበአዲስ አበባ አስተማማኝ የሶፋ፣ የምንጣፍ፣ የፍራሽ፣ የመስታወት እና የቤት/ቢሮ ጥልቅ ፅዳት እንሰጣለን::\n\nዛሬ ምን ማፅዳት ይፈልጋሉ? ከታች ካሉት አማራጮች አንዱን ይምረጡ:");
-      $welcomeEn = WebsiteSetting::getVal('bot_welcome_en', "Welcome to Meash Cleaning Solution!\n\nProfessional Cleaning. Fresh. Clean. Reliable.");
+      $welcomeAm = WebsiteSetting::getVal('bot_welcome_am', "<b>እንኳን ወደ ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) በደህና መጡ!</b>\n\n\"Your Environment, Our Responsibility.\"\n\nከፍተኛ ጥራት የጠበቀ የንግድ ተቋማት የጽዳት አገልግሎት — ሆቴሎች | ሬስቶራንቶች | ካፌዎች | ቢሮዎች።\n\nዛሬ ምን ማፅዳት ይፈልጋሉ? ከታች ካሉት አማራጮች አንዱን ይምረጡ:");
+      $welcomeEn = WebsiteSetting::getVal('bot_welcome_en', "Welcome to MEASH CLEANING SOLUTION!\n\n\"Your Environment, Our Responsibility.\"\n\nPremium Commercial Cleaning Solutions — Hotels | Restaurants | Cafés | Offices.");
       $welcome = "{$welcomeAm}\n\n<i>{$welcomeEn}</i>";
 
       $httpsUrl = $this->getMiniAppHttpsUrl();
@@ -686,11 +686,11 @@ class TelegramController extends Controller
           ],
           [
             ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-            ['text' => 'TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
+            ['text' => 'TikTok', 'url' => 'https://www.tiktok.com/@meashcleaningsolution'],
           ],
           [
-            ['text' => 'Facebook', 'url' => 'https://facebook.com/meashclean'],
-            ['text' => 'Instagram', 'url' => 'https://instagram.com/@meashdeepcleaning'],
+            ['text' => 'Facebook', 'url' => 'https://facebook.com/meashcleaningsolution'],
+            ['text' => 'Instagram', 'url' => 'https://instagram.com/meashcleaningsolution'],
           ],
           [
             ['text' => 'ለሌሎች አጋራ | Share', 'switch_inline_query_current_chat' => ''],
@@ -728,12 +728,12 @@ class TelegramController extends Controller
       // General guidance
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "ጤና ይስጥልኝ! ሜሽ የፅዳት አገልግሎት ነው::\n\nቀጠሮ ለመያዝ፣ አገልግሎቶችን ለማየት ወይም ሪሴፕሽን ለማነጋገር /start ብለው ይላኩ::\n\nለበለጠ መረጃ: 0970075509\nቦት: @{$this->botUsername}",
+        'text' => "ጤና ይስጥልኝ! ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) ነው::\n\n\"Your Environment, Our Responsibility.\"\n\nቀጠሮ ለመያዝ፣ አገልግሎቶችን ለማየት ወይም ሪሴፕሽን ለማነጋገር /start ብለው ይላኩ::\n\nለበለጠ መረጃ: 0970075509 / 0998142190\nቦት: @{$this->botUsername}",
         'parse_mode' => 'HTML',
         'reply_markup' => json_encode([
           'inline_keyboard' => [
-            [['text' => ' ዋና ማውጫ | Main Menu', 'callback_data' => 'menu_start']],
-            [['text' => ' ቦታ ያስይዙ | Book Now', 'callback_data' => 'menu_book']],
+            [['text' => 'ዋና ማውጫ | Main Menu', 'callback_data' => 'menu_start']],
+            [['text' => 'ቦታ ያስይዙ | Book Now', 'callback_data' => 'menu_book']],
           ]
         ]),
       ]);
@@ -1139,20 +1139,23 @@ class TelegramController extends Controller
   {
     $phone1 = WebsiteSetting::getVal('contact_phone_1', '0970075509');
     $phone2 = WebsiteSetting::getVal('contact_phone_2', '0998142190');
-    $addressAm = WebsiteSetting::getVal('company_address_am', 'አዲስ አበባ፣ ሃያት አደባባይ ተስፉ ሞል ፊትለፊት');
-    $hoursAm = WebsiteSetting::getVal('working_hours_am', 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00');
+    $addressAm = WebsiteSetting::getVal('company_address_am', 'አያት አደባባይ፣ አዲስ አበባ');
+    $hoursAm = WebsiteSetting::getVal('working_hours_am', 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)');
     $channelUrl = WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashdeepcleaning');
-    $tiktokUrl = WebsiteSetting::getVal('tiktok', 'https://tiktok.com/@meashcleaningsolition');
+    $tiktokUrl = WebsiteSetting::getVal('tiktok', 'https://www.tiktok.com/@meashcleaningsolution');
 
-    $msg = " <b>የሜሽ የሪሴፕሽን ስልክ አድራሻ</b>\n" .
-      "<i>(Customer Reception & Support Desk)</i>\n\n" .
-      " <b>ዋና ስልክ:</b> {$phone1}\n" .
-      ($phone2 ? " <b>ተጨማሪ ስልክ:</b> {$phone2}\n" : '') .
-      " <b>የቴሌግራም ሪሴፕሽን:</b> @Shetesfa\n" .
-      " <b>የስራ ሰዓት:</b> {$hoursAm}\n" .
-      " <b>አድራሻ:</b> {$addressAm}\n\n" .
-      " <b>ኦፊሴላዊ ቦት:</b> @{$this->botUsername}\n" .
-      " <b>ኦፊሴላዊ ቻናል:</b> {$channelUrl}\n\n" .
+    $msg = "<b>የሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION)</b>\n" .
+      "<b>\"Your Environment, Our Responsibility.\"</b>\n\n" .
+      "<b>የደንበኞች አገልግሎትና ሪሴፕሽን (Customer Support Desk):</b>\n\n" .
+      "• <b>ዋና ስልክ:</b> {$phone1}\n" .
+      ($phone2 ? "• <b>ተጨማሪ ስልክ:</b> {$phone2}\n" : '') .
+      "• <b>ኢሜይል:</b> meashcleaningsolution@gmail.com\n" .
+      "• <b>የቴሌግራም ሪሴፕሽን:</b> @Shetesfa\n" .
+      "• <b>የስራ ሰዓት:</b> {$hoursAm}\n" .
+      "• <b>አድራሻ:</b> {$addressAm}\n\n" .
+      "• <b>TikTok | Instagram | Facebook:</b> @meashcleaningsolution\n" .
+      "• <b>ኦፊሴላዊ ቦት:</b> @{$this->botUsername}\n" .
+      "• <b>ኦፊሴላዊ ቻናል:</b> {$channelUrl}\n\n" .
       "ጥያቄ፣ አስተያየት ወይም የቀጠሮ ማስተካከያ ካለዎት በማንኛውም ጊዜ ይደውሉልን ወይም በቴሌግራም @Shetesfa ያናግሩን!";
 
     $this->telegramApi('sendMessage', [
@@ -1161,11 +1164,11 @@ class TelegramController extends Controller
       'parse_mode' => 'HTML',
       'reply_markup' => json_encode([
         'inline_keyboard' => [
-          [['text' => ' ቀጥታ ሪሴፕሽን ያናግሩ (@Shetesfa)', 'url' => 'https://t.me/Shetesfa']],
-          [['text' => ' ቦታ ያስይዙ | Book Now', 'callback_data' => 'menu_book']],
+          [['text' => 'ቀጥታ ሪሴፕሽን ያናግሩ (@Shetesfa)', 'url' => 'https://t.me/Shetesfa']],
+          [['text' => 'ቦታ ያስይዙ | Book Now', 'callback_data' => 'menu_book']],
           [
-            ['text' => ' ቴሌግራም ቻናል', 'url' => $channelUrl],
-            ['text' => ' TikTok', 'url' => $tiktokUrl],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => $channelUrl],
+            ['text' => 'TikTok', 'url' => $tiktokUrl],
           ]
         ]
       ]),

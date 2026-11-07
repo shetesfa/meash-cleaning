@@ -76,20 +76,30 @@ class WebsiteSetting extends Model
     {
         return [
             'company_name' => 'MEASH CLEANING SOLUTION',
+            'company_name_am' => 'ሜአሽ የጽዳት አገልግሎት',
             'company_slogan' => 'Your Environment, Our Responsibility.',
-            'company_slogan_am' => 'የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት!',
+            'company_slogan_am' => 'Your Environment, Our Responsibility.',
+            'company_subtitle_en' => 'Premium Commercial Cleaning Solutions — Hotels | Restaurants | Cafés | Offices',
+            'company_subtitle_am' => 'ከፍተኛ ጥራት የጠበቀ የንግድ ተቋማት የጽዳት አገልግሎት — ሆቴሎች | ሬስቶራንቶች | ካፌዎች | ቢሮዎች',
             'contact_phone_1' => '0970075509',
             'contact_phone_2' => '0998142190',
-            'company_email' => 'info@meashcleaning.com',
-            'company_address' => 'Ayat, in front of Tesfu Mall, Addis Ababa, Ethiopia',
-            'company_address_am' => 'አያት ተስፉ ሞል ፊት ለፊት ህንፃ ላይ፣ አዲስ አበባ፣ ኢትዮጵያ',
-            'working_hours_am' => 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ በቀጠሮ)',
-            'working_hours_en' => 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday by Appointment)',
+            'company_email' => 'meashcleaningsolution@gmail.com',
+            'company_address' => 'Ayat Square, Addis Ababa, Ethiopia',
+            'company_address_am' => 'አያት አደባባይ፣ አዲስ አበባ',
+            'social_handle' => '@meashcleaningsolution',
+            'working_hours_am' => 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)',
+            'working_hours_en' => 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday & Night Shift by Appointment)',
             'telegram_channel' => 'https://t.me/meashdeepcleaning',
             'telegram_bot' => 'https://t.me/meash_cleaning_solution_bot',
-            'tiktok' => 'https://www.tiktok.com/@meashcleaningsolition',
-            'facebook' => 'https://facebook.com/meashclean',
-            'instagram' => 'https://instagram.com/@meashdeepcleaning',
+            'tiktok' => 'https://www.tiktok.com/@meashcleaningsolution',
+            'facebook' => 'https://facebook.com/meashcleaningsolution',
+            'instagram' => 'https://instagram.com/meashcleaningsolution',
+            'about_text_en' => 'Meash Cleaning Solution is a fully licensed and insured premium B2B cleaning partner based at Ayat Square. We deliver exceptional commercial-grade sanitation services designed to protect your facility, project a flawless corporate image, and boost workplace productivity.',
+            'about_text_am' => 'ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING) ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማት ፕሪሚየም የጽዳት አገልግሎት የሚሰጥ ተቋም ነው። የሥራ ቦታዎን ንፅህና ለድርጅትዎ ስምና ክብር፣ እንዲሁም ለሰራተኞችዎ ጤና እና ምርታማነት ወሳኝ መሆኑን ተረድተን በላቀ ጥራት እንሰራለን።',
+            'customer_promise_en' => "We don't just clean; we maintain environments. Every service is backed by a dedicated supervisor to ensure your precise standards are met every single time.",
+            'customer_promise_am' => 'የጥራት ማረጋገጫችን እኛ አካባቢዎን ማጽዳት ብቻ ሳይሆን ንፅህናው ዘላቂ እንዲሆን እንሰራለን። እያንዳንዱ ሥራ የእርስዎን መመዘኛ ማሟላቱን የሚያረጋግጥ የተመደበ ተቆጣጣሪ (Supervisor) እንመድባለን።',
+            'cta_text_en' => 'Ready for a Cleaner, Healthier Workspace? Partner with Meash Cleaning Solution today. Let us handle the details while you drive your business growth.',
+            'cta_text_am' => 'ለድርጅትዎ ንፅህና ዝግጁ ነዎት? የድርጅትዎን ገጽታ ዛሬውኑ ያድሱ። ስለ ጽዳቱ ለእኛ ይተውልንና እርስዎ ሥራዎ ላይ ብቻ ትኩረት ያድርጉ።',
 
             // Payment Accounts
             'telebirr_account_number' => '0970075509',
@@ -118,7 +128,7 @@ class WebsiteSetting extends Model
                 ['id' => 'lemi_kura', 'name_am' => 'ለሚ ኩራ', 'name_en' => 'Lemi Kura', 'active' => true],
             ], JSON_UNESCAPED_UNICODE),
 
-            // Time Slots JSON
+            // Time Slots JSON (Includes Night Shift & Weekend)
             'time_slots' => json_encode([
                 [
                     'id' => 'morning',
@@ -141,6 +151,20 @@ class WebsiteSetting extends Model
                     'slot' => '08:30 AM - 04:30 PM',
                     'active' => true,
                 ],
+                [
+                    'id' => 'night_shift',
+                    'name_am' => 'የሌሊት ፈረቃ (ከምሽቱ 1:00 - ሌሊቱ 11:00 / Night Shift)',
+                    'name_en' => 'Night Shift (07:00 PM - 05:00 AM)',
+                    'slot' => '07:00 PM - 05:00 AM',
+                    'active' => true,
+                ],
+                [
+                    'id' => 'weekend_shift',
+                    'name_am' => 'ቅዳሜና እሁድ (እንደ ፍላጎትዎ / Weekend Special)',
+                    'name_en' => 'Weekend Shift (Flexible Sat & Sun)',
+                    'slot' => 'Flexible Weekend',
+                    'active' => true,
+                ],
             ], JSON_UNESCAPED_UNICODE),
 
             // Pricing Rules & Discounts JSON
@@ -156,10 +180,10 @@ class WebsiteSetting extends Model
             ], JSON_UNESCAPED_UNICODE),
 
             // Telegram Bot Texts
-            'bot_welcome_am' => "✨ እንኳን ወደ ሜአሽ ጥልቅ የፅዳት አገልግሎት በደህና መጡ!\n\nለሶፋ፣ ምንጣፍ፣ ፍራሽ፣ መስታወትና ለቤትዎ አስተማማኝና ዘመናዊ የጽዳት አገልግሎት እንሰጣለን:: የሚፈልጉትን አገልግሎት ከታች ባሉት አማራጮች ይምረጡ፦",
-            'bot_welcome_en' => "✨ Welcome to Meash Deep Cleaning Solution!\n\nWe provide professional cleaning for sofas, carpets, mattresses, windows, and entire residential or office spaces.",
-            'bot_help_am' => "📞 ሪሴፕሽን: 0970075509 / 0998142190\n📍 አድራሻ: አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ\n🌐 ድረ-ገጽ: https://meashcleaning.com\n\nለቀጠሮ ማስያዝ /book ይጫኑ::",
-            'bot_help_en' => "📞 Reception: 0970075509 / 0998142190\n📍 Address: Ayat, in front of Tesfu Mall, Addis Ababa\n🌐 Website: https://meashcleaning.com\n\nTo book an appointment type /book.",
+            'bot_welcome_am' => "✨ እንኳን ወደ ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) በደህና መጡ!\n\n\"Your Environment, Our Responsibility.\"\n\nከፍተኛ ጥራት የጠበቀ የንግድ ተቋማት የጽዳት አገልግሎት — ሆቴሎች | ሬስቶራንቶች | ካፌዎች | ቢሮዎች። የሚፈልጉትን አገልግሎት ከታች ባሉት አማራጮች ይምረጡ፦",
+            'bot_welcome_en' => "✨ Welcome to MEASH CLEANING SOLUTION!\n\n\"Your Environment, Our Responsibility.\"\n\nPremium Commercial Cleaning Solutions — Hotels | Restaurants | Cafés | Offices.",
+            'bot_help_am' => "📞 ስልክ: 0970075509 / 0998142190\n📧 ኢሜይል: meashcleaningsolution@gmail.com\n📍 አድራሻ: አያት አደባባይ፣ አዲስ አበባ\n🌐 ድረ-ገጽ: https://meashcleaning.com\n\nለቀጠሮ ማስያዝ /book ይጫኑ::",
+            'bot_help_en' => "📞 Phone: 0970075509 / 0998142190\n📧 Email: meashcleaningsolution@gmail.com\n📍 Address: Ayat Square, Addis Ababa, Ethiopia\n🌐 Website: https://meashcleaning.com\n\nTo book an appointment type /book.",
         ];
     }
 

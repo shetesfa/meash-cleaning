@@ -30,13 +30,17 @@ class AdminWebsiteController extends Controller
     {
         $validated = $request->validate([
             'company_name' => 'nullable|string|max:255',
+            'company_name_am' => 'nullable|string|max:255',
             'company_slogan' => 'nullable|string|max:255',
             'company_slogan_am' => 'nullable|string|max:255',
+            'company_subtitle_en' => 'nullable|string|max:500',
+            'company_subtitle_am' => 'nullable|string|max:500',
             'contact_phone_1' => 'nullable|string|max:32',
             'contact_phone_2' => 'nullable|string|max:32',
             'company_email' => 'nullable|email|max:128',
             'company_address' => 'nullable|string|max:255',
             'company_address_am' => 'nullable|string|max:255',
+            'social_handle' => 'nullable|string|max:128',
             'working_hours_am' => 'nullable|string|max:255',
             'working_hours_en' => 'nullable|string|max:255',
             'telegram_channel' => 'nullable|string|max:255',
@@ -46,6 +50,10 @@ class AdminWebsiteController extends Controller
             'instagram' => 'nullable|string|max:255',
             'about_text_en' => 'nullable|string',
             'about_text_am' => 'nullable|string',
+            'customer_promise_en' => 'nullable|string',
+            'customer_promise_am' => 'nullable|string',
+            'cta_text_en' => 'nullable|string',
+            'cta_text_am' => 'nullable|string',
             'gallery_images' => 'nullable|string',
 
             // Payment Accounts

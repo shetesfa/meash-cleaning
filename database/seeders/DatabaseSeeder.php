@@ -174,9 +174,75 @@ class DatabaseSeeder extends Seeder
         TeamMember::create(['cleaning_team_id' => $teamDelta->id, 'user_id' => $cleaner4->id, 'role_in_team' => 'leader']);
 
         // ==========================================
-        // 3. SERVICE CATALOG (Bilingual)
+        // 3. SERVICE CATALOG (Official Meash 6 Core Services)
         // ==========================================
         $servicesData = [
+            [
+                'code' => 'floor_ceramic',
+                'name_en' => 'Ceramic & Hardwood Floor Cleaning (Deep tile & grout restoration)',
+                'name_am' => 'የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት',
+                'description_en' => 'Deep tile, grout scrubbing and wood floor restoration with industrial rotary equipment.',
+                'description_am' => 'የሴራሚክ፣ የግራናይት እና የእንጨት ወለሎች ጥልቅ የማሽን እጥበት፣ ነጠብጣብ ማስወገድ እና የወለል ማደስ።',
+                'icon' => 'sparkles',
+                'base_price' => 60.00,
+                'unit' => 'sqm',
+                'sort_order' => 1,
+            ],
+            [
+                'code' => 'facilities_general',
+                'name_en' => 'Deep & General Facilities Cleaning (Corporate spaces & offices)',
+                'name_am' => 'የተቋማት አጠቃላይ እና ጥልቅ ጽዳት (ለቢሮዎች እና ለድርጅቶች)',
+                'description_en' => 'Comprehensive sanitization for corporate headquarters, offices, banks, and institutions.',
+                'description_am' => 'ለቢሮዎች፣ ለባንኮች፣ ለድርጅቶች እና ለተቋማት አጠቃላይ ጥልቅ ጽዳት በቋሚ ወይም በጊዜያዊ ውል።',
+                'icon' => 'briefcase',
+                'base_price' => 3500.00,
+                'unit' => 'service',
+                'sort_order' => 2,
+            ],
+            [
+                'code' => 'kitchen_dining',
+                'name_en' => 'Kitchen & Dining Sanitation (Hotels, Cafés & Restaurants)',
+                'name_am' => 'የወጥ ቤት እና የምግብ ማስተናገጃ ቦታዎች ጽዳት (ለሆቴል፣ ካፌ እና ሬስቶራንት)',
+                'description_en' => 'Commercial kitchen degreasing, dining area sanitization, and food safety standards.',
+                'description_am' => 'ለሆቴሎች፣ ሬስቶራንቶች እና ካፌዎች የወጥ ቤት ቅባት ማስወገድ፣ የምግብ ማብሰያ እና ማስተናገጃ ቦታዎች ጥልቅ ጽዳት።',
+                'icon' => 'coffee',
+                'base_price' => 3000.00,
+                'unit' => 'service',
+                'sort_order' => 3,
+            ],
+            [
+                'code' => 'post_construction',
+                'name_en' => 'Post-Construction Handover Cleaning (For new developments)',
+                'name_am' => 'ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት',
+                'description_en' => 'Heavy debris clearing, cement stain removal, and pristine pre-handover perfection.',
+                'description_am' => 'ከአዲስ ህንፃ እና ቤት ግንባታ ወይም እድሳት ማጠናቀቅ በኋላ የቀለም፣ የሲሚንቶ እና የአቧራ ቅሪቶችን አጽድቶ ለርክክብ ማዘጋጀት።',
+                'icon' => 'home',
+                'base_price' => 4500.00,
+                'unit' => 'service',
+                'sort_order' => 4,
+            ],
+            [
+                'code' => 'glass',
+                'name_en' => 'High-Rise Window & Glass Cleaning',
+                'name_am' => 'የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት',
+                'description_en' => 'Streak-free crystal-clear window washing for multi-story buildings, showrooms, and facades.',
+                'description_am' => 'የህንፃ እና የመኖሪያ ቤት መስታወቶች ከውስጥ እና ከውጭ በዘመናዊ እቃዎች ንፁህ እና ብሩህ አድርጎ ማፅዳት።',
+                'icon' => 'sun',
+                'base_price' => 70.00,
+                'unit' => 'sqm',
+                'sort_order' => 5,
+            ],
+            [
+                'code' => 'upholstery_carpet',
+                'name_en' => 'Upholstery & Carpet Deep Care',
+                'name_am' => 'የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ (ቴክኖሎጂን ሳይጎዱ ማፅዳት)',
+                'description_en' => 'High-tech deep shampoo extraction for sofas, carpets, rugs, and mattresses without fabric damage.',
+                'description_am' => 'ለሶፋ፣ ምንጣፍ፣ ፍራሽ እና ወንበሮች ጥልቅ የስቲም እና የሻምፖ እጥበት፣ ነጠብጣብ ማስወገድ እና ማደስ።',
+                'icon' => 'sofa',
+                'base_price' => 350.00,
+                'unit' => 'seat',
+                'sort_order' => 6,
+            ],
             [
                 'code' => 'sofa',
                 'name_en' => 'Sofa & Couch Deep Cleaning',
@@ -186,7 +252,7 @@ class DatabaseSeeder extends Seeder
                 'icon' => 'sofa',
                 'base_price' => 350.00,
                 'unit' => 'seat',
-                'sort_order' => 1,
+                'sort_order' => 7,
             ],
             [
                 'code' => 'carpet',
@@ -197,7 +263,7 @@ class DatabaseSeeder extends Seeder
                 'icon' => 'sparkles',
                 'base_price' => 80.00,
                 'unit' => 'sqm',
-                'sort_order' => 2,
+                'sort_order' => 8,
             ],
             [
                 'code' => 'mattress',
@@ -208,18 +274,7 @@ class DatabaseSeeder extends Seeder
                 'icon' => 'bed',
                 'base_price' => 600.00,
                 'unit' => 'piece',
-                'sort_order' => 3,
-            ],
-            [
-                'code' => 'glass',
-                'name_en' => 'Glass & Window Facade Cleaning',
-                'name_am' => 'የመስታወት እና የፎቅ መስታወት ፅዳት',
-                'description_en' => 'Streak-free window washing for residential homes, villas, and commercial buildings.',
-                'description_am' => 'የቤት እና የህንፃ መስታወቶችን ከውጭ እና ከውስጥ ንፁህ እና ብሩህ አድርጎ ማፅዳት::',
-                'icon' => 'sun',
-                'base_price' => 70.00,
-                'unit' => 'sqm',
-                'sort_order' => 4,
+                'sort_order' => 9,
             ],
             [
                 'code' => 'home',
@@ -230,7 +285,7 @@ class DatabaseSeeder extends Seeder
                 'icon' => 'home',
                 'base_price' => 2500.00,
                 'unit' => 'service',
-                'sort_order' => 5,
+                'sort_order' => 10,
             ],
             [
                 'code' => 'office',
@@ -241,7 +296,7 @@ class DatabaseSeeder extends Seeder
                 'icon' => 'briefcase',
                 'base_price' => 3500.00,
                 'unit' => 'service',
-                'sort_order' => 6,
+                'sort_order' => 11,
             ],
             [
                 'code' => 'curtain',
@@ -252,13 +307,13 @@ class DatabaseSeeder extends Seeder
                 'icon' => 'wind',
                 'base_price' => 120.00,
                 'unit' => 'piece',
-                'sort_order' => 7,
+                'sort_order' => 12,
             ],
         ];
 
         $services = [];
         foreach ($servicesData as $sData) {
-            $services[$sData['code']] = Service::create($sData);
+            $services[$sData['code']] = Service::updateOrCreate(['code' => $sData['code']], $sData);
         }
 
         // ==========================================
@@ -985,78 +1040,91 @@ class DatabaseSeeder extends Seeder
     {
         $servicesData = [
             [
-                'code' => 'SVC-SOFA',
-                'name_en' => 'Sofa Deep Cleaning & Shampooing',
-                'name_am' => 'የሶፋ ጥልቅ እጥበትና ሻምፑ',
-                'description_en' => 'Professional injection-extraction deep washing removing deep stains and odor.',
-                'description_am' => 'የቆሸሹ ሶፋዎችን በከፍተኛ ቴክኖሎጂ ማጠብ፣ ማድረቅና ማጽዳት።',
-                'category' => 'upholstery',
-                'pricing_type' => 'fixed',
-                'unit' => 'seat',
-                'base_price' => 350,
-                'min_quantity' => 1,
-                'duration_minutes' => 60,
-                'icon' => 'sofa',
-                'color' => '#06B6D4',
+                'code' => 'floor_ceramic',
+                'name_en' => 'Ceramic & Hardwood Floor Cleaning (Deep tile & grout restoration)',
+                'name_am' => 'የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት',
+                'description_en' => 'Deep tile, grout scrubbing and wood floor restoration with industrial rotary equipment.',
+                'description_am' => 'የሴራሚክ፣ የግራናይት እና የእንጨት ወለሎች ጥልቅ የማሽን እጥበት፣ ነጠብጣብ ማስወገድ እና የወለል ማደስ።',
+                'icon' => 'sparkles',
+                'base_price' => 60.00,
+                'unit' => 'sqm',
                 'is_active' => true,
                 'sort_order' => 1,
             ],
             [
-                'code' => 'SVC-CARPET',
-                'name_en' => 'Carpet Washing & Steam Disinfection',
-                'name_am' => 'የምንጣፍ ማጠብና ስቲም ፀረ-ተባይ',
-                'description_en' => 'Commercial extraction equipment with specialized textile shampoo and antibacterial steaming.',
-                'description_am' => 'ምንጣፎችን ከነቆሻሻቸውና ጠረናቸው ሙሉ በሙሉ ማጽዳት።',
-                'category' => 'carpet',
-                'pricing_type' => 'area_sqm',
-                'unit' => 'sqm',
-                'base_price' => 80,
-                'min_quantity' => 10,
-                'duration_minutes' => 90,
-                'icon' => 'grid',
-                'color' => '#10B981',
+                'code' => 'facilities_general',
+                'name_en' => 'Deep & General Facilities Cleaning (Corporate spaces & offices)',
+                'name_am' => 'የተቋማት አጠቃላይ እና ጥልቅ ጽዳት (ለቢሮዎች እና ለድርጅቶች)',
+                'description_en' => 'Comprehensive sanitization for corporate headquarters, offices, banks, and institutions.',
+                'description_am' => 'ለቢሮዎች፣ ለባንኮች፣ ለድርጅቶች እና ለተቋማት አጠቃላይ ጥልቅ ጽዳት በቋሚ ወይም በጊዜያዊ ውል።',
+                'icon' => 'briefcase',
+                'base_price' => 3500.00,
+                'unit' => 'service',
                 'is_active' => true,
                 'sort_order' => 2,
             ],
             [
-                'code' => 'SVC-MATTRESS',
-                'name_en' => 'Mattress Sanitization & UV Dust-Mite Removal',
-                'name_am' => 'የፍራሽ ጥልቅ እጥበትና ፀረ-አቧራ',
-                'description_en' => 'Hospital-grade sanitization targeting dust mites, allergens, body fluids, and sweat marks.',
-                'description_am' => 'ፍራሽ ላይ ያሉ ጀርሞችንና አቧራዎችን በከፍተኛ ቫኪዩም ማጽዳት።',
-                'category' => 'mattress',
-                'pricing_type' => 'fixed',
-                'unit' => 'item',
-                'base_price' => 800,
-                'min_quantity' => 1,
-                'duration_minutes' => 45,
-                'icon' => 'bed',
-                'color' => '#8B5CF6',
+                'code' => 'kitchen_dining',
+                'name_en' => 'Kitchen & Dining Sanitation (Hotels, Cafés & Restaurants)',
+                'name_am' => 'የወጥ ቤት እና የምግብ ማስተናገጃ ቦታዎች ጽዳት (ለሆቴል፣ ካፌ እና ሬስቶራንት)',
+                'description_en' => 'Commercial kitchen degreasing, dining area sanitization, and food safety standards.',
+                'description_am' => 'ለሆቴሎች፣ ሬስቶራንቶች እና ካፌዎች የወጥ ቤት ቅባት ማስወገድ፣ የምግብ ማብሰያ እና ማስተናገጃ ቦታዎች ጥልቅ ጽዳት።',
+                'icon' => 'coffee',
+                'base_price' => 3000.00,
+                'unit' => 'service',
                 'is_active' => true,
                 'sort_order' => 3,
             ],
             [
-                'code' => 'SVC-MOVEIN',
-                'name_en' => 'Post-Construction & Move-in Deep Cleaning',
-                'name_am' => 'ከግንባታ በኋላ እና የአዲስ ቤት ጥልቅ ጽዳት',
-                'description_en' => 'Paint scraping, cement haze removal, tile buffing, deep kitchen degreasing, and bathrooms.',
-                'description_am' => 'አዲስ ለተገነባ ወይም ለተቀየረ ቤት የሚደረግ የተሟላ ጽዳት።',
-                'category' => 'deep_cleaning',
-                'pricing_type' => 'quote',
-                'unit' => 'house',
-                'base_price' => 5000,
-                'min_quantity' => 1,
-                'duration_minutes' => 360,
+                'code' => 'post_construction',
+                'name_en' => 'Post-Construction Handover Cleaning (For new developments)',
+                'name_am' => 'ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት',
+                'description_en' => 'Heavy debris clearing, cement stain removal, and pristine pre-handover perfection.',
+                'description_am' => 'ከአዲስ ህንፃ እና ቤት ግንባታ ወይም እድሳት ማጠናቀቅ በኋላ የቀለም፣ የሲሚንቶ እና የአቧራ ቅሪቶችን አጽድቶ ለርክክብ ማዘጋጀት።',
                 'icon' => 'home',
-                'color' => '#F59E0B',
+                'base_price' => 4500.00,
+                'unit' => 'service',
                 'is_active' => true,
                 'sort_order' => 4,
-            ]
+            ],
+            [
+                'code' => 'glass',
+                'name_en' => 'High-Rise Window & Glass Cleaning',
+                'name_am' => 'የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት',
+                'description_en' => 'Streak-free crystal-clear window washing for multi-story buildings, showrooms, and facades.',
+                'description_am' => 'የህንፃ እና የመኖሪያ ቤት መስታወቶች ከውስጥ እና ከውጭ በዘመናዊ እቃዎች ንፁህ እና ብሩህ አድርጎ ማፅዳት።',
+                'icon' => 'sun',
+                'base_price' => 70.00,
+                'unit' => 'sqm',
+                'is_active' => true,
+                'sort_order' => 5,
+            ],
+            [
+                'code' => 'upholstery_carpet',
+                'name_en' => 'Upholstery & Carpet Deep Care',
+                'name_am' => 'የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ (ቴክኖሎጂን ሳይጎዱ ማፅዳት)',
+                'description_en' => 'High-tech deep shampoo extraction for sofas, carpets, rugs, and mattresses without fabric damage.',
+                'description_am' => 'ለሶፋ፣ ምንጣፍ፣ ፍራሽ እና ወንበሮች ጥልቅ የስቲም እና የሻምፖ እጥበት፣ ነጠብጣብ ማስወገድ እና ማደስ።',
+                'icon' => 'sofa',
+                'base_price' => 350.00,
+                'unit' => 'seat',
+                'is_active' => true,
+                'sort_order' => 6,
+            ],
         ];
 
         foreach ($servicesData as $s) {
-            Service::create($s);
+            Service::updateOrCreate(['code' => $s['code']], $s);
         }
-        $this->command->info('Seeded essential services for production.');
+
+        // Seed default website settings
+        if (class_exists(\App\Models\WebsiteSetting::class)) {
+            $defaults = \App\Models\WebsiteSetting::getDefaults();
+            foreach ($defaults as $k => $v) {
+                \App\Models\WebsiteSetting::updateOrCreate(['key' => $k], ['value' => $v, 'group' => 'general']);
+            }
+        }
+
+        $this->command->info('Seeded official 6 core services and brochure settings.');
     }
 }

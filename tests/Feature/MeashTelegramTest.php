@@ -26,7 +26,7 @@ class MeashTelegramTest extends TestCase
         $results = $controller->buildInlineResults('');
         $this->assertNotEmpty($results);
         $this->assertEquals('article', $results[0]['type']);
-        $this->assertStringContainsString('Meash Cleaning Solution', $results[0]['title']);
+        $this->assertStringContainsStringIgnoringCase('Meash Cleaning Solution', $results[0]['title']);
 
         // 2. Specific search for sofa
         $sofaResults = $controller->buildInlineResults('sofa');

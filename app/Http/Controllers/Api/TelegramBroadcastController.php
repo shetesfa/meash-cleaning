@@ -768,7 +768,7 @@ class TelegramBroadcastController extends Controller
         ]);
 
         $message = trim($validated['message']);
-        $title = $validated['title'] ?: 'የጅምላ ኤስኤምኤስ ስርጭት (SMS Campaign)';
+        $title = !empty($validated['title']) ? $validated['title'] : 'የጅምላ ኤስኤምኤስ ስርጭት (SMS Campaign)';
         $excludedIds = array_map('intval', $validated['excluded_ids'] ?? []);
         $selectedIds = array_map('intval', $validated['selected_ids'] ?? []);
 
@@ -911,6 +911,18 @@ class TelegramBroadcastController extends Controller
             $recipientIds[] = $request->input('recipient_id');
         }
         $recipientIds = array_filter(array_map('intval', (array)$recipientIds));
+
+        if (empty($recipientIds) && $request->filled('phone')) {
+            $phone = trim($request->input('phone'));
+            $matchedIds = CampaignRecipient::where('campaign_id', $campaign->id)
+                ->where(function($q) use ($phone) {
+                    $q->where('phone', $phone)
+                      ->orWhere('phone', 'like', "%{$phone}%");
+                })
+                ->pluck('id')
+                ->all();
+            $recipientIds = array_merge($recipientIds, $matchedIds);
+        }
 
         $status = $request->input('status', 'sent') === 'failed' ? 'failed' : 'sent';
         $errMsg = $request->input('error_message');

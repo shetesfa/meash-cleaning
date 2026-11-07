@@ -37,8 +37,10 @@
 
   if (empty($timeSlots)) {
     $timeSlots = [
-      ['key' => 'morning', 'label_am' => 'ጠዋት (ከ 2:00 - 6:00)', 'label_en' => 'Morning (8:00 AM - 12:00 PM)'],
+      ['key' => 'morning', 'label_am' => 'ጥዋት (ከ 2:00 - 6:00)', 'label_en' => 'Morning (8:00 AM - 12:00 PM)'],
       ['key' => 'afternoon', 'label_am' => 'ከሰዓት (ከ 7:00 - 11:00)', 'label_en' => 'Afternoon (1:00 PM - 5:00 PM)'],
+      ['key' => 'night', 'label_am' => 'የሌሊት ፈረቃ (ከ 1:00 - 11:00)', 'label_en' => 'Night Shift (7:00 PM - 5:00 AM)'],
+      ['key' => 'weekend', 'label_am' => 'ቅዳሜና እሁድ (እንደ ፍላጎትዎ)', 'label_en' => 'Weekend Shift (Flexible Hours)'],
     ];
   }
 
@@ -47,17 +49,19 @@
   $monthlyDisc = (int)($pricingRules['monthly_discount_percent'] ?? 5);
 
   $telebirrNo = $websiteSettings['telebirr_account_number'] ?? '0970075509';
-  $telebirrName = $websiteSettings['telebirr_account_name'] ?? 'ሜሽ የፅዳት አገልግሎት / MESH CLEANING';
+  $telebirrName = $websiteSettings['telebirr_account_name'] ?? 'ሜአሽ የጽዳት አገልግሎት / MEASH CLEANING';
   $cbeNo = $websiteSettings['cbe_account_number'] ?? '1000123456789';
-  $cbeName = $websiteSettings['cbe_account_name'] ?? 'ሜሽ የፅዳት አገልግሎት / MESH CLEANING';
+  $cbeName = $websiteSettings['cbe_account_name'] ?? 'ሜአሽ የጽዳት አገልግሎት / MEASH CLEANING';
   $contactPhone = $websiteSettings['contact_phone_1'] ?? '0970075509';
-  $companyName = $websiteSettings['company_name'] ?? 'ሜሽ የፅዳት አገልግሎት';
+  $contactPhone2 = $websiteSettings['contact_phone_2'] ?? '0998142190';
+  $companyName = $websiteSettings['company_name_am'] ?? ($websiteSettings['company_name'] ?? 'ሜአሽ የጽዳት አገልግሎት');
+  $companySlogan = 'Your Environment, Our Responsibility.';
 @endphp
 <html lang="am">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ሜሽ የፅዳት አገልግሎት | Telegram Mini App</title>
+  <title>MEASH CLEANING SOLUTION | Telegram Mini App</title>
     <!-- Telegram WebApp SDK (With Offline Safety) -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
@@ -105,10 +109,11 @@
     <!-- Header & Language Toggle -->
     <div class="flex items-center justify-between gap-3 mb-5 p-3.5 rounded-2xl bg-slate-800/90 border border-slate-700/80 shadow-lg">
       <div class="flex items-center gap-3">
-        <img src="/logo.jpg" alt="Mesh Cleaning Logo" class="w-11 h-11 rounded-xl object-cover border border-cyan-500/40 shadow-md shadow-cyan-500/20 shrink-0">
+        <img src="/logo.jpg" alt="Meash Cleaning Logo" class="w-12 h-12 rounded-xl object-cover border border-cyan-500/40 shadow-md shadow-cyan-500/20 shrink-0">
         <div>
-          <h1 class="text-sm font-extrabold text-white tracking-tight" id="txt-app-title">ሜሽ የፅዳት አገልግሎት</h1>
-          <p class="text-[11px] text-cyan-400 font-semibold" id="tg-user-greeting">እንኳን ደህና መጡ </p>
+          <h1 class="text-sm font-extrabold text-white tracking-tight" id="txt-app-title">MEASH CLEANING SOLUTION</h1>
+          <p class="text-[10px] text-cyan-300 font-bold tracking-tight">"Your Environment, Our Responsibility."</p>
+          <p class="text-[10px] text-slate-400 font-semibold" id="tg-user-greeting">እንኳን ደህና መጡ </p>
         </div>
       </div>
       <!-- Language Pill Switcher -->
@@ -126,13 +131,17 @@
           @forelse($activeServices as $index => $svc)
             @php
               $iconMap = [
+                'floor_ceramic' => 'sparkles',
+                'facilities_general' => 'building-2',
+                'kitchen_dining' => 'utensils',
+                'post_construction' => 'home',
+                'glass' => 'sun',
+                'upholstery_carpet' => 'sofa',
                 'sofa' => 'sofa',
                 'carpet' => 'layers',
                 'mattress' => 'bed',
-                'glass' => 'square',
                 'residential_deep' => 'home',
                 'commercial' => 'building-2',
-                'floor_ceramic' => 'sparkles',
               ];
               $lucideIcon = $iconMap[$svc->code] ?? 'sparkles';
               $pUnit = $svc->pricing_unit_am ?: ($svc->unit ?: 'ስራ');
@@ -200,7 +209,12 @@
           <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" id="lbl-slot">የቀጠሮ ሰዓት</label>
           <select id="tma-slot" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500">
             @foreach($timeSlots as $ts)
-              <option value="{{ $ts['key'] }}" id="opt-{{ $ts['key'] }}">{{ $ts['label_am'] }} ({{ $ts['label_en'] }})</option>
+              @php
+                $slotKey = $ts['key'] ?? $ts['id'] ?? $ts['slot'] ?? 'morning';
+                $slotAm = $ts['label_am'] ?? $ts['name_am'] ?? $slotKey;
+                $slotEn = $ts['label_en'] ?? $ts['name_en'] ?? $slotKey;
+              @endphp
+              <option value="{{ $slotKey }}" id="opt-{{ $slotKey }}">{{ $slotAm }} ({{ $slotEn }})</option>
             @endforeach
           </select>
         </div>
@@ -322,7 +336,8 @@
     </div>
 
     <p class="text-center text-[11px] text-slate-500 pt-3 border-t border-slate-800/80">
-      ኦፊሴላዊ ቦት: <span class="text-cyan-400 font-bold">{{ $websiteSettings['telegram_bot_username'] ?? '@meash_cleaning_solution_bot' }}</span> | ቻናል: <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-cyan-400 font-bold hover:underline">@meashdeepcleaning</a> | ስልክ: <a href="tel:{{ $contactPhone }}" class="text-slate-300 font-bold hover:underline">{{ $contactPhone }}</a>
+      ኦፊሴላዊ ቦት: <span class="text-cyan-400 font-bold">{{ $websiteSettings['telegram_bot_username'] ?? '@meash_cleaning_solution_bot' }}</span> | ቻናል: <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-cyan-400 font-bold hover:underline">@meashdeepcleaning</a><br>
+      ስልክ: <a href="tel:0970075509" class="text-slate-300 font-bold hover:underline">0970 07 55 09</a> / <a href="tel:0998142190" class="text-slate-300 font-bold hover:underline">0998 14 21 90</a> | አያት አደባባይ፣ አዲስ አበባ
     </p>
   </div>
 
@@ -336,46 +351,48 @@
       unit: initialLiveServices[0].pricing_unit_am || initialLiveServices[0].unit || 'መቀመጫ',
       nameAm: initialLiveServices[0].name_am || initialLiveServices[0].name_en,
       nameEn: initialLiveServices[0].name_en || initialLiveServices[0].name_am
-    } : { id: 1, code: 'sofa', price: 350, unit: 'መቀመጫ / seats', nameAm: 'የሶፋ ጥልቅ እጥበት', nameEn: 'Sofa Deep Cleaning' };
+    } : { id: 1, code: 'floor_ceramic', price: 120, unit: 'ካሬ / sqm', nameAm: 'የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት', nameEn: 'Ceramic & Hardwood Floor Cleaning' };
     let qty = (currentSvc.code === 'carpet' || currentSvc.id === 2) ? 10 : ((currentSvc.code === 'sofa' || currentSvc.id === 1) ? 5 : 1);
     let tgUser = null;
 
     const i18nDict = {
       am: {
-        appTitle: 'ሜሽ የፅዳት አገልግሎት',
+        appTitle: 'MEASH CLEANING SOLUTION',
         greetingDefault: 'እንኳን ደህና መጡ ',
         step1: '1. ስራዎቻችንን ይምረጡ',
         step2: '2. አድራሻ በአዲስ አበባ',
         step3: '4. የእርስዎ መረጃ',
         stepDate: '3. የቀጠሮ ቀን',
-        stepSlot: 'የቀጠሮ ሰዓት',
+        stepSlot: 'የቀጠሮ ሰዓት እና ፈረቃ',
         selectSubcity: 'ክፍለ ከተማ ይምረጡ...',
         addressPlaceholder: 'የሰፈር ስም፣ ልዩ መለያ እና የቤት ቁጥር...',
         namePlaceholder: 'ሙሉ ስምዎ',
-        phonePlaceholder: 'ስልክ ቁጥር (ለምሳሌ 0911223344)',
+        phonePlaceholder: 'ስልክ ቁጥር (ለምሳሌ 0970075509)',
         totalEst: 'ጠቅላላ ክፍያ / ዋጋ:',
         submitBtn: 'ቀጠሮውን አረጋግጥ (Submit Booking)',
         submitting: 'በመመዝገብ ላይ...',
         successTitle: ' ቀጠሮዎ በተሳካ ሁኔታ ተመዝግቧል!',
-        successDesc: 'የሜሽ ሪሴፕሽን ሰራተኞቻችን የቡድን ምደባውን በስልክ ደውለው ያረጋግጡልዎታል::',
+        successDesc: 'የሜአሽ ሪሴፕሽን ሰራተኞቻችን የቡድን ምደባውን በስልክ ደውለው ያረጋግጡልዎታል::',
         trackingId: 'የትዕዛዝ መለያ ቁጥር (Order ID)',
         closeApp: 'ዝጋ (Close)',
         currency: 'ብር',
-        morning: 'ጠዋት (ከ 3:00 - 6:00)',
-        afternoon: 'ከሰዓት (ከ 8:00 - 11:00)',
+        morning: 'ጥዋት (ከ 2:00 - 6:00)',
+        afternoon: 'ከሰዓት (ከ 7:00 - 11:00)',
+        night: 'የሌሊት ፈረቃ (ከ 1:00 - 11:00)',
+        weekend: 'ቅዳሜና እሁድ (እንደ ፍላጎትዎ)',
       },
       en: {
-        appTitle: 'MESH CLEANING SOLUTION',
-        greetingDefault: 'Welcome to Mesh ',
+        appTitle: 'MEASH CLEANING SOLUTION',
+        greetingDefault: 'Welcome to Meash ',
         step1: '1. Choose Service',
         step2: '2. Location in Addis Ababa',
         step3: '4. Your Contact Details',
         stepDate: '3. Appointment Date',
-        stepSlot: 'Time Slot',
+        stepSlot: 'Time Slot & Shift',
         selectSubcity: 'Select Subcity...',
         addressPlaceholder: 'Specific address, landmark & house number...',
         namePlaceholder: 'Your Full Name',
-        phonePlaceholder: 'Phone Number (e.g. 0911223344)',
+        phonePlaceholder: 'Phone Number (e.g. 0970075509)',
         totalEst: 'Estimated Total:',
         submitBtn: 'Confirm & Book Now',
         submitting: 'Submitting Booking...',
@@ -384,8 +401,10 @@
         trackingId: 'Tracking / Order ID',
         closeApp: 'Close Mini App',
         currency: 'ETB',
-        morning: 'Morning (9:00 AM - 12:00 PM)',
-        afternoon: 'Afternoon (2:00 PM - 5:00 PM)',
+        morning: 'Morning (8:00 AM - 12:00 PM)',
+        afternoon: 'Afternoon (1:00 PM - 5:00 PM)',
+        night: 'Night Shift (7:00 PM - 5:00 AM)',
+        weekend: 'Weekend Shift (Flexible Hours)',
       }
     };
 
@@ -539,6 +558,8 @@
       document.getElementById('txt-submit-btn').innerText = dict.submitBtn;
       if (document.getElementById('opt-morning')) document.getElementById('opt-morning').innerText = dict.morning;
       if (document.getElementById('opt-afternoon')) document.getElementById('opt-afternoon').innerText = dict.afternoon;
+      if (document.getElementById('opt-night')) document.getElementById('opt-night').innerText = dict.night;
+      if (document.getElementById('opt-weekend')) document.getElementById('opt-weekend').innerText = dict.weekend;
 
       document.getElementById('txt-success-title').innerText = dict.successTitle;
       document.getElementById('txt-success-desc').innerText = dict.successDesc;
