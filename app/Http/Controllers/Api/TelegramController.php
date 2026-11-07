@@ -658,12 +658,9 @@ class TelegramController extends Controller
         return;
       }
 
-      $welcome = "<b>እንኳን ወደ ሜሽ የፅዳት አገልግሎት በደህና መጡ!</b>\n" .
-        "<b>Welcome to Meash Cleaning Solution!</b>\n\n" .
-        "<b>ጥራት ያለው ፅዳት:: ንፁህ:: አስተማማኝ::</b>\n" .
-        "<i>(Professional Cleaning. Fresh. Clean. Reliable.)</i>\n\n" .
-        "በአዲስ አበባ አስተማማኝ የሶፋ፣ የምንጣፍ፣ የፍራሽ፣ የመስታወት እና የቤት/ቢሮ ጥልቅ ፅዳት እንሰጣለን::\n\n" .
-        "ዛሬ ምን ማፅዳት ይፈልጋሉ? ከታች ካሉት አማራጮች አንዱን ይምረጡ:";
+      $welcomeAm = WebsiteSetting::getVal('bot_welcome_am', "<b>እንኳን ወደ ሜሽ የፅዳት አገልግሎት በደህና መጡ!</b>\n\nጥራት ያለው ፅዳት:: ንፁህ:: አስተማማኝ::\n\nበአዲስ አበባ አስተማማኝ የሶፋ፣ የምንጣፍ፣ የፍራሽ፣ የመስታወት እና የቤት/ቢሮ ጥልቅ ፅዳት እንሰጣለን::\n\nዛሬ ምን ማፅዳት ይፈልጋሉ? ከታች ካሉት አማራጮች አንዱን ይምረጡ:");
+      $welcomeEn = WebsiteSetting::getVal('bot_welcome_en', "Welcome to Meash Cleaning Solution!\n\nProfessional Cleaning. Fresh. Clean. Reliable.");
+      $welcome = "{$welcomeAm}\n\n<i>{$welcomeEn}</i>";
 
       $httpsUrl = $this->getMiniAppHttpsUrl();
       $wizardButton = ['text' => 'በቦቱ ቀጠሮ ያስይዙ (1 ደቂቃ)', 'callback_data' => 'book_start_wizard'];
@@ -1140,15 +1137,22 @@ class TelegramController extends Controller
 
   private function sendContactInfo(int|string $chatId): void
   {
+    $phone1 = WebsiteSetting::getVal('contact_phone_1', '0970075509');
+    $phone2 = WebsiteSetting::getVal('contact_phone_2', '0998142190');
+    $addressAm = WebsiteSetting::getVal('company_address_am', 'አዲስ አበባ፣ ሃያት አደባባይ ተስፉ ሞል ፊትለፊት');
+    $hoursAm = WebsiteSetting::getVal('working_hours_am', 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00');
+    $channelUrl = WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashdeepcleaning');
+    $tiktokUrl = WebsiteSetting::getVal('tiktok', 'https://tiktok.com/@meashcleaningsolition');
+
     $msg = " <b>የሜሽ የሪሴፕሽን ስልክ አድራሻ</b>\n" .
       "<i>(Customer Reception & Support Desk)</i>\n\n" .
-      " <b>ዋና ስልክ:</b> 0970075509\n" .
-      " <b>ተጨማሪ ስልክ:</b> 0911000001\n" .
+      " <b>ዋና ስልክ:</b> {$phone1}\n" .
+      ($phone2 ? " <b>ተጨማሪ ስልክ:</b> {$phone2}\n" : '') .
       " <b>የቴሌግራም ሪሴፕሽን:</b> @Shetesfa\n" .
-      " <b>የስራ ሰዓት:</b> ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00\n" .
-      " <b>አድራሻ:</b> አዲስ አበባ፣ ሃያት አደባባይ ተስፉ ሞል ፊትለፊት\n\n" .
+      " <b>የስራ ሰዓት:</b> {$hoursAm}\n" .
+      " <b>አድራሻ:</b> {$addressAm}\n\n" .
       " <b>ኦፊሴላዊ ቦት:</b> @{$this->botUsername}\n" .
-      " <b>ኦፊሴላዊ ቻናል:</b> https://t.me/meashdeepcleaning\n\n" .
+      " <b>ኦፊሴላዊ ቻናል:</b> {$channelUrl}\n\n" .
       "ጥያቄ፣ አስተያየት ወይም የቀጠሮ ማስተካከያ ካለዎት በማንኛውም ጊዜ ይደውሉልን ወይም በቴሌግራም @Shetesfa ያናግሩን!";
 
     $this->telegramApi('sendMessage', [
@@ -1160,8 +1164,8 @@ class TelegramController extends Controller
           [['text' => ' ቀጥታ ሪሴፕሽን ያናግሩ (@Shetesfa)', 'url' => 'https://t.me/Shetesfa']],
           [['text' => ' ቦታ ያስይዙ | Book Now', 'callback_data' => 'menu_book']],
           [
-            ['text' => ' ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-            ['text' => ' TikTok', 'url' => 'https://tiktok.com/@meashcleaningsolition'],
+            ['text' => ' ቴሌግራም ቻናል', 'url' => $channelUrl],
+            ['text' => ' TikTok', 'url' => $tiktokUrl],
           ]
         ]
       ]),
@@ -1244,14 +1248,14 @@ class TelegramController extends Controller
 
   private function sendHelpMessage(int|string $chatId): void
   {
+    $helpAm = WebsiteSetting::getVal('bot_help_am', "የሚከተሉትን ትዕዛዞች መጠቀም ይችላሉ:\n• <code>/start</code> - ዋናውን ማውጫ ይከፍታል\n• <code>/services</code> - የአገልግሎቶች እና የዋጋ ዝርዝር\n• <code>/book</code> - በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዣ\n• <code>/status ORD-...</code> - የትዕዛዝ ሁኔታ መከታተያ\n• <code>/contact</code> - የሪሴፕሽን ስልክ አድራሻ\n• <code>/help</code> - ይህንን መመሪያ ያሳያል");
+    $helpEn = WebsiteSetting::getVal('bot_help_en', "Available commands:\n• <code>/start</code> - Main menu\n• <code>/services</code> - Services & Pricing\n• <code>/book</code> - 1-Minute Booking\n• <code>/status ORD-...</code> - Track Order\n• <code>/contact</code> - Reception Hotline\n• <code>/help</code> - Help guide");
+    $phone1 = WebsiteSetting::getVal('contact_phone_1', '0970075509');
+
     $msg = " <b>የሜሽ ቴሌግራም ቦት መመሪያ</b>\n\n" .
-      "የሚከተሉትን ትዕዛዞች መጠቀም ይችላሉ:\n" .
-      "• <code>/start</code> - ዋናውን ማውጫ ይከፍታል\n" .
-      "• <code>/services</code> - የአገልግሎቶች እና የዋጋ ዝርዝር\n" .
-      "• <code>/book</code> - በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዣ\n" .
-      "• <code>/status ORD-...</code> - የትዕዛዝ ሁኔታ መከታተያ\n" .
-      "• <code>/contact</code> - የሪሴፕሽን ስልክ አድራሻ (0970075509)\n" .
-      "• <code>/help</code> - ይህንን መመሪያ ያሳያል\n\n" .
+      "{$helpAm}\n\n" .
+      "<i>{$helpEn}</i>\n\n" .
+      "📞 <b>ሪሴፕሽን:</b> {$phone1}\n\n" .
       "እንዲሁም በማንኛውም የቴሌግራም ቻት ውስጥ <code>@{$this->botUsername}</code> ብለው በመጻፍ አገልግሎቶችን ለወዳጅዎ ማጋራት ይችላሉ!";
 
     $this->telegramApi('sendMessage', [
@@ -1330,7 +1334,17 @@ class TelegramController extends Controller
     }
 
     $plan = $validated['subscription_plan'] ?? 'one_time';
-    $discRates = ['weekly' => 15.0, 'biweekly' => 10.0, 'monthly' => 5.0, 'one_time' => 0.0];
+    $pricingRules = WebsiteSetting::getJson('pricing_rules', [
+        'weekly_discount' => 15,
+        'biweekly_discount' => 10,
+        'monthly_discount' => 5,
+    ]);
+    $discRates = [
+        'weekly' => (float)($pricingRules['weekly_discount'] ?? 15.0),
+        'biweekly' => (float)($pricingRules['biweekly_discount'] ?? 10.0),
+        'monthly' => (float)($pricingRules['monthly_discount'] ?? 5.0),
+        'one_time' => 0.0,
+    ];
     $discPercent = $discRates[$plan] ?? 0.0;
 
     $order = DB::transaction(function () use ($validated, $catalogServices, $plan, $discPercent) {
@@ -2118,30 +2132,42 @@ class TelegramController extends Controller
       'reply_markup' => json_encode($replyKeyboard),
     ]);
 
-    $subcityButtons = [
-      'inline_keyboard' => [
-        [
-          ['text' => ' ቦሌ (Bole)', 'callback_data' => 'book_subcity:Bole'],
-          ['text' => ' ለሚኩራ (Lemi Kura)', 'callback_data' => 'book_subcity:Lemi Kura'],
-        ],
-        [
-          ['text' => ' የካ (Yeka)', 'callback_data' => 'book_subcity:Yeka'],
-          ['text' => ' ቂርቆስ (Kirkos)', 'callback_data' => 'book_subcity:Kirkos'],
-        ],
-        [
-          ['text' => ' ንፋስ ስልክ (Nifas)', 'callback_data' => 'book_subcity:Nifas Silk'],
-          ['text' => ' ኮልፌ (Kolfe)', 'callback_data' => 'book_subcity:Kolfe'],
-        ],
-        [
-          ['text' => ' አራዳ (Arada)', 'callback_data' => 'book_subcity:Arada'],
-          ['text' => ' ጉለሌ (Gulele)', 'callback_data' => 'book_subcity:Gulele'],
-        ],
-        [
-          ['text' => ' አቃቂ (Akaki)', 'callback_data' => 'book_subcity:Akaki'],
-          ['text' => ' ልደታ (Lideta)', 'callback_data' => 'book_subcity:Lideta'],
-        ],
-      ],
+    $configuredSubcities = WebsiteSetting::getJson('subcities', []);
+    $activeSubcities = array_filter($configuredSubcities, fn($s) => !isset($s['active']) || !empty($s['active']));
+    if (empty($activeSubcities)) {
+      $activeSubcities = [
+        ['id' => 'bole', 'name_am' => 'ቦሌ', 'name_en' => 'Bole'],
+        ['id' => 'lemi_kura', 'name_am' => 'ለሚኩራ', 'name_en' => 'Lemi Kura'],
+        ['id' => 'yeka', 'name_am' => 'የካ', 'name_en' => 'Yeka'],
+        ['id' => 'kirkos', 'name_am' => 'ቂርቆስ', 'name_en' => 'Kirkos'],
+        ['id' => 'nifas_silk', 'name_am' => 'ንፋስ ስልክ', 'name_en' => 'Nifas Silk'],
+        ['id' => 'kolfe', 'name_am' => 'ኮልፌ', 'name_en' => 'Kolfe'],
+        ['id' => 'arada', 'name_am' => 'አራዳ', 'name_en' => 'Arada'],
+        ['id' => 'gulele', 'name_am' => 'ጉለሌ', 'name_en' => 'Gulele'],
+        ['id' => 'akaki_kality', 'name_am' => 'አቃቂ', 'name_en' => 'Akaki'],
+        ['id' => 'lideta', 'name_am' => 'ልደታ', 'name_en' => 'Lideta'],
+      ];
+    }
+
+    $inlineRows = [];
+    $currentRow = [];
+    foreach ($activeSubcities as $s) {
+      $sEn = $s['name_en'] ?? ($s['name_am'] ?? 'Addis');
+      $sAm = $s['name_am'] ?? $sEn;
+      $currentRow[] = ['text' => " {$sAm} ({$sEn})", 'callback_data' => "book_subcity:{$sEn}"];
+      if (count($currentRow) >= 2) {
+        $inlineRows[] = $currentRow;
+        $currentRow = [];
+      }
+    }
+    if (!empty($currentRow)) {
+      $inlineRows[] = $currentRow;
+    }
+    $inlineRows[] = [
+      ['text' => ' ሰርዝ | Cancel', 'callback_data' => 'book_cancel'],
     ];
+
+    $subcityButtons = ['inline_keyboard' => $inlineRows];
 
     $this->telegramApi('sendMessage', [
       'chat_id' => $chatId,
@@ -2268,22 +2294,29 @@ class TelegramController extends Controller
       "ቀን: <b>{$apptDate} ({$ethDate['formatted_am']})</b>\n\n" .
       "የሚመችዎትን ሰዓት ይጫኑ:";
 
-    $timeButtons = [
-      'inline_keyboard' => [
-        [
-          ['text' => ' ጠዋት (2:00 - 6:00 ሰዓት / Morning)', 'callback_data' => 'book_time:morning'],
-        ],
-        [
-          ['text' => ' ከሰዓት (7:00 - 11:00 ሰዓት / Afternoon)', 'callback_data' => 'book_time:afternoon'],
-        ],
-        [
-          ['text' => ' ሙሉ ቀን / በማንኛውም ሰዓት (Flexible)', 'callback_data' => 'book_time:flexible'],
-        ],
-        [
-          ['text' => ' ሰርዝ | Cancel', 'callback_data' => 'book_cancel'],
-        ],
-      ],
+    $configuredTimeSlots = WebsiteSetting::getJson('time_slots', []);
+    $activeSlots = array_filter($configuredTimeSlots, fn($ts) => !isset($ts['active']) || !empty($ts['active']));
+    if (empty($activeSlots)) {
+      $activeSlots = [
+        ['id' => 'morning', 'name_am' => 'ጠዋት (2:00 - 6:00 ሰዓት / Morning)'],
+        ['id' => 'afternoon', 'name_am' => 'ከሰዓት (7:00 - 11:00 ሰዓት / Afternoon)'],
+        ['id' => 'full_day', 'name_am' => 'ሙሉ ቀን / በማንኛውም ሰዓት (Flexible)'],
+      ];
+    }
+
+    $inlineTimeRows = [];
+    foreach ($activeSlots as $slot) {
+      $slotId = $slot['id'] ?? 'morning';
+      $slotLabel = $slot['name_am'] ?? ($slot['slot'] ?? $slotId);
+      $inlineTimeRows[] = [
+        ['text' => " {$slotLabel}", 'callback_data' => "book_time:{$slotId}"],
+      ];
+    }
+    $inlineTimeRows[] = [
+      ['text' => ' ሰርዝ | Cancel', 'callback_data' => 'book_cancel'],
     ];
+
+    $timeButtons = ['inline_keyboard' => $inlineTimeRows];
 
     $this->telegramApi('sendMessage', [
       'chat_id' => $chatId,
@@ -2456,6 +2489,10 @@ class TelegramController extends Controller
       default => 'በማንኛውም ሰዓት',
     };
 
+    $receptionPhone = WebsiteSetting::getVal('contact_phone_1', '0970075509');
+    $telebirrAcc = WebsiteSetting::getVal('telebirr_account_number', '0970075509');
+    $cbeAcc = WebsiteSetting::getVal('cbe_account_number', '1000552467891');
+
     $confirmMsg = " <b>እናመሰግናለን {$name}! የቀጠሮ ጥያቄዎ በተሳካ ሁኔታ ተመዝግቧል!</b>\n\n" .
       " <b>የትዕዛዝ ቁጥር:</b> <code>{$order->order_number}</code>\n" .
       " <b>ደንበኛ:</b> {$name}\n" .
@@ -2464,8 +2501,12 @@ class TelegramController extends Controller
       " <b>አድራሻ:</b> {$address}" . ($subcity ? " ({$subcity})" : "") . "\n" .
       " <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$ethAppt['formatted_am']}) {$timeSlotAm}\n" .
       " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
+      " <b>የክፍያ አማራጮች:</b>\n" .
+      "• <b>ቴሌብር:</b> <code>{$telebirrAcc}</code>\n" .
+      "• <b>ንግድ ባንክ (CBE):</b> <code>{$cbeAcc}</code>\n" .
+      "• ወይም በቦታው በጥሬ ገንዘብ (Cash)\n\n" .
       " <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
-      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
+      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ ({$receptionPhone}) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
 
     $actionButtons = [];
     if ($lat && $lng) {
@@ -2473,7 +2514,7 @@ class TelegramController extends Controller
     }
     $actionButtons[] = [
       ['text' => ' የትዕዛዝ ሁኔታ | Status', 'callback_data' => 'menu_status'],
-      ['text' => ' ሪሴፕሽን (0970075509)', 'callback_data' => 'menu_contact'],
+      ['text' => " ሪሴፕሽን ({$receptionPhone})", 'callback_data' => 'menu_contact'],
     ];
     $actionButtons[] = [
       ['text' => ' ዋና ማውጫ | Main Menu', 'callback_data' => 'menu_start'],

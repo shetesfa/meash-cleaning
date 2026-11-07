@@ -24,7 +24,7 @@ class AdminWebsiteController extends Controller
     }
 
     /**
-     * Update website settings (contact info, slogan, text, etc.)
+     * Update website settings (contact info, slogan, text, bank accounts, subcities, time slots, pricing rules, bot texts)
      */
     public function updateSettings(Request $request): JsonResponse
     {
@@ -37,22 +37,63 @@ class AdminWebsiteController extends Controller
             'company_email' => 'nullable|email|max:128',
             'company_address' => 'nullable|string|max:255',
             'company_address_am' => 'nullable|string|max:255',
+            'working_hours_am' => 'nullable|string|max:255',
+            'working_hours_en' => 'nullable|string|max:255',
             'telegram_channel' => 'nullable|string|max:255',
             'telegram_bot' => 'nullable|string|max:255',
             'tiktok' => 'nullable|string|max:255',
+            'facebook' => 'nullable|string|max:255',
+            'instagram' => 'nullable|string|max:255',
             'about_text_en' => 'nullable|string',
             'about_text_am' => 'nullable|string',
             'gallery_images' => 'nullable|string',
+
+            // Payment Accounts
+            'telebirr_account_number' => 'nullable|string|max:64',
+            'telebirr_account_name' => 'nullable|string|max:128',
+            'cbe_account_number' => 'nullable|string|max:64',
+            'cbe_account_name' => 'nullable|string|max:128',
+            'boa_account_number' => 'nullable|string|max:64',
+            'boa_account_name' => 'nullable|string|max:128',
+            'awash_account_number' => 'nullable|string|max:64',
+            'awash_account_name' => 'nullable|string|max:128',
+            'payment_instructions_am' => 'nullable|string|max:500',
+            'payment_instructions_en' => 'nullable|string|max:500',
+            'payment_accounts' => 'nullable',
+
+            // Subcities, Time slots, Pricing rules
+            'subcities' => 'nullable',
+            'time_slots' => 'nullable',
+            'pricing_rules' => 'nullable',
+
+            // Telegram Bot Texts & Config
+            'bot_welcome_am' => 'nullable|string',
+            'bot_welcome_en' => 'nullable|string',
+            'bot_help_am' => 'nullable|string',
+            'bot_help_en' => 'nullable|string',
+            'telegram_bot_token' => 'nullable|string',
+            'telegram_bot_username' => 'nullable|string',
+            'telegram_admin_chat_id' => 'nullable|string',
         ]);
 
         foreach ($validated as $key => $val) {
-            WebsiteSetting::setVal($key, $val, 'general');
+            if ($val === null) {
+                continue;
+            }
+            if (is_array($val)) {
+                WebsiteSetting::setJson($key, $val, 'custom');
+            } else {
+                WebsiteSetting::setVal($key, (string)$val, 'custom');
+            }
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'የድረ-ገጽ ቅንብሮች በተሳካ ሁኔታ ተዘምነዋል! (Website settings updated successfully)',
+            'message' => 'የድረ-ገጽ እና የስርዓት ቅንብሮች በተሳካ ሁኔታ ተዘምነዋል! (System settings updated successfully)',
             'settings' => WebsiteSetting::getAllKeyValue(),
+            'subcities' => WebsiteSetting::getJson('subcities'),
+            'time_slots' => WebsiteSetting::getJson('time_slots'),
+            'pricing_rules' => WebsiteSetting::getJson('pricing_rules'),
         ]);
     }
 

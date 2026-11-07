@@ -1,13 +1,57 @@
 <!DOCTYPE html>
 @php
   $activeServices = collect();
+  $websiteSettings = [];
+  $subcities = [];
+  $timeSlots = [];
+  $pricingRules = [];
   try {
     if (\Illuminate\Support\Facades\Schema::hasTable('services')) {
       $activeServices = \App\Models\Service::where('is_active', true)->orderBy('sort_order')->get();
     }
+    if (\Illuminate\Support\Facades\Schema::hasTable('website_settings')) {
+      $websiteSettings = \App\Models\WebsiteSetting::getAllKeyValue();
+      $subcities = \App\Models\WebsiteSetting::getJson('subcities', []);
+      $timeSlots = \App\Models\WebsiteSetting::getJson('time_slots', []);
+      $pricingRules = \App\Models\WebsiteSetting::getJson('pricing_rules', []);
+    }
   } catch (\Throwable $e) {
     // Graceful fallback
   }
+
+  if (empty($subcities)) {
+    $subcities = [
+      ['name_am' => 'ቦሌ', 'name_en' => 'Bole', 'key' => 'Bole'],
+      ['name_am' => 'የካ', 'name_en' => 'Yeka', 'key' => 'Yeka'],
+      ['name_am' => 'ቂርቆስ', 'name_en' => 'Kirkos', 'key' => 'Kirkos'],
+      ['name_am' => 'ልደታ', 'name_en' => 'Lideta', 'key' => 'Lideta'],
+      ['name_am' => 'ንፋስ ስልክ ላፍቶ', 'name_en' => 'Nifas Silk', 'key' => 'Nifas Silk'],
+      ['name_am' => 'ኮልፌ ቀራኒዮ', 'name_en' => 'Kolfe', 'key' => 'Kolfe'],
+      ['name_am' => 'አራዳ', 'name_en' => 'Arada', 'key' => 'Arada'],
+      ['name_am' => 'ጉለሌ', 'name_en' => 'Gulele', 'key' => 'Gulele'],
+      ['name_am' => 'አዲስ ከተማ', 'name_en' => 'Addis Ketema', 'key' => 'Addis Ketema'],
+      ['name_am' => 'አቃቂ ቃሊቲ', 'name_en' => 'Akaki', 'key' => 'Akaki'],
+      ['name_am' => 'ለሚ ኩራ', 'name_en' => 'Lemi Kura', 'key' => 'Lemi Kura'],
+    ];
+  }
+
+  if (empty($timeSlots)) {
+    $timeSlots = [
+      ['key' => 'morning', 'label_am' => 'ጠዋት (ከ 2:00 - 6:00)', 'label_en' => 'Morning (8:00 AM - 12:00 PM)'],
+      ['key' => 'afternoon', 'label_am' => 'ከሰዓት (ከ 7:00 - 11:00)', 'label_en' => 'Afternoon (1:00 PM - 5:00 PM)'],
+    ];
+  }
+
+  $weeklyDisc = (int)($pricingRules['weekly_discount_percent'] ?? 15);
+  $biweeklyDisc = (int)($pricingRules['biweekly_discount_percent'] ?? 10);
+  $monthlyDisc = (int)($pricingRules['monthly_discount_percent'] ?? 5);
+
+  $telebirrNo = $websiteSettings['telebirr_account_number'] ?? '0970075509';
+  $telebirrName = $websiteSettings['telebirr_account_name'] ?? 'ሜሽ የፅዳት አገልግሎት / MESH CLEANING';
+  $cbeNo = $websiteSettings['cbe_account_number'] ?? '1000123456789';
+  $cbeName = $websiteSettings['cbe_account_name'] ?? 'ሜሽ የፅዳት አገልግሎት / MESH CLEANING';
+  $contactPhone = $websiteSettings['contact_phone_1'] ?? '0970075509';
+  $companyName = $websiteSettings['company_name'] ?? 'ሜሽ የፅዳት አገልግሎት';
 @endphp
 <html lang="am">
 <head>
@@ -138,16 +182,9 @@
         <input type="hidden" id="tma-lng" value="">
         <select id="tma-subcity" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 mb-2">
           <option value="" id="opt-select-subcity">ክፍለ ከተማ ይምረጡ...</option>
-          <option value="Bole">ቦሌ (Bole)</option>
-          <option value="Yeka">የካ (Yeka)</option>
-          <option value="Kirkos">ቂርቆስ (Kirkos)</option>
-          <option value="Lideta">ልደታ (Lideta)</option>
-          <option value="Nifas Silk">ንፋስ ስልክ ላፍቶ (Nifas Silk)</option>
-          <option value="Kolfe">ኮልፌ ቀራኒዮ (Kolfe Keranio)</option>
-          <option value="Arada">አራዳ (Arada)</option>
-          <option value="Gulele">ጉለሌ (Gulele)</option>
-          <option value="Akaki">አቃቂ ቃሊቲ (Akaki Kality)</option>
-          <option value="Lemi Kura">ለሚ ኩራ (Lemi Kura)</option>
+          @foreach($subcities as $sc)
+            <option value="{{ $sc['key'] ?? $sc['name_en'] }}">{{ $sc['name_am'] }} ({{ $sc['name_en'] }})</option>
+          @endforeach
         </select>
         <input type="text" id="tma-address" required placeholder="የሰፈር ስም፣ ልዩ መለያ እና የቤት ቁጥር..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500">
       </div>
@@ -162,8 +199,9 @@
         <div>
           <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" id="lbl-slot">የቀጠሮ ሰዓት</label>
           <select id="tma-slot" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500">
-            <option value="morning" id="opt-morning"> ጠዋት (2:00–6:00 ጠዋቱ ETH)</option>
-            <option value="afternoon" id="opt-afternoon"> ከሰዓት (7:00–11:00 ከሰዓቱ ETH)</option>
+            @foreach($timeSlots as $ts)
+              <option value="{{ $ts['key'] }}" id="opt-{{ $ts['key'] }}">{{ $ts['label_am'] }} ({{ $ts['label_en'] }})</option>
+            @endforeach
           </select>
         </div>
       </div>
@@ -183,21 +221,21 @@
             <input type="radio" name="tma_sub_plan" value="weekly" onchange="updateTotal()" class="text-cyan-500">
             <div>
               <span class="font-bold text-white block text-[11px]">በየሳምንቱ</span>
-              <span class="text-[9px] text-cyan-400 font-extrabold">15% ቅናሽ</span>
+              <span class="text-[9px] text-cyan-400 font-extrabold" id="tma-disc-weekly">{{ $weeklyDisc }}% ቅናሽ</span>
             </div>
           </label>
           <label class="p-2 rounded-lg bg-slate-900 border border-slate-700 flex items-center gap-1.5 cursor-pointer">
             <input type="radio" name="tma_sub_plan" value="biweekly" onchange="updateTotal()" class="text-cyan-500">
             <div>
               <span class="font-bold text-white block text-[11px]">በ2 ሳምንት</span>
-              <span class="text-[9px] text-cyan-400 font-extrabold">10% ቅናሽ</span>
+              <span class="text-[9px] text-cyan-400 font-extrabold" id="tma-disc-biweekly">{{ $biweeklyDisc }}% ቅናሽ</span>
             </div>
           </label>
           <label class="p-2 rounded-lg bg-slate-900 border border-slate-700 flex items-center gap-1.5 cursor-pointer">
             <input type="radio" name="tma_sub_plan" value="monthly" onchange="updateTotal()" class="text-cyan-500">
             <div>
               <span class="font-bold text-white block text-[11px]">በየወሩ</span>
-              <span class="text-[9px] text-cyan-400 font-extrabold">5% ቅናሽ</span>
+              <span class="text-[9px] text-cyan-400 font-extrabold" id="tma-disc-monthly">{{ $monthlyDisc }}% ቅናሽ</span>
             </div>
           </label>
         </div>
@@ -245,9 +283,21 @@
       </div>
       <h3 class="text-xl font-black text-white mb-2" id="txt-success-title"> ቀጠሮዎ በተሳካ ሁኔታ ተመዝግቧል!</h3>
       <p class="text-xs text-slate-300 mb-5 leading-relaxed" id="txt-success-desc">የሜሽ ሪሴፕሽን ሰራተኞቻችን የቡድን ምደባውን በስልክ ደውለው ያረጋግጡልዎታል::</p>
-      <div class="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 mb-6 shadow-md">
+      <div class="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 mb-4 shadow-md">
         <span class="text-[11px] font-semibold text-slate-400 block mb-1" id="lbl-tracking-id">የትዕዛዝ መለያ ቁጥር (Order ID)</span>
         <span class="text-2xl font-black text-cyan-400 tracking-wider" id="tma-result-id">ORD-2026-0001</span>
+      </div>
+
+      <!-- Payment Accounts Info in TMA Confirmation -->
+      <div id="tma-payment-notice" class="p-3.5 rounded-2xl bg-slate-900/90 border border-cyan-500/30 mb-5 text-left text-xs">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-cyan-400 font-bold">💳 የክፍያ ማስተላለፊያ መረጃ / Payment Accounts</span>
+        </div>
+        <div class="space-y-1.5 text-slate-300 text-[11px]">
+          <p><span class="font-bold text-cyan-400">ቴሌብር (Telebirr):</span> <span class="font-mono text-white font-bold">{{ $telebirrNo }}</span> <span class="text-[10px] text-slate-400">({{ $telebirrName }})</span></p>
+          <p><span class="font-bold text-purple-400">ንግድ ባንክ (CBE):</span> <span class="font-mono text-white font-bold">{{ $cbeNo }}</span> <span class="text-[10px] text-slate-400">({{ $cbeName }})</span></p>
+          <p class="text-[10px] text-slate-400 pt-1 border-t border-slate-800">ማስታወሻ፦ በቴሌብር ወይም በባንክ ሲከፍሉ የትዕዛዝ መለያ ቁጥርዎን በምክንያት/Reason ማስታወሻ ላይ ያስገቡ::</p>
+        </div>
       </div>
 
       <!-- MiniApp 5-Star Review Widget -->
@@ -272,7 +322,7 @@
     </div>
 
     <p class="text-center text-[11px] text-slate-500 pt-3 border-t border-slate-800/80">
-      ኦፊሴላዊ ቦት: <span class="text-cyan-400 font-bold">@meash_cleaning_solution_bot</span> | ቻናል: <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-cyan-400 font-bold hover:underline">@meashdeepcleaning</a> | ስልክ: <a href="tel:0970075509" class="text-slate-300 font-bold hover:underline">0970075509</a>
+      ኦፊሴላዊ ቦት: <span class="text-cyan-400 font-bold">{{ $websiteSettings['telegram_bot_username'] ?? '@meash_cleaning_solution_bot' }}</span> | ቻናል: <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-cyan-400 font-bold hover:underline">@meashdeepcleaning</a> | ስልክ: <a href="tel:{{ $contactPhone }}" class="text-slate-300 font-bold hover:underline">{{ $contactPhone }}</a>
     </p>
   </div>
 
@@ -408,7 +458,31 @@
       setTmaLang(currentLang);
       updateTotal();
       loadTmaLiveServices();
+      loadTmaLiveSettings();
     });
+
+    async function loadTmaLiveSettings() {
+      try {
+        const res = await fetch('/api/public/settings');
+        const data = await res.json();
+        if (data && data.pricing_rules) {
+          const pr = data.pricing_rules;
+          if (pr.weekly_discount_percent !== undefined) tmaSubDiscounts.weekly = parseInt(pr.weekly_discount_percent);
+          if (pr.biweekly_discount_percent !== undefined) tmaSubDiscounts.biweekly = parseInt(pr.biweekly_discount_percent);
+          if (pr.monthly_discount_percent !== undefined) tmaSubDiscounts.monthly = parseInt(pr.monthly_discount_percent);
+          
+          const elW = document.getElementById('tma-disc-weekly');
+          const elB = document.getElementById('tma-disc-biweekly');
+          const elM = document.getElementById('tma-disc-monthly');
+          if (elW) elW.innerText = `${tmaSubDiscounts.weekly}% ቅናሽ`;
+          if (elB) elB.innerText = `${tmaSubDiscounts.biweekly}% ቅናሽ`;
+          if (elM) elM.innerText = `${tmaSubDiscounts.monthly}% ቅናሽ`;
+          updateTotal();
+        }
+      } catch(err) {
+        console.warn('Could not load live settings in TMA', err);
+      }
+    }
 
     async function loadTmaLiveServices() {
       try {
@@ -463,8 +537,8 @@
       document.getElementById('tma-phone').placeholder = dict.phonePlaceholder;
       document.getElementById('lbl-total-est').innerText = dict.totalEst;
       document.getElementById('txt-submit-btn').innerText = dict.submitBtn;
-      document.getElementById('opt-morning').innerText = dict.morning;
-      document.getElementById('opt-afternoon').innerText = dict.afternoon;
+      if (document.getElementById('opt-morning')) document.getElementById('opt-morning').innerText = dict.morning;
+      if (document.getElementById('opt-afternoon')) document.getElementById('opt-afternoon').innerText = dict.afternoon;
 
       document.getElementById('txt-success-title').innerText = dict.successTitle;
       document.getElementById('txt-success-desc').innerText = dict.successDesc;
@@ -510,7 +584,12 @@
       updateTotal();
     }
 
-    const tmaSubDiscounts = { one_time: 0, weekly: 15, biweekly: 10, monthly: 5 };
+    let tmaSubDiscounts = { 
+      one_time: 0, 
+      weekly: {{ $weeklyDisc }}, 
+      biweekly: {{ $biweeklyDisc }}, 
+      monthly: {{ $monthlyDisc }} 
+    };
 
     function updateTotal() {
       const baseTotal = qty * currentSvc.price;

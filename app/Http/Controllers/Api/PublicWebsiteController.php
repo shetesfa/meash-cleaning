@@ -23,14 +23,23 @@ use Illuminate\Validation\ValidationException;
 class PublicWebsiteController extends Controller
 {
     /**
-     * Get public website settings (phones, slogans, about text, etc.)
+     * Get public website settings (phones, slogans, about text, bank accounts, subcities, time slots, pricing rules)
      */
     public function settings(): JsonResponse
     {
         $settings = WebsiteSetting::getAllKeyValue();
+        $subcities = WebsiteSetting::getJson('subcities', []);
+        $timeSlots = WebsiteSetting::getJson('time_slots', []);
+        $pricingRules = WebsiteSetting::getJson('pricing_rules', []);
+        $paymentAccounts = WebsiteSetting::getJson('payment_accounts', []);
+
         return response()->json([
             'success' => true,
             'settings' => $settings,
+            'subcities' => $subcities,
+            'time_slots' => $timeSlots,
+            'pricing_rules' => $pricingRules,
+            'payment_accounts' => $paymentAccounts,
         ]);
     }
 
@@ -98,7 +107,17 @@ class PublicWebsiteController extends Controller
             }
 
             $plan = $validated['subscription_plan'] ?? 'one_time';
-            $discRates = ['weekly' => 15.0, 'biweekly' => 10.0, 'monthly' => 5.0, 'one_time' => 0.0];
+            $pricingRules = WebsiteSetting::getJson('pricing_rules', [
+                'weekly_discount' => 15,
+                'biweekly_discount' => 10,
+                'monthly_discount' => 5,
+            ]);
+            $discRates = [
+                'weekly' => (float)($pricingRules['weekly_discount'] ?? 15.0),
+                'biweekly' => (float)($pricingRules['biweekly_discount'] ?? 10.0),
+                'monthly' => (float)($pricingRules['monthly_discount'] ?? 5.0),
+                'one_time' => 0.0,
+            ];
             $discPercent = $discRates[$plan] ?? 0.0;
 
             $payMethod = ($validated['payment_method'] ?? 'cash') === 'cbe_birr' ? 'cbe' : ($validated['payment_method'] ?? 'cash');

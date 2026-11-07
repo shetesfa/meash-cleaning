@@ -6437,70 +6437,262 @@
             }
         }
 
-        // Sub-tab 2: Contact Info & Slogan
+        // Sub-tab 2: Website & System Settings (100% Customizable)
         function renderCmsContactTab(container) {
             const s = cmsSettingsData || {};
+
+            // Parse subcities for display
+            let subcitiesStr = 'ቦሌ, የካ, ቂርቆስ, አራዳ, ጉለሌ, ልደታ, ኮልፌ ቀራኒዮ, ንፋስ ስልክ ላፍቶ, አዲስ ከተማ, አቃቂ ቃሊቲ, ለሚ ኩራ';
+            try {
+                if (s.subcities) {
+                    const parsed = typeof s.subcities === 'string' ? JSON.parse(s.subcities) : s.subcities;
+                    if (Array.isArray(parsed) && parsed.length) {
+                        subcitiesStr = parsed.map(c => c.name_am || c.name_en || c).join(', ');
+                    }
+                }
+            } catch (_) {}
+
+            // Parse pricing rules
+            let pr = { weekly_discount: 15, biweekly_discount: 10, monthly_discount: 5, urgent_surcharge: 0, sofa_multiplier: 350, carpet_sqm_multiplier: 80, window_sqm_multiplier: 60, deep_cleaning_sqm_multiplier: 45 };
+            try {
+                if (s.pricing_rules) {
+                    const parsedPr = typeof s.pricing_rules === 'string' ? JSON.parse(s.pricing_rules) : s.pricing_rules;
+                    if (parsedPr && typeof parsedPr === 'object') {
+                        pr = Object.assign(pr, parsedPr);
+                    }
+                }
+            } catch (_) {}
+
             container.innerHTML = `
-                <div class="max-w-3xl space-y-6">
+                <div class="max-w-4xl space-y-6">
                     <div>
-                        <h3 class="text-lg font-bold text-white">የስልክ ቁጥሮች፣ አድራሻ እና መፈክር (Contact Info &amp; Slogan)</h3>
-                        <p class="text-xs text-slate-400">እዚህ የተቀየረ ማንኛውም ስልክ ቁጥር ወይም መፈክር በቀጥታ በዋናው ድረ-ገጽ ራስጌ፣ ግርጌ እና Click-to-Call ላይ ይቀየራል።</p>
+                        <h3 class="text-lg font-bold text-white">የስርዓቱ እና የድረ-ገጽ ቅንብሮች (Website &amp; System Settings)</h3>
+                        <p class="text-xs text-slate-400">እዚህ የተቀየረ ማንኛውም መረጃ (ስልኮች፣ የባንክ አካውንቶች፣ ክፍለ ከተሞች፣ ቅናሾችና የቦት መልዕክቶች) ወዲያውኑ በድረ-ገጹ፣ በሚኒ አፑ እና በቴሌግራም ቦቱ ላይ ይንጸባረቃል።</p>
                     </div>
 
-                    <form onsubmit="saveCmsContactSettings(event)" class="space-y-4 bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl">
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-slate-300 block mb-1">ዋና ስልክ ቁጥር 1 (Primary Hotline)</label>
-                                <input type="text" id="set-phone-1" value="${s.contact_phone_1 || '0970075509'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-sm focus:border-cyan-400">
+                    <form onsubmit="saveCmsContactSettings(event)" class="space-y-6">
+
+                        <!-- SECTION 1: Branding & Contact Details -->
+                        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl space-y-4">
+                            <div class="flex items-center gap-2 pb-3 border-b border-slate-800">
+                                <div class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">1</div>
+                                <h4 class="font-extrabold text-white text-sm">የድርጅቱ መረጃ፣ ስልኮች እና አድራሻ (Branding &amp; Contact)</h4>
                             </div>
-                            <div>
-                                <label class="text-xs font-bold text-slate-300 block mb-1">ተጨማሪ ስልክ ቁጥር 2 (Secondary Hotline)</label>
-                                <input type="text" id="set-phone-2" value="${s.contact_phone_2 || '0998142190'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-sm focus:border-cyan-400">
+
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">ዋና ስልክ ቁጥር 1 (Primary Hotline) *</label>
+                                    <input type="text" id="set-phone-1" value="${escapeHtml(s.contact_phone_1 || '0970075509')}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-sm focus:border-cyan-400">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">ተጨማሪ ስልክ ቁጥር 2 (Secondary Hotline)</label>
+                                    <input type="text" id="set-phone-2" value="${escapeHtml(s.contact_phone_2 || '0998142190')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-sm focus:border-cyan-400">
+                                </div>
+                            </div>
+
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ ስም (Company Name) *</label>
+                                    <input type="text" id="set-comp-name" value="${escapeHtml(s.company_name || 'MEASH CLEANING SOLUTION')}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">ይፋዊ ኢሜይል (Company Email)</label>
+                                    <input type="email" id="set-comp-email" value="${escapeHtml(s.company_email || 'info@meashcleaning.com')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                </div>
+                            </div>
+
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ መፈክር በአማርኛ (Slogan AM)</label>
+                                    <input type="text" id="set-slogan-am" value="${escapeHtml(s.company_slogan_am || 'የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት!')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ መፈክር በእንግሊዝኛ (Slogan EN)</label>
+                                    <input type="text" id="set-slogan-en" value="${escapeHtml(s.company_slogan || 'Your Environment, Our Responsibility.')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                </div>
+                            </div>
+
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የቢሮ አድራሻ በአማርኛ (Office Location AM)</label>
+                                    <input type="text" id="set-address-am" value="${escapeHtml(s.company_address_am || 'አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ፣ ኢትዮጵያ')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የቢሮ አድራሻ በእንግሊዝኛ (Office Location EN)</label>
+                                    <input type="text" id="set-address-en" value="${escapeHtml(s.company_address || 'Ayat, in front of Tesfu Mall, Addis Ababa, Ethiopia')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                </div>
+                            </div>
+
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የስራ ሰዓት በአማርኛ (Working Hours AM)</label>
+                                    <input type="text" id="set-hours-am" value="${escapeHtml(s.working_hours_am || 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ በቀጠሮ)')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የስራ ሰዓት በእንግሊዝኛ (Working Hours EN)</label>
+                                    <input type="text" id="set-hours-en" value="${escapeHtml(s.working_hours_en || 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday by Appointment)')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                </div>
+                            </div>
+
+                            <div class="grid sm:grid-cols-3 gap-4 pt-2">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቦት (Bot Link)</label>
+                                    <input type="text" id="set-tg-bot" value="${escapeHtml(s.telegram_bot || 'https://t.me/meash_cleaning_solution_bot')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቻናል (Channel Link)</label>
+                                    <input type="text" id="set-tg-chan" value="${escapeHtml(s.telegram_channel || 'https://t.me/meashdeepcleaning')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">TikTok ሊንክ</label>
+                                    <input type="text" id="set-tiktok" value="${escapeHtml(s.tiktok || 'https://www.tiktok.com/@meashcleaningsolition')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                                </div>
                             </div>
                         </div>
 
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ ስም (Company Name)</label>
-                                <input type="text" id="set-comp-name" value="${s.company_name || 'MEASH CLEANING SOLUTION'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                        <!-- SECTION 2: Bank & Payment Accounts -->
+                        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl space-y-4">
+                            <div class="flex items-center gap-2 pb-3 border-b border-slate-800">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">2</div>
+                                <h4 class="font-extrabold text-white text-sm">የባንክ እና የቴሌብር ሂሳብ ቁጥሮች (Bank &amp; Payment Accounts)</h4>
                             </div>
+
+                            <div class="grid sm:grid-cols-2 gap-4">
+                                <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                                    <span class="text-xs font-bold text-cyan-400 flex items-center gap-1.5">📱 ቴሌብር (Telebirr)</span>
+                                    <div>
+                                        <label class="text-[11px] text-slate-400 block mb-0.5">የስልክ / ሂሳብ ቁጥር:</label>
+                                        <input type="text" id="set-pay-telebirr-no" value="${escapeHtml(s.telebirr_account_number || '0970075509')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="text-[11px] text-slate-400 block mb-0.5">የአካውንት ስም (Account Name):</label>
+                                        <input type="text" id="set-pay-telebirr-name" value="${escapeHtml(s.telebirr_account_name || 'Meash Cleaning / Tesfaye')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs">
+                                    </div>
+                                </div>
+
+                                <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                                    <span class="text-xs font-bold text-purple-400 flex items-center gap-1.5">🏦 ንግድ ባንክ (Commercial Bank of Ethiopia - CBE)</span>
+                                    <div>
+                                        <label class="text-[11px] text-slate-400 block mb-0.5">የሂሳብ ቁጥር (Account No):</label>
+                                        <input type="text" id="set-pay-cbe-no" value="${escapeHtml(s.cbe_account_number || '1000552467891')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="text-[11px] text-slate-400 block mb-0.5">የአካውንት ስም (Account Name):</label>
+                                        <input type="text" id="set-pay-cbe-name" value="${escapeHtml(s.cbe_account_name || 'Meash Cleaning Solution')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs">
+                                    </div>
+                                </div>
+
+                                <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                                    <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">🏦 አቢሲኒያ ባንክ (Bank of Abyssinia - BOA)</span>
+                                    <div>
+                                        <label class="text-[11px] text-slate-400 block mb-0.5">የሂሳብ ቁጥር (Account No):</label>
+                                        <input type="text" id="set-pay-boa-no" value="${escapeHtml(s.boa_account_number || '54321678')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="text-[11px] text-slate-400 block mb-0.5">የአካውንት ስም (Account Name):</label>
+                                        <input type="text" id="set-pay-boa-name" value="${escapeHtml(s.boa_account_name || 'Meash Cleaning Solution')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs">
+                                    </div>
+                                </div>
+
+                                <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                                    <span class="text-xs font-bold text-blue-400 flex items-center gap-1.5">🏦 አዋሽ ባንክ (Awash Bank)</span>
+                                    <div>
+                                        <label class="text-[11px] text-slate-400 block mb-0.5">የሂሳብ ቁጥር (Account No):</label>
+                                        <input type="text" id="set-pay-awash-no" value="${escapeHtml(s.awash_account_number || '01320876543200')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="text-[11px] text-slate-400 block mb-0.5">የአካውንት ስም (Account Name):</label>
+                                        <input type="text" id="set-pay-awash-name" value="${escapeHtml(s.awash_account_name || 'Meash Cleaning Solution')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div>
-                                <label class="text-xs font-bold text-slate-300 block mb-1">ይፋዊ ኢሜይል (Company Email)</label>
-                                <input type="email" id="set-comp-email" value="${s.company_email || 'info@meashcleaning.com'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የክፍያ መመሪያ ማሳሰቢያ በአማርኛ (Payment Instructions AM)</label>
+                                <input type="text" id="set-pay-instr-am" value="${escapeHtml(s.payment_instructions_am || 'ክፍያ ፈጽመው ሲያጠናቅቁ የደረሰኝ ቁጥር (Transaction Reference) ወይም ስክሪንሾት ያስገቡልን::')}" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs">
                             </div>
                         </div>
 
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ መፈክር በእንግሊዝኛ (Slogan EN)</label>
-                                <input type="text" id="set-slogan-en" value="${s.company_slogan || 'Your Environment, Our Responsibility.'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                        <!-- SECTION 3: Subscription Discounts & Pricing Rules -->
+                        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl space-y-4">
+                            <div class="flex items-center gap-2 pb-3 border-b border-slate-800">
+                                <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold">3</div>
+                                <h4 class="font-extrabold text-white text-sm">የደንበኝነት ቅናሾች እና የዋጋ ማስያ ስሌት (Subscription Discounts &amp; Multipliers)</h4>
                             </div>
-                            <div>
-                                <label class="text-xs font-bold text-slate-300 block mb-1">የድርጅቱ መፈክር በአማርኛ (Slogan AM)</label>
-                                <input type="text" id="set-slogan-am" value="${s.company_slogan_am || 'የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት!'}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የሳምንት ቅናሽ (Weekly %)</label>
+                                    <div class="relative">
+                                        <input type="number" step="0.5" id="set-disc-weekly" value="${pr.weekly_discount ?? 15}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono font-bold text-sm focus:border-cyan-400 pr-7">
+                                        <span class="absolute right-2.5 top-2 text-slate-500 text-xs font-bold">%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የ2 ሳምንት ቅናሽ (Bi-weekly %)</label>
+                                    <div class="relative">
+                                        <input type="number" step="0.5" id="set-disc-biweekly" value="${pr.biweekly_discount ?? 10}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono font-bold text-sm focus:border-cyan-400 pr-7">
+                                        <span class="absolute right-2.5 top-2 text-slate-500 text-xs font-bold">%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የወር ቅናሽ (Monthly %)</label>
+                                    <div class="relative">
+                                        <input type="number" step="0.5" id="set-disc-monthly" value="${pr.monthly_discount ?? 5}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono font-bold text-sm focus:border-cyan-400 pr-7">
+                                        <span class="absolute right-2.5 top-2 text-slate-500 text-xs font-bold">%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">አስቸኳይ ተጨማሪ (Urgent Surcharge %)</label>
+                                    <div class="relative">
+                                        <input type="number" step="0.5" id="set-surcharge-urgent" value="${pr.urgent_surcharge ?? 0}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono font-bold text-sm focus:border-cyan-400 pr-7">
+                                        <span class="absolute right-2.5 top-2 text-slate-500 text-xs font-bold">%</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="text-xs font-bold text-slate-300 block mb-1">የቢሮ አድራሻ በአማርኛ (Office Location AM)</label>
-                            <input type="text" id="set-address-am" value="${s.company_address_am || 'አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ፣ ኢትዮጵያ'}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
-                        </div>
-
-                        <div class="grid sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቦት ሊንክ (Telegram Bot)</label>
-                                <input type="text" id="set-tg-bot" value="${s.telegram_bot || 'https://t.me/meash_cleaning_solution_bot'}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                        <!-- SECTION 4: Coverage Subcities & Time Slots -->
+                        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl space-y-4">
+                            <div class="flex items-center gap-2 pb-3 border-b border-slate-800">
+                                <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">4</div>
+                                <h4 class="font-extrabold text-white text-sm">የአገልግሎት ሽፋን ክፍለ ከተሞች (Coverage Subcities)</h4>
                             </div>
+
                             <div>
-                                <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቻናል (Telegram Channel)</label>
-                                <input type="text" id="set-tg-chan" value="${s.telegram_channel || 'https://t.me/meashdeepcleaning'}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                                <label class="text-xs font-bold text-slate-300 block mb-1">ንቁ ክፍለ ከተሞች (በኮማ የተለዩ / Comma-separated):</label>
+                                <textarea id="set-subcities-list" rows="2" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400 leading-relaxed">${escapeHtml(subcitiesStr)}</textarea>
+                                <p class="text-[11px] text-slate-400 mt-1">እነዚህ ክፍለ ከተሞች በድረ-ገጹ፣ በሚኒ አፑ እና በቴሌግራም ቦቱ የቀጠሮ ማስያዣ ዝርዝር ውስጥ በቀጥታ ይታያሉ።</p>
                             </div>
                         </div>
 
-                        <div class="pt-4 flex justify-end">
-                            <button type="submit" id="btn-save-contact" class="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 shadow-lg shadow-cyan-600/30 cursor-pointer">
+                        <!-- SECTION 5: Telegram Bot Welcome Messages -->
+                        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl space-y-4">
+                            <div class="flex items-center gap-2 pb-3 border-b border-slate-800">
+                                <div class="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">5</div>
+                                <h4 class="font-extrabold text-white text-sm">የቴሌግራም ቦት መልእክቶች (Telegram Bot Welcome &amp; Help Texts)</h4>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የቦቱ የእንኳን ደህና መጡ መልእክት በአማርኛ (Bot Welcome AM):</label>
+                                <textarea id="set-bot-welcome-am" rows="3" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_welcome_am || "✨ እንኳን ወደ ሜአሽ ጥልቅ የፅዳት አገልግሎት በደህና መጡ!\n\nለሶፋ፣ ምንጣፍ፣ ፍራሽ፣ መስታወትና ለቤትዎ አስተማማኝና ዘመናዊ የጽዳት አገልግሎት እንሰጣለን:: የሚፈልጉትን አገልግሎት ከታች ባሉት አማራጮች ይምረጡ፦")}</textarea>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የቦቱ የእንኳን ደህና መጡ መልእክት በእንግሊዝኛ (Bot Welcome EN):</label>
+                                <textarea id="set-bot-welcome-en" rows="2" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_welcome_en || "✨ Welcome to Meash Deep Cleaning Solution!\n\nWe provide professional cleaning for sofas, carpets, mattresses, windows, and entire residential or office spaces.")}</textarea>
+                            </div>
+
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የቦቱ የአጠቃቀም መመሪያ በአማርኛ (Bot Help AM):</label>
+                                <textarea id="set-bot-help-am" rows="3" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_help_am || "የሚከተሉትን ትዕዛዞች መጠቀም ይችላሉ:\n• /start - ዋናውን ማውጫ ይከፍታል\n• /services - የአገልግሎቶች እና የዋጋ ዝርዝር\n• /book - በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዣ\n• /status ORD-... - የትዕዛዝ ሁኔታ መከታተያ\n• /contact - የሪሴፕሽን ስልክ አድራሻ\n• /help - ይህንን መመሪያ ያሳያል")}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 flex justify-end">
+                            <button type="submit" id="btn-save-contact" class="px-8 py-3.5 bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 shadow-xl shadow-cyan-600/30 cursor-pointer">
                                 <i data-lucide="save" class="w-4 h-4"></i>
-                                <span>ቅንብሮችን መዝግብ (Save Settings)</span>
+                                <span>ቅንብሮችን መዝግብ (Save All Settings)</span>
                             </button>
                         </div>
                     </form>
@@ -6515,6 +6707,32 @@
             btn.disabled = true;
             btn.innerText = 'በመመዝገብ ላይ...';
 
+            // Parse subcities list from CSV text
+            const rawSubcities = document.getElementById('set-subcities-list').value.split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+            const subcityEnMap = {
+                'ቦሌ': 'Bole', 'የካ': 'Yeka', 'ቂርቆስ': 'Kirkos', 'አራዳ': 'Arada',
+                'ጉለሌ': 'Gulele', 'ልደታ': 'Lideta', 'ኮልፌ ቀራኒዮ': 'Kolfe Keranio',
+                'ኮልፌ': 'Kolfe Keranio', 'ንፋስ ስልክ ላፍቶ': 'Nifas Silk-Lafto',
+                'ንፋስ ስልክ': 'Nifas Silk-Lafto', 'አዲስ ከተማ': 'Addis Ketema',
+                'አቃቂ ቃሊቲ': 'Akaki Kality', 'አቃቂ': 'Akaki Kality', 'ለሚ ኩራ': 'Lemi Kura', 'ለሚኩራ': 'Lemi Kura'
+            };
+            const subcitiesArray = rawSubcities.map((amName, idx) => ({
+                id: (subcityEnMap[amName] || `subcity_${idx + 1}`).toLowerCase().replace(/[\s-]+/g, '_'),
+                name_am: amName,
+                name_en: subcityEnMap[amName] || amName,
+                active: true
+            }));
+
+            // Construct Pricing Rules
+            const pricingRules = {
+                weekly_discount: parseFloat(document.getElementById('set-disc-weekly')?.value || 15),
+                biweekly_discount: parseFloat(document.getElementById('set-disc-biweekly')?.value || 10),
+                monthly_discount: parseFloat(document.getElementById('set-disc-monthly')?.value || 5),
+                urgent_surcharge: parseFloat(document.getElementById('set-surcharge-urgent')?.value || 0),
+            };
+
             const payload = {
                 contact_phone_1: document.getElementById('set-phone-1').value.trim(),
                 contact_phone_2: document.getElementById('set-phone-2').value.trim(),
@@ -6523,8 +6741,32 @@
                 company_slogan: document.getElementById('set-slogan-en').value.trim(),
                 company_slogan_am: document.getElementById('set-slogan-am').value.trim(),
                 company_address_am: document.getElementById('set-address-am').value.trim(),
+                company_address: document.getElementById('set-address-en').value.trim(),
+                working_hours_am: document.getElementById('set-hours-am').value.trim(),
+                working_hours_en: document.getElementById('set-hours-en').value.trim(),
                 telegram_bot: document.getElementById('set-tg-bot').value.trim(),
-                telegram_channel: document.getElementById('set-tg-chan').value.trim()
+                telegram_channel: document.getElementById('set-tg-chan').value.trim(),
+                tiktok: document.getElementById('set-tiktok').value.trim(),
+
+                // Bank & Payment Accounts
+                telebirr_account_number: document.getElementById('set-pay-telebirr-no').value.trim(),
+                telebirr_account_name: document.getElementById('set-pay-telebirr-name').value.trim(),
+                cbe_account_number: document.getElementById('set-pay-cbe-no').value.trim(),
+                cbe_account_name: document.getElementById('set-pay-cbe-name').value.trim(),
+                boa_account_number: document.getElementById('set-pay-boa-no').value.trim(),
+                boa_account_name: document.getElementById('set-pay-boa-name').value.trim(),
+                awash_account_number: document.getElementById('set-pay-awash-no').value.trim(),
+                awash_account_name: document.getElementById('set-pay-awash-name').value.trim(),
+                payment_instructions_am: document.getElementById('set-pay-instr-am').value.trim(),
+
+                // Subcities & Pricing Rules as JSON
+                subcities: JSON.stringify(subcitiesArray),
+                pricing_rules: JSON.stringify(pricingRules),
+
+                // Telegram Bot Texts
+                bot_welcome_am: document.getElementById('set-bot-welcome-am').value.trim(),
+                bot_welcome_en: document.getElementById('set-bot-welcome-en').value.trim(),
+                bot_help_am: document.getElementById('set-bot-help-am').value.trim(),
             };
 
             try {
@@ -6535,7 +6777,7 @@
                 });
                 const d = await res.json();
                 if (res.ok) {
-                    alert('የስልክ ቁጥሮች እና መፈክር በተሳካ ሁኔታ ተመዝግበዋል!');
+                    alert('ሁሉም የስርዓቱ እና የድረ-ገጹ ቅንብሮች በተሳካ ሁኔታ ተመዝግበዋል!');
                     cmsSettingsData = d.settings || payload;
                 } else {
                     alert('ስህተት፡ ' + (d.message || 'ማስቀመጥ አልተቻለም'));
@@ -6544,7 +6786,7 @@
                 alert('የግንኙነት ችግር፡ ' + err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'ቅንብሮችን መዝግብ (Save Settings)';
+                btn.innerText = 'ቅንብሮችን መዝግብ (Save All Settings)';
             }
         }
 

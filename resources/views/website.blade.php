@@ -2,25 +2,45 @@
 @php
   $activeServices = collect();
   $websiteSettings = [];
+  $subcities = [];
+  $timeSlots = [];
+  $pricingRules = [];
   try {
     if (\Illuminate\Support\Facades\Schema::hasTable('services')) {
       $activeServices = \App\Models\Service::where('is_active', true)->orderBy('sort_order')->get();
     }
     if (\Illuminate\Support\Facades\Schema::hasTable('website_settings')) {
       $websiteSettings = \App\Models\WebsiteSetting::getAllKeyValue();
+      $subcities = \App\Models\WebsiteSetting::getJson('subcities', []);
+      $timeSlots = \App\Models\WebsiteSetting::getJson('time_slots', []);
+      $pricingRules = \App\Models\WebsiteSetting::getJson('pricing_rules', []);
     }
   } catch (\Throwable $e) {
     // Graceful fallback for pre-migration or isolated test runs
   }
+  $phone1 = $websiteSettings['contact_phone_1'] ?? '0970075509';
+  $phone2 = $websiteSettings['contact_phone_2'] ?? '0998142190';
+  $companyName = $websiteSettings['company_name'] ?? 'MEASH CLEANING SOLUTION';
+  $sloganEn = $websiteSettings['company_slogan'] ?? 'Your Environment, Our Responsibility.';
+  $sloganAm = $websiteSettings['company_slogan_am'] ?? 'የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት!';
+  $addressAm = $websiteSettings['company_address_am'] ?? 'አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ፣ ኢትዮጵያ';
+  $addressEn = $websiteSettings['company_address'] ?? 'Ayat, in front of Tesfu Mall, Addis Ababa, Ethiopia';
+  $email = $websiteSettings['company_email'] ?? 'info@meashcleaning.com';
+  $hoursAm = $websiteSettings['working_hours_am'] ?? 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ በቀጠሮ)';
+  $hoursEn = $websiteSettings['working_hours_en'] ?? 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday by Appointment)';
+  $telebirrNo = $websiteSettings['telebirr_account_number'] ?? '0970075509';
+  $cbeNo = $websiteSettings['cbe_account_number'] ?? '1000552467891';
+  $boaNo = $websiteSettings['boa_account_number'] ?? '54321678';
+  $awashNo = $websiteSettings['awash_account_number'] ?? '01320876543200';
 @endphp
 <html lang="am" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>MEASH CLEANING SOLUTION | Best Deep Cleaning Services in Addis Ababa | የጽዳት አገልግሎት</title>
-<meta name="description" content="MEASH CLEANING SOLUTION — Premier residential and commercial deep cleaning in Addis Ababa, Ethiopia. Sofa, carpet, mattress, glass, post-construction and office cleaning. Your Environment, Our Responsibility. Call 0970075509 / 0998142190">
+<title>{{ $companyName }} | Best Deep Cleaning Services in Addis Ababa | የጽዳት አገልግሎት</title>
+<meta name="description" content="{{ $companyName }} — Premier residential and commercial deep cleaning in Addis Ababa, Ethiopia. {{ $sloganEn }} Call {{ $phone1 }} / {{ $phone2 }}">
 <meta name="keywords" content="Cleaning Services in Addis Ababa, Sofa Cleaning in Addis Ababa, Carpet Washing Addis Ababa, Office Cleaning Addis Ababa, Deep Cleaning Ethiopia, Hotel Cleaning Addis, Commercial Cleaning Addis Ababa, Meash Cleaning Solution, የሶፋ እጥበት አዲስ አበባ, የምንጣፍ እጥበት, የቢሮ ጽዳት">
-<meta name="author" content="MEASH CLEANING SOLUTION">
+<meta name="author" content="{{ $companyName }}">
 <meta name="theme-color" content="#0B1220">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
@@ -29,28 +49,28 @@
 <meta name="apple-mobile-web-app-title" content="Meash">
 
 <!-- Open Graph & Social SEO -->
-<meta property="og:title" content="MEASH CLEANING SOLUTION | Your Environment, Our Responsibility.">
-<meta property="og:description" content="Professional deep cleaning for villas, apartments, corporate offices, hotels & restaurants in Addis Ababa. Call 0970075509 / 0998142190.">
+<meta property="og:title" content="{{ $companyName }} | {{ $sloganEn }}">
+<meta property="og:description" content="Professional deep cleaning for villas, apartments, corporate offices, hotels & restaurants in Addis Ababa. Call {{ $phone1 }} / {{ $phone2 }}.">
 <meta property="og:image" content="/logo.jpg">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://meash-cleaning-gy5x.onrender.com">
+<meta property="og:url" content="{{ url('/') }}">
 
 <!-- LocalBusiness Schema.org JSON-LD Structured Data for Google Search -->
 <script type="application/ld+json">
 {!! json_encode([
   '@context' => 'https://schema.org',
   '@type' => 'HomeAndConstructionBusiness',
-  'name' => 'MEASH CLEANING SOLUTION',
+  'name' => $companyName,
   'alternateName' => 'ሜሽ ክሊኒንግ ሶሉሽን',
-  'image' => 'https://meash-cleaning-gy5x.onrender.com/logo.jpg',
-  'slogan' => 'Your Environment, Our Responsibility.',
-  'url' => 'https://meash-cleaning-gy5x.onrender.com',
-  'telephone' => '+251970075509',
-  'email' => 'info@meashcleaning.com',
+  'image' => url('/logo.jpg'),
+  'slogan' => $sloganEn,
+  'url' => url('/'),
+  'telephone' => '+251' . ltrim($phone1, '0+'),
+  'email' => $email,
   'priceRange' => 'ETB 50 - ETB 6000',
   'address' => [
     '@type' => 'PostalAddress',
-    'streetAddress' => 'Ayat, in front of Tesfu Mall',
+    'streetAddress' => $addressEn,
     'addressLocality' => 'Addis Ababa',
     'addressRegion' => 'Addis Ababa',
     'postalCode' => '1000',
@@ -61,11 +81,13 @@
     'latitude' => 9.0227,
     'longitude' => 38.8681
   ],
-  'sameAs' => [
-    'https://t.me/meashdeepcleaning',
-    'https://t.me/meash_cleaning_solution_bot',
-    'https://www.tiktok.com/@meashcleaningsolition'
-  ]
+  'sameAs' => array_values(array_filter([
+    $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleaning',
+    $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot',
+    $websiteSettings['tiktok'] ?? 'https://www.tiktok.com/@meashcleaningsolition',
+    $websiteSettings['facebook'] ?? null,
+    $websiteSettings['instagram'] ?? null,
+  ]))
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
 </script>
 
@@ -1110,16 +1132,23 @@
           <p class="font-semibold mb-4 text-sm"><span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Address</span></p>
           <select id="book-subcity" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 bg-white text-sm" required>
             <option value="">-- Subcity / ክፍለ ከተማ --</option>
-            <option value="Bole">Bole (ቦሌ)</option>
-            <option value="Yeka">Yeka (የካ)</option>
-            <option value="Kirkos">Kirkos (ቂርቆስ)</option>
-            <option value="Arada">Arada (አራዳ)</option>
-            <option value="Lideta">Lideta (ልደታ)</option>
-            <option value="Nifas Silk">Nifas Silk (ንፋስ ስልክ)</option>
-            <option value="Kolfe">Kolfe (ኮልፌ)</option>
-            <option value="Gulele">Gulele (ጉለሌ)</option>
-            <option value="Akaky Kaliti">Akaky Kaliti (አቃቂ ቃሊቲ)</option>
-            <option value="Lemi Kura">Lemi Kura (ለሚ ኩራ)</option>
+            @php
+              $activeSubcitiesList = !empty($subcities) ? array_filter($subcities, fn($c) => !isset($c['active']) || !empty($c['active'])) : [
+                ['name_am' => 'ቦሌ', 'name_en' => 'Bole'],
+                ['name_am' => 'የካ', 'name_en' => 'Yeka'],
+                ['name_am' => 'ቂርቆስ', 'name_en' => 'Kirkos'],
+                ['name_am' => 'አራዳ', 'name_en' => 'Arada'],
+                ['name_am' => 'ልደታ', 'name_en' => 'Lideta'],
+                ['name_am' => 'ንፋስ ስልክ', 'name_en' => 'Nifas Silk'],
+                ['name_am' => 'ኮልፌ', 'name_en' => 'Kolfe'],
+                ['name_am' => 'ጉለሌ', 'name_en' => 'Gulele'],
+                ['name_am' => 'አቃቂ ቃሊቲ', 'name_en' => 'Akaki Kality'],
+                ['name_am' => 'ለሚ ኩራ', 'name_en' => 'Lemi Kura'],
+              ];
+            @endphp
+            @foreach($activeSubcitiesList as $sc)
+              <option value="{{ $sc['name_en'] ?? $sc['name_am'] }}">{{ $sc['name_en'] ?? $sc['name_am'] }} ({{ $sc['name_am'] ?? $sc['name_en'] }})</option>
+            @endforeach
           </select>
           <input id="book-address" type="text" placeholder="Street, house no. / ጎዳና፣ የቤት ቁጥር" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
           <input id="book-landmark" type="text" placeholder="Landmark / መለያ ቦታ (ምሳሌ፡ ሆቴል አጠገብ)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm">
@@ -1348,6 +1377,11 @@
                 <span class="text-[9px] text-navy/50">CBE / CBE Birr</span>
               </label>
             </div>
+            <!-- Quick Bank Details Hint -->
+            <div class="mt-2.5 p-2.5 rounded-md bg-fog border border-navy/10 text-[11px] text-navy/70 space-y-1">
+              <p><strong class="text-teal-dark">ቴሌብር:</strong> <span class="font-mono font-bold">{{ $telebirrNo }}</span> ({{ $websiteSettings['telebirr_account_name'] ?? 'ሜሽ የፅዳት' }})</p>
+              <p><strong class="text-purple-700">ንግድ ባንክ:</strong> <span class="font-mono font-bold">{{ $cbeNo }}</span> ({{ $websiteSettings['cbe_account_name'] ?? 'ሜሽ የፅዳት' }})</p>
+            </div>
           </div>
 
           <div class="bg-fog rounded-md px-4 py-3 mb-5 flex items-center justify-between border border-navy/10">
@@ -1366,6 +1400,20 @@
           <h3 class="font-serif font-semibold text-xl mb-1"><span data-lang-block="am">ተመዝግቧል!</span><span data-lang-block="en">Booking received!</span></h3>
           <p class="text-navy/55 text-sm mb-1"><span data-lang-block="am">የቀጠሮ ቁጥር</span><span data-lang-block="en">Your reference number</span></p>
           <p class="font-serif font-semibold text-2xl text-teal-dark mb-4" id="success-booking-id"></p>
+
+          <!-- Payment Instructions in Success Card -->
+          <div class="p-3.5 rounded-lg bg-fog border border-navy/10 max-w-sm mx-auto mb-5 text-left text-xs">
+            <p class="font-bold text-navy mb-1.5"><span data-lang-block="am">የክፍያ ማስተላለፊያ መረጃ፦</span><span data-lang-block="en">Payment Account Information:</span></p>
+            <div class="space-y-1 text-navy/75 text-[11px]">
+              <p><strong class="text-teal-dark">ቴሌብር (Telebirr):</strong> <span class="font-mono font-bold">{{ $telebirrNo }}</span> ({{ $websiteSettings['telebirr_account_name'] ?? 'ሜሽ የፅዳት' }})</p>
+              <p><strong class="text-purple-700">ንግድ ባንክ (CBE):</strong> <span class="font-mono font-bold">{{ $cbeNo }}</span> ({{ $websiteSettings['cbe_account_name'] ?? 'ሜሽ የፅዳት' }})</p>
+              @if(!empty($boaNo))
+              <p><strong class="text-navy">አቢሲኒያ ባንክ (BOA):</strong> <span class="font-mono font-bold">{{ $boaNo }}</span> ({{ $websiteSettings['boa_account_name'] ?? 'ሜሽ የፅዳት' }})</p>
+              @endif
+              <p class="text-[10px] text-navy/50 pt-1 border-t border-navy/10">ማስታወሻ፦ ገንዘቡን ሲያስተላልፉ በትራንስፈር ማስታወሻ ላይ የቀጠሮ ቁጥርዎን ያስገቡ::</p>
+            </div>
+          </div>
+
           <p class="text-xs text-navy/60 max-w-sm mx-auto mb-6"><span data-lang-block="am">ቡድናችን በቅርቡ ደውሎ ዝርዝሮችን ያረጋግጥልዎታል። እናመሰግናለን!</span><span data-lang-block="en">Our team will call you shortly to confirm the appointment. Thank you!</span></p>
           <button type="button" onclick="resetWizard()" class="border border-navy/15 font-bold px-6 py-3 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ሌላ ቀጠሮ ያዙ</span><span data-lang-block="en">Book another</span></button>
         </div>
@@ -2127,7 +2175,29 @@
   }
 
   let selectedSubPlan = 'one_time';
-  const subPlanDiscounts = { one_time: 0, weekly: 15, biweekly: 10, monthly: 5 };
+  let livePricingRules = @json($pricingRules);
+  const subPlanDiscounts = {
+    one_time: 0,
+    weekly: Number(livePricingRules?.weekly_discount ?? 15),
+    biweekly: Number(livePricingRules?.biweekly_discount ?? 10),
+    monthly: Number(livePricingRules?.monthly_discount ?? 5)
+  };
+
+  // Fetch live settings asynchronously to keep pricing and accounts always fresh
+  (async function loadLiveSettings() {
+    try {
+      const res = await fetch('/api/public/settings');
+      if (res.ok) {
+        const d = await res.json();
+        if (d.pricing_rules) {
+          livePricingRules = d.pricing_rules;
+          subPlanDiscounts.weekly = Number(d.pricing_rules.weekly_discount ?? 15);
+          subPlanDiscounts.biweekly = Number(d.pricing_rules.biweekly_discount ?? 10);
+          subPlanDiscounts.monthly = Number(d.pricing_rules.monthly_discount ?? 5);
+        }
+      }
+    } catch (_) {}
+  })();
 
   function updateSubscriptionDiscount(){
     const checked = document.querySelector('input[name="sub_plan"]:checked');
