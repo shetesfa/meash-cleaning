@@ -249,6 +249,25 @@
         <span class="text-[11px] font-semibold text-slate-400 block mb-1" id="lbl-tracking-id">የትዕዛዝ መለያ ቁጥር (Order ID)</span>
         <span class="text-2xl font-black text-cyan-400 tracking-wider" id="tma-result-id">ORD-2026-0001</span>
       </div>
+
+      <!-- MiniApp 5-Star Review Widget -->
+      <div id="tma-review-box" class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/40 mb-6 text-left shadow-lg">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="text-amber-400 text-base">✨</span>
+          <span class="text-xs font-bold text-white">አገልግሎታችን እንዴት ነበር? ደረጃ ይስጡን</span>
+        </div>
+        <p class="text-[11px] text-slate-300 mb-3">ከ1 እስከ 5 ኮከብ በመስጠት እና አስተያየትዎን በማጋራት ያግዙን፦</p>
+        <div class="flex items-center justify-center gap-2 mb-3">
+          <button type="button" onclick="setTmaReviewRating(1)" class="p-1 hover:scale-110 transition cursor-pointer" title="1 ኮከብ"><svg id="tma-star-1" class="w-8 h-8 text-amber-400 fill-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button type="button" onclick="setTmaReviewRating(2)" class="p-1 hover:scale-110 transition cursor-pointer" title="2 ኮከብ"><svg id="tma-star-2" class="w-8 h-8 text-amber-400 fill-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button type="button" onclick="setTmaReviewRating(3)" class="p-1 hover:scale-110 transition cursor-pointer" title="3 ኮከብ"><svg id="tma-star-3" class="w-8 h-8 text-amber-400 fill-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button type="button" onclick="setTmaReviewRating(4)" class="p-1 hover:scale-110 transition cursor-pointer" title="4 ኮከብ"><svg id="tma-star-4" class="w-8 h-8 text-amber-400 fill-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button type="button" onclick="setTmaReviewRating(5)" class="p-1 hover:scale-110 transition cursor-pointer" title="5 ኮከብ"><svg id="tma-star-5" class="w-8 h-8 text-amber-400 fill-amber-400" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+        </div>
+        <textarea id="tma-review-comment" rows="2" placeholder="አስተያየት ካለዎት እዚህ ይጻፉ (አማራጭ)..." class="w-full text-xs p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 mb-2"></textarea>
+        <button type="button" id="tma-review-btn" onclick="submitTmaReview()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-all shadow-md cursor-pointer">ደረጃውን መዝግብ (Submit Rating)</button>
+        <div id="tma-review-msg" class="hidden mt-2 p-2.5 rounded-xl text-center text-xs font-bold"></div>
+      </div>
       <button onclick="window.Telegram?.WebApp?.close()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold rounded-xl transition-all" id="btn-close-app">ዝጋ (Close)</button>
     </div>
 
@@ -605,6 +624,83 @@
       } finally {
         btn.disabled = false;
         btn.innerText = currentLang === 'am' ? 'ቀጠሮውን አረጋግጥ (Submit Booking)' : 'Confirm & Book Now';
+      }
+    }
+
+    // MiniApp 5-Star Review Rating Handler
+    let selectedTmaRating = 5;
+    function setTmaReviewRating(star) {
+      selectedTmaRating = star;
+      for (let i = 1; i <= 5; i++) {
+        const starEl = document.getElementById(`tma-star-${i}`);
+        if (starEl) {
+          if (i <= star) {
+            starEl.classList.remove('text-slate-600', 'fill-none');
+            starEl.classList.add('text-amber-400', 'fill-amber-400');
+          } else {
+            starEl.classList.remove('text-amber-400', 'fill-amber-400');
+            starEl.classList.add('text-slate-600', 'fill-none');
+          }
+        }
+      }
+    }
+
+    async function submitTmaReview() {
+      const orderNo = document.getElementById('tma-result-id')?.innerText?.trim() || '';
+      const comment = document.getElementById('tma-review-comment')?.value?.trim() || '';
+      const msgEl = document.getElementById('tma-review-msg');
+      const btnEl = document.getElementById('tma-review-btn');
+
+      if (!orderNo) {
+        alert('የትዕዛዝ ቁጥር አልተገኘም');
+        return;
+      }
+
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerText = 'በማስገባት ላይ...';
+      }
+
+      try {
+        const res = await fetch('/api/public/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            order_number: orderNo,
+            rating: selectedTmaRating,
+            comment: comment,
+            source: 'telegram_miniapp',
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (msgEl) {
+            msgEl.className = 'mt-2 p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs font-bold text-center';
+            msgEl.innerText = '✨ እናመሰግናለን! ደረጃዎ በተሳካ ሁኔታ ተመዝግቧል።';
+            msgEl.classList.remove('hidden');
+          }
+          if (btnEl) btnEl.classList.add('hidden');
+        } else {
+          if (msgEl) {
+            msgEl.className = 'mt-2 p-2.5 rounded-xl bg-red-950/80 border border-red-500/40 text-red-200 text-xs font-bold text-center';
+            msgEl.innerText = data.message || 'ስህተት ተፈጥሯል';
+            msgEl.classList.remove('hidden');
+          }
+          if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.innerText = 'ደረጃውን መዝግብ (Submit Rating)';
+          }
+        }
+      } catch (err) {
+        if (msgEl) {
+          msgEl.className = 'mt-2 p-2.5 rounded-xl bg-red-950/80 border border-red-500/40 text-red-200 text-xs font-bold text-center';
+          msgEl.innerText = 'የግንኙነት ችግር ተፈጥሯል';
+          msgEl.classList.remove('hidden');
+        }
+        if (btnEl) {
+          btnEl.disabled = false;
+          btnEl.innerText = 'ደረጃውን መዝግብ (Submit Rating)';
+        }
       }
     }
   </script>

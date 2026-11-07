@@ -466,6 +466,21 @@ class OrderController extends Controller
             }
         }
 
+        if ($order->order_status === 'completed' && ($old['order_status'] ?? '') !== 'completed') {
+            if (!$order->completed_at) {
+                $order->completed_at = now();
+                $order->save();
+            }
+            try {
+                $sentViaTelegram = TelegramController::sendOrderReviewRequest($order);
+                if (!$sentViaTelegram) {
+                    SmsService::sendJobCompleted($order);
+                }
+            } catch (\Throwable $th) {
+                Log::warning('Review request failed on order update: ' . $th->getMessage());
+            }
+        }
+
         AuditLog::logAction(
             $request->user()?->id,
             'updated',
@@ -572,9 +587,12 @@ class OrderController extends Controller
             }
         } elseif ($validated['order_status'] === 'completed') {
             try {
-                SmsService::sendJobCompleted($order);
+                $sentViaTelegram = TelegramController::sendOrderReviewRequest($order);
+                if (!$sentViaTelegram) {
+                    SmsService::sendJobCompleted($order);
+                }
             } catch (\Throwable $th) {
-                Log::warning('Job completed SMS failed: ' . $th->getMessage());
+                Log::warning('Job completed notification failed: ' . $th->getMessage());
             }
         }
 
@@ -1014,6 +1032,44 @@ class OrderController extends Controller
             'order' => $order->fresh(['customer', 'assignedTeam', 'items']),
             'sms_sent' => $smsResult['ok'] ?? false,
             'telegram_sent' => $tgResult,
+        ]);
+    }
+
+    /**
+     * Reception or Owner triggers review request manually
+     */
+    public function sendReviewRequest(Request $request, Order $order): JsonResponse
+    {
+        $order->loadMissing('customer');
+        if (!$order->customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ትዕዛዙ የተገናኘ ደንበኛ የለውም (Customer not found).',
+            ], 422);
+        }
+
+        $sentViaTelegram = false;
+        try {
+            $sentViaTelegram = TelegramController::sendOrderReviewRequest($order);
+        } catch (\Throwable $th) {
+            Log::warning('Manual telegram review request error: ' . $th->getMessage());
+        }
+
+        if ($sentViaTelegram) {
+            return response()->json([
+                'success' => true,
+                'channel' => 'telegram',
+                'message' => 'የ 5-ኮከብ ደረጃ መስጫ ጥያቄ በቴሌግራም ለደንበኛው ተልኳል!',
+            ]);
+        }
+
+        // Fallback to direct normal phone SMS
+        $smsResult = SmsService::sendReviewRequest($order);
+        return response()->json([
+            'success' => true,
+            'channel' => 'sms',
+            'message' => 'የ 5-ኮከብ ደረጃ መስጫ ጥያቄ በኤስኤምኤስ (SMS) ለደንበኛው ስልክ ተልኳል!',
+            'sms' => $smsResult,
         ]);
     }
 

@@ -41,6 +41,7 @@ Route::prefix('public')->group(function () {
     Route::match(['get', 'post'], '/track-order', [PublicWebsiteController::class, 'trackOrder'])->middleware('throttle:10,1');
     Route::post('/reschedule-order', [PublicWebsiteController::class, 'rescheduleOrder'])->middleware('throttle:15,1');
     Route::get('/reviews', [PublicWebsiteController::class, 'publicReviews'])->middleware('throttle:60,1');
+    Route::post('/reviews', [PublicWebsiteController::class, 'submitReview'])->middleware('throttle:10,1');
     Route::post('/quick-message', [PublicWebsiteController::class, 'quickMessage'])->middleware('throttle:15,1');
 });
 
@@ -94,6 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/{order}/payment', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/payments', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/postpone', [OrderController::class, 'postpone'])->middleware('role:owner,reception');
+    Route::post('/orders/{order}/send-review-request', [OrderController::class, 'sendReviewRequest'])->middleware('role:owner,reception');
 
     // E. Appointments & Calendar
     Route::get('/appointments', [AppointmentController::class, 'index']);

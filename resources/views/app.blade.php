@@ -1576,6 +1576,9 @@
                                                     <button onclick="openRejectPaymentModal(${s.id}, '${escapeHtml(s.order_number)}')" class="px-1.5 py-1 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-500/40 text-[10px] font-bold cursor-pointer" title="ክፍያ ውድቅ አድርግ">ውድቅ</button>
                                                 ` : ''}
                                                 <span class="text-xs font-bold ${s.order_status === 'completed' ? 'text-emerald-400' : 'text-cyan-400'} uppercase">${s.order_status}</span>
+                                                ${s.order_status === 'completed' ? `
+                                                    <button onclick="triggerSendReviewRequest(${s.id}, '${escapeHtml(s.order_number)}')" class="px-2 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 text-[10px] font-bold cursor-pointer" title="የ 5-ኮከብ ደረጃ ጥየቃ ላክ">⭐ ጥየቃ ላክ</button>
+                                                ` : ''}
                                                 ${s.order_status !== 'completed' ? `
                                                     <button onclick="openPostponeOrderModal(${s.id}, '${s.order_number}', '${s.customer?.full_name}')" class="px-2 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 text-[10px] font-bold">አስተላልፍ</button>
                                                 ` : ''}
@@ -7078,6 +7081,12 @@
                             </div>
 
                             <div class="flex flex-wrap justify-end gap-2 pt-4 border-t border-slate-800 mt-4">
+                                ${o.order_status === 'completed' ? `
+                                    <button onclick="triggerSendReviewRequest(${o.id}, '${escapeHtml(o.order_number)}')" class="px-4 py-2 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
+                                        <i data-lucide="star" class="w-4 h-4 text-amber-400"></i>
+                                        <span>የደረጃ ጥየቃ ላክ (Review Request)</span>
+                                    </button>
+                                ` : ''}
                                 ${o.payment_status !== 'paid' ? `
                                     <button onclick="closeModal(); openRecordOrderPaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, ${parseFloat(o.payments?.reduce((acc, p) => acc + parseFloat(p.amount), 0) || 0)});" class="px-4 py-2 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
                                         <i data-lucide="credit-card" class="w-4 h-4 text-emerald-400"></i>
@@ -7105,6 +7114,27 @@
                 closeModal();
             }
         }
+
+        async function triggerSendReviewRequest(orderId, orderNumber) {
+            if (!confirm(`የትዕዛዝ ቁጥር ${orderNumber} ደንበኛ የ 5-ኮከብ ደረጃ እንዲሰጡ ጥያቄ በቴሌግራም/ኤስኤምኤስ ይላክ?`)) {
+                return;
+            }
+            try {
+                showToast('የደረጃ መስጫ ጥያቄ በመላክ ላይ...', 'info');
+                const res = await apiFetch(`/api/orders/${orderId}/send-review-request`, {
+                    method: 'POST',
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast(data.message || 'የደረጃ መስጫ ጥያቄው በተሳካ ሁኔታ ተልኳል!', 'success');
+                } else {
+                    showToast(data.message || 'ጥያቄውን መላክ አልተቻለም', 'error');
+                }
+            } catch (err) {
+                showToast('የኔትወርክ ስህተት አጋጥሟል', 'error');
+            }
+        }
+        window.triggerSendReviewRequest = triggerSendReviewRequest;
 
         // ==========================================
         // IN-APP LIVE RIDE MAP (Car into House - Ride/Uber Style)

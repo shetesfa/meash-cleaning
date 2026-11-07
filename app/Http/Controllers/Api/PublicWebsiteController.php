@@ -364,6 +364,74 @@ class PublicWebsiteController extends Controller
     }
 
     /**
+     * Submit public customer review & star rating for an order
+     */
+    public function submitReview(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'order_number' => 'nullable|string|max:64',
+            'order_id' => 'nullable|integer',
+            'phone' => 'nullable|string|max:32',
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:1000',
+        ]);
+
+        $orderNumber = trim($validated['order_number'] ?? '');
+        $orderId = $validated['order_id'] ?? null;
+        $phone = !empty($validated['phone']) ? SecurityTokenService::normalizePhone($validated['phone']) : null;
+
+        $orderQuery = Order::with('customer');
+        if (!empty($orderId)) {
+            $orderQuery->where('id', $orderId);
+        } elseif (!empty($orderNumber)) {
+            $orderQuery->where('order_number', $orderNumber);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'የትዕዛዝ ቁጥር (Order Number) ያስፈልጋል::',
+            ], 422);
+        }
+
+        $order = $orderQuery->first();
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'የትዕዛዝ መረጃው አልተገኘም:: እባክዎ ትክክለኛ የትዕዛዝ ቁጥር ያስገቡ::',
+            ], 404);
+        }
+
+        if ($phone && $order->customer) {
+            $cleanCustPhone = SecurityTokenService::normalizePhone($order->customer->phone ?? '');
+            if ($cleanCustPhone !== $phone) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ያስገቡት ስልክ ቁጥር ከትዕዛዙ መረጃ ጋር አይዛመድም::',
+                ], 403);
+            }
+        }
+
+        $rating = (int)$validated['rating'];
+        $comment = trim($validated['comment'] ?? '');
+
+        $feedback = Feedback::updateOrCreate(
+            ['order_id' => $order->id],
+            [
+                'customer_id' => $order->customer_id,
+                'rating' => $rating,
+                'comment' => $comment ?: null,
+                'source' => $request->input('source', 'website'),
+                'is_approved' => ($rating >= 4),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'አስተያየትዎ እና የኮከብ ደረጃዎ በተሳካ ሁኔታ ተመዝግቧል! እናመሰግናለን::',
+            'feedback' => $feedback,
+        ]);
+    }
+
+    /**
      * Customer Self-Reschedule / Postpone Request from Website or Bot
      * Strictly requires a valid expiring signed action token.
      */

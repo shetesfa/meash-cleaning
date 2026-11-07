@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\Customer;
+use App\Models\Feedback;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Service;
@@ -601,6 +602,38 @@ class TelegramController extends Controller
       return;
     }
 
+    // Handle customer text review comment submission after rating
+    if (Cache::has("tg_awaiting_feedback_{$chatId}")) {
+      $feedbackSession = Cache::get("tg_awaiting_feedback_{$chatId}");
+      Cache::forget("tg_awaiting_feedback_{$chatId}");
+
+      if ($text === '/skip' || $text === 'ዝለል') {
+        $this->telegramApi('sendMessage', [
+          'chat_id' => $chatId,
+          'text' => "እናመሰግናለን! መልካም ቀን ይሁንልዎ::",
+          'parse_mode' => 'HTML',
+        ]);
+        return;
+      } elseif (!empty($text) && !empty($feedbackSession['feedback_id'])) {
+        try {
+          $fb = Feedback::find($feedbackSession['feedback_id']);
+          if ($fb) {
+            $fb->comment = ($fb->comment ? $fb->comment . "\n" : '') . $text;
+            $fb->save();
+          }
+        } catch (\Throwable $th) {
+          Log::warning('Saving feedback comment failed: ' . $th->getMessage());
+        }
+
+        $this->telegramApi('sendMessage', [
+          'chat_id' => $chatId,
+          'text' => "✨ <b>አስተያየትዎን ተቀብለናል!</b>\n\nአገልግሎታችንን ለማሻሻል ስላገዙን እና የተሰማዎትን ስላጋሩን ከልብ እናመሰግናለን:: መልካም ቀን ይሁንልዎ!",
+          'parse_mode' => 'HTML',
+        ]);
+        return;
+      }
+    }
+
     // Handle Interactive Booking Wizard States (Name, Phone, Location Pin, Address)
     if ($tgUser && $tgUser->bot_state && str_starts_with($tgUser->bot_state, 'booking_')) {
       if ($this->handleInteractiveBookingMessage($tgUser, $message, $chatId)) {
@@ -912,6 +945,51 @@ class TelegramController extends Controller
         );
       } catch (\Throwable $th) {
         Log::warning('Could not get/create telegram user on callback: ' . $th->getMessage());
+      }
+    }
+
+    // Handle customer 5-star rating callback
+    if (str_starts_with($data, 'rate_order:')) {
+      $parts = explode(':', $data);
+      $orderId = isset($parts[1]) ? (int)$parts[1] : 0;
+      $stars = isset($parts[2]) ? (int)$parts[2] : 5;
+      $stars = max(1, min(5, $stars));
+
+      $order = Order::find($orderId);
+      if ($order) {
+        $feedback = Feedback::updateOrCreate(
+          ['order_id' => $order->id],
+          [
+            'customer_id' => $order->customer_id,
+            'rating' => $stars,
+            'source' => 'telegram',
+            'is_approved' => ($stars >= 4),
+          ]
+        );
+
+        Cache::put("tg_awaiting_feedback_{$chatId}", [
+          'feedback_id' => $feedback->id,
+          'order_id' => $order->id,
+        ], now()->addHours(2));
+
+        $this->telegramApi('answerCallbackQuery', [
+          'callback_query_id' => $id,
+          'text' => "የሰጡት {$stars} ኮከብ ተመዝግቧል! እናመሰግናለን።",
+        ]);
+
+        $starIcons = str_repeat('⭐', $stars);
+        $this->telegramApi('sendMessage', [
+          'chat_id' => $chatId,
+          'text' => "✨ <b>እናመሰግናለን!</b> ደረጃዎ ({$starIcons} {$stars}/5) በተሳካ ሁኔታ ተመዝግቧል::\n\nተጨማሪ አስተያየት ካለዎት በጽሑፍ ይላኩልን (ወይም /skip ይበሉ)።",
+          'parse_mode' => 'HTML',
+        ]);
+        return;
+      } else {
+        $this->telegramApi('answerCallbackQuery', [
+          'callback_query_id' => $id,
+          'text' => 'የትዕዛዝ መረጃው አልተገኘም።',
+        ]);
+        return;
       }
     }
 
@@ -2822,5 +2900,64 @@ class TelegramController extends Controller
       'success' => false,
       'message' => 'መልእክት መላክ አልተቻለም፡ ' . ($resp['description'] ?? json_encode($resp)),
     ], 400);
+  }
+
+  /**
+   * Send 5-star interactive review request to customer via Telegram
+   */
+  public static function sendOrderReviewRequest(Order $order): bool
+  {
+    try {
+      $order->loadMissing('customer');
+      $customer = $order->customer;
+      if (!$customer) {
+        return false;
+      }
+
+      $chatId = $customer->telegram_user_id ?: null;
+
+      // If no direct telegram_user_id on customer, try finding by phone in telegram_users
+      if (!$chatId && !empty($customer->phone)) {
+        $cleanPhone = SmsService::normalizeEthiopianPhone($customer->phone);
+        $localPhone = str_starts_with($cleanPhone, '251') ? '0' . substr($cleanPhone, 3) : $cleanPhone;
+        $chatId = TelegramUser::where('phone_number', $cleanPhone)
+          ->orWhere('phone_number', $localPhone)
+          ->orWhere('phone_number', '+' . $cleanPhone)
+          ->value('telegram_id');
+      }
+
+      if (!$chatId) {
+        return false;
+      }
+
+      $instance = app(self::class);
+      $text = "✨ <b>ክቡር ደንበኛችን</b>፣ የሜአሽ ጽዳት አገልግሎታችን እንዴት ነበር?\n\n" .
+        "የትዕዛዝ ቁጥር: <code>{$order->order_number}</code>\n\n" .
+        "እባክዎ ከ1 እስከ 5 ኮከብ በመስጠት ደረጃ ይስጡን፦";
+
+      $keyboard = [
+        'inline_keyboard' => [
+          [
+            ['text' => '⭐ 1', 'callback_data' => "rate_order:{$order->id}:1"],
+            ['text' => '⭐⭐ 2', 'callback_data' => "rate_order:{$order->id}:2"],
+            ['text' => '⭐⭐⭐ 3', 'callback_data' => "rate_order:{$order->id}:3"],
+            ['text' => '⭐⭐⭐⭐ 4', 'callback_data' => "rate_order:{$order->id}:4"],
+            ['text' => '⭐⭐⭐⭐⭐ 5', 'callback_data' => "rate_order:{$order->id}:5"],
+          ]
+        ]
+      ];
+
+      $res = $instance->telegramApi('sendMessage', [
+        'chat_id' => $chatId,
+        'text' => $text,
+        'parse_mode' => 'HTML',
+        'reply_markup' => json_encode($keyboard),
+      ]);
+
+      return !empty($res['ok']);
+    } catch (\Throwable $th) {
+      Log::warning("Telegram review request failed for order #{$order->id}: " . $th->getMessage());
+      return false;
+    }
   }
 }

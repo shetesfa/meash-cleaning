@@ -2445,6 +2445,36 @@
             </div>`;
         }
 
+        let reviewWidgetHtml = '';
+        if (isCompleted || ord.status === 'completed') {
+          reviewWidgetHtml = `
+            <div id="website-review-container" class="mt-4 pt-4 border-t border-navy/10 bg-gradient-to-br from-amber-50/70 to-orange-50/40 rounded-2xl p-4 border border-amber-200/80 shadow-sm">
+              <div class="flex items-center gap-2 mb-1.5">
+                <span class="text-amber-500 font-bold text-lg">✨</span>
+                <h4 class="font-extrabold text-navy text-xs sm:text-sm">የፅዳት አገልግሎታችን እንዴት ነበር? ደረጃ ይስጡን</h4>
+              </div>
+              <p class="text-[11px] text-navy/70 mb-3">እባክዎ ከ1 እስከ 5 ኮከብ በመምረጥ እና አስተያየትዎን በማጋራት ያግዙን፦</p>
+
+              <div class="flex items-center gap-2 mb-3">
+                <button type="button" onclick="setReviewRating(1)" class="p-1 hover:scale-110 transition cursor-pointer" title="1 ኮከብ"><svg id="review-star-1" class="w-7 h-7 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                <button type="button" onclick="setReviewRating(2)" class="p-1 hover:scale-110 transition cursor-pointer" title="2 ኮከብ"><svg id="review-star-2" class="w-7 h-7 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                <button type="button" onclick="setReviewRating(3)" class="p-1 hover:scale-110 transition cursor-pointer" title="3 ኮከብ"><svg id="review-star-3" class="w-7 h-7 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                <button type="button" onclick="setReviewRating(4)" class="p-1 hover:scale-110 transition cursor-pointer" title="4 ኮከብ"><svg id="review-star-4" class="w-7 h-7 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                <button type="button" onclick="setReviewRating(5)" class="p-1 hover:scale-110 transition cursor-pointer" title="5 ኮከብ"><svg id="review-star-5" class="w-7 h-7 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+              </div>
+
+              <textarea id="website-review-comment" rows="2" placeholder="ተጨማሪ አስተያየት ካለዎት እዚህ ይጻፉ (አማራጭ)..." class="w-full text-xs p-2.5 rounded-xl border border-navy/20 focus:border-teal focus:ring-1 focus:ring-teal outline-none bg-white text-navy mb-2.5"></textarea>
+
+              <div class="flex items-center justify-end">
+                <button type="button" id="website-review-btn" onclick="submitWebsiteReview('${escapeHtml(ord.order_number)}')" class="px-4 py-2 bg-teal hover:bg-teal-dark text-white rounded-xl font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                  <span>ደረጃውን መዝግብ (Submit Rating)</span>
+                </button>
+              </div>
+              <div id="website-review-msg" class="hidden"></div>
+            </div>`;
+        }
+
         box.innerHTML = `
           <div class="bg-white rounded-2xl p-6 border border-navy/10 shadow-lg">
             ${postponeAlertHtml}
@@ -2482,18 +2512,12 @@
                 <span class="font-bold ${ord.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}">${ord.payment_status === 'paid' ? 'ተከፍሏል' : 'ያልተከፈለ'}</span>
               </div>
             </div>
-                <span class="font-bold text-teal-dark text-sm">${ord.total.toLocaleString()} ETB</span>
-              </div>
-              <div>
-                <span class="text-navy/50 block">የክፍያ ሁኔታ:</span>
-                <span class="font-bold ${ord.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}">${ord.payment_status === 'paid' ? 'ተከፍሏል' : 'ያልተከፈለ'}</span>
-              </div>
-            </div>
 
             ${subBadge}
             ${teamInfoHtml}
             ${addressSummaryHtml}
             ${rescheduleBtnHtml}
+            ${reviewWidgetHtml}
           </div>`;
 
         if (window.lucide) lucide.createIcons();
@@ -2507,6 +2531,104 @@
       box.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-xs">የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ በ 0970075509 በቀጥታ ይደውሉ።</div>';
     }
   }
+
+  // ---- 5-Star Customer Rating & Review Submission ----
+  let selectedReviewRating = 5;
+  function setReviewRating(star) {
+    selectedReviewRating = star;
+    for (let i = 1; i <= 5; i++) {
+      const starEl = document.getElementById(`review-star-${i}`);
+      if (starEl) {
+        if (i <= star) {
+          starEl.classList.remove('text-slate-300', 'fill-none');
+          starEl.classList.add('text-amber-400', 'fill-amber-400');
+        } else {
+          starEl.classList.remove('text-amber-400', 'fill-amber-400');
+          starEl.classList.add('text-slate-300', 'fill-none');
+        }
+      }
+    }
+  }
+
+  async function submitWebsiteReview(orderNumber) {
+    const commentEl = document.getElementById('website-review-comment');
+    const msgEl = document.getElementById('website-review-msg');
+    const btnEl = document.getElementById('website-review-btn');
+    const comment = commentEl ? commentEl.value.trim() : '';
+
+    if (btnEl) {
+      btnEl.disabled = true;
+      btnEl.innerHTML = '<span class="inline-block animate-spin mr-1">⌛</span> በማስገባት ላይ...';
+    }
+
+    try {
+      const res = await fetch('/api/public/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          order_number: orderNumber,
+          rating: selectedReviewRating,
+          comment: comment,
+          source: 'website',
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (msgEl) {
+          msgEl.className = 'mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center';
+          msgEl.innerHTML = '✨ እናመሰግናለን! የሰጡት ደረጃ እና አስተያየት በተሳካ ሁኔታ ተመዝግቧል።';
+          msgEl.classList.remove('hidden');
+        }
+        if (commentEl) commentEl.disabled = true;
+        if (btnEl) btnEl.classList.add('hidden');
+      } else {
+        if (msgEl) {
+          msgEl.className = 'mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center';
+          msgEl.innerText = data.message || 'አስተያየቱን ማስገባት አልተቻለም። እባክዎ እንደገና ይሞክሩ።';
+          msgEl.classList.remove('hidden');
+        }
+        if (btnEl) {
+          btnEl.disabled = false;
+          btnEl.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5"></i><span>ደረጃውን መዝግብ (Submit Rating)</span>';
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+    } catch (e) {
+      if (msgEl) {
+        msgEl.className = 'mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center';
+        msgEl.innerText = 'የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ እንደገና ይሞክሩ።';
+        msgEl.classList.remove('hidden');
+      }
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5"></i><span>ደረጃውን መዝግብ (Submit Rating)</span>';
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+  }
+
+  // Auto-trigger review if review_order query parameter is present in URL
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const reviewOrderParam = urlParams.get('review_order');
+      if (reviewOrderParam) {
+        const trackInput = document.getElementById('track-input');
+        if (trackInput) {
+          trackInput.value = reviewOrderParam;
+          setTimeout(() => {
+            trackOrder();
+            const trackSection = document.getElementById('track-order') || document.getElementById('track-result');
+            if (trackSection) {
+              trackSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 400);
+        }
+      }
+    } catch (e) {
+      // Safe fallback
+    }
+  });
 
   // ---- Staff / Admin Authentication Modal ----
   function openStaffModal() {

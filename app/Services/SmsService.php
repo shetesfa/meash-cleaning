@@ -75,10 +75,36 @@ class SmsService
         if (empty($phone)) return ['ok' => false, 'error' => 'No phone number'];
 
         $formattedPhone = self::normalizeEthiopianPhone($phone);
-        $msg = "ውድ {$name}፣ የፅዳት አገልግሎቱ ተጠናቋል:: ስለመረጡን እናመሰግናለን! አስተያየትዎን ወይም ደረጃዎን በ 0911000002 ያጋሩን:: Mesh Cleaning";
+        $baseUrl = rtrim(config('app.url') ?: env('APP_URL', 'https://meashcleaning.com'), '/');
+        $reviewUrl = "{$baseUrl}/?review_order={$order->order_number}#track-order";
+        $msg = "ውድ {$name}፣ የፅዳት አገልግሎቱ ተጠናቋል:: ስለመረጡን እናመሰግናለን! እባክዎ ከ1-5 ኮከብ ደረጃ ይስጡን፦ {$reviewUrl} | ሪሴፕሽን: 0970075509";
 
         return self::sendDirectSms($formattedPhone, $msg, [
             'event' => 'job_completed',
+            'order_id' => $order->id,
+            'order_number' => $order->order_number,
+        ]);
+    }
+
+    /**
+     * Sends SMS review request with direct feedback link
+     */
+    public static function sendReviewRequest(Order $order): array
+    {
+        $order->loadMissing(['customer']);
+        $phone = $order->customer ? $order->customer->phone : null;
+        $name = $order->customer ? $order->customer->full_name : 'ክቡር ደንበኛችን';
+
+        if (empty($phone)) return ['ok' => false, 'error' => 'No phone number'];
+
+        $formattedPhone = self::normalizeEthiopianPhone($phone);
+        $baseUrl = rtrim(config('app.url') ?: env('APP_URL', 'https://meashcleaning.com'), '/');
+        $reviewUrl = "{$baseUrl}/?review_order={$order->order_number}#track-order";
+
+        $msg = "✨ ውድ {$name}፣ የሜአሽ ጽዳት አገልግሎታችን እንዴት ነበር? እባክዎ ከ1 እስከ 5 ኮከብ በመስጠት ደረጃ ይስጡን፦ {$reviewUrl} | ሪሴፕሽን: 0970075509";
+
+        return self::sendDirectSms($formattedPhone, $msg, [
+            'event' => 'review_request',
             'order_id' => $order->id,
             'order_number' => $order->order_number,
         ]);
