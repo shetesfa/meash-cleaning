@@ -2894,7 +2894,6 @@
           reviewWidgetHtml = `
             <div id="website-review-container" class="mt-4 pt-4 border-t border-navy/10 bg-gradient-to-br from-amber-50/70 to-orange-50/40 rounded-2xl p-4 border border-amber-200/80 shadow-sm">
               <div class="flex items-center gap-2 mb-1.5">
-                <span class="text-amber-500 font-bold text-lg">✨</span>
                 <h4 class="font-extrabold text-navy text-xs sm:text-sm">የፅዳት አገልግሎታችን እንዴት ነበር? ደረጃ ይስጡን</h4>
               </div>
               <p class="text-[11px] text-navy/70 mb-3">እባክዎ ከ1 እስከ 5 ኮከብ በመምረጥ እና አስተያየትዎን በማጋራት ያግዙን፦</p>
@@ -3020,7 +3019,7 @@
       if (res.ok && data.success) {
         if (msgEl) {
           msgEl.className = 'mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center';
-          msgEl.innerHTML = '✨ እናመሰግናለን! የሰጡት ደረጃ እና አስተያየት በተሳካ ሁኔታ ተመዝግቧል።';
+          msgEl.innerHTML = 'እናመሰግናለን! የሰጡት ደረጃ እና አስተያየት በተሳካ ሁኔታ ተመዝግቧል።';
           msgEl.classList.remove('hidden');
         }
         if (commentEl) commentEl.disabled = true;

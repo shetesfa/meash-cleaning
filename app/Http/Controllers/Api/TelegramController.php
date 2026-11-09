@@ -50,10 +50,10 @@ class TelegramController extends Controller
     }
 
     $url = config('app.url');
-    if (!empty($url)) {
+    if (!empty($url) && str_starts_with($url, 'https://')) {
       return rtrim($url, '/') . '/telegram-miniapp';
     }
-    return '/telegram-miniapp';
+    return null;
   }
 
   public function webhook(Request $request): JsonResponse
@@ -652,7 +652,7 @@ class TelegramController extends Controller
 
         $this->telegramApi('sendMessage', [
           'chat_id' => $chatId,
-          'text' => "✨ <b>አስተያየትዎን ተቀብለናል!</b>\n\nአገልግሎታችንን ለማሻሻል ስላገዙን እና የተሰማዎትን ስላጋሩን ከልብ እናመሰግናለን:: መልካም ቀን ይሁንልዎ!",
+          'text' => "<b>አስተያየትዎን ተቀብለናል!</b>\n\nአገልግሎታችንን ለማሻሻል ስላገዙን እና የተሰማዎትን ስላጋሩን ከልብ እናመሰግናለን:: መልካም ቀን ይሁንልዎ!",
           'parse_mode' => 'HTML',
         ]);
         return;
@@ -999,10 +999,9 @@ class TelegramController extends Controller
           'text' => "የሰጡት {$stars} ኮከብ ተመዝግቧል! እናመሰግናለን።",
         ]);
 
-        $starIcons = str_repeat('⭐', $stars);
         $this->telegramApi('sendMessage', [
           'chat_id' => $chatId,
-          'text' => "✨ <b>እናመሰግናለን!</b> ደረጃዎ ({$starIcons} {$stars}/5) በተሳካ ሁኔታ ተመዝግቧል::\n\nተጨማሪ አስተያየት ካለዎት በጽሑፍ ይላኩልን (ወይም /skip ይበሉ)።",
+          'text' => "<b>እናመሰግናለን!</b> የሰጡት ደረጃ ({$stars}/5) በተሳካ ሁኔታ ተመዝግቧል::\n\nተጨማሪ አስተያየት ካለዎት በጽሑፍ ይላኩልን (ወይም /skip ይበሉ)።",
           'parse_mode' => 'HTML',
         ]);
         return;
@@ -1280,10 +1279,10 @@ class TelegramController extends Controller
     $helpEn = WebsiteSetting::getVal('bot_help_en', "Available commands:\n• <code>/start</code> - Main menu\n• <code>/services</code> - Services & Pricing\n• <code>/book</code> - 1-Minute Booking\n• <code>/status ORD-...</code> - Track Order\n• <code>/contact</code> - Reception Hotline\n• <code>/help</code> - Help guide");
     $phone1 = WebsiteSetting::getVal('contact_phone_1', '0970075509');
 
-    $msg = " <b>የሜሽ ቴሌግራም ቦት መመሪያ</b>\n\n" .
+    $msg = "<b>የሜሽ ቴሌግራም ቦት መመሪያ</b>\n\n" .
       "{$helpAm}\n\n" .
       "<i>{$helpEn}</i>\n\n" .
-      "📞 <b>ሪሴፕሽን:</b> {$phone1}\n\n" .
+      "<b>ሪሴፕሽን:</b> {$phone1}\n\n" .
       "እንዲሁም በማንኛውም የቴሌግራም ቻት ውስጥ <code>@{$this->botUsername}</code> ብለው በመጻፍ አገልግሎቶችን ለወዳጅዎ ማጋራት ይችላሉ!";
 
     $this->telegramApi('sendMessage', [
@@ -1727,14 +1726,14 @@ class TelegramController extends Controller
           $custName = $order->customer ? $order->customer->full_name : 'ደንበኛ';
           $custPhone = $order->customer ? $order->customer->phone : 'ያልታወቀ';
           $total = number_format((float)($order->total_amount ?: $order->total), 2);
-          $adminText = "🔔 <b>አዲስ የፅዳት ቀጠሮ ተመዝግቧል!</b>\n\n" .
-            "📦 <b>ትዕዛዝ #:</b> <code>{$order->order_number}</code>\n" .
-            "👤 <b>ደንበኛ:</b> {$custName}\n" .
-            "📞 <b>ስልክ:</b> <code>{$custPhone}</code>\n" .
-            "📍 <b>አድራሻ:</b> {$order->address} " . ($order->subcity ? "({$order->subcity})" : "") . "\n" .
-            "📅 <b>ቀን:</b> " . ($order->appointment_date ? (is_string($order->appointment_date) ? $order->appointment_date : $order->appointment_date->format('Y-m-d')) : 'ያልተገለጸ') . " ({$order->appointment_time_slot})\n" .
-            "💰 <b>ጠቅላላ ዋጋ:</b> {$total} ብር\n" .
-            "🌐 <b>ሰርጥ:</b> {$order->source}\n\n" .
+          $adminText = "<b>አዲስ የፅዳት ቀጠሮ ተመዝግቧል!</b>\n\n" .
+            "<b>ትዕዛዝ #:</b> <code>{$order->order_number}</code>\n" .
+            "<b>ደንበኛ:</b> {$custName}\n" .
+            "<b>ስልክ:</b> <code>{$custPhone}</code>\n" .
+            "<b>አድራሻ:</b> {$order->address} " . ($order->subcity ? "({$order->subcity})" : "") . "\n" .
+            "<b>ቀን:</b> " . ($order->appointment_date ? (is_string($order->appointment_date) ? $order->appointment_date : $order->appointment_date->format('Y-m-d')) : 'ያልተገለጸ') . " ({$order->appointment_time_slot})\n" .
+            "<b>ጠቅላላ ዋጋ:</b> {$total} ብር\n" .
+            "<b>የትዕዛዝ ምንጭ:</b> {$order->source}\n\n" .
             "እባክዎ በሪሴፕሽን ዳሽቦርድ ያረጋግጡ!";
 
           $this->telegramApi('sendMessage', [
@@ -3035,18 +3034,18 @@ class TelegramController extends Controller
       }
 
       $instance = app(self::class);
-      $text = "✨ <b>ክቡር ደንበኛችን</b>፣ የሜአሽ ጽዳት አገልግሎታችን እንዴት ነበር?\n\n" .
+      $text = "<b>ክቡር ደንበኛችን</b>፣ የሜአሽ ጽዳት አገልግሎታችን እንዴት ነበር?\n\n" .
         "የትዕዛዝ ቁጥር: <code>{$order->order_number}</code>\n\n" .
         "እባክዎ ከ1 እስከ 5 ኮከብ በመስጠት ደረጃ ይስጡን፦";
 
       $keyboard = [
         'inline_keyboard' => [
           [
-            ['text' => '⭐ 1', 'callback_data' => "rate_order:{$order->id}:1"],
-            ['text' => '⭐⭐ 2', 'callback_data' => "rate_order:{$order->id}:2"],
-            ['text' => '⭐⭐⭐ 3', 'callback_data' => "rate_order:{$order->id}:3"],
-            ['text' => '⭐⭐⭐⭐ 4', 'callback_data' => "rate_order:{$order->id}:4"],
-            ['text' => '⭐⭐⭐⭐⭐ 5', 'callback_data' => "rate_order:{$order->id}:5"],
+            ['text' => '1 ኮከብ', 'callback_data' => "rate_order:{$order->id}:1"],
+            ['text' => '2 ኮከብ', 'callback_data' => "rate_order:{$order->id}:2"],
+            ['text' => '3 ኮከብ', 'callback_data' => "rate_order:{$order->id}:3"],
+            ['text' => '4 ኮከብ', 'callback_data' => "rate_order:{$order->id}:4"],
+            ['text' => '5 ኮከብ', 'callback_data' => "rate_order:{$order->id}:5"],
           ]
         ]
       ];

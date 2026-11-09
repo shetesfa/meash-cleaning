@@ -1157,9 +1157,28 @@
         // ==========================================
         async function renderOwnerDashboard(container) {
             try {
-                const res = await apiFetch('/api/dashboard/owner');
-                if (res.status === 401) return;
-                const data = await res.json();
+                let data = null;
+                if (navigator.onLine) {
+                    try {
+                        const res = await apiFetch('/api/dashboard/owner');
+                        if (res.status === 401) return;
+                        if (res.ok) {
+                            data = await res.json();
+                            try { localStorage.setItem('meash_cached_owner_dashboard', JSON.stringify(data)); } catch (_) {}
+                        }
+                    } catch (netErr) {
+                        console.warn('Owner dashboard network fetch failed, using offline cache:', netErr);
+                    }
+                }
+                if (!data) {
+                    const cached = localStorage.getItem('meash_cached_owner_dashboard');
+                    if (cached) {
+                        try { data = JSON.parse(cached); } catch (_) {}
+                    }
+                }
+                if (!data) {
+                    data = { today: { eth_date: 'የከመስመር ውጭ እይታ (Offline View)' }, month_to_date: {} };
+                }
                 const today = data.today || {};
                 const mtd = data.month_to_date || {};
 
@@ -1455,7 +1474,7 @@
                                                 <span class="text-xs font-black text-white">${parseFloat(o.total || 0).toLocaleString()} ETB</span>
                                                 ${o.payment_status === 'pending_approval' ? `
                                                     <button onclick="openApprovePaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, '${escapeHtml(o.pending_payment_method || o.payment_method || 'cash')}', '${escapeHtml(o.pending_payment_reference || o.payment_reference || '')}')" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] rounded-lg shadow-sm cursor-pointer" title="ክፍያ አጽድቅ">
-                                                        ✓ አጽድቅ
+                                                        አጽድቅ
                                                     </button>
                                                     <button onclick="openRejectPaymentModal(${o.id}, '${escapeHtml(o.order_number)}')" class="px-1.5 py-0.5 bg-red-950/80 hover:bg-red-900 text-red-300 font-bold text-[10px] rounded-lg border border-red-500/30 cursor-pointer" title="ክፍያ ውድቅ አድርግ">
                                                         ውድቅ
@@ -1497,9 +1516,28 @@
         // ==========================================
         async function renderReceptionView(container) {
             try {
-                const res = await apiFetch('/api/dashboard/reception');
-                if (res.status === 401) return;
-                const data = await res.json();
+                let data = null;
+                if (navigator.onLine) {
+                    try {
+                        const res = await apiFetch('/api/dashboard/reception');
+                        if (res.status === 401) return;
+                        if (res.ok) {
+                            data = await res.json();
+                            try { localStorage.setItem('meash_cached_reception_dashboard', JSON.stringify(data)); } catch (_) {}
+                        }
+                    } catch (netErr) {
+                        console.warn('Reception dashboard network fetch failed, using offline cache:', netErr);
+                    }
+                }
+                if (!data) {
+                    const cached = localStorage.getItem('meash_cached_reception_dashboard');
+                    if (cached) {
+                        try { data = JSON.parse(cached); } catch (_) {}
+                    }
+                }
+                if (!data) {
+                    data = { eth_date: 'የከመስመር ውጭ እይታ (Offline View)', channel_counts: {}, today_unassigned: [], pending_approvals: [], active_cleanings: [] };
+                }
 
                 container.innerHTML = `
                     <div class="max-w-7xl mx-auto space-y-6">
@@ -1523,12 +1561,12 @@
 
                         <!-- Channel Source Live Counters Bar -->
                         <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-wrap items-center gap-2 text-xs">
-                            <span class="text-slate-400 font-bold mr-1">አዳዲስ ትዕዛዞች በሰርጥ:</span>
-                            <span class="px-2.5 py-1 rounded-xl bg-indigo-950/70 text-indigo-300 border border-indigo-500/30 font-bold flex items-center gap-1">🌐 ድረ-ገጽ: ${data.channel_counts?.website || 0}</span>
-                            <span class="px-2.5 py-1 rounded-xl bg-sky-950/70 text-sky-300 border border-sky-500/30 font-bold flex items-center gap-1">📱 ሚኒአፕ: ${data.channel_counts?.telegram_miniapp || 0}</span>
-                            <span class="px-2.5 py-1 rounded-xl bg-cyan-950/70 text-cyan-300 border border-cyan-500/30 font-bold flex items-center gap-1">🤖 ቦት: ${data.channel_counts?.telegram_bot || 0}</span>
-                            <span class="px-2.5 py-1 rounded-xl bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 font-bold flex items-center gap-1">📞 ስልክ: ${data.channel_counts?.phone || 0}</span>
-                            <span class="px-2.5 py-1 rounded-xl bg-purple-950/70 text-purple-300 border border-purple-500/30 font-bold flex items-center gap-1">🚶 በአካል: ${data.channel_counts?.walk_in || 0}</span>
+                            <span class="text-slate-400 font-bold mr-1">አዳዲስ ትዕዛዞች በምንጭ:</span>
+                            <span class="px-2.5 py-1 rounded-xl bg-indigo-950/70 text-indigo-300 border border-indigo-500/30 font-bold flex items-center gap-1">ድረ-ገጽ: ${data.channel_counts?.website || 0}</span>
+                            <span class="px-2.5 py-1 rounded-xl bg-sky-950/70 text-sky-300 border border-sky-500/30 font-bold flex items-center gap-1">ሚኒአፕ: ${data.channel_counts?.telegram_miniapp || 0}</span>
+                            <span class="px-2.5 py-1 rounded-xl bg-cyan-950/70 text-cyan-300 border border-cyan-500/30 font-bold flex items-center gap-1">ቦት: ${data.channel_counts?.telegram_bot || 0}</span>
+                            <span class="px-2.5 py-1 rounded-xl bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 font-bold flex items-center gap-1">ስልክ: ${data.channel_counts?.phone || 0}</span>
+                            <span class="px-2.5 py-1 rounded-xl bg-purple-950/70 text-purple-300 border border-purple-500/30 font-bold flex items-center gap-1">በአካል: ${data.channel_counts?.walk_in || 0}</span>
                         </div>
 
                         <!-- 4 Priority Queues for Reception -->
@@ -1567,7 +1605,7 @@
                                             </div>
                                             <div class="flex flex-wrap items-center gap-1.5 self-end sm:self-auto">
                                                 ${b.payment_status === 'pending_approval' ? `
-                                                    <button onclick="openApprovePaymentModal(${b.id}, '${escapeHtml(b.order_number)}', ${parseFloat(b.total || 0)}, '${escapeHtml(b.pending_payment_method || b.payment_method || 'cash')}', '${escapeHtml(b.pending_payment_reference || b.payment_reference || '')}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow cursor-pointer" title="ክፍያ አጽድቅ">✓ አጽድቅ</button>
+                                                    <button onclick="openApprovePaymentModal(${b.id}, '${escapeHtml(b.order_number)}', ${parseFloat(b.total || 0)}, '${escapeHtml(b.pending_payment_method || b.payment_method || 'cash')}', '${escapeHtml(b.pending_payment_reference || b.payment_reference || '')}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold shadow cursor-pointer" title="ክፍያ አጽድቅ">አጽድቅ</button>
                                                     <button onclick="openRejectPaymentModal(${b.id}, '${escapeHtml(b.order_number)}')" class="px-2 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-500/40 text-xs font-bold cursor-pointer" title="ክፍያ ውድቅ አድርግ">ውድቅ</button>
                                                 ` : ''}
                                                 <button onclick="confirmAndAssignOrder(${b.id})" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition">ሰራተኛ መድብ</button>
@@ -1611,7 +1649,7 @@
                                             </div>
                                             <div class="flex flex-wrap items-center gap-1.5 self-end sm:self-auto">
                                                 ${s.payment_status === 'pending_approval' ? `
-                                                    <button onclick="openApprovePaymentModal(${s.id}, '${escapeHtml(s.order_number)}', ${parseFloat(s.total || 0)}, '${escapeHtml(s.pending_payment_method || s.payment_method || 'cash')}', '${escapeHtml(s.pending_payment_reference || s.payment_reference || '')}')" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-extrabold shadow cursor-pointer" title="ክፍያ አጽድቅ">✓ አጽድቅ</button>
+                                                    <button onclick="openApprovePaymentModal(${s.id}, '${escapeHtml(s.order_number)}', ${parseFloat(s.total || 0)}, '${escapeHtml(s.pending_payment_method || s.payment_method || 'cash')}', '${escapeHtml(s.pending_payment_reference || s.payment_reference || '')}')" class="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-extrabold shadow cursor-pointer" title="ክፍያ አጽድቅ">አጽድቅ</button>
                                                     <button onclick="openRejectPaymentModal(${s.id}, '${escapeHtml(s.order_number)}')" class="px-1.5 py-1 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-500/40 text-[10px] font-bold cursor-pointer" title="ክፍያ ውድቅ አድርግ">ውድቅ</button>
                                                 ` : ''}
                                                 <span class="text-xs font-bold ${s.order_status === 'completed' ? 'text-emerald-400' : 'text-cyan-400'} uppercase">${s.order_status}</span>
@@ -1910,10 +1948,10 @@
                                                 ${job.payment_status === 'paid' ? `
                                                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">የተከፈለ (Paid)</span>
                                                 ` : (job.payment_status === 'pending_approval' ? `
-                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">⏳ ክፍያ ለመጽደቅ ቀርቧል</span>
+                                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">ክፍያ ለመጽደቅ ቀርቧል</span>
                                                 ` : `
                                                     <button onclick="openCleanerPaymentModal(${job.id}, '${escapeHtml(job.order_number || '')}', ${parseFloat(job.total || job.total_amount || 0)})" class="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shadow cursor-pointer flex items-center gap-1">
-                                                        <span>💰 ክፍያ አስገባ</span>
+                                                        <span>ክፍያ አስገባ</span>
                                                     </button>
                                                 `)}
                                             </div>
@@ -2356,27 +2394,65 @@
 
         async function renderOrdersModule(container, isSilent = false) {
             try {
-                const queryParams = new URLSearchParams();
-                if (window._ordersFilterSource) queryParams.set('source', window._ordersFilterSource);
-                if (window._ordersFilterStatus) queryParams.set('status', window._ordersFilterStatus);
-                if (window._ordersFilterPayment) queryParams.set('payment_status', window._ordersFilterPayment);
-                if (window._ordersSearchQuery) queryParams.set('search', window._ordersSearchQuery);
-                queryParams.set('page', window._ordersPage || 1);
-                queryParams.set('per_page', window._ordersPerPage || 50);
+                let orders = [];
+                let totalOrders = 0;
+                let lastPage = 1;
+                let currentPage = window._ordersPage || 1;
 
-                const res = await apiFetch('/api/orders?' + queryParams.toString());
-                const data = await res.json();
-                const orders = data.data || [];
-                const totalOrders = data.total !== undefined ? data.total : orders.length;
-                const lastPage = data.last_page || 1;
-                const currentPage = data.current_page || 1;
+                if (navigator.onLine) {
+                    try {
+                        const queryParams = new URLSearchParams();
+                        if (window._ordersFilterSource) queryParams.set('source', window._ordersFilterSource);
+                        if (window._ordersFilterStatus) queryParams.set('status', window._ordersFilterStatus);
+                        if (window._ordersFilterPayment) queryParams.set('payment_status', window._ordersFilterPayment);
+                        if (window._ordersSearchQuery) queryParams.set('search', window._ordersSearchQuery);
+                        queryParams.set('page', window._ordersPage || 1);
+                        queryParams.set('per_page', window._ordersPerPage || 50);
+
+                        const res = await apiFetch('/api/orders?' + queryParams.toString());
+                        if (res.ok) {
+                            const data = await res.json();
+                            orders = data.data || [];
+                            totalOrders = data.total !== undefined ? data.total : orders.length;
+                            lastPage = data.last_page || 1;
+                            currentPage = data.current_page || 1;
+
+                            if (window.meashOffline && typeof window.meashOffline.cacheItems === 'function') {
+                                window.meashOffline.cacheItems('orders', orders).catch(() => {});
+                            }
+                            try { localStorage.setItem('meash_cached_orders_list', JSON.stringify(orders)); } catch (_) {}
+                        }
+                    } catch (netErr) {
+                        console.warn('Orders network fetch failed, falling back to cache:', netErr);
+                    }
+                }
+
+                // If offline or network failed, pull from offline storage
+                if (orders.length === 0) {
+                    if (window.meashOffline && typeof window.meashOffline.getAllItems === 'function') {
+                        try {
+                            const cached = await window.meashOffline.getAllItems('orders');
+                            if (cached && cached.length > 0) {
+                                orders = cached;
+                            }
+                        } catch (_) {}
+                    }
+                    if (orders.length === 0) {
+                        const localCached = localStorage.getItem('meash_cached_orders_list');
+                        if (localCached) {
+                            try { orders = JSON.parse(localCached); } catch (_) {}
+                        }
+                    }
+                    totalOrders = orders.length;
+                    lastPage = Math.max(1, Math.ceil(totalOrders / (window._ordersPerPage || 50)));
+                }
 
                 container.innerHTML = `
                     <div class="max-w-7xl mx-auto space-y-6">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                                 <h2 class="text-2xl font-black text-white">የትዕዛዞች ማስተዳደሪያ (Orders Management)</h2>
-                                <p class="text-xs text-slate-400 mt-1">ሁሉንም የፅዳት ትዕዛዞች በሰርጥ፣ በሁኔታ እና በክፍያ ማጣራትና ማስተዳደር።</p>
+                                <p class="text-xs text-slate-400 mt-1">ሁሉንም የፅዳት ትዕዛዞች በምንጭ፣ በሁኔታ እና በክፍያ ማጣራትና ማስተዳደር።</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button onclick="downloadOrdersCsv()" class="px-3.5 py-2.5 bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer transition">
@@ -2409,16 +2485,16 @@
 
                             <!-- Channel Source Filter -->
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">የትዕዛዝ ሰርጥ / ምንጭ (Channel Source)</label>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">የትዕዛዝ ምንጭ (Channel Source)</label>
                                 <select onchange="window._ordersFilterSource = this.value; window._ordersPage = 1; renderOrdersModule(document.getElementById('app-viewport'));" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
-                                    <option value="" ${window._ordersFilterSource === '' ? 'selected' : ''}>-- ሁሉም ሰርጦች (All Channels) --</option>
-                                    <option value="website" ${window._ordersFilterSource === 'website' ? 'selected' : ''}>🌐 ድረ-ገጽ (Website)</option>
-                                    <option value="telegram_miniapp" ${window._ordersFilterSource === 'telegram_miniapp' ? 'selected' : ''}>📱 ቴሌግራም ሚኒአፕ (MiniApp)</option>
-                                    <option value="telegram_bot" ${window._ordersFilterSource === 'telegram_bot' ? 'selected' : ''}>🤖 ቴሌግራም ቦት (Telegram Bot)</option>
-                                    <option value="phone" ${window._ordersFilterSource === 'phone' ? 'selected' : ''}>📞 ስልክ ጥሪ (Phone Call)</option>
-                                    <option value="walk_in" ${window._ordersFilterSource === 'walk_in' ? 'selected' : ''}>🚶 በአካል የመጣ (Walk-in)</option>
-                                    <option value="internal" ${window._ordersFilterSource === 'internal' ? 'selected' : ''}>🏢 ውስጣዊ / ሪሴፕሽን (Internal)</option>
-                                    <option value="corporate_contract" ${window._ordersFilterSource === 'corporate_contract' ? 'selected' : ''}>📑 ኮርፖሬት ውል (Corporate)</option>
+                                    <option value="" ${window._ordersFilterSource === '' ? 'selected' : ''}>-- ሁሉም ምንጮች (All Channels) --</option>
+                                    <option value="website" ${window._ordersFilterSource === 'website' ? 'selected' : ''}>ድረ-ገጽ (Website)</option>
+                                    <option value="telegram_miniapp" ${window._ordersFilterSource === 'telegram_miniapp' ? 'selected' : ''}>ቴሌግራም ሚኒአፕ (MiniApp)</option>
+                                    <option value="telegram_bot" ${window._ordersFilterSource === 'telegram_bot' ? 'selected' : ''}>ቴሌግራም ቦት (Telegram Bot)</option>
+                                    <option value="phone" ${window._ordersFilterSource === 'phone' ? 'selected' : ''}>ስልክ ጥሪ (Phone Call)</option>
+                                    <option value="walk_in" ${window._ordersFilterSource === 'walk_in' ? 'selected' : ''}>በአካል የመጣ (Walk-in)</option>
+                                    <option value="internal" ${window._ordersFilterSource === 'internal' ? 'selected' : ''}>ውስጣዊ / ሪሴፕሽን (Internal)</option>
+                                    <option value="corporate_contract" ${window._ordersFilterSource === 'corporate_contract' ? 'selected' : ''}>ኮርፖሬት ውል (Corporate)</option>
                                 </select>
                             </div>
 
@@ -2443,7 +2519,7 @@
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">የክፍያ ሁኔታ (Payment Status)</label>
                                 <select onchange="window._ordersFilterPayment = this.value; window._ordersPage = 1; renderOrdersModule(document.getElementById('app-viewport'));" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
                                     <option value="" ${window._ordersFilterPayment === '' ? 'selected' : ''}>-- ሁሉም የክፍያ ሁኔታ --</option>
-                                    <option value="pending_approval" ${window._ordersFilterPayment === 'pending_approval' ? 'selected' : ''}>⏳ ማጽደቅ የሚጠብቅ (Pending Approval)</option>
+                                    <option value="pending_approval" ${window._ordersFilterPayment === 'pending_approval' ? 'selected' : ''}>ማጽደቅ የሚጠብቅ (Pending Approval)</option>
                                     <option value="unpaid" ${window._ordersFilterPayment === 'unpaid' ? 'selected' : ''}>ያልተከፈለ (Unpaid)</option>
                                     <option value="partially_paid" ${window._ordersFilterPayment === 'partially_paid' ? 'selected' : ''}>በከፊል የተከፈለ (Partial)</option>
                                     <option value="paid" ${window._ordersFilterPayment === 'paid' ? 'selected' : ''}>የተከፈለ (Paid)</option>
@@ -2458,7 +2534,7 @@
                                         <tr>
                                             <th class="p-4">ትዕዛዝ #</th>
                                             <th class="p-4">ደንበኛ</th>
-                                            <th class="p-4">ሰርጥ / ምንጭ</th>
+                                            <th class="p-4">የትዕዛዝ ምንጭ</th>
                                             <th class="p-4">ቀጠሮ</th>
                                             <th class="p-4">የተመደበ ቡድን</th>
                                             <th class="p-4">ዋጋና ክፍያ</th>
@@ -2501,7 +2577,7 @@
                                                 <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
                                                     ${o.payment_status === 'pending_approval' ? `
                                                         <button onclick="openApprovePaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, '${escapeHtml(o.pending_payment_method || o.payment_method || 'cash')}', '${escapeHtml(o.pending_payment_reference || o.payment_reference || '')}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] rounded-lg shadow-sm transition" title="ክፍያ አጽድቅ (Approve)">
-                                                            ✓ አጽድቅ
+                                                            አጽድቅ
                                                         </button>
                                                         <button onclick="openRejectPaymentModal(${o.id}, '${escapeHtml(o.order_number)}')" class="px-2 py-1 bg-red-950/80 hover:bg-red-900 text-red-300 font-bold text-[11px] rounded-lg border border-red-500/40 transition" title="ክፍያ ውድቅ አድርግ / አጣራ">
                                                             ውድቅ
@@ -2512,7 +2588,7 @@
                                                         </button>
                                                     ` : '')}
                                                     <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ሰራተኛ መድብ">ሰራተኛ</button>
-                                                    <button onclick="printOrderInvoice(${o.id})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-500/40 transition" title="ደረሰኝ አትም (Print Invoice)">🖨️ ደረሰኝ</button>
+                                                    <button onclick="printOrderInvoice(${o.id})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-500/40 transition" title="ደረሰኝ አትም (Print Invoice)">ደረሰኝ</button>
                                                     <button data-phone="${escapeHtml(o.customer_phone || o.customer?.phone || '')}" data-name="${escapeHtml(o.customer_name || o.customer?.full_name || o.customer?.name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">SMS</button>
                                                     <button onclick="openOrderDetailsModal(${o.id})" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር</button>
                                                 </td>
@@ -2949,9 +3025,37 @@
         // ==========================================
         async function renderCustomersModule(container) {
             try {
-                const res = await apiFetch('/api/customers');
-                const data = await res.json();
-                const customers = data.data || [];
+                let customers = [];
+                if (navigator.onLine) {
+                    try {
+                        const res = await apiFetch('/api/customers');
+                        if (res.ok) {
+                            const data = await res.json();
+                            customers = data.data || [];
+                            if (window.meashOffline && typeof window.meashOffline.cacheItems === 'function') {
+                                window.meashOffline.cacheItems('customers', customers).catch(() => {});
+                            }
+                            try { localStorage.setItem('meash_cached_customers_list', JSON.stringify(customers)); } catch (_) {}
+                        }
+                    } catch (netErr) {
+                        console.warn('Customers fetch failed, falling back to cache:', netErr);
+                    }
+                }
+
+                if (customers.length === 0) {
+                    if (window.meashOffline && typeof window.meashOffline.getAllItems === 'function') {
+                        try {
+                            const cached = await window.meashOffline.getAllItems('customers');
+                            if (cached && cached.length > 0) customers = cached;
+                        } catch (_) {}
+                    }
+                    if (customers.length === 0) {
+                        const localCached = localStorage.getItem('meash_cached_customers_list');
+                        if (localCached) {
+                            try { customers = JSON.parse(localCached); } catch (_) {}
+                        }
+                    }
+                }
 
                 container.innerHTML = `
                     <div class="max-w-7xl mx-auto space-y-6">
@@ -2997,12 +3101,47 @@
         async function renderFinanceModule(container) {
             try {
                 const currentPeriod = window._financePeriod || 'all_time';
-                const [reportRes, expRes] = await Promise.all([
-                    apiFetch('/api/finance/profit-report?period=' + currentPeriod),
-                    apiFetch('/api/finance/expenses?per_page=50')
-                ]);
-                const data = await reportRes.json();
-                const expData = await expRes.json();
+                let data = null;
+                let expData = null;
+
+                if (navigator.onLine) {
+                    try {
+                        const [reportRes, expRes] = await Promise.all([
+                            apiFetch('/api/finance/profit-report?period=' + currentPeriod),
+                            apiFetch('/api/finance/expenses?per_page=50')
+                        ]);
+                        if (reportRes.ok && expRes.ok) {
+                            data = await reportRes.json();
+                            expData = await expRes.json();
+                            try {
+                                localStorage.setItem('meash_cached_finance_report', JSON.stringify(data));
+                                localStorage.setItem('meash_cached_finance_expenses', JSON.stringify(expData));
+                            } catch (_) {}
+                        }
+                    } catch (netErr) {
+                        console.warn('Finance network fetch failed, using offline cache:', netErr);
+                    }
+                }
+
+                if (!data) {
+                    const cachedReport = localStorage.getItem('meash_cached_finance_report');
+                    if (cachedReport) {
+                        try { data = JSON.parse(cachedReport); } catch (_) {}
+                    }
+                }
+                if (!expData) {
+                    const cachedExp = localStorage.getItem('meash_cached_finance_expenses');
+                    if (cachedExp) {
+                        try { expData = JSON.parse(cachedExp); } catch (_) {}
+                    }
+                }
+                if (!data) {
+                    data = { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, breakdown: [] };
+                }
+                if (!expData) {
+                    expData = { data: [] };
+                }
+
                 const expensesList = expData.data || (Array.isArray(expData) ? expData : []);
 
                 const categoryLabels = {
@@ -3258,22 +3397,22 @@
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-400 mb-1">የትዕዛዝ ምንጭ (Channel Source) *</label>
                                     <select id="mo-source" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer font-bold">
-                                        <option value="phone">📞 ስልክ ጥሪ (Phone Call)</option>
-                                        <option value="walk_in">🚶 በአካል የመጣ (Walk-in)</option>
-                                        <option value="internal">🏢 ውስጣዊ / ሪሴፕሽን (Internal)</option>
-                                        <option value="website">🌐 ድረ-ገጽ (Website)</option>
-                                        <option value="telegram_miniapp">📱 ቴሌግራም ሚኒአፕ (MiniApp)</option>
-                                        <option value="telegram_bot">🤖 ቴሌግራም ቦት (Telegram Bot)</option>
-                                        <option value="corporate_contract">📑 ኮርፖሬት ውል (Corporate)</option>
+                                        <option value="phone">ስልክ ጥሪ (Phone Call)</option>
+                                        <option value="walk_in">በአካል የመጣ (Walk-in)</option>
+                                        <option value="internal">ውስጣዊ / ሪሴፕሽን (Internal)</option>
+                                        <option value="website">ድረ-ገጽ (Website)</option>
+                                        <option value="telegram_miniapp">ቴሌግራም ሚኒአፕ (MiniApp)</option>
+                                        <option value="telegram_bot">ቴሌግራም ቦት (Telegram Bot)</option>
+                                        <option value="corporate_contract">ኮርፖሬት ውል (Corporate)</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-400 mb-1">የክፍያ መንገድ (Payment Method) *</label>
                                     <select id="mo-payment-method" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer font-bold">
-                                        <option value="cash">💵 ጥሬ ገንዘብ (Cash)</option>
-                                        <option value="telebirr">📱 ቴሌብር (Telebirr)</option>
-                                        <option value="cbe">🏦 የኢትዮጵያ ንግድ ባንክ (CBE)</option>
-                                        <option value="bank_transfer">🏛️ የባንክ ዝውውር (Bank Transfer)</option>
+                                        <option value="cash">ጥሬ ገንዘብ (Cash)</option>
+                                        <option value="telebirr">ቴሌብር (Telebirr)</option>
+                                        <option value="cbe">የኢትዮጵያ ንግድ ባንክ (CBE)</option>
+                                        <option value="bank_transfer">የባንክ ዝውውር (Bank Transfer)</option>
                                     </select>
                                 </div>
                             </div>
@@ -3564,7 +3703,7 @@
                 <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
                     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl text-center space-y-4">
                         <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-black">
-                            ✓
+                            <i data-lucide="check" class="w-6 h-6"></i>
                         </div>
                         <div>
                             <h3 class="text-base font-bold text-white">ትዕዛዙ በተሳካ ሁኔታ ተመዝግቧል!</h3>
@@ -3626,11 +3765,11 @@
                             <div>
                                 <label class="block text-slate-400 font-semibold mb-1">የክፍያ መንገድ (Payment Method) *</label>
                                 <select id="pay-method" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer focus:outline-none focus:border-emerald-500">
-                                    <option value="cash">💵 ጥሬ ገንዘብ (Cash)</option>
-                                    <option value="telebirr">📱 ቴሌብር (Telebirr)</option>
-                                    <option value="cbe">🏦 የኢትዮጵያ ንግድ ባንክ (CBE)</option>
-                                    <option value="bank_transfer">🏛️ የባንክ ዝውውር (Bank Transfer)</option>
-                                    <option value="check">📝 ቼክ (Check)</option>
+                                    <option value="cash">ጥሬ ገንዘብ (Cash)</option>
+                                    <option value="telebirr">ቴሌብር (Telebirr)</option>
+                                    <option value="cbe">የኢትዮጵያ ንግድ ባንክ (CBE)</option>
+                                    <option value="bank_transfer">የባንክ ዝውውር (Bank Transfer)</option>
+                                    <option value="check">ቼክ (Check)</option>
                                 </select>
                             </div>
 
@@ -3720,7 +3859,7 @@
                     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                             <div>
-                                <h3 class="text-base font-bold text-white">💰 የክፍያ መሰብሰቢያ (Collect Payment)</h3>
+                                <h3 class="text-base font-bold text-white">የክፍያ መሰብሰቢያ (Collect Payment)</h3>
                                 <p class="text-xs text-slate-400 font-mono mt-0.5">${escapeHtml(orderNumber)} • ${total.toLocaleString()} ETB</p>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
@@ -3735,10 +3874,10 @@
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">የክፍያ መንገድ (Payment Method) *</label>
                                 <select id="cl-pay-method" required onchange="onCleanerPaymentMethodChange(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
-                                    <option value="cash">💵 ጥሬ ገንዘብ (Cash)</option>
-                                    <option value="telebirr">📱 ቴሌብር (Telebirr)</option>
-                                    <option value="cbe">🏦 የኢትዮጵያ ንግድ ባንክ (CBE)</option>
-                                    <option value="bank_transfer">🏛️ የባንክ ዝውውር (Bank Transfer)</option>
+                                    <option value="cash">ጥሬ ገንዘብ (Cash)</option>
+                                    <option value="telebirr">ቴሌብር (Telebirr)</option>
+                                    <option value="cbe">የኢትዮጵያ ንግድ ባንክ (CBE)</option>
+                                    <option value="bank_transfer">የባንክ ዝውውር (Bank Transfer)</option>
                                 </select>
                             </div>
 
@@ -3839,7 +3978,7 @@
                 const result = await res.json();
 
                 if (res.ok && result.success) {
-                    alert('✓ የክፍያ መረጃው በተሳካ ሁኔታ ተልኳል! ባለቤት ወይም ሪሴፕሽን እስኪያጸድቁት ድረስ በ "Pending Approval" ይቆያል።');
+                    alert('የክፍያ መረጃው በተሳካ ሁኔታ ተልኳል! ባለቤት ወይም ሪሴፕሽን እስኪያጸድቁት ድረስ በ "Pending Approval" ይቆያል።');
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -3866,7 +4005,7 @@
                     <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                             <div>
-                                <h3 class="text-base font-bold text-white">✅ ክፍያ ማጽደቂያ (Approve Payment)</h3>
+                                <h3 class="text-base font-bold text-white">ክፍያ ማጽደቂያ (Approve Payment)</h3>
                                 <p class="text-xs font-mono text-cyan-400 mt-0.5">${escapeHtml(orderNumber)} • ${total.toLocaleString()} ETB</p>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
@@ -3876,10 +4015,10 @@
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">የተከፈለበት መንገድ (Payment Method) *</label>
                                 <select id="appr-pay-method" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
-                                    <option value="cash" ${method === 'cash' ? 'selected' : ''}>💵 ጥሬ ገንዘብ (Cash)</option>
-                                    <option value="telebirr" ${method === 'telebirr' ? 'selected' : ''}>📱 ቴሌብር (Telebirr)</option>
-                                    <option value="cbe" ${method === 'cbe' ? 'selected' : ''}>🏦 የኢትዮጵያ ንግድ ባንክ (CBE)</option>
-                                    <option value="bank_transfer" ${method === 'bank_transfer' ? 'selected' : ''}>🏛️ የባንክ ዝውውር (Bank Transfer)</option>
+                                    <option value="cash" ${method === 'cash' ? 'selected' : ''}>ጥሬ ገንዘብ (Cash)</option>
+                                    <option value="telebirr" ${method === 'telebirr' ? 'selected' : ''}>ቴሌብር (Telebirr)</option>
+                                    <option value="cbe" ${method === 'cbe' ? 'selected' : ''}>የኢትዮጵያ ንግድ ባንክ (CBE)</option>
+                                    <option value="bank_transfer" ${method === 'bank_transfer' ? 'selected' : ''}>የባንክ ዝውውር (Bank Transfer)</option>
                                 </select>
                             </div>
 
@@ -3901,7 +4040,7 @@
                             <div class="flex items-center gap-2 pt-2">
                                 <button type="button" onclick="closeModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
                                 <button type="submit" id="appr-btn" class="flex-1 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer">
-                                    <span>✓ አጽድቅ (Approve)</span>
+                                    <span>አጽድቅ (Approve)</span>
                                 </button>
                             </div>
                         </form>
@@ -3938,7 +4077,7 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    alert('✓ ክፍያው በተሳካ ሁኔታ ጸድቋል! ወደ ገቢ መዝገብ ገብቷል።');
+                    alert('ክፍያው በተሳካ ሁኔታ ጸድቋል! ወደ ገቢ መዝገብ ገብቷል።');
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -3948,7 +4087,7 @@
                 alert('ስህተት፡ ' + err.message);
                 if (btn) {
                     btn.disabled = false;
-                    btn.textContent = '✓ አጽድቅ (Approve)';
+                    btn.textContent = 'አጽድቅ (Approve)';
                 }
             }
         }
@@ -3961,7 +4100,7 @@
                     <div class="bg-slate-900 border border-red-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                             <div>
-                                <h3 class="text-base font-bold text-white">⚠️ ክፍያ ውድቅ ማድረጊያ / ማጣሪያ</h3>
+                                <h3 class="text-base font-bold text-white">ክፍያ ውድቅ ማድረጊያ / ማጣሪያ</h3>
                                 <p class="text-xs font-mono text-slate-400 mt-0.5">${escapeHtml(orderNumber)}</p>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
@@ -4525,7 +4664,7 @@
                                     <i data-lucide="banknote" class="w-5 h-5 text-amber-400"></i>
                                     <span>የደመወዝ ክፍያ መመዝገቢያ (Pay Salary)</span>
                                 </h3>
-                                <p class="text-[11px] text-slate-400">ለሰራተኛ የተከፈለ ደመወዝ ይመዝግቡ (በራስ-ሰር የወጪ መዝገብ ላይ ይገባል)።</p>
+                                <p class="text-[11px] text-slate-400">ለሰራተኛ የተከፈለ ደመወዝ ይመዝግቡ (በሲስተሙ የወጪ መዝገብ ላይ ይገባል)።</p>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
@@ -4563,7 +4702,7 @@
                             </div>
                             <div class="p-3 rounded-2xl bg-amber-950/40 border border-amber-500/30 text-amber-300 text-[11px] flex items-start gap-2">
                                 <i data-lucide="info" class="w-4 h-4 text-amber-400 shrink-0 mt-0.5"></i>
-                                <span>ይህ የተከፈለ ገንዘብ በራስ-ሰር በአድሚኑ የወጪ ገጽ (Expense Page) ላይ እንደ «የሰራተኞች ክፍያ» ወጪ ሆኖ ይመዘገባል።</span>
+                                <span>ይህ የተከፈለ ገንዘብ በሲስተሙ በአድሚኑ የወጪ ገጽ (Expense Page) ላይ እንደ «የሰራተኞች ክፍያ» ወጪ ሆኖ ይመዘገባል።</span>
                             </div>
                             <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
                                 <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
@@ -5051,7 +5190,7 @@
                         <div>
                             <label class="block text-slate-300 font-bold text-xs mb-1">የመልእክቱ ሙሉ ዝርዝር (Message Body) *</label>
                             <textarea id="inpage-bc-message" rows="4" placeholder="የማስታወቂያውን መልእክት እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white text-xs leading-relaxed focus:outline-none focus:border-cyan-500">ውድ {name}፤ የሜሽ ክሊኒንግ ልዩ የጥልቅ ጽዳት አገልግሎት ቅናሽ ተዘጋጅቶ ይጠብቆታል። አሁኑኑ በ 0970075509 ደውለው ቀጠሮዎን ያስይዙ!</textarea>
-                            <p class="text-[11px] text-cyan-400 mt-1">ማስታወሻ፦ <code>{name}</code> ወይም <code>{ስም}</code> የሚለውን ተጠቅመው የእያንዳንዱን ደንበኛ ስም በራስ-ሰር ማካተት ይችላሉ::</p>
+                            <p class="text-[11px] text-cyan-400 mt-1">ማስታወሻ፦ <code>{name}</code> ወይም <code>{ስም}</code> የሚለውን ተጠቅመው የእያንዳንዱን ደንበኛ ስም በሲስተሙ ማካተት ይችላሉ::</p>
                         </div>
                     </div>
 
@@ -5064,7 +5203,6 @@
                         <div class="flex flex-wrap items-center gap-3">
                             <!-- 1. iPhone 1-Scan Auto-SMS Button -->
                             <button type="button" id="btn-iphone-sms" onclick="openIphoneSmsModal()" class="px-6 py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-xl shadow-emerald-500/20 flex items-center gap-2 cursor-pointer transition transform active:scale-95">
-                                <span class="text-lg">🍏</span>
                                 <span>በስልክ SMS ላክ (iPhone 1-Scan Auto-Send)</span>
                             </button>
 
@@ -5521,12 +5659,9 @@
                         <div class="bg-slate-900 border border-emerald-500/50 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-auto">
                             <!-- Modal Header -->
                             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-2xl">🍏</span>
-                                    <div>
-                                        <h3 class="text-base font-black text-white">iPhone 1-Scan Auto-SMS Bridge</h3>
-                                        <p class="text-[11px] text-emerald-400 font-bold">ለ ${data.total_targets} ደንበኞች ከእርስዎ iPhone ሲም ካርድ ይላካል</p>
-                                    </div>
+                                <div>
+                                    <h3 class="text-base font-black text-white">iPhone 1-Scan Auto-SMS Bridge</h3>
+                                    <p class="text-[11px] text-emerald-400 font-bold">ለ ${data.total_targets} ደንበኞች ከእርስዎ iPhone ሲም ካርድ ይላካል</p>
                                 </div>
                                 <button onclick="closeSmsBridgeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                             </div>
@@ -5565,7 +5700,6 @@
                             <!-- 1-Minute Shortcut Setup Instructions Dropdown -->
                             <details class="rounded-2xl bg-slate-950/70 border border-slate-800 p-3.5 text-xs text-slate-300">
                                 <summary class="font-bold text-emerald-400 cursor-pointer flex items-center gap-1.5">
-                                    <span>🍏</span>
                                     <span>የአይፎን Shortcut 1-ደቂቃ ማዘጋጃ መመሪያ (ለመጀመሪያ ጊዜ ብቻ)</span>
                                 </summary>
                                 <ol class="space-y-2 mt-3 list-decimal list-inside text-[11px] leading-relaxed text-slate-300">
@@ -6816,7 +6950,7 @@
 
                             <div class="grid sm:grid-cols-2 gap-4">
                                 <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                                    <span class="text-xs font-bold text-cyan-400 flex items-center gap-1.5">📱 ቴሌብር (Telebirr)</span>
+                                    <span class="text-xs font-bold text-cyan-400 flex items-center gap-1.5">ቴሌብር (Telebirr)</span>
                                     <div>
                                         <label class="text-[11px] text-slate-400 block mb-0.5">የስልክ / ሂሳብ ቁጥር:</label>
                                         <input type="text" id="set-pay-telebirr-no" value="${escapeHtml(s.telebirr_account_number || '0970075509')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
@@ -6828,7 +6962,7 @@
                                 </div>
 
                                 <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                                    <span class="text-xs font-bold text-purple-400 flex items-center gap-1.5">🏦 ንግድ ባንክ (Commercial Bank of Ethiopia - CBE)</span>
+                                    <span class="text-xs font-bold text-purple-400 flex items-center gap-1.5">ንግድ ባንክ (Commercial Bank of Ethiopia - CBE)</span>
                                     <div>
                                         <label class="text-[11px] text-slate-400 block mb-0.5">የሂሳብ ቁጥር (Account No):</label>
                                         <input type="text" id="set-pay-cbe-no" value="${escapeHtml(s.cbe_account_number || '1000552467891')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
@@ -6840,7 +6974,7 @@
                                 </div>
 
                                 <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                                    <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">🏦 አቢሲኒያ ባንክ (Bank of Abyssinia - BOA)</span>
+                                    <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">አቢሲኒያ ባንክ (Bank of Abyssinia - BOA)</span>
                                     <div>
                                         <label class="text-[11px] text-slate-400 block mb-0.5">የሂሳብ ቁጥር (Account No):</label>
                                         <input type="text" id="set-pay-boa-no" value="${escapeHtml(s.boa_account_number || '54321678')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
@@ -6852,7 +6986,7 @@
                                 </div>
 
                                 <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                                    <span class="text-xs font-bold text-blue-400 flex items-center gap-1.5">🏦 አዋሽ ባንክ (Awash Bank)</span>
+                                    <span class="text-xs font-bold text-blue-400 flex items-center gap-1.5">አዋሽ ባንክ (Awash Bank)</span>
                                     <div>
                                         <label class="text-[11px] text-slate-400 block mb-0.5">የሂሳብ ቁጥር (Account No):</label>
                                         <input type="text" id="set-pay-awash-no" value="${escapeHtml(s.awash_account_number || '01320876543200')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
@@ -6932,12 +7066,12 @@
 
                             <div>
                                 <label class="text-xs font-bold text-slate-300 block mb-1">የቦቱ የእንኳን ደህና መጡ መልእክት በአማርኛ (Bot Welcome AM):</label>
-                                <textarea id="set-bot-welcome-am" rows="3" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_welcome_am || "✨ እንኳን ወደ ሜአሽ ጥልቅ የፅዳት አገልግሎት በደህና መጡ!\n\nለሶፋ፣ ምንጣፍ፣ ፍራሽ፣ መስታወትና ለቤትዎ አስተማማኝና ዘመናዊ የጽዳት አገልግሎት እንሰጣለን:: የሚፈልጉትን አገልግሎት ከታች ባሉት አማራጮች ይምረጡ፦")}</textarea>
+                                <textarea id="set-bot-welcome-am" rows="3" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_welcome_am || "እንኳን ወደ ሜአሽ ጥልቅ የፅዳት አገልግሎት በደህና መጡ!\n\nለሶፋ፣ ምንጣፍ፣ ፍራሽ፣ መስታወትና ለቤትዎ አስተማማኝና ዘመናዊ የጽዳት አገልግሎት እንሰጣለን:: የሚፈልጉትን አገልግሎት ከታች ባሉት አማራጮች ይምረጡ፦")}</textarea>
                             </div>
 
                             <div>
                                 <label class="text-xs font-bold text-slate-300 block mb-1">የቦቱ የእንኳን ደህና መጡ መልእክት በእንግሊዝኛ (Bot Welcome EN):</label>
-                                <textarea id="set-bot-welcome-en" rows="2" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_welcome_en || "✨ Welcome to Meash Deep Cleaning Solution!\n\nWe provide professional cleaning for sofas, carpets, mattresses, windows, and entire residential or office spaces.")}</textarea>
+                                <textarea id="set-bot-welcome-en" rows="2" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_welcome_en || "Welcome to Meash Deep Cleaning Solution!\n\nWe provide professional cleaning for sofas, carpets, mattresses, windows, and entire residential or office spaces.")}</textarea>
                             </div>
 
                             <div>
@@ -7283,7 +7417,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                                 <h2 class="text-2xl font-black text-white">የቀጠሮዎች እና የስራ መርሃ-ግብር ካላንደር</h2>
-                                <p class="text-xs text-slate-400 mt-1">የቀን መቁጠሪያ በኢትዮጵያ ዘመን አቆጣጠር፣ በሰዓት፣ በሰርጥ እና በተመደቡ ቡድኖች።</p>
+                                <p class="text-xs text-slate-400 mt-1">የቀን መቁጠሪያ በኢትዮጵያ ዘመን አቆጣጠር፣ በሰዓት፣ በትዕዛዝ ምንጭ እና በተመደቡ ቡድኖች።</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button onclick="renderCalendarModule(document.getElementById('app-viewport'))" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 flex items-center gap-1.5 transition cursor-pointer" title="ዳታውን አድስ">
@@ -7309,14 +7443,14 @@
 
                             <!-- Source Dropdown -->
                             <div class="flex items-center gap-2">
-                                <span class="text-slate-400 font-bold">ሰርጥ፡</span>
+                                <span class="text-slate-400 font-bold">ምንጭ፡</span>
                                 <select onchange="window._calendarSource = this.value; renderCalendarModule(document.getElementById('app-viewport'));" class="bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-white font-bold cursor-pointer text-xs">
-                                    <option value="" ${window._calendarSource === '' ? 'selected' : ''}>-- ሁሉም ሰርጦች --</option>
-                                    <option value="website" ${window._calendarSource === 'website' ? 'selected' : ''}>🌐 ድረ-ገጽ (Website)</option>
-                                    <option value="telegram_miniapp" ${window._calendarSource === 'telegram_miniapp' ? 'selected' : ''}>📱 ሚኒአፕ (MiniApp)</option>
-                                    <option value="telegram_bot" ${window._calendarSource === 'telegram_bot' ? 'selected' : ''}>🤖 ቴሌግራም ቦት</option>
-                                    <option value="phone" ${window._calendarSource === 'phone' ? 'selected' : ''}>📞 ስልክ ጥሪ</option>
-                                    <option value="walk_in" ${window._calendarSource === 'walk_in' ? 'selected' : ''}>🚶 በአካል (Walk-in)</option>
+                                    <option value="" ${window._calendarSource === '' ? 'selected' : ''}>-- ሁሉም ምንጮች --</option>
+                                    <option value="website" ${window._calendarSource === 'website' ? 'selected' : ''}>ድረ-ገጽ (Website)</option>
+                                    <option value="telegram_miniapp" ${window._calendarSource === 'telegram_miniapp' ? 'selected' : ''}>ሚኒአፕ (MiniApp)</option>
+                                    <option value="telegram_bot" ${window._calendarSource === 'telegram_bot' ? 'selected' : ''}>ቴሌግራም ቦት</option>
+                                    <option value="phone" ${window._calendarSource === 'phone' ? 'selected' : ''}>ስልክ ጥሪ</option>
+                                    <option value="walk_in" ${window._calendarSource === 'walk_in' ? 'selected' : ''}>በአካል (Walk-in)</option>
                                 </select>
                             </div>
                         </div>
@@ -7328,7 +7462,7 @@
                                     <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-cyan-500/50 transition">
                                         <div>
                                             <div class="flex flex-wrap items-center gap-2">
-                                                <span class="text-xs font-bold text-cyan-400">📅 ${a.eth_date || EC.formatEth(a.appointment_date)}</span>
+                                                <span class="text-xs font-bold text-cyan-400">${a.eth_date || EC.formatEth(a.appointment_date)}</span>
                                                 <span class="text-[10px] text-slate-400 font-normal">(${a.appointment_date || '—'})</span>
                                                 <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-700/80 text-cyan-300 font-bold">${formatTimeSlot(a.appointment_time_slot || a.order?.appointment_time_slot)}</span>
                                                 ${a.order?.order_number ? `<span class="text-xs font-bold text-white font-mono">${escapeHtml(a.order.order_number)}</span>` : ''}
@@ -7336,7 +7470,7 @@
                                                 ${getPaymentBadge(a.order?.payment_status)}
                                             </div>
                                             <h4 class="text-sm font-bold text-white mt-1.5">${escapeHtml(a.order?.customer?.full_name || a.customer?.full_name || 'Customer')} - <span class="font-mono text-cyan-300">${escapeHtml(a.order?.customer?.phone || a.customer?.phone || '')}</span></h4>
-                                            <p class="text-xs text-slate-400 mt-0.5">📍 ${escapeHtml(a.order?.address || a.order?.customer?.address || 'Addis Ababa')} | የተመደበ ቡድን: <strong class="text-white">${escapeHtml(a.team?.team_name || 'ቡድን አልተመደበም')}</strong></p>
+                                            <p class="text-xs text-slate-400 mt-0.5">${escapeHtml(a.order?.address || a.order?.customer?.address || 'Addis Ababa')} | የተመደበ ቡድን: <strong class="text-white">${escapeHtml(a.team?.team_name || 'ቡድን አልተመደበም')}</strong></p>
                                         </div>
                                         <div class="flex items-center gap-2 self-end sm:self-auto">
                                             <span class="px-3 py-1 rounded-full text-xs font-bold uppercase ${a.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}">${a.status}</span>

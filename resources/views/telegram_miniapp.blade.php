@@ -305,7 +305,7 @@
       <!-- Payment Accounts Info in TMA Confirmation -->
       <div id="tma-payment-notice" class="p-3.5 rounded-2xl bg-slate-900/90 border border-cyan-500/30 mb-5 text-left text-xs">
         <div class="flex items-center gap-2 mb-2">
-          <span class="text-cyan-400 font-bold">💳 የክፍያ ማስተላለፊያ መረጃ / Payment Accounts</span>
+          <span class="text-cyan-400 font-bold">የክፍያ ማስተላለፊያ መረጃ / Payment Accounts</span>
         </div>
         <div class="space-y-1.5 text-slate-300 text-[11px]">
           <p><span class="font-bold text-cyan-400">ቴሌብር (Telebirr):</span> <span class="font-mono text-white font-bold">{{ $telebirrNo }}</span> <span class="text-[10px] text-slate-400">({{ $telebirrName }})</span></p>
@@ -317,7 +317,6 @@
       <!-- MiniApp 5-Star Review Widget -->
       <div id="tma-review-box" class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/40 mb-6 text-left shadow-lg">
         <div class="flex items-center gap-2 mb-1.5">
-          <span class="text-amber-400 text-base">✨</span>
           <span class="text-xs font-bold text-white">አገልግሎታችን እንዴት ነበር? ደረጃ ይስጡን</span>
         </div>
         <p class="text-[11px] text-slate-300 mb-3">ከ1 እስከ 5 ኮከብ በመስጠት እና አስተያየትዎን በማጋራት ያግዙን፦</p>
@@ -776,7 +775,7 @@
         if (res.ok && data.success) {
           if (msgEl) {
             msgEl.className = 'mt-2 p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs font-bold text-center';
-            msgEl.innerText = '✨ እናመሰግናለን! ደረጃዎ በተሳካ ሁኔታ ተመዝግቧል።';
+            msgEl.innerText = 'እናመሰግናለን! ደረጃዎ በተሳካ ሁኔታ ተመዝግቧል።';
             msgEl.classList.remove('hidden');
           }
           if (btnEl) btnEl.classList.add('hidden');

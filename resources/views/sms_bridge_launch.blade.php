@@ -21,7 +21,7 @@
       <img src="/logo.jpg" alt="Logo" class="w-12 h-12 rounded-xl object-cover border border-cyan-500/40">
       <div>
         <h1 class="text-sm font-extrabold text-white">ሜሽ የፅዳት አገልግሎት</h1>
-        <p class="text-[11px] text-cyan-400 font-semibold">🍏 iPhone 1-Scan Auto-SMS Bridge</p>
+        <p class="text-[11px] text-cyan-400 font-semibold">iPhone 1-Scan Auto-SMS Bridge</p>
       </div>
     </div>
 
@@ -51,8 +51,7 @@
     <!-- Main Action Button -->
     <div class="space-y-3 mb-6">
       <a href="{{ $shortcutDirectUrl }}" id="btn-launch-shortcut" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 active:scale-98 transition-all">
-        <span class="text-lg">⚡</span>
-        <span>በአይፎን በራስ-ሰር ላክ (Launch Shortcut)</span>
+        <span>በአይፎን ላክ (Launch Shortcut)</span>
       </a>
 
       <p class="text-[11px] text-center text-slate-400">
@@ -63,7 +62,6 @@
     <!-- 1-Minute Shortcut Setup Instructions -->
     <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-700/80 mb-6 text-xs text-slate-300">
       <div class="flex items-center gap-2 mb-2 font-bold text-white text-sm">
-        <span>🍏</span>
         <span>የአይፎን Shortcut ለመጀመሪያ ጊዜ ማዘጋጃ (1 ደቂቃ)</span>
       </div>
       <p class="text-[11px] text-slate-400 mb-3">በአይፎንዎ ውስጥ ያለውን <strong>Shortcuts</strong> መተግበሪያ በመክፈት የሚከተሉትን 4 እርምጃዎች 1 ጊዜ ብቻ ያዘጋጁ፦</p>

@@ -180,10 +180,10 @@ class WebsiteSetting extends Model
             ], JSON_UNESCAPED_UNICODE),
 
             // Telegram Bot Texts
-            'bot_welcome_am' => "✨ እንኳን ወደ ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) በደህና መጡ!\n\n\"Your Environment, Our Responsibility.\"\n\nከፍተኛ ጥራት የጠበቀ የንግድ ተቋማት የጽዳት አገልግሎት — ሆቴሎች | ሬስቶራንቶች | ካፌዎች | ቢሮዎች። የሚፈልጉትን አገልግሎት ከታች ባሉት አማራጮች ይምረጡ፦",
-            'bot_welcome_en' => "✨ Welcome to MEASH CLEANING SOLUTION!\n\n\"Your Environment, Our Responsibility.\"\n\nPremium Commercial Cleaning Solutions — Hotels | Restaurants | Cafés | Offices.",
-            'bot_help_am' => "📞 ስልክ: 0970075509 / 0998142190\n📧 ኢሜይል: meashcleaningsolution@gmail.com\n📍 አድራሻ: አያት አደባባይ፣ አዲስ አበባ\n\nለቀጠሮ ማስያዝ /book ይጫኑ::",
-            'bot_help_en' => "📞 Phone: 0970075509 / 0998142190\n📧 Email: meashcleaningsolution@gmail.com\n📍 Address: Ayat Square, Addis Ababa, Ethiopia\n\nTo book an appointment type /book.",
+            'bot_welcome_am' => "እንኳን ወደ ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) በደህና መጡ!\n\n\"Your Environment, Our Responsibility.\"\n\nከፍተኛ ጥራት የጠበቀ የንግድ ተቋማት የጽዳት አገልግሎት — ሆቴሎች | ሬስቶራንቶች | ካፌዎች | ቢሮዎች። የሚፈልጉትን አገልግሎት ከታች ባሉት አማራጮች ይምረጡ፦",
+            'bot_welcome_en' => "Welcome to MEASH CLEANING SOLUTION!\n\n\"Your Environment, Our Responsibility.\"\n\nPremium Commercial Cleaning Solutions — Hotels | Restaurants | Cafés | Offices.",
+            'bot_help_am' => "ስልክ: 0970075509 / 0998142190\nኢሜይል: meashcleaningsolution@gmail.com\nአድራሻ: አያት አደባባይ፣ አዲስ አበባ\n\nለቀጠሮ ማስያዝ /book ይጫኑ::",
+            'bot_help_en' => "Phone: 0970075509 / 0998142190\nEmail: meashcleaningsolution@gmail.com\nAddress: Ayat Square, Addis Ababa, Ethiopia\n\nTo book an appointment type /book.",
         ];
     }
 
