@@ -38,8 +38,8 @@ return [
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'bot_username' => env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'),
-        'webhook_url' => env('TELEGRAM_WEBHOOK_URL', 'https://www.meashcleaningsolution.com/api/telegram/webhook'),
-        'miniapp_url' => env('TELEGRAM_MINIAPP_URL', 'https://www.meashcleaningsolution.com/telegram-miniapp'),
+        'webhook_url' => env('TELEGRAM_WEBHOOK_URL', env('APP_URL') ? rtrim(env('APP_URL'), '/') . '/api/telegram/webhook' : null),
+        'miniapp_url' => env('TELEGRAM_MINIAPP_URL', env('APP_URL') ? rtrim(env('APP_URL'), '/') . '/telegram-miniapp' : null),
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 
