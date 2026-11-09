@@ -1326,8 +1326,10 @@ class TelegramController extends Controller
     ]);
 
     $initData = $request->input('init_data');
-    $isProd = app()->environment('production');
-    $enforceInitData = filter_var(env('TELEGRAM_ENFORCE_INITDATA', $isProd), FILTER_VALIDATE_BOOLEAN);
+    $isProd = app()->environment('production') || config('app.env') === 'production' || $request->server('APP_ENV') === 'production';
+    $enforceInitData = config('services.telegram.enforce_initdata') !== null
+      ? (bool)config('services.telegram.enforce_initdata')
+      : filter_var(env('TELEGRAM_ENFORCE_INITDATA', $isProd), FILTER_VALIDATE_BOOLEAN);
 
     // In production or when init_data is provided, telegram_user_id from client is discarded
     // and only taken from cryptographically verified initData.
@@ -1335,25 +1337,26 @@ class TelegramController extends Controller
       unset($validated['telegram_user_id']);
     }
 
+    $maxAgeSeconds = (int)(config('services.telegram.auth_date_max_age') ?: env('TELEGRAM_AUTH_DATE_MAX_AGE', 900));
     $initDataHash = !empty($initData) ? hash('sha256', (string)$initData) : null;
 
     if (!empty($initData)) {
-      // Replay prevention: check if this initData has already been used for an order
-      if ($initDataHash && Cache::has("tg_miniapp_used_{$initDataHash}")) {
+      // Atomic claim for replay & concurrency protection across the entire validity window
+      if ($initDataHash && !Cache::add("tg_miniapp_replay_{$initDataHash}", true, now()->addSeconds($maxAgeSeconds))) {
         throw ValidationException::withMessages([
-          'init_data' => ['This Telegram WebApp session request has already been processed. Please refresh.'],
+          'init_data' => ['This Telegram WebApp session request has already been claimed or processed. Please refresh.'],
         ]);
       }
 
       $extractedUser = null;
       $isValid = $this->verifyTelegramInitData((string)$initData, $this->botToken, $extractedUser);
       if (!$isValid) {
-        if ($enforceInitData) {
-          throw ValidationException::withMessages([
-            'init_data' => ['Invalid or untrusted Telegram WebApp signature.'],
-          ]);
+        if ($initDataHash) {
+          Cache::forget("tg_miniapp_replay_{$initDataHash}");
         }
-        Log::warning('Telegram MiniApp initData signature mismatch.');
+        throw ValidationException::withMessages([
+          'init_data' => ['Invalid or untrusted Telegram WebApp signature.'],
+        ]);
       } elseif (!empty($extractedUser['id'])) {
         // Authoritative assignment of telegram_user_id ONLY from cryptographically verified Telegram payload
         $validated['telegram_user_id'] = (string)$extractedUser['id'];
@@ -1602,15 +1605,15 @@ class TelegramController extends Controller
       return false;
     }
 
-    // Freshness & anti-replay check: validate auth_date within 24 hours
+    // Freshness & anti-replay check: validate auth_date within configurable freshness window
     if (empty($params['auth_date']) || !is_numeric($params['auth_date'])) {
       Log::warning('Telegram initData verification failed: missing or non-numeric auth_date.');
       return false;
     }
     $authTimestamp = (int)$params['auth_date'];
     $currentTime = time();
-    $maxAgeSeconds = 86400; // 24 hours max lifetime
-    if (($currentTime - $authTimestamp) > $maxAgeSeconds || $authTimestamp > ($currentTime + 300)) {
+    $maxAgeSeconds = (int)(config('services.telegram.auth_date_max_age') ?: env('TELEGRAM_AUTH_DATE_MAX_AGE', 900));
+    if (($currentTime - $authTimestamp) > $maxAgeSeconds || $authTimestamp > ($currentTime + 60)) {
       Log::warning("Telegram initData verification failed: auth_date expired or future timestamp (auth: {$authTimestamp}, current: {$currentTime}).");
       return false;
     }

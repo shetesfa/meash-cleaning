@@ -41,6 +41,17 @@ class SyncController extends Controller
             $payload = $item['payload'];
             $clientVer = $item['client_version'] ?? 1;
 
+            // Atomic concurrency lock and idempotency check
+            $lockKey = "sync_lock_{$uuid}";
+            if (!\Illuminate\Support\Facades\Cache::add($lockKey, true, now()->addMinutes(2))) {
+                $synced[] = [
+                    'client_uuid' => $uuid,
+                    'status' => 'already_processed',
+                    'message' => 'Concurrent duplicate sync request safely suppressed.',
+                ];
+                continue;
+            }
+
             // Idempotency check: did we already process this client_uuid?
             $existingAudit = AuditLog::where('action', 'like', "%{$uuid}%")
                 ->orWhere('new_values->client_uuid', $uuid)
@@ -59,11 +70,12 @@ class SyncController extends Controller
                 $user = $request->user();
 
                 if ($entityType === 'order' && $action === 'create') {
-                    // Cleaners cannot create arbitrary orders in production
-                    if (app()->environment('production') && $user && $user->isCleaner()) {
+                    // Strict positive authorization: Only Owner and Reception (or offline Cleaner in local/test)
+                    $canCreateOrder = $user && ($user->isOwner() || $user->role === 'reception' || ($user->isCleaner() && !app()->environment('production')));
+                    if (!$canCreateOrder) {
                         $errors[] = [
                             'client_uuid' => $uuid,
-                            'error' => 'Unauthorized: Cleaners are not permitted to create orders in production.',
+                            'error' => 'Unauthorized: Only Reception and Owner are permitted to create orders.',
                         ];
                         continue;
                     }
@@ -72,7 +84,10 @@ class SyncController extends Controller
                     DB::transaction(function () use ($payload, $uuid, $request, &$synced) {
                         $orderNumber = Order::generateNextNumber();
                         $assignedTeam = !empty($payload['assigned_team_id']) ? $payload['assigned_team_id'] : (!empty($payload['team_id']) ? $payload['team_id'] : null);
-                        $orderStatus = $assignedTeam ? 'assigned' : ($payload['order_status'] ?? 'new');
+
+                        $incomingStatus = $payload['order_status'] ?? 'new';
+                        $allowedStatuses = ['new', 'confirmed', 'assigned', 'on_the_way', 'cleaning', 'completed', 'rescheduled'];
+                        $orderStatus = in_array($incomingStatus, $allowedStatuses, true) ? ($assignedTeam ? 'assigned' : $incomingStatus) : ($assignedTeam ? 'assigned' : 'new');
 
                         $customerId = $payload['customer_id'] ?? null;
                         if (!$customerId) {
@@ -97,9 +112,9 @@ class SyncController extends Controller
                             'assigned_team_id' => $assignedTeam,
                             'source' => $payload['source'] ?? 'phone',
                             'order_status' => $orderStatus,
-                            'payment_status' => 'unpaid',
+                            'payment_status' => 'unpaid', // Authoritative: never trust client payment status
                             'subtotal' => 0,
-                            'discount' => 0,
+                            'discount' => 0,              // Authoritative: never trust client discount
                             'tax' => 0,
                             'total' => 0,
                             'appointment_date' => $payload['appointment_date'] ?? null,
@@ -124,17 +139,50 @@ class SyncController extends Controller
                         $subtotalCalc = 0;
                         if (!empty($payload['items'])) {
                             foreach ($payload['items'] as $it) {
-                                // Authoritative catalogue price lookup
-                                $service = !empty($it['service_id']) ? \App\Models\Service::find($it['service_id']) : null;
-                                $unitPrice = $service ? (float)$service->base_price : (float)($it['unit_price'] ?? 0);
-                                $qty = (float)($it['quantity'] ?? 1);
+                                // Authoritative catalogue price lookup - never fall back to forged client price
+                                $service = null;
+                                if (!empty($it['service_id'])) {
+                                    $service = \App\Models\Service::where('id', $it['service_id'])->where('is_active', true)->first();
+                                }
+                                if (!$service && !empty($it['service_code'])) {
+                                    $service = \App\Models\Service::where('code', $it['service_code'])->where('is_active', true)->first();
+                                }
+                                if (!$service && !empty($it['item_name'])) {
+                                    $cleanName = trim($it['item_name']);
+                                    $service = \App\Models\Service::where('is_active', true)
+                                        ->where(function ($q) use ($cleanName) {
+                                            $q->where('name_en', $cleanName)
+                                              ->orWhere('name_am', $cleanName)
+                                              ->orWhere('code', strtolower($cleanName))
+                                              ->orWhere('name_en', 'like', "%{$cleanName}%")
+                                              ->orWhere('name_am', 'like', "%{$cleanName}%");
+                                        })->first();
+                                    if (!$service) {
+                                        $firstWord = explode(' ', $cleanName)[0] ?? '';
+                                        if (strlen($firstWord) >= 3) {
+                                            $service = \App\Models\Service::where('is_active', true)
+                                                ->where(function ($q) use ($firstWord) {
+                                                    $q->where('code', 'like', "%{$firstWord}%")
+                                                      ->orWhere('name_en', 'like', "%{$firstWord}%")
+                                                      ->orWhere('name_am', 'like', "%{$firstWord}%");
+                                                })->first();
+                                        }
+                                    }
+                                }
+
+                                if (!$service) {
+                                    throw new \Exception("Selected service is invalid or unavailable in catalog.");
+                                }
+
+                                $unitPrice = (float) $service->base_price;
+                                $qty = max(0.1, (float)($it['quantity'] ?? 1));
                                 $sub = round($qty * $unitPrice, 2);
                                 $subtotalCalc += $sub;
 
                                 OrderItem::create([
                                     'order_id' => $order->id,
-                                    'service_id' => $service?->id ?? ($it['service_id'] ?? null),
-                                    'item_name' => $service ? ($service->name_am ?: $service->name_en) : ($it['item_name'] ?? 'አገልግሎት'),
+                                    'service_id' => $service->id,
+                                    'item_name' => $service->name_am ?: $service->name_en,
                                     'quantity' => $qty,
                                     'unit_price' => $unitPrice,
                                     'subtotal' => $sub,
@@ -163,6 +211,15 @@ class SyncController extends Controller
                         ];
                     });
                 } elseif (($entityType === 'order' || $entityType === 'job_action') && ($action === 'status_change' || $action === 'job_action' || $action === 'update')) {
+                    // Positive authorization: Sales and Finance cannot modify orders
+                    if ($user && ($user->isSales() || $user->role === 'finance')) {
+                        $errors[] = [
+                            'client_uuid' => $uuid,
+                            'error' => 'Unauthorized: Sales and Finance roles are not permitted to modify orders.',
+                        ];
+                        continue;
+                    }
+
                     $order = Order::find($payload['order_id'] ?? $payload['id'] ?? null);
                     if (!$order) {
                         $errors[] = [
@@ -187,10 +244,30 @@ class SyncController extends Controller
                         }
                     }
 
-                    // Conflict Detection: check if server order version or status changed divergently
+                    // Strict status validation - reject arbitrary or unrecognized statuses
                     $incomingStatus = $payload['order_status'] ?? $payload['action'] ?? null;
                     if ($incomingStatus === 'complete') $incomingStatus = 'completed';
                     if ($incomingStatus === 'start') $incomingStatus = 'cleaning';
+
+                    $allowedStatuses = ['new', 'confirmed', 'assigned', 'on_the_way', 'cleaning', 'completed', 'cancelled', 'rescheduled', 'issue'];
+                    if ($incomingStatus && !in_array($incomingStatus, $allowedStatuses, true)) {
+                        $errors[] = [
+                            'client_uuid' => $uuid,
+                            'error' => "Invalid or unrecognized order status '{$incomingStatus}'.",
+                        ];
+                        continue;
+                    }
+
+                    if ($user && $user->isCleaner() && $incomingStatus) {
+                        $cleanerPermittedStatuses = ['assigned', 'on_the_way', 'cleaning', 'completed', 'issue'];
+                        if (!in_array($incomingStatus, $cleanerPermittedStatuses, true)) {
+                            $errors[] = [
+                                'client_uuid' => $uuid,
+                                'error' => "Cleaners are not permitted to set order status to '{$incomingStatus}'.",
+                            ];
+                            continue;
+                        }
+                    }
 
                     if ($order->version > $clientVer && $order->order_status !== $incomingStatus) {
                         // Conflict! Store in sync_conflicts
@@ -326,6 +403,11 @@ class SyncController extends Controller
                         'client_uuid' => $uuid,
                         'status' => 'synced',
                         'entity_id' => $expense->id,
+                    ];
+                } else {
+                    $errors[] = [
+                        'client_uuid' => $uuid,
+                        'error' => "Unauthorized or unrecognized entity/action: {$entityType}/{$action}",
                     ];
                 }
             } catch (\Exception $e) {

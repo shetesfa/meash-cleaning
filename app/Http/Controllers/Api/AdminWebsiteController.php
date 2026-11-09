@@ -12,17 +12,11 @@ use Illuminate\Http\Request;
 class AdminWebsiteController extends Controller
 {
     /**
-     * Get all website settings with sensitive values safely masked
+     * Get all website settings safely sanitized (never returns bot tokens or secrets)
      */
     public function getSettings(): JsonResponse
     {
-        $settings = WebsiteSetting::getAllKeyValue();
-
-        // Mask sensitive tokens so real credentials are never sent directly in plain text
-        if (!empty($settings['telegram_bot_token'])) {
-            $len = strlen($settings['telegram_bot_token']);
-            $settings['telegram_bot_token'] = $len > 8 ? substr($settings['telegram_bot_token'], 0, 4) . '...' . substr($settings['telegram_bot_token'], -4) : '********';
-        }
+        $settings = WebsiteSetting::getSanitizedAdminSettings();
 
         return response()->json([
             'success' => true,
@@ -81,22 +75,15 @@ class AdminWebsiteController extends Controller
             'time_slots' => 'nullable',
             'pricing_rules' => 'nullable',
 
-            // Telegram Bot Texts & Config
+            // Telegram Bot Texts (public greeting & help content only)
             'bot_welcome_am' => 'nullable|string',
             'bot_welcome_en' => 'nullable|string',
             'bot_help_am' => 'nullable|string',
             'bot_help_en' => 'nullable|string',
-            'telegram_bot_token' => 'nullable|string',
-            'telegram_bot_username' => 'nullable|string',
-            'telegram_admin_chat_id' => 'nullable|string',
         ]);
 
         foreach ($validated as $key => $val) {
             if ($val === null) {
-                continue;
-            }
-            // Do not overwrite secret if client sends back the masked placeholder
-            if ($key === 'telegram_bot_token' && (str_contains($val, '...') || str_contains($val, '****'))) {
                 continue;
             }
             if (is_array($val)) {
@@ -109,7 +96,7 @@ class AdminWebsiteController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'የድረ-ገጽ እና የስርዓት ቅንብሮች በተሳካ ሁኔታ ተዘምነዋል! (System settings updated successfully)',
-            'settings' => WebsiteSetting::getAllKeyValue(),
+            'settings' => WebsiteSetting::getSanitizedAdminSettings(),
             'subcities' => WebsiteSetting::getJson('subcities'),
             'time_slots' => WebsiteSetting::getJson('time_slots'),
             'pricing_rules' => WebsiteSetting::getJson('pricing_rules'),

@@ -87,7 +87,14 @@ class Order extends Model
 
     public function getCustomerPhoneAttribute(): string
     {
-        return $this->customer?->phone ?? '';
+        if (isset($this->attributes['customer_phone'])) {
+            return $this->attributes['customer_phone'];
+        }
+        $phone = $this->customer?->phone ?? '';
+        if (auth()->check() && auth()->user()->role === 'finance' && $phone !== '') {
+            return substr($phone, 0, 4) . '****';
+        }
+        return $phone;
     }
 
     public function getStatusAttribute(): ?string

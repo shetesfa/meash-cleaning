@@ -169,6 +169,17 @@ class MeashOfflineEngine {
         this.notifyStatus();
     }
 
+    getCurrentUserId() {
+        try {
+            const u = JSON.parse(localStorage.getItem('meash_user') || '{}');
+            if (u && u.id) return u.id;
+        } catch (e) {}
+        if (window.currentUser && window.currentUser.id) {
+            return window.currentUser.id;
+        }
+        return null;
+    }
+
     generateUUID() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -183,8 +194,11 @@ class MeashOfflineEngine {
             throw err;
         }
 
+        const currentUserId = this.getCurrentUserId();
+
         const item = {
             client_uuid: this.generateUUID(),
+            user_id: currentUserId,
             entity_type: entityType,
             action: action,
             payload: payload,
@@ -331,18 +345,32 @@ class MeashOfflineEngine {
 
     async getQueueCounts() {
         const all = await this.getAllItems('sync_queue');
+        const currentUserId = this.getCurrentUserId();
         let pending = 0;
         let failed = 0;
+        let otherUserPending = 0;
         for (const it of all) {
+            if (currentUserId && it.user_id && it.user_id !== currentUserId) {
+                if (it.status !== 'failed') otherUserPending++;
+                continue;
+            }
             if (it.status === 'failed') failed++;
             else pending++;
         }
-        return { pending, failed };
+        return { pending, failed, otherUserPending, total: all.length };
     }
 
     async getPendingItems() {
         const all = await this.getAllItems('sync_queue');
-        return all.filter(it => it.status !== 'failed');
+        const currentUserId = this.getCurrentUserId();
+        return all.filter(it => {
+            if (it.status === 'failed') return false;
+            // Account Isolation: never sync another user's pending operations with current user's token
+            if (currentUserId && it.user_id && it.user_id !== currentUserId) {
+                return false;
+            }
+            return true;
+        });
     }
 
     async getFailedItems() {

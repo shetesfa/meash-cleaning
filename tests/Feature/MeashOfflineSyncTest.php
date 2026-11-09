@@ -20,7 +20,7 @@ class MeashOfflineSyncTest extends TestCase
 
     public function test_offline_sync_batch_creates_order_idempotently(): void
     {
-        $cleaner = User::where('role', 'cleaner')->first();
+        $staff = User::where('role', 'reception')->first() ?: User::where('role', 'owner')->first();
         $customer = Customer::first();
         $uuid = 'test-client-uuid-' . uniqid();
 
@@ -50,12 +50,12 @@ class MeashOfflineSyncTest extends TestCase
         ];
 
         // First sync
-        $response1 = $this->actingAs($cleaner)->postJson('/api/sync/batch', $batchPayload);
+        $response1 = $this->actingAs($staff)->postJson('/api/sync/batch', $batchPayload);
         $response1->assertStatus(200);
         $this->assertEquals(1, $response1->json('synced_count'));
 
         // Repeat sync with same client_uuid (Idempotency test)
-        $response2 = $this->actingAs($cleaner)->postJson('/api/sync/batch', $batchPayload);
+        $response2 = $this->actingAs($staff)->postJson('/api/sync/batch', $batchPayload);
         $response2->assertStatus(200);
         $this->assertEquals('already_processed', $response2->json('synced.0.status'));
     }

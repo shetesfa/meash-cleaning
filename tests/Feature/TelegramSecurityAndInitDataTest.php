@@ -64,12 +64,16 @@ class TelegramSecurityAndInitDataTest extends TestCase
         $cleanerRes = $this->actingAs($cleaner)->postJson('/api/telegram/set-webhook');
         $cleanerRes->assertStatus(403);
 
-        // Reception/Owner should reach controller (role authorized)
+        // Reception must be forbidden (403) - Telegram webhook config is strictly Owner-only
         $reception = User::factory()->create(['role' => 'reception']);
         $recRes = $this->actingAs($reception)->postJson('/api/telegram/set-webhook');
-        // Will fail on token missing (400) or success, but not 401/403
-        $this->assertNotEquals(401, $recRes->status());
-        $this->assertNotEquals(403, $recRes->status());
+        $recRes->assertStatus(403);
+
+        // Owner should reach controller (role authorized)
+        $owner = User::factory()->create(['role' => 'owner']);
+        $ownerRes = $this->actingAs($owner)->postJson('/api/telegram/set-webhook');
+        $this->assertNotEquals(401, $ownerRes->status());
+        $this->assertNotEquals(403, $ownerRes->status());
     }
 
     public function test_miniapp_booking_verifies_init_data_and_sets_trusted_user_id(): void

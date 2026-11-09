@@ -82,8 +82,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/services/{service}', [ServiceController::class, 'update'])->middleware('role:owner,reception');
 
     // D. Orders (Multi-item)
-    Route::get('/orders', [OrderController::class, 'index']);
-    Route::get('/orders/{order}', [OrderController::class, 'show']);
+    Route::get('/orders', [OrderController::class, 'index'])->middleware('role:owner,reception,cleaner,finance');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->middleware('role:owner,reception,cleaner,finance');
     Route::post('/orders', [OrderController::class, 'store'])->middleware('role:owner,reception');
     Route::match(['put', 'patch'], '/orders/{order}', [OrderController::class, 'update'])->middleware('role:owner,reception');
     Route::match(['put', 'patch', 'post'], '/orders/{order}/update', [OrderController::class, 'update'])->middleware('role:owner,reception');
@@ -98,18 +98,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/{order}/send-review-request', [OrderController::class, 'sendReviewRequest'])->middleware('role:owner,reception');
 
     // E. Appointments & Calendar
-    Route::get('/appointments', [AppointmentController::class, 'index']);
+    Route::get('/appointments', [AppointmentController::class, 'index'])->middleware('role:owner,reception,cleaner');
     Route::post('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule'])->middleware('role:owner,reception');
 
     // F. Cleaning Teams & Cleaner Mobile View
-    Route::get('/teams', [TeamController::class, 'index']);
+    Route::get('/teams', [TeamController::class, 'index'])->middleware('role:owner,reception,cleaner');
     Route::post('/teams', [TeamController::class, 'store'])->middleware('role:owner,reception');
     Route::get('/employees', [TeamController::class, 'getEmployees'])->middleware('role:owner,reception');
     Route::post('/employees', [TeamController::class, 'storeEmployee'])->middleware('role:owner');
-    Route::get('/teams/my-jobs', [TeamController::class, 'myJobs']);
-    Route::post('/teams/jobs/{order}/action', [TeamController::class, 'handleJobAction']);
-    Route::post('/teams/location', [TeamController::class, 'updateLocation']);
-    Route::post('/teams/update-location', [TeamController::class, 'updateLocation']);
+    Route::get('/teams/my-jobs', [TeamController::class, 'myJobs'])->middleware('role:cleaner,owner');
+    Route::post('/teams/jobs/{order}/action', [TeamController::class, 'handleJobAction'])->middleware('role:cleaner,owner');
+    Route::post('/teams/location', [TeamController::class, 'updateLocation'])->middleware('role:cleaner,owner');
+    Route::post('/teams/update-location', [TeamController::class, 'updateLocation'])->middleware('role:cleaner,owner');
 
     // Subscriptions (Recurring Cleaning Model)
     Route::prefix('subscriptions')->middleware('role:owner,reception')->group(function () {
@@ -193,10 +193,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/conflicts/{conflict}/resolve', [SyncController::class, 'resolveConflict'])->middleware('role:owner,reception');
     });
 
-    // L. Telegram Administrative Operations (Owner/Reception)
-    Route::prefix('telegram')->group(function () {
-        Route::post('/set-webhook', [TelegramController::class, 'setRenderWebhook'])->middleware('role:owner,reception');
-        Route::post('/send-test', [TelegramController::class, 'sendTestMessage'])->middleware('role:owner,reception');
+    // L. Telegram Administrative Operations (Strictly Owner Only)
+    Route::prefix('telegram')->middleware('role:owner')->group(function () {
+        Route::post('/set-webhook', [TelegramController::class, 'setRenderWebhook']);
+        Route::post('/send-test', [TelegramController::class, 'sendTestMessage']);
     });
 });
 

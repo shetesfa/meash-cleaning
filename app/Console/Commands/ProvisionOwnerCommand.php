@@ -35,14 +35,20 @@ class ProvisionOwnerCommand extends Command
     {
         $this->info('Starting Owner provisioning audit...');
 
-        // Rule 1: Check if an Owner already exists. Refuse to overwrite or duplicate.
-        $existingOwner = User::where('role', 'owner')->first();
+        $username = trim($this->option('username') ?: 'amha');
+
+        // Check if a legitimate real Owner already exists (ignore legacy demo owner@meash.com)
+        $existingOwner = User::where('username', $username)
+            ->orWhere(function ($q) {
+                $q->where('role', 'owner')->whereNotIn('email', ['owner@meash.com']);
+            })
+            ->first();
+
         if ($existingOwner) {
-            $this->warn("Refusing to create duplicate Owner accounts. An Owner already exists in the system (Username/Email: {$existingOwner->username} / {$existingOwner->email}).");
+            $this->warn("Refusing to create duplicate Owner accounts. An active legitimate Owner already exists ({$existingOwner->username} / {$existingOwner->email}).");
             return Command::SUCCESS;
         }
 
-        $username = trim($this->option('username') ?: 'amha');
         if (User::where('username', $username)->exists()) {
             $this->error("The username '{$username}' is already in use by another user account.");
             return Command::FAILURE;
@@ -63,7 +69,7 @@ class ProvisionOwnerCommand extends Command
             return Command::FAILURE;
         }
 
-        if (User::where('email', $email)->exists()) {
+        if (User::where('email', $email)->where('username', '!=', $username)->exists()) {
             $this->error("The email address '{$email}' is already registered.");
             return Command::FAILURE;
         }
@@ -75,7 +81,7 @@ class ProvisionOwnerCommand extends Command
 
         if (empty($password)) {
             if ($this->input->isInteractive()) {
-                $password = $this->secret('Enter strong Owner password (minimum 10 characters)');
+                $password = $this->secret('Enter strong Owner password (minimum 12 characters, mixed case, numbers, symbols)');
                 $confirmPassword = $this->secret('Confirm Owner password');
 
                 if ($password !== $confirmPassword) {
@@ -83,14 +89,13 @@ class ProvisionOwnerCommand extends Command
                     return Command::FAILURE;
                 }
             } else {
-                // Non-interactive generation of a cryptographically secure password
-                $password = Str::password(16, true, true, false, false);
-                $this->warn('Generated secure random password. Please securely note it.');
+                $this->error('In non-interactive environments, a password must be provided via --password or MEASH_OWNER_PASSWORD env.');
+                return Command::FAILURE;
             }
         }
 
-        if (strlen($password) < 10) {
-            $this->error('The Owner password must be at least 10 characters long.');
+        if (strlen($password) < 12 || !preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password)) {
+            $this->error('The Owner password must be at least 12 characters long and include uppercase letters, lowercase letters, and numbers.');
             return Command::FAILURE;
         }
 

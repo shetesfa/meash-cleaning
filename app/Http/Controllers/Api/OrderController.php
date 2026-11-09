@@ -93,12 +93,26 @@ class OrderController extends Controller
         $orders = $query->latest('appointment_date')->paginate($perPage);
 
         // Append Ethiopian calendar formatted strings and alias fields
-        $orders->getCollection()->transform(function ($order) {
+        $orders->getCollection()->transform(function ($order) use ($user) {
             $eth = EthiopianCalendarService::toEthiopian($order->appointment_date);
             $order->eth_appointment_date = $eth['formatted_am'];
             $order->eth_appointment_en = $eth['formatted_en'];
-            $order->customer_name = $order->customer?->full_name ?? $order->customer?->name ?? 'ደንበኛ';
-            $order->customer_phone = $order->customer?->phone ?? '';
+
+            // Privacy: mask customer personal phone and private street address for Finance role
+            if ($user && $user->role === 'finance') {
+                $maskedPhone = $order->customer?->phone ? (substr($order->customer->phone, 0, 4) . '****') : '';
+                $order->customer_name = $order->customer?->full_name ?? 'ደንበኛ';
+                $order->customer_phone = $maskedPhone;
+                $order->address = $order->subcity ?? 'Addis Ababa';
+                if ($order->relationLoaded('customer') && $order->customer) {
+                    $order->customer->phone = $maskedPhone;
+                    $order->customer->address = $order->subcity ?? 'Addis Ababa';
+                }
+            } else {
+                $order->customer_name = $order->customer?->full_name ?? $order->customer?->name ?? 'ደንበኛ';
+                $order->customer_phone = $order->customer?->phone ?? '';
+            }
+
             $order->status = $order->order_status;
             $order->team_id = $order->assigned_team_id;
             return $order;
@@ -139,6 +153,15 @@ class OrderController extends Controller
         $orderData['eth_appointment_date'] = $ethAppt['formatted_am'];
         $orderData['eth_appointment_en'] = $ethAppt['formatted_en'];
         $orderData['eth_created_date'] = $ethCreated['formatted_am'];
+
+        // Privacy: mask customer personal phone and private address for Finance role
+        if ($user && $user->role === 'finance') {
+            if (!empty($orderData['customer'])) {
+                $orderData['customer']['phone'] = substr($orderData['customer']['phone'] ?? '', 0, 4) . '****';
+                $orderData['customer']['address'] = $orderData['customer']['subcity'] ?? 'Addis Ababa';
+            }
+            $orderData['address'] = $order->subcity ?? 'Addis Ababa';
+        }
 
         return response()->json($orderData);
     }

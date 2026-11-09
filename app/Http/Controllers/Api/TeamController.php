@@ -18,13 +18,27 @@ use Illuminate\Support\Facades\DB;
 
 class TeamController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $teams = CleaningTeam::with(['leader:id,name,phone', 'members.user:id,name,phone'])
+        $user = $request->user();
+        $query = CleaningTeam::with(['leader:id,name,phone', 'members.user:id,name,phone'])
             ->withCount(['orders as active_jobs_count' => function ($q) {
                 $q->whereIn('order_status', ['assigned', 'on_the_way', 'cleaning']);
-            }])
-            ->get();
+            }]);
+
+        // Cleaners: Strict access limit to ONLY their own assigned team
+        if ($user && $user->isCleaner()) {
+            $cleanerTeamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
+                ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
+                ->unique();
+
+            if ($cleanerTeamIds->isEmpty()) {
+                return response()->json([]);
+            }
+            $query->whereIn('id', $cleanerTeamIds);
+        }
+
+        $teams = $query->get();
 
         $teams->transform(function ($team) {
             $totalAssigned = Order::where('assigned_team_id', $team->id)->count();

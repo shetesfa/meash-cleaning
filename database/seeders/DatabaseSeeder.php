@@ -38,34 +38,14 @@ class DatabaseSeeder extends Seeder
 
         if ($isProduction || ! $seedDemoData) {
             $this->command->info('Running DatabaseSeeder in strict production mode. Demo data and default passwords are prohibited.');
-            $ownerEmail = env('MEASH_OWNER_EMAIL', env('OWNER_EMAIL', 'owner@meash.com'));
-            $ownerPassword = env('MEASH_OWNER_PASSWORD', env('OWNER_PASSWORD'));
 
-            if (! User::where('role', 'owner')->exists()) {
-                if (empty($ownerPassword) || $ownerPassword === 'password') {
-                    $generatedPassword = \Illuminate\Support\Str::random(16);
-                    $ownerPassword = $generatedPassword;
-                    $this->command->warn("=================================================");
-                    $this->command->warn("SECURITY NOTICE: A secure random password was generated for production owner ({$ownerEmail}): {$generatedPassword}");
-                    $this->command->warn("Store this password immediately. Default passwords are strictly forbidden in production.");
-                    $this->command->warn("=================================================");
-                }
-
-                User::create([
-                    'name' => env('MEASH_OWNER_NAME', 'Meash General Manager'),
-                    'email' => $ownerEmail,
-                    'phone' => env('MEASH_OWNER_PHONE', '0911000001'),
-                    'role' => 'owner',
-                    'password' => Hash::make($ownerPassword),
-                    'is_active' => true,
-                ]);
-                $this->command->info("Created production owner account ({$ownerEmail}) securely.");
-            }
-
-            // In production, seed essential services if none exist
+            // In production, seed only essential official services and brochure settings if none exist
             if (Service::count() === 0) {
                 $this->seedEssentialServices();
             }
+
+            $this->command->info('Production DatabaseSeeder completed.');
+            $this->command->info('To securely create the single production Owner account, run: php artisan meash:provision-owner');
             return;
         }
 

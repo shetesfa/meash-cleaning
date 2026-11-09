@@ -13,12 +13,27 @@ class AppointmentController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+
         $query = Appointment::with([
             'order:id,order_number,source,order_status,payment_status,total,customer_id',
             'order.customer:id,customer_code,full_name,phone,address,subcity',
             'order.items.service:id,name_en,name_am',
             'team:id,team_name,phone',
         ]);
+
+        // Cleaners: Strict access limit to ONLY their own assigned team's appointments
+        if ($user && $user->isCleaner()) {
+            $cleanerTeamIds = \Illuminate\Support\Facades\DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
+                ->merge(\Illuminate\Support\Facades\DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
+                ->unique();
+
+            if ($cleanerTeamIds->isEmpty()) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->whereIn('cleaning_team_id', $cleanerTeamIds);
+            }
+        }
 
         if ($view = $request->input('view')) {
             if ($view === 'today') {

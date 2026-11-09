@@ -198,6 +198,46 @@ class WebsiteSetting extends Model
     }
 
     /**
+     * Get safe settings for authenticated admin users.
+     * Sensitive tokens (Telegram bot token, secrets) are strictly excluded and replaced with status booleans.
+     */
+    public static function getSanitizedAdminSettings(): array
+    {
+        $all = static::getAllKeyValue();
+
+        $hasToken = !empty($all['telegram_bot_token'] ?? null) || !empty(config('services.telegram.bot_token'));
+
+        // Strip all sensitive credentials, tokens, and secrets
+        $sensitiveKeys = [
+            'telegram_bot_token',
+            'telegram_admin_chat_id',
+            'webhook_secret',
+            'admin_secret',
+            'db_password',
+            'sms_gateway_api_key',
+            'api_token',
+            'secret_token',
+            'jwt_secret',
+            'private_key',
+        ];
+
+        foreach ($sensitiveKeys as $secKey) {
+            unset($all[$secKey]);
+        }
+
+        // Secondary defense-in-depth: remove any keys matching sensitive patterns
+        foreach (array_keys($all) as $k) {
+            if (preg_match('/(token|secret|password|credential|private_key|admin_chat)/i', strtolower($k))) {
+                unset($all[$k]);
+            }
+        }
+
+        $all['telegram_bot_configured'] = (bool) $hasToken;
+
+        return $all;
+    }
+
+    /**
      * Explicit whitelist of setting keys that are safe to expose to public unauthenticated visitors.
      */
     public static function getPublicAllowlist(): array
