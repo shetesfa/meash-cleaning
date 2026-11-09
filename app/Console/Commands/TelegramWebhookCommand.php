@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 class TelegramWebhookCommand extends Command
 {
     protected $signature = 'telegram:webhook {action=status : status, set, or delete}';
-    protected $description = 'Manage Telegram Bot Webhook (status, set to Render, or delete for local polling)';
+    protected $description = 'Manage Telegram Bot Webhook (status, set to production domain, or delete for local polling)';
 
     public function handle(): int
     {
@@ -24,12 +24,12 @@ class TelegramWebhookCommand extends Command
             $configuredWebhook = config('services.telegram.webhook_url');
             $appUrl = config('app.url') ?: env('APP_URL');
 
-            if (!empty($configuredWebhook) && !str_contains($configuredWebhook, 'onrender.com')) {
+            if (!empty($configuredWebhook)) {
                 $url = $configuredWebhook;
             } elseif (!empty($appUrl) && $appUrl !== 'http://localhost') {
                 $url = rtrim($appUrl, '/') . '/api/telegram/webhook';
             } else {
-                $url = $configuredWebhook ?: 'https://meashcleaning.com/api/telegram/webhook';
+                $url = 'https://meashcleaning.com/api/telegram/webhook';
             }
 
             $this->info("Setting Webhook to: {$url}...");
@@ -52,8 +52,8 @@ class TelegramWebhookCommand extends Command
             }
 
             if ($resp['ok'] ?? false) {
-                $this->info(' Webhook successfully set to Render!');
-                $this->line('The Telegram Bot is now active 24/7 on the cloud.');
+                $this->info(' Webhook successfully set to production domain!');
+                $this->line('The Telegram Bot is now active 24/7.');
                 return 0;
             } else {
                 $this->error(' Failed to set webhook: ' . json_encode($resp));

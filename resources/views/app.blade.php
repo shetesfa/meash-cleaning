@@ -578,7 +578,7 @@
                     if (errText) errText.innerText = 'በርካታ ያልተሳኩ ሙከራዎች ተደርገዋል፤ እባክዎ ጥቂት ደቂቃ ቆይተው እንደገና ይሞክሩ (Too many attempts)::';
                     if (errBanner) errBanner.classList.remove('hidden');
                 } else if (res.status >= 500) {
-                    if (errText) errText.innerText = 'ሰርቨሩ በመነሳት ላይ ነው (Render Cold Start)፤ እባክዎ ከ20-30 ሰከንድ በኋላ እንደገና ይሞክሩ::';
+                    if (errText) errText.innerText = 'የውስጥ ሲስተም ችግር አጋጥሟል፤ እባክዎ ጥቂት ሰከንዶች ቆይተው እንደገና ይሞክሩ::';
                     if (errBanner) errBanner.classList.remove('hidden');
                 } else {
                     let msg = 'የተሳሳተ ኢሜይል/ስልክ ወይም የይለፍ ቃል አስገብተዋል::';

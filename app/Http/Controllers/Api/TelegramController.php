@@ -2908,7 +2908,7 @@ class TelegramController extends Controller
       $botUser = $getMe['result']['username'] ?? $this->botUsername;
       return response()->json([
         'success' => true,
-        'message' => "ቦቱ (@{$botUser}) በተሳካ ሁኔታ ከ Render Webhook ጋር ተገናኝቷል! አሁን 24 ሰዓት ይሰራል::",
+        'message' => "ቦቱ (@{$botUser}) በተሳካ ሁኔታ ከ Webhook ጋር ተገናኝቷል! አሁን 24 ሰዓት ይሰራል::",
         'bot' => $getMe['result'] ?? null,
         'webhook_url' => $url,
       ]);
@@ -2945,7 +2945,7 @@ class TelegramController extends Controller
 
     $resp = $this->telegramApi('sendMessage', [
       'chat_id' => $targetChatId,
-      'text' => " <b>የሜሽ ቴሌግራም ቦት የሙከራ መልዕክት (Test Alert)</b>\n\n ቦቱ ከ Render Cloud Webhook ጋር በትክክል ተገናኝቷል!\n ሰዓት፡ " . now()->toDateTimeString() . "\n MEASH CLEANING SOLUTION",
+      'text' => " <b>የሜሽ ቴሌግራም ቦት የሙከራ መልዕክት (Test Alert)</b>\n\n ቦቱ ከ Webhook ጋር በትክክል ተገናኝቷል!\n ሰዓት፡ " . now()->toDateTimeString() . "\n MEASH CLEANING SOLUTION",
       'parse_mode' => 'HTML',
     ]);
 
