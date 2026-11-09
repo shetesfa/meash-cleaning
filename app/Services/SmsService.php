@@ -75,7 +75,7 @@ class SmsService
         if (empty($phone)) return ['ok' => false, 'error' => 'No phone number'];
 
         $formattedPhone = self::normalizeEthiopianPhone($phone);
-        $baseUrl = rtrim(config('app.url') ?: env('APP_URL', 'https://meashcleaning.com'), '/');
+        $baseUrl = rtrim(config('app.url') ?: env('APP_URL', 'https://www.meashcleaningsolution.com'), '/');
         $reviewUrl = "{$baseUrl}/?review_order={$order->order_number}#track-order";
         $msg = "ውድ {$name}፣ የፅዳት አገልግሎቱ ተጠናቋል:: ስለመረጡን እናመሰግናለን! እባክዎ ከ1-5 ኮከብ ደረጃ ይስጡን፦ {$reviewUrl} | ሪሴፕሽን: 0970075509";
 
@@ -98,7 +98,7 @@ class SmsService
         if (empty($phone)) return ['ok' => false, 'error' => 'No phone number'];
 
         $formattedPhone = self::normalizeEthiopianPhone($phone);
-        $baseUrl = rtrim(config('app.url') ?: env('APP_URL', 'https://meashcleaning.com'), '/');
+        $baseUrl = rtrim(config('app.url') ?: env('APP_URL', 'https://www.meashcleaningsolution.com'), '/');
         $reviewUrl = "{$baseUrl}/?review_order={$order->order_number}#track-order";
 
         $msg = "✨ ውድ {$name}፣ የሜአሽ ጽዳት አገልግሎታችን እንዴት ነበር? እባክዎ ከ1 እስከ 5 ኮከብ በመስጠት ደረጃ ይስጡን፦ {$reviewUrl} | ሪሴፕሽን: 0970075509";

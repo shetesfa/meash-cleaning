@@ -2858,7 +2858,7 @@ class TelegramController extends Controller
       'webhook_active' => $isWebhookActive,
       'bot' => $getMe['result'] ?? null,
       'webhook' => $wh,
-      'expected_webhook_url' => config('services.telegram.webhook_url') ?: (config('app.url') ? rtrim(config('app.url'), '/') . '/api/telegram/webhook' : 'https://meashcleaning.com/api/telegram/webhook'),
+      'expected_webhook_url' => config('services.telegram.webhook_url') ?: (config('app.url') ? rtrim(config('app.url'), '/') . '/api/telegram/webhook' : 'https://www.meashcleaningsolution.com/api/telegram/webhook'),
     ]);
   }
 
@@ -2890,7 +2890,7 @@ class TelegramController extends Controller
       ], 400);
     }
 
-    $url = config('services.telegram.webhook_url') ?: (config('app.url') ? rtrim(config('app.url'), '/') . '/api/telegram/webhook' : 'https://meashcleaning.com/api/telegram/webhook');
+    $url = config('services.telegram.webhook_url') ?: (config('app.url') ? rtrim(config('app.url'), '/') . '/api/telegram/webhook' : 'https://www.meashcleaningsolution.com/api/telegram/webhook');
     $params = [
       'url' => $url,
       'drop_pending_updates' => true,

@@ -1332,12 +1332,12 @@
       <!-- Website QR -->
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-navy/10 flex flex-col items-center">
         <div class="p-3 bg-white rounded-xl shadow-inner border border-gray-100 mb-4">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode(config('app.url', 'https://meashcleaning.com')) }}" alt="Website QR Code" class="w-36 h-36 rounded-lg">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode(config('app.url', 'https://www.meashcleaningsolution.com')) }}" alt="Website QR Code" class="w-36 h-36 rounded-lg">
         </div>
         <h4 class="font-bold text-sm text-navy dark:text-white flex items-center gap-1.5 mb-1">
           <i data-lucide="globe" class="w-4 h-4 text-teal"></i> Website Direct Booking
         </h4>
-        <span class="text-xs text-navy/50">{{ parse_url(config('app.url', 'https://meashcleaning.com'), PHP_URL_HOST) }}</span>
+        <span class="text-xs text-navy/50">{{ parse_url(config('app.url', 'https://www.meashcleaningsolution.com'), PHP_URL_HOST) }}</span>
       </div>
 
       <!-- Telegram Bot QR -->

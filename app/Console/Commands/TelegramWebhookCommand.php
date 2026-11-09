@@ -29,7 +29,7 @@ class TelegramWebhookCommand extends Command
             } elseif (!empty($appUrl) && $appUrl !== 'http://localhost') {
                 $url = rtrim($appUrl, '/') . '/api/telegram/webhook';
             } else {
-                $url = 'https://meashcleaning.com/api/telegram/webhook';
+                $url = 'https://www.meashcleaningsolution.com/api/telegram/webhook';
             }
 
             $this->info("Setting Webhook to: {$url}...");
