@@ -198,30 +198,76 @@ class WebsiteSetting extends Model
     }
 
     /**
-     * Get only safe public settings, strictly filtering out tokens, secrets, credentials and admin configs
+     * Explicit whitelist of setting keys that are safe to expose to public unauthenticated visitors.
+     */
+    public static function getPublicAllowlist(): array
+    {
+        return [
+            'company_name',
+            'company_name_am',
+            'company_slogan',
+            'company_slogan_am',
+            'company_subtitle_en',
+            'company_subtitle_am',
+            'contact_phone_1',
+            'contact_phone_2',
+            'company_email',
+            'company_address',
+            'company_address_am',
+            'social_handle',
+            'working_hours_am',
+            'working_hours_en',
+            'telegram_channel',
+            'telegram_bot',
+            'tiktok',
+            'facebook',
+            'instagram',
+            'about_text_en',
+            'about_text_am',
+            'customer_promise_en',
+            'customer_promise_am',
+            'cta_text_en',
+            'cta_text_am',
+            'telebirr_account_number',
+            'telebirr_account_name',
+            'cbe_account_number',
+            'cbe_account_name',
+            'boa_account_number',
+            'boa_account_name',
+            'awash_account_number',
+            'awash_account_name',
+            'payment_instructions_am',
+            'payment_instructions_en',
+            'subcities',
+            'time_slots',
+            'pricing_rules',
+            'bot_welcome_am',
+            'bot_welcome_en',
+            'bot_help_am',
+            'bot_help_en',
+        ];
+    }
+
+    /**
+     * Get only safe public settings, strictly enforced by an explicit whitelist.
+     * Never returns bot tokens, secrets, database credentials, or private internal configurations.
      */
     public static function getPublicKeyValue(): array
     {
         $all = static::getAllKeyValue();
-        $sensitiveKeys = [
-            'telegram_bot_token',
-            'telegram_admin_chat_id',
-            'webhook_secret',
-            'admin_secret',
-            'db_password',
-            'sms_gateway_api_key',
-            'api_token',
-            'secret_token',
-            'jwt_secret',
-            'private_key',
-        ];
+        $allowlist = static::getPublicAllowlist();
 
-        return array_filter($all, function ($val, $key) use ($sensitiveKeys) {
-            $keyLower = strtolower($key);
-            if (in_array($keyLower, $sensitiveKeys, true)) {
-                return false;
+        $filtered = [];
+        foreach ($allowlist as $allowedKey) {
+            if (array_key_exists($allowedKey, $all)) {
+                $filtered[$allowedKey] = $all[$allowedKey];
             }
-            if (preg_match('/(token|secret|password|credential|private_key)/i', $keyLower)) {
+        }
+
+        // Secondary defense-in-depth: enforce regex block against sensitive words
+        return array_filter($filtered, function ($val, $key) {
+            $keyLower = strtolower($key);
+            if (preg_match('/(token|secret|password|credential|private_key|api_key|admin_chat)/i', $keyLower)) {
                 return false;
             }
             return true;

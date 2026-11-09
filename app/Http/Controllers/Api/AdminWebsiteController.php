@@ -12,11 +12,18 @@ use Illuminate\Http\Request;
 class AdminWebsiteController extends Controller
 {
     /**
-     * Get all website settings
+     * Get all website settings with sensitive values safely masked
      */
     public function getSettings(): JsonResponse
     {
         $settings = WebsiteSetting::getAllKeyValue();
+
+        // Mask sensitive tokens so real credentials are never sent directly in plain text
+        if (!empty($settings['telegram_bot_token'])) {
+            $len = strlen($settings['telegram_bot_token']);
+            $settings['telegram_bot_token'] = $len > 8 ? substr($settings['telegram_bot_token'], 0, 4) . '...' . substr($settings['telegram_bot_token'], -4) : '********';
+        }
+
         return response()->json([
             'success' => true,
             'settings' => $settings,
@@ -86,6 +93,10 @@ class AdminWebsiteController extends Controller
 
         foreach ($validated as $key => $val) {
             if ($val === null) {
+                continue;
+            }
+            // Do not overwrite secret if client sends back the masked placeholder
+            if ($key === 'telegram_bot_token' && (str_contains($val, '...') || str_contains($val, '****'))) {
                 continue;
             }
             if (is_array($val)) {

@@ -681,12 +681,18 @@
             try {
                 await apiFetch('/api/auth/logout', { method: 'POST' });
             } catch (e) {}
+            if (window.meashOffline && typeof window.meashOffline.clearUserData === 'function') {
+                try { await window.meashOffline.clearUserData(); } catch (err) {}
+            }
             localStorage.removeItem('meash_token');
             localStorage.removeItem('meash_user');
             checkAuthStatus();
         }
 
         function showLoginScreen(msg = '') {
+            if (window.meashOffline && typeof window.meashOffline.clearUserData === 'function') {
+                try { window.meashOffline.clearUserData(); } catch (err) {}
+            }
             localStorage.removeItem('meash_token');
             const loginScreen = document.getElementById('app-login-screen');
             const appWrapper = document.getElementById('app-authenticated-wrapper');

@@ -59,6 +59,15 @@ class SyncController extends Controller
                 $user = $request->user();
 
                 if ($entityType === 'order' && $action === 'create') {
+                    // Cleaners cannot create arbitrary orders in production
+                    if (app()->environment('production') && $user && $user->isCleaner()) {
+                        $errors[] = [
+                            'client_uuid' => $uuid,
+                            'error' => 'Unauthorized: Cleaners are not permitted to create orders in production.',
+                        ];
+                        continue;
+                    }
+
                     // Create Order
                     DB::transaction(function () use ($payload, $uuid, $request, &$synced) {
                         $orderNumber = Order::generateNextNumber();
@@ -89,6 +98,10 @@ class SyncController extends Controller
                             'source' => $payload['source'] ?? 'phone',
                             'order_status' => $orderStatus,
                             'payment_status' => 'unpaid',
+                            'subtotal' => 0,
+                            'discount' => 0,
+                            'tax' => 0,
+                            'total' => 0,
                             'appointment_date' => $payload['appointment_date'] ?? null,
                             'appointment_time_slot' => $payload['appointment_time_slot'] ?? 'morning',
                             'address' => $payload['address'] ?? 'አዲስ አበባ',
@@ -108,18 +121,30 @@ class SyncController extends Controller
                             ]);
                         }
 
+                        $subtotalCalc = 0;
                         if (!empty($payload['items'])) {
                             foreach ($payload['items'] as $it) {
+                                // Authoritative catalogue price lookup
+                                $service = !empty($it['service_id']) ? \App\Models\Service::find($it['service_id']) : null;
+                                $unitPrice = $service ? (float)$service->base_price : (float)($it['unit_price'] ?? 0);
+                                $qty = (float)($it['quantity'] ?? 1);
+                                $sub = round($qty * $unitPrice, 2);
+                                $subtotalCalc += $sub;
+
                                 OrderItem::create([
                                     'order_id' => $order->id,
-                                    'service_id' => $it['service_id'] ?? null,
-                                    'item_name' => $it['item_name'],
-                                    'quantity' => $it['quantity'],
-                                    'unit_price' => $it['unit_price'],
-                                    'subtotal' => (float)$it['quantity'] * (float)$it['unit_price'],
+                                    'service_id' => $service?->id ?? ($it['service_id'] ?? null),
+                                    'item_name' => $service ? ($service->name_am ?: $service->name_en) : ($it['item_name'] ?? 'አገልግሎት'),
+                                    'quantity' => $qty,
+                                    'unit_price' => $unitPrice,
+                                    'subtotal' => $sub,
                                 ]);
                             }
                         }
+
+                        $order->subtotal = $subtotalCalc;
+                        $order->total = $subtotalCalc;
+                        $order->save();
 
                         AuditLog::logAction(
                             $request->user()?->id,
@@ -232,6 +257,14 @@ class SyncController extends Controller
                         'entity_id' => $order->id,
                     ];
                 } elseif ($entityType === 'sales_visit') {
+                    if (!$user || (!$user->isSales() && !$user->isOwner())) {
+                        $errors[] = [
+                            'client_uuid' => $uuid,
+                            'error' => 'Unauthorized: Only Sales or Owner accounts can record sales visits.',
+                        ];
+                        continue;
+                    }
+
                     $visit = SalesVisit::create([
                         'visit_code' => SalesVisit::generateNextCode(),
                         'organization_id' => $payload['organization_id'],
@@ -262,6 +295,14 @@ class SyncController extends Controller
                         'entity_id' => $visit->id,
                     ];
                 } elseif ($entityType === 'expense') {
+                    if (!$user || (!$user->isOwner() && !$user->isFinance())) {
+                        $errors[] = [
+                            'client_uuid' => $uuid,
+                            'error' => 'Unauthorized: Only Finance or Owner accounts can record business expenses.',
+                        ];
+                        continue;
+                    }
+
                     $expense = Expense::create([
                         'expense_number' => Expense::generateNextNumber(),
                         'category' => $payload['category'],

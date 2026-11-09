@@ -452,6 +452,29 @@ class MeashOfflineEngine {
         });
     }
 
+    async clearUserData() {
+        if (!this.db) return;
+        return new Promise((resolve) => {
+            try {
+                const stores = ['orders', 'my_jobs', 'customers'];
+                const tx = this.db.transaction(stores, 'readwrite');
+                stores.forEach(name => {
+                    if (this.db.objectStoreNames.contains(name)) {
+                        tx.objectStore(name).clear();
+                    }
+                });
+                tx.oncomplete = () => {
+                    console.log('User offline cache cleanly wiped on logout.');
+                    resolve(true);
+                };
+                tx.onerror = () => resolve(false);
+            } catch (e) {
+                console.warn('Error clearing offline user data:', e);
+                resolve(false);
+            }
+        });
+    }
+
     async cacheItems(storeName, items) {
         if (!this.db || !Array.isArray(items)) return;
         return new Promise((resolve) => {

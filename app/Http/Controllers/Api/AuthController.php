@@ -31,9 +31,10 @@ class AuthController extends Controller
             ], 429);
         }
 
-        // Enforce strict login by exact email, phone number, or full username with password
+        // Enforce strict login by exact email, phone number, username, or full name with password
         $user = User::where('phone', $login)
             ->orWhere('email', $login)
+            ->orWhere('username', $login)
             ->orWhere('name', $login)
             ->first();
 
@@ -63,6 +64,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'role' => $user->role,
@@ -78,6 +80,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'role' => $user->role,

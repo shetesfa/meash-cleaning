@@ -63,8 +63,17 @@ class TelegramController extends Controller
 
   public function handleWebhook(Request $request): JsonResponse
   {
+    $updateId = $request->input('update_id');
+
     try {
       $secretToken = config('services.telegram.webhook_secret') ?: env('TELEGRAM_WEBHOOK_SECRET');
+
+      // In production, TELEGRAM_WEBHOOK_SECRET is strictly required. Fail closed if missing.
+      if (app()->environment('production') && empty($secretToken)) {
+        Log::error('Telegram webhook rejected: TELEGRAM_WEBHOOK_SECRET must be configured in production.');
+        return response()->json(['error' => 'Webhook secret not configured in production'], 401);
+      }
+
       if (!empty($secretToken)) {
         $incomingSecret = (string)$request->header('X-Telegram-Bot-Api-Secret-Token');
         if (empty($incomingSecret) || !hash_equals($secretToken, $incomingSecret)) {
@@ -73,35 +82,48 @@ class TelegramController extends Controller
         }
       }
 
-      $updateId = $request->input('update_id');
-      if ($updateId && !Cache::add("tg_update_{$updateId}", true, now()->addMinutes(10))) {
-        return response()->json(['ok' => true]);
+      // Idempotency: If this update has already been successfully processed, return 200 immediately
+      if ($updateId && (Cache::has("tg_update_{$updateId}") || Cache::has("tg_update_done_{$updateId}"))) {
+        return response()->json(['ok' => true, 'status' => 'already_processed']);
+      }
+
+      // Prevent concurrent processing of the exact same update
+      if ($updateId && !Cache::add("tg_update_lock_{$updateId}", true, now()->addMinutes(2))) {
+        return response()->json(['ok' => true, 'status' => 'in_progress']);
       }
 
       $update = $request->all();
+      $status = 'ignored';
 
       // 1. Handle Inline Query (@botUsername <query>)
       if (isset($update['inline_query'])) {
         $this->handleInlineQuery($update['inline_query']);
-        return response()->json(['status' => 'inline_handled']);
+        $status = 'inline_handled';
       }
-
       // 2. Handle Callback Query (Button clicks)
-      if (isset($update['callback_query'])) {
+      elseif (isset($update['callback_query'])) {
         $this->handleCallbackQuery($update['callback_query']);
-        return response()->json(['status' => 'callback_handled']);
+        $status = 'callback_handled';
       }
-
       // 3. Handle Private Message
-      if (isset($update['message'])) {
+      elseif (isset($update['message'])) {
         $this->handleMessage($update['message']);
-        return response()->json(['status' => 'message_handled']);
+        $status = 'message_handled';
       }
 
-      return response()->json(['status' => 'ignored']);
+      // Mark update successfully processed only AFTER the business operation completed
+      if ($updateId) {
+        Cache::put("tg_update_{$updateId}", true, now()->addHours(24));
+        Cache::put("tg_update_done_{$updateId}", true, now()->addHours(24));
+        Cache::forget("tg_update_lock_{$updateId}");
+      }
+
+      return response()->json(['status' => $status]);
     } catch (\Throwable $e) {
       if (!empty($updateId)) {
         Cache::forget("tg_update_{$updateId}");
+        Cache::forget("tg_update_done_{$updateId}");
+        Cache::forget("tg_update_lock_{$updateId}");
       }
       Log::error('Telegram webhook error: ' . $e->getMessage(), [
         'file' => $e->getFile(),
@@ -1303,12 +1325,26 @@ class TelegramController extends Controller
       'items.*.unit_price' => 'required|numeric|min:0',
     ]);
 
-    // Cryptographic validation of Telegram WebApp initData
     $initData = $request->input('init_data');
     $isProd = app()->environment('production');
     $enforceInitData = filter_var(env('TELEGRAM_ENFORCE_INITDATA', $isProd), FILTER_VALIDATE_BOOLEAN);
 
+    // In production or when init_data is provided, telegram_user_id from client is discarded
+    // and only taken from cryptographically verified initData.
+    if ($isProd || !empty($initData)) {
+      unset($validated['telegram_user_id']);
+    }
+
+    $initDataHash = !empty($initData) ? hash('sha256', (string)$initData) : null;
+
     if (!empty($initData)) {
+      // Replay prevention: check if this initData has already been used for an order
+      if ($initDataHash && Cache::has("tg_miniapp_used_{$initDataHash}")) {
+        throw ValidationException::withMessages([
+          'init_data' => ['This Telegram WebApp session request has already been processed. Please refresh.'],
+        ]);
+      }
+
       $extractedUser = null;
       $isValid = $this->verifyTelegramInitData((string)$initData, $this->botToken, $extractedUser);
       if (!$isValid) {
@@ -1319,7 +1355,7 @@ class TelegramController extends Controller
         }
         Log::warning('Telegram MiniApp initData signature mismatch.');
       } elseif (!empty($extractedUser['id'])) {
-        // Authoritative override of telegram_user_id from cryptographically verified Telegram payload
+        // Authoritative assignment of telegram_user_id ONLY from cryptographically verified Telegram payload
         $validated['telegram_user_id'] = (string)$extractedUser['id'];
       }
     } elseif ($enforceInitData) {
@@ -1503,6 +1539,11 @@ class TelegramController extends Controller
           "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ",
         'parse_mode' => 'HTML',
       ]);
+    }
+
+    // Mark initData hash as used to prevent replay attacks
+    if ($initDataHash) {
+      Cache::put("tg_miniapp_used_{$initDataHash}", true, now()->addMinutes(30));
     }
 
     // Dispatch non-critical side effects (SMS, Admin alert) after response to guarantee sub-2s response
