@@ -420,23 +420,37 @@ class TeamController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
+            'username' => 'nullable|string|max:64|unique:users,username',
+            'email' => 'nullable|email|max:255|unique:users,email',
             'phone' => 'nullable|string|max:32',
             'role' => 'required|string|in:owner,reception,cleaner,sales,finance',
-            'password' => [
-                'required',
-                'string',
-                \Illuminate\Validation\Rules\Password::min(12)
-                    ->letters()
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols(),
-            ],
+            'password' => 'required|string|min:6',
         ]);
+
+        $username = trim($validated['username'] ?? \Illuminate\Support\Str::slug($validated['name'], '_'));
+        if (empty($username)) {
+            $username = 'user_' . \Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(6));
+        }
+
+        // Ensure username is strictly unique
+        $baseUsername = $username;
+        $counter = 1;
+        while (\App\Models\User::where('username', $username)->exists()) {
+            $username = $baseUsername . '_' . $counter++;
+        }
+
+        $email = $validated['email'] ?? ($username . '@meash.internal');
+        $baseEmail = $email;
+        $counter = 1;
+        while (\App\Models\User::where('email', $email)->exists()) {
+            $email = str_replace('@', "_{$counter}@", $baseEmail);
+            $counter++;
+        }
 
         $user = \App\Models\User::create([
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'username' => $username,
+            'email' => $email,
             'phone' => $validated['phone'] ?? null,
             'role' => $validated['role'],
             'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),

@@ -134,12 +134,12 @@
 
             <form onsubmit="handleAppLoginSubmit(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">የተጠቃሚ ስም፣ ኢሜይል ወይም ስልክ ቁጥር</label>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">የተጠቃሚ ስም ወይም ስልክ (Username or Phone)</label>
                     <div class="relative">
                         <i data-lucide="user" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="app-login-input" required placeholder="የተጠቃሚ ስም፣ ኢሜይል ወይም ስልክ (ምሳሌ፦ amha ወይም owner@meash.com)" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="text" id="app-login-input" required placeholder="የተጠቃሚ ስም ወይም ስልክ ያስገቡ (ምሳሌ፦ amha)" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1">የስራ አስኪያጅ መለያ፦ <code class="text-cyan-400">amha</code> ወይም <code class="text-cyan-400">owner@meash.com</code></p>
+                    <p class="text-[11px] text-slate-500 mt-1">የስራ አስኪያጅ መለያ፦ <code class="text-cyan-400 font-bold">amha</code></p>
                 </div>
 
                 <div>
@@ -943,7 +943,7 @@
         async function switchRole(role) {
             currentUser.role = role;
             if (role === 'owner') {
-                currentUser.name = 'የሜሽ ዋና ስራ አስኪያጅ (GM)';
+                currentUser.name = 'አምሃ (ዋና ስራ አስኪያጅ)';
                 activeTab = 'dashboard';
             } else if (role === 'reception') {
                 currentUser.name = 'ቤተልሔም ታደሰ (ሪሴፕሽን)';
@@ -4269,7 +4269,7 @@
                                             <th class="py-3 px-3">ሰራተኛ</th>
                                             <th class="py-3 px-3">የስራ ድርሻ (Role)</th>
                                             <th class="py-3 px-3">ስልክ</th>
-                                            <th class="py-3 px-3">ኢሜይል</th>
+                                            <th class="py-3 px-3">የተጠቃሚ ስም (Username)</th>
                                             <th class="py-3 px-3">ሁኔታ</th>
                                             <th class="py-3 px-3 text-right">ክፍያ / Payroll</th>
                                         </tr>
@@ -4289,7 +4289,7 @@
                                                     </span>
                                                 </td>
                                                 <td class="py-3 px-3 font-mono text-slate-300">${e.phone || '—'}</td>
-                                                <td class="py-3 px-3 font-mono text-slate-400">${e.email}</td>
+                                                <td class="py-3 px-3 font-mono text-cyan-400 font-bold">${e.username || (e.email ? e.email.split('@')[0] : '—')}</td>
                                                 <td class="py-3 px-3">
                                                     <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400">
                                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
@@ -4340,8 +4340,8 @@
                                 <input type="text" id="new-emp-name" required placeholder="ለምሳሌ፡ ዮናስ አበበ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
                             </div>
                             <div>
-                                <label class="block text-slate-300 font-bold mb-1">ኢሜይል (ለመግቢያ የሚያገለግል) *</label>
-                                <input type="email" id="new-emp-email" required placeholder="yonas@meash.com" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono">
+                                <label class="block text-slate-300 font-bold mb-1">የተጠቃሚ ስም (ለመግቢያ የሚሆን Username) *</label>
+                                <input type="text" id="new-emp-username" required placeholder="ለምሳሌ፡ yonas" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-mono">
                             </div>
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">ስልክ ቁጥር *</label>
@@ -4380,9 +4380,10 @@
             btn.disabled = true;
             btn.innerText = 'በመመዝገብ ላይ...';
 
+            const usernameInput = document.getElementById('new-emp-username').value.trim();
             const payload = {
                 name: document.getElementById('new-emp-name').value.trim(),
-                email: document.getElementById('new-emp-email').value.trim(),
+                username: usernameInput,
                 phone: document.getElementById('new-emp-phone').value.trim(),
                 role: document.getElementById('new-emp-role').value,
                 password: document.getElementById('new-emp-password').value,
