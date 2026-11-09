@@ -19,6 +19,66 @@ class RealDataEndToEndTest extends TestCase
         parent::setUp();
         $this->seed();
         \Illuminate\Support\Facades\Config::set('services.telegram.webhook_secret', 'test-secret');
+        \Illuminate\Support\Facades\Config::set('services.telegram.bot_token', '123456789:ABCdefGHIjklMNOpqrSTUvwxYZ');
+        \Illuminate\Support\Facades\Http::fake([
+            'https://api.telegram.org/*' => \Illuminate\Support\Facades\Http::response(['ok' => true, 'result' => ['message_id' => 999]], 200),
+            '*' => \Illuminate\Support\Facades\Http::response(['ok' => true], 200),
+        ]);
+    }
+
+    private function getOrCreateSofaService(): Service
+    {
+        return Service::where('code', 'sofa')->first() ?: Service::create([
+            'name' => 'የሶፋ ጥልቅ ፅዳት (Sofa Deep Steam)',
+            'code' => 'sofa',
+            'category' => 'residential',
+            'pricing_type' => 'fixed',
+            'base_price' => 350.00,
+            'unit' => 'seat',
+            'is_active' => true,
+        ]);
+    }
+
+    private function getOrCreateOwner(): User
+    {
+        return User::where('role', 'owner')->first() ?: User::create([
+            'name' => 'E2E Owner',
+            'username' => 'e2e_owner',
+            'email' => 'e2e_owner@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'owner',
+        ]);
+    }
+
+    private function getOrCreateReception(): User
+    {
+        return User::where('role', 'reception')->first() ?: User::create([
+            'name' => 'E2E Reception',
+            'username' => 'e2e_reception',
+            'email' => 'e2e_reception@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'reception',
+        ]);
+    }
+
+    public static function generateValidTelegramInitData(string $botToken, int $userId = 987654321): string
+    {
+        $params = [
+            'auth_date' => (string)time(),
+            'query_id' => 'AA' . uniqid(),
+            'user' => json_encode(['id' => $userId, 'first_name' => 'Sara', 'username' => 'sara_tg']),
+        ];
+        ksort($params);
+        $dataCheckArr = [];
+        foreach ($params as $k => $v) {
+            $dataCheckArr[] = "{$k}={$v}";
+        }
+        $dataCheckString = implode("\n", $dataCheckArr);
+        $secretKey = hash_hmac('sha256', $botToken, 'WebAppData', true);
+        $hash = hash_hmac('sha256', $dataCheckString, $secretKey);
+        $params['hash'] = $hash;
+
+        return http_build_query($params);
     }
 
     /**
@@ -26,7 +86,7 @@ class RealDataEndToEndTest extends TestCase
      */
     public function test_website_booking_with_real_data(): void
     {
-        $sofa = Service::where('code', 'sofa')->first() ?: Service::first();
+        $sofa = $this->getOrCreateSofaService();
 
         $payload = [
             'customer_name' => 'Kidus Yohannes (Real Web Test)',
@@ -71,7 +131,9 @@ class RealDataEndToEndTest extends TestCase
      */
     public function test_telegram_mini_app_booking_with_real_data(): void
     {
-        $sofa = Service::where('code', 'sofa')->first() ?: Service::first();
+        $sofa = $this->getOrCreateSofaService();
+        $botToken = config('services.telegram.bot_token') ?: '123456789:ABCdefGHIjklMNOpqrSTUvwxYZ';
+        $initData = self::generateValidTelegramInitData($botToken, 987654321);
 
         $payload = [
             'customer_name' => 'Sara Bekele (Real MiniApp Test)',
@@ -83,6 +145,7 @@ class RealDataEndToEndTest extends TestCase
             'appointment_date' => now()->addDays(3)->toDateString(),
             'appointment_time_slot' => 'afternoon',
             'telegram_user_id' => '987654321',
+            'init_data' => $initData,
             'items' => [
                 [
                     'service_id' => $sofa->id,
@@ -113,6 +176,7 @@ class RealDataEndToEndTest extends TestCase
      */
     public function test_telegram_bot_webhook_booking_flow(): void
     {
+        $this->getOrCreateSofaService();
         $chatId = 5566778899;
 
         // Step 1: Send /start
@@ -159,7 +223,7 @@ class RealDataEndToEndTest extends TestCase
                 ]
             ]
         ];
-        $resBooking = $this->postJson('/api/telegram/webhook', $webAppDataUpdate);
+        $resBooking = $this->withHeaders(['X-Telegram-Bot-Api-Secret-Token' => 'test-secret'])->postJson('/api/telegram/webhook', $webAppDataUpdate);
         $resBooking->assertStatus(200);
 
         // Verify order created in Database from Bot
@@ -181,8 +245,8 @@ class RealDataEndToEndTest extends TestCase
      */
     public function test_orders_immediately_visible_to_admin_and_reception(): void
     {
-        $owner = User::where('role', 'owner')->first() ?: User::factory()->create(['role' => 'owner', 'email' => 'owner_test@meash.com']);
-        $reception = User::where('role', 'reception')->first() ?: User::factory()->create(['role' => 'reception', 'email' => 'reception_test@meash.com']);
+        $owner = $this->getOrCreateOwner();
+        $reception = $this->getOrCreateReception();
 
         // Check Owner can view latest orders including web, miniapp, and bot
         $ownerRes = $this->actingAs($owner)->getJson('/api/orders');
@@ -203,9 +267,9 @@ class RealDataEndToEndTest extends TestCase
      */
     public function test_website_order_is_visible_and_reconciles_through_payment(): void
     {
-        $service = Service::where('is_active', true)->firstOrFail();
-        $owner = User::where('role', 'owner')->firstOrFail();
-        $reception = User::where('role', 'reception')->firstOrFail();
+        $service = Service::where('is_active', true)->first() ?: $this->getOrCreateSofaService();
+        $owner = $this->getOrCreateOwner();
+        $reception = $this->getOrCreateReception();
 
         $booking = $this->postJson('/api/public/book', [
             'customer_name' => 'End To End Payment Customer',
@@ -265,6 +329,7 @@ class RealDataEndToEndTest extends TestCase
      */
     public function test_telegram_bot_interactive_chat_wizard_booking_flow(): void
     {
+        $this->getOrCreateSofaService();
         $wizardChatId = 7788990011;
 
         // Ensure user exists and has payload cache configured for confirmation step

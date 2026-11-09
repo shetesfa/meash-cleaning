@@ -36,6 +36,8 @@ jobs:
       SESSION_DRIVER: array
       QUEUE_CONNECTION: sync
       MAIL_MAILER: array
+      TELEGRAM_BOT_TOKEN: "123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"
+      MEASH_SEED_DEMO_DATA: "true"
 
     steps:
       - name: Checkout Code
@@ -64,6 +66,14 @@ jobs:
       - name: Prepare Laravel Environment
         run: |
           cp .env.example .env
+          sed -i 's/APP_ENV=production/APP_ENV=testing/' .env
+          sed -i 's/DB_DATABASE=meash_production_db/DB_DATABASE=meash_testing/' .env
+          sed -i 's/DB_USERNAME=meash_app_user/DB_USERNAME=root/' .env
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+          sed -i 's/SESSION_DRIVER=database/SESSION_DRIVER=array/' .env
+          sed -i 's/CACHE_STORE=database/CACHE_STORE=array/' .env
+          sed -i 's/MEASH_SEED_DEMO_DATA=false/MEASH_SEED_DEMO_DATA=true/' .env
+          sed -i 's/TELEGRAM_BOT_TOKEN=.*/TELEGRAM_BOT_TOKEN="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"/' .env
           php artisan key:generate --force
 
       - name: Run Database Migrations

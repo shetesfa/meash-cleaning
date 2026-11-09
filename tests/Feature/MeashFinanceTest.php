@@ -19,10 +19,47 @@ class MeashFinanceTest extends TestCase
         $this->seed();
     }
 
+    private function getOrCreateOwner(): User
+    {
+        return User::where('role', 'owner')->first() ?: User::create([
+            'name' => 'Finance Owner',
+            'username' => 'finance_owner',
+            'email' => 'fin_owner@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'owner',
+        ]);
+    }
+
+    private function getOrCreateUnpaidOrder(): Order
+    {
+        $order = Order::where('payment_status', 'unpaid')->first();
+        if ($order) {
+            return $order;
+        }
+
+        $customer = \App\Models\Customer::first() ?: \App\Models\Customer::create([
+            'name' => 'Finance Customer',
+            'phone' => '0911002233',
+            'address' => 'Bole',
+        ]);
+
+        return Order::create([
+            'order_number' => 'ORD-FIN-001',
+            'customer_id' => $customer->id,
+            'source' => 'phone',
+            'order_status' => 'pending',
+            'payment_status' => 'unpaid',
+            'total' => 2500,
+            'address' => 'Bole',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+    }
+
     public function test_payment_updates_order_payment_status_automatically(): void
     {
-        $owner = User::where('role', 'owner')->first();
-        $order = Order::where('payment_status', 'unpaid')->first();
+        $owner = $this->getOrCreateOwner();
+        $order = $this->getOrCreateUnpaidOrder();
 
         $response = $this->actingAs($owner)->postJson("/api/orders/{$order->id}/payment", [
             'amount' => $order->total,
@@ -38,7 +75,7 @@ class MeashFinanceTest extends TestCase
 
     public function test_profit_report_calculates_real_net_profit(): void
     {
-        $owner = User::where('role', 'owner')->first();
+        $owner = $this->getOrCreateOwner();
 
         $response = $this->actingAs($owner)->getJson('/api/finance/profit-report?period=all_time');
 

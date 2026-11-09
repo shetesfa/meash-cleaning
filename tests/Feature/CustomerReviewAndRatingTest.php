@@ -26,9 +26,29 @@ class CustomerReviewAndRatingTest extends TestCase
         ]);
     }
 
+    private function getOrCreateCustomer(): Customer
+    {
+        return Customer::first() ?: Customer::create([
+            'name' => 'Test Customer',
+            'phone' => '0911223344',
+            'address' => 'Bole, Addis Ababa',
+        ]);
+    }
+
+    private function getOrCreateOwner(): User
+    {
+        return User::where('role', 'owner')->first() ?: User::create([
+            'name' => 'Test Owner',
+            'username' => 'test_owner',
+            'email' => 'owner@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'owner',
+        ]);
+    }
+
     public function test_public_website_review_submission_with_high_rating_auto_approves(): void
     {
-        $customer = Customer::first();
+        $customer = $this->getOrCreateCustomer();
         $order = Order::create([
             'order_number' => 'ORD-REV-001',
             'customer_id' => $customer->id,
@@ -69,7 +89,7 @@ class CustomerReviewAndRatingTest extends TestCase
 
     public function test_public_website_review_submission_with_low_rating_stays_unapproved(): void
     {
-        $customer = Customer::first();
+        $customer = $this->getOrCreateCustomer();
         $order = Order::create([
             'order_number' => 'ORD-REV-002',
             'customer_id' => $customer->id,
@@ -100,7 +120,7 @@ class CustomerReviewAndRatingTest extends TestCase
 
     public function test_telegram_webhook_rate_order_callback_creates_feedback(): void
     {
-        $customer = Customer::first();
+        $customer = $this->getOrCreateCustomer();
         $order = Order::create([
             'order_number' => 'ORD-TG-REV-001',
             'customer_id' => $customer->id,
@@ -178,8 +198,8 @@ class CustomerReviewAndRatingTest extends TestCase
 
     public function test_manual_send_review_request_from_reception_or_owner(): void
     {
-        $owner = User::where('role', 'owner')->first();
-        $customer = Customer::first();
+        $owner = $this->getOrCreateOwner();
+        $customer = $this->getOrCreateCustomer();
         $customer->telegram_user_id = '987654321';
         $customer->save();
 
@@ -205,8 +225,8 @@ class CustomerReviewAndRatingTest extends TestCase
 
     public function test_order_completion_triggers_review_notification(): void
     {
-        $owner = User::where('role', 'owner')->first();
-        $customer = Customer::first();
+        $owner = $this->getOrCreateOwner();
+        $customer = $this->getOrCreateCustomer();
         $customer->phone = '0911554433';
         $customer->save();
 

@@ -21,6 +21,7 @@ class TelegramOptimizationAndChapaRemovalTest extends TestCase
     {
         parent::setUp();
         Cache::flush();
+        config(['services.telegram.bot_token' => '123456789:ABCdefGHIjklMNOpqrSTUvwxYZ']);
     }
 
     public function test_chapa_is_rejected_in_order_payment_and_website_booking(): void

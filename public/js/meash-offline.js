@@ -414,6 +414,10 @@ class MeashOfflineEngine {
         return all.filter(it => it.status === 'failed' && it.user_id === currentUserId);
     }
 
+    getAuthToken() {
+        return localStorage.getItem('meash_token') || (window.authToken || null);
+    }
+
     async getQuarantinedItems() {
         // Strict privacy: Only authenticated Owner/Admin accounts can inspect quarantined unassigned records
         if (!this.isOwnerOrAdmin()) {
@@ -434,6 +438,31 @@ class MeashOfflineEngine {
             alert('No quarantined records found.');
             return;
         }
+
+        // Server-Side Authorization Verification: Do not rely solely on client-side state
+        try {
+            const token = this.getAuthToken();
+            const res = await fetch('/api/sync/quarantine/export', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({ items: quarantined.map(i => ({ client_uuid: i.client_uuid })) })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                alert(errData.error || 'Server authorization failed: Only an authenticated Owner can export quarantined records.');
+                return;
+            }
+        } catch (netErr) {
+            console.error('Failed to verify export authorization with server:', netErr);
+            alert('Security verification failed: Cannot export quarantined records without server verification.');
+            return;
+        }
+
         const blob = new Blob([JSON.stringify(quarantined, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -456,18 +485,47 @@ class MeashOfflineEngine {
         if (!targetUserId || targetUserId !== currentUserId) {
             targetUserId = currentUserId;
         }
+
         const all = await this.getAllItems('sync_queue');
+        const quarantined = all.filter(it => it.status === 'quarantined' || !it.user_id);
+        if (quarantined.length === 0) {
+            return 0;
+        }
+
+        // Server-Side Verification: Ensure server approves the recovery and verifies owner permissions
+        const token = this.getAuthToken();
+        const res = await fetch('/api/sync/quarantine/recover', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+                items: quarantined.map(i => ({ client_uuid: i.client_uuid })),
+                target_user_id: targetUserId
+            })
+        });
+
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            const msg = errData.error || 'Server authorization failed: Only an authenticated Owner can recover quarantined records.';
+            console.error(msg);
+            throw new Error(msg);
+        }
+
+        const resData = await res.json();
+        const authorizedTarget = resData.target_user_id || targetUserId;
+
         let count = 0;
-        for (const it of all) {
-            if (it.status === 'quarantined' || !it.user_id) {
-                it.user_id = targetUserId;
-                it.status = 'pending';
-                it.retries = 0;
-                it.last_error = null;
-                it._recovered_by_owner_at = new Date().toISOString();
-                await this.putStoreItem('sync_queue', it);
-                count++;
-            }
+        for (const it of quarantined) {
+            it.user_id = authorizedTarget;
+            it.status = 'pending';
+            it.retries = 0;
+            it.last_error = null;
+            it._recovered_by_owner_at = new Date().toISOString();
+            await this.putStoreItem('sync_queue', it);
+            count++;
         }
         this.notifyStatus();
         return count;

@@ -18,10 +18,60 @@ class MeashOfflineSyncTest extends TestCase
         $this->seed();
     }
 
+    private function getOrCreateStaff(): User
+    {
+        return User::whereIn('role', ['reception', 'owner'])->first() ?: User::create([
+            'name' => 'Sync Staff',
+            'username' => 'sync_staff',
+            'email' => 'sync_staff@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'reception',
+        ]);
+    }
+
+    private function getOrCreateCleaner(): User
+    {
+        return User::where('role', 'cleaner')->first() ?: User::create([
+            'name' => 'Sync Cleaner',
+            'username' => 'sync_cleaner',
+            'email' => 'sync_cleaner@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'cleaner',
+        ]);
+    }
+
+    private function getOrCreateCustomer(): Customer
+    {
+        return Customer::first() ?: Customer::create([
+            'name' => 'Sync Customer',
+            'phone' => '0911998877',
+            'address' => 'Bole Medhanialem',
+        ]);
+    }
+
+    private function getOrCreateOrder(): Order
+    {
+        $order = Order::first();
+        if ($order) return $order;
+
+        $customer = $this->getOrCreateCustomer();
+        return Order::create([
+            'order_number' => 'ORD-SYNC-001',
+            'customer_id' => $customer->id,
+            'source' => 'phone',
+            'order_status' => 'assigned',
+            'payment_status' => 'unpaid',
+            'total' => 1400,
+            'address' => 'Bole Medhanialem',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+    }
+
     public function test_offline_sync_batch_creates_order_idempotently(): void
     {
-        $staff = User::where('role', 'reception')->first() ?: User::where('role', 'owner')->first();
-        $customer = Customer::first();
+        $staff = $this->getOrCreateStaff();
+        $customer = $this->getOrCreateCustomer();
         $uuid = 'test-client-uuid-' . uniqid();
 
         $batchPayload = [
@@ -62,8 +112,8 @@ class MeashOfflineSyncTest extends TestCase
 
     public function test_sync_detects_conflict_when_server_version_diverges(): void
     {
-        $cleaner = User::where('role', 'cleaner')->first();
-        $order = Order::first();
+        $cleaner = $this->getOrCreateCleaner();
+        $order = $this->getOrCreateOrder();
 
         // Simulate server updated ahead (version incremented to 5, status cancelled by owner)
         $order->version = 5;

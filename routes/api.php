@@ -191,6 +191,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/batch', [SyncController::class, 'batchSync']);
         Route::get('/conflicts', [SyncController::class, 'listConflicts'])->middleware('role:owner,reception');
         Route::post('/conflicts/{conflict}/resolve', [SyncController::class, 'resolveConflict'])->middleware('role:owner,reception');
+        Route::post('/quarantine/export', [SyncController::class, 'exportQuarantined'])->middleware('role:owner');
+        Route::post('/quarantine/recover', [SyncController::class, 'recoverQuarantined'])->middleware('role:owner');
     });
 
     // L. Telegram Administrative Operations (Strictly Owner Only)

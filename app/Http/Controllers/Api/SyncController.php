@@ -12,6 +12,7 @@ use App\Models\OrderItem;
 use App\Models\SalesVisit;
 use App\Models\SyncConflict;
 use App\Models\SyncIdempotencyRecord;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -628,5 +629,94 @@ class SyncController extends Controller
         ]);
 
         return response()->json(['message' => 'Conflict resolved successfully', 'conflict' => $conflict]);
+    }
+
+    public function exportQuarantined(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user || ! in_array($user->role, ['owner', 'admin'])) {
+            return response()->json(['error' => 'Unauthorized: Only an authenticated Owner or Administrator can export quarantined offline records.'], 403);
+        }
+
+        $validated = $request->validate([
+            'items' => 'nullable|array',
+            'items.*.client_uuid' => 'required_with:items|string',
+        ]);
+
+        $exportedCount = count($validated['items'] ?? []);
+
+        AuditLog::create([
+            'user_id' => $user->id,
+            'action' => 'sync_quarantine_exported',
+            'auditable_type' => SyncIdempotencyRecord::class,
+            'auditable_id' => 0,
+            'old_values' => null,
+            'new_values' => [
+                'exported_count' => $exportedCount,
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Quarantined records export authorized by Owner.',
+            'exported_count' => $exportedCount,
+        ]);
+    }
+
+    public function recoverQuarantined(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user || ! in_array($user->role, ['owner', 'admin'])) {
+            return response()->json(['error' => 'Unauthorized: Only an authenticated Owner or Administrator can authorize recovery of quarantined offline records.'], 403);
+        }
+
+        $validated = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.client_uuid' => 'required|string',
+            'target_user_id' => 'nullable|integer|exists:users,id',
+        ]);
+
+        $targetUserId = $validated['target_user_id'] ?? $user->id;
+
+        $targetUser = User::find($targetUserId);
+        if (! $targetUser) {
+            return response()->json(['error' => 'Target user does not exist.'], 422);
+        }
+
+        $recoveredUuids = [];
+        foreach ($validated['items'] as $item) {
+            $uuid = $item['client_uuid'];
+            $recoveredUuids[] = $uuid;
+
+            $record = SyncIdempotencyRecord::where('client_uuid', $uuid)->first();
+            if ($record) {
+                $record->update(['user_id' => $targetUserId]);
+            }
+        }
+
+        AuditLog::create([
+            'user_id' => $user->id,
+            'action' => 'sync_quarantine_recovered',
+            'auditable_type' => SyncIdempotencyRecord::class,
+            'auditable_id' => 0,
+            'old_values' => null,
+            'new_values' => [
+                'authorized_by_owner_id' => $user->id,
+                'assigned_target_user_id' => $targetUserId,
+                'recovered_uuids' => $recoveredUuids,
+                'recovered_count' => count($recoveredUuids),
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Quarantined records recovery authorized and verified by Owner.',
+            'target_user_id' => $targetUserId,
+            'recovered_count' => count($recoveredUuids),
+        ]);
     }
 }

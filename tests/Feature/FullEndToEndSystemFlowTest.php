@@ -70,12 +70,43 @@ class FullEndToEndSystemFlowTest extends TestCase
         ]);
     }
 
+    public static function generateValidTelegramInitData(string $botToken, int $userId = 987654321): string
+    {
+        $params = [
+            'auth_date' => (string)time(),
+            'query_id' => 'AA' . uniqid(),
+            'user' => json_encode(['id' => $userId, 'first_name' => 'Dawit', 'username' => 'dawit_tg']),
+        ];
+        ksort($params);
+        $dataCheckArr = [];
+        foreach ($params as $k => $v) {
+            $dataCheckArr[] = "{$k}={$v}";
+        }
+        $dataCheckString = implode("\n", $dataCheckArr);
+        $secretKey = hash_hmac('sha256', $botToken, 'WebAppData', true);
+        $hash = hash_hmac('sha256', $dataCheckString, $secretKey);
+        $params['hash'] = $hash;
+
+        return http_build_query($params);
+    }
+
     /**
      * Flow 1: 4 Channels (Bot, MiniApp, Website, Phone) & Auto-Sync into telegram_users Broadcast List
      */
     public function test_flow_1_orders_from_all_four_channels_and_auto_sync_to_broadcast_list(): void
     {
         $service = Service::where('code', 'floor_ceramic')->first() ?? Service::first();
+        if (!$service) {
+            $service = Service::create([
+                'name' => 'Floor Ceramic',
+                'code' => 'floor_ceramic',
+                'category' => 'residential',
+                'pricing_type' => 'fixed',
+                'base_price' => 60,
+                'unit' => 'sqm',
+                'is_active' => true,
+            ]);
+        }
 
         // 1. Channel A: Direct Phone Call Order (Reception / Owner)
         $phoneOrderRes = $this->actingAs($this->reception)->postJson('/api/orders', [
@@ -133,6 +164,9 @@ class FullEndToEndSystemFlowTest extends TestCase
         ]);
 
         // 3. Channel C: Telegram MiniApp Booking
+        $botToken = config('services.telegram.bot_token') ?: '123456789:ABCdefGHIjklMNOpqrSTUvwxYZ';
+        $initData = self::generateValidTelegramInitData($botToken, 987654321);
+
         $miniappRes = $this->postJson('/api/telegram/miniapp/book', [
             'customer_name' => 'MiniApp Customer Dawit',
             'customer_phone' => '0933445566',
@@ -142,6 +176,7 @@ class FullEndToEndSystemFlowTest extends TestCase
             'appointment_time_slot' => 'night',
             'payment_method' => 'cash',
             'telegram_user_id' => '987654321',
+            'init_data' => $initData,
             'items' => [
                 [
                     'service_id' => $service->id,

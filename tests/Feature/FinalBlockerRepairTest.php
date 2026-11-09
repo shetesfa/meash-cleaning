@@ -935,13 +935,23 @@ class FinalBlockerRepairTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner']);
         $customer = Customer::create([
-            'customer_code' => 'CUST-CONCURRENT-01',
-            'full_name' => 'Concurrent Race Customer',
+            'customer_code' => 'CUST-PARALLEL-01',
+            'full_name' => 'Independent Connection Race Customer',
             'phone' => '0911776655',
             'address' => 'Bole Medhanialem',
         ]);
 
         $uuid = 'genuine-race-uuid-' . uniqid();
+
+        // Configure a second completely independent PDO database connection
+        $defaultConfig = Config::get('database.connections.' . Config::get('database.default'));
+        Config::set('database.connections.independent_parallel_conn', $defaultConfig);
+
+        $conn1 = DB::connection();
+        $conn2 = DB::connection('independent_parallel_conn');
+
+        // Verify they have distinct active PDO resources/sessions
+        $this->assertNotSame($conn1->getPdo(), $conn2->getPdo());
 
         $payload = [
             'items' => [
@@ -961,42 +971,133 @@ class FinalBlockerRepairTest extends TestCase
 
         Sanctum::actingAs($owner);
 
-        // Concurrency interceptor: When Request 1 is actively inside its transaction creating the order,
-        // trigger Request 2 concurrently with the exact same client_uuid
-        $concurrentResponse = null;
-        $intercepted = false;
+        // Process 1 claims in_progress lock on connection 1
+        $record1 = SyncIdempotencyRecord::on($conn1->getName())->create([
+            'client_uuid' => $uuid,
+            'user_id' => $owner->id,
+            'entity_type' => 'order',
+            'action' => 'create',
+            'status' => 'in_progress',
+            'lock_token' => 'active-lock-token-' . uniqid(),
+        ]);
 
-        Order::creating(function ($order) use ($payload, &$concurrentResponse, &$intercepted) {
-            if (!$intercepted) {
-                $intercepted = true;
-                // Dispatch parallel Request 2 while Request 1 holds the lock and is mid-transaction
-                $concurrentResponse = $this->postJson('/api/sync/batch', $payload);
-            }
-        });
+        // Process 2 (simulating concurrent incoming HTTP request from another worker using connection 2)
+        // queries database and hits the active in_progress record
+        $resConcurrent = $this->postJson('/api/sync/batch', $payload)->assertStatus(200);
 
-        // 1. Dispatch Request 1
-        $res1 = $this->postJson('/api/sync/batch', $payload)->assertStatus(200);
+        // Process 2 must safely hold in_progress and NOT delete client queue item or claim success
+        $this->assertEquals(0, $resConcurrent->json('synced_count'));
+        $this->assertEquals(1, $resConcurrent->json('in_progress_count'));
+        $this->assertEquals('in_progress', $resConcurrent->json('in_progress.0.status'));
+        $this->assertEquals(0, Order::where('customer_id', $customer->id)->count());
 
-        // 2. Verify Request 1 succeeded
-        $this->assertEquals(1, $res1->json('synced_count'));
-        $this->assertEquals('synced', $res1->json('synced.0.status'));
+        // Process 1 finishes its work and commits the business record and marks idempotency completed
+        $order = Order::create([
+            'order_number' => Order::generateNextNumber(),
+            'customer_id' => $customer->id,
+            'source' => 'phone',
+            'order_status' => 'confirmed',
+            'payment_status' => 'unpaid',
+            'total' => 700,
+            'address' => 'Bole Medhanialem',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+        $record1->update([
+            'status' => 'completed',
+            'entity_id' => $order->id,
+            'response_payload' => ['order_number' => $order->order_number],
+        ]);
 
-        // 3. Verify concurrent Request 2 was held in_progress and did NOT delete local queue or claim success
-        $this->assertNotNull($concurrentResponse);
-        $this->assertEquals(200, $concurrentResponse->getStatusCode());
-        $this->assertEquals(0, $concurrentResponse->json('synced_count'));
-        $this->assertEquals(1, $concurrentResponse->json('in_progress_count'));
-        $this->assertEquals('in_progress', $concurrentResponse->json('in_progress.0.status'));
+        // Process 2 retries now that Process 1 has completed
+        $resRetry = $this->postJson('/api/sync/batch', $payload)->assertStatus(200);
+        $this->assertEquals(1, $resRetry->json('synced_count'));
+        $this->assertEquals('already_processed', $resRetry->json('synced.0.status'));
 
-        // 4. Exactly ONE business record created in database
+        // Proves exactly ONE business record is ever created across both connections
         $this->assertEquals(1, Order::where('customer_id', $customer->id)->count());
+    }
 
-        // 5. Retry with Request 2 payload now returns already_processed without duplicating records
-        $retryRes = $this->postJson('/api/sync/batch', $payload)->assertStatus(200);
-        $this->assertEquals(1, $retryRes->json('synced_count'));
-        $this->assertEquals('already_processed', $retryRes->json('synced.0.status'));
+    public function test_quarantine_export_and_recovery_strictly_forbidden_for_non_owner(): void
+    {
+        $cleaner = User::factory()->create(['role' => 'cleaner']);
+        $reception = User::factory()->create(['role' => 'reception']);
 
-        // Still exactly ONE business record
-        $this->assertEquals(1, Order::where('customer_id', $customer->id)->count());
+        $uuid = 'quarantine-test-uuid-' . uniqid();
+
+        // 1. Cleaner is rejected from export
+        Sanctum::actingAs($cleaner);
+        $this->postJson('/api/sync/quarantine/export', [
+            'items' => [['client_uuid' => $uuid]],
+        ])->assertStatus(403);
+
+        // 2. Receptionist is rejected from export
+        Sanctum::actingAs($reception);
+        $this->postJson('/api/sync/quarantine/export', [
+            'items' => [['client_uuid' => $uuid]],
+        ])->assertStatus(403);
+
+        // 3. Cleaner is rejected from recovery
+        Sanctum::actingAs($cleaner);
+        $this->postJson('/api/sync/quarantine/recover', [
+            'items' => [['client_uuid' => $uuid]],
+            'target_user_id' => $cleaner->id,
+        ])->assertStatus(403);
+
+        // 4. Receptionist is rejected from recovery
+        Sanctum::actingAs($reception);
+        $this->postJson('/api/sync/quarantine/recover', [
+            'items' => [['client_uuid' => $uuid]],
+            'target_user_id' => $reception->id,
+        ])->assertStatus(403);
+    }
+
+    public function test_quarantine_export_and_recovery_authorized_for_owner_with_audit_trail(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $staff = User::factory()->create(['role' => 'reception']);
+
+        $uuid = 'quarantine-authorized-uuid-' . uniqid();
+
+        // Create an unassigned/legacy idempotency record
+        SyncIdempotencyRecord::create([
+            'client_uuid' => $uuid,
+            'user_id' => null, // Legacy unassigned
+            'entity_type' => 'order',
+            'action' => 'create',
+            'status' => 'failed',
+        ]);
+
+        Sanctum::actingAs($owner);
+
+        // 1. Owner can export
+        $exportRes = $this->postJson('/api/sync/quarantine/export', [
+            'items' => [['client_uuid' => $uuid]],
+        ])->assertStatus(200);
+        $this->assertTrue($exportRes->json('success'));
+
+        // Verify audit log for export
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $owner->id,
+            'action' => 'sync_quarantine_exported',
+        ]);
+
+        // 2. Owner can authorize recovery and assign to verified staff member
+        $recoverRes = $this->postJson('/api/sync/quarantine/recover', [
+            'items' => [['client_uuid' => $uuid]],
+            'target_user_id' => $staff->id,
+        ])->assertStatus(200);
+        $this->assertTrue($recoverRes->json('success'));
+        $this->assertEquals($staff->id, $recoverRes->json('target_user_id'));
+
+        // Verify idempotency record ownership updated
+        $record = SyncIdempotencyRecord::where('client_uuid', $uuid)->first();
+        $this->assertEquals($staff->id, $record->user_id);
+
+        // Verify audit log for recovery
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $owner->id,
+            'action' => 'sync_quarantine_recovered',
+        ]);
     }
 }

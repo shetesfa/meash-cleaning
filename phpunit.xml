@@ -31,5 +31,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="TELEGRAM_BOT_TOKEN" value="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"/>
+        <env name="MEASH_SEED_DEMO_DATA" value="true"/>
     </php>
 </phpunit>

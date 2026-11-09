@@ -21,12 +21,56 @@ class MeashOrderTest extends TestCase
         $this->seed();
     }
 
+    private function getOrCreateOwner(): User
+    {
+        return User::where('role', 'owner')->first() ?: User::create([
+            'name' => 'Order Owner',
+            'username' => 'order_owner',
+            'email' => 'order_owner@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'owner',
+        ]);
+    }
+
+    private function getOrCreateCleaner(): User
+    {
+        return User::where('role', 'cleaner')->first() ?: User::create([
+            'name' => 'Order Cleaner',
+            'username' => 'order_cleaner',
+            'email' => 'order_cleaner@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'cleaner',
+        ]);
+    }
+
+    private function getOrCreateCustomer(): Customer
+    {
+        return Customer::first() ?: Customer::create([
+            'name' => 'Order Customer',
+            'phone' => '0911776655',
+            'address' => 'Bole Medhanialem',
+        ]);
+    }
+
+    private function getOrCreateService(string $code, string $name, float $price): Service
+    {
+        return Service::where('code', $code)->first() ?: Service::create([
+            'name' => $name,
+            'code' => $code,
+            'category' => 'residential',
+            'pricing_type' => 'fixed',
+            'base_price' => $price,
+            'unit' => 'piece',
+            'is_active' => true,
+        ]);
+    }
+
     public function test_multi_item_order_calculates_totals_accurately(): void
     {
-        $user = User::where('role', 'owner')->first();
-        $customer = Customer::first();
-        $sofa = Service::where('code', 'sofa')->first();
-        $carpet = Service::where('code', 'carpet')->first();
+        $user = $this->getOrCreateOwner();
+        $customer = $this->getOrCreateCustomer();
+        $sofa = $this->getOrCreateService('sofa', 'Sofa Cleaning', 350.00);
+        $carpet = $this->getOrCreateService('carpet', 'Carpet Cleaning', 80.00);
 
         $payload = [
             'customer_id' => $customer->id,
@@ -66,8 +110,8 @@ class MeashOrderTest extends TestCase
 
     public function test_cleaner_can_complete_job_and_schedule_followup(): void
     {
-        $cleaner = User::where('role', 'cleaner')->first();
-        $customer = Customer::first();
+        $cleaner = $this->getOrCreateCleaner();
+        $customer = $this->getOrCreateCustomer();
         $order = Order::firstOrCreate(
             ['order_status' => 'assigned'],
             [
