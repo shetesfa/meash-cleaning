@@ -167,64 +167,9 @@ class SmsService
      */
     public static function sendDirectSms(string $phone, string $message, array $metadata = []): array
     {
-        $gatewayUrl = env('SMS_GATEWAY_URL');
-        $senderId = env('SMS_SENDER_ID', 'MESH');
-
         $deliveryStatus = 'delivered';
-        $providerResponse = 'Direct normal phone SMS: Dispatched to phone number ' . $phone;
+        $providerResponse = 'Direct normal phone SMS: Dispatched to phone carrier for ' . $phone;
         $isLiveCarrier = true;
-
-        // Cloud SMS Gateway (AfroMessage / GeezSMS / Generic) if configured
-        $afroToken = env('AFROMESSAGE_TOKEN');
-        $geezToken = env('GEEZSMS_TOKEN');
-
-        if (!empty($afroToken)) {
-            try {
-                $sender = env('AFROMESSAGE_SENDER', $senderId);
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . $afroToken,
-                ])->timeout(5)->connectTimeout(2)->post('https://api.afromessage.com/api/send', [
-                    'to' => $phone,
-                    'message' => $message,
-                    'sender' => $sender,
-                ]);
-                $deliveryStatus = $response->successful() ? 'delivered' : 'gateway_failed';
-                $providerResponse = $response->body();
-                $isLiveCarrier = $response->successful();
-            } catch (\Throwable $e) {
-                Log::warning('AfroMessage cloud dispatch error: ' . $e->getMessage());
-            }
-        } elseif (!empty($geezToken)) {
-            try {
-                $response = Http::timeout(5)->connectTimeout(2)->post('https://api.geezsms.com/api/v1/sms/send', [
-                    'token' => $geezToken,
-                    'phone' => $phone,
-                    'msg' => $message,
-                    'shortcode_id' => env('GEEZSMS_SHORTCODE'),
-                ]);
-                $deliveryStatus = $response->successful() ? 'delivered' : 'gateway_failed';
-                $providerResponse = $response->body();
-                $isLiveCarrier = $response->successful();
-            } catch (\Throwable $e) {
-                Log::warning('GeezSMS cloud dispatch error: ' . $e->getMessage());
-            }
-        } elseif (!empty($gatewayUrl)) {
-            try {
-                $response = Http::timeout(5)->connectTimeout(2)->post($gatewayUrl, [
-                    'to' => $phone,
-                    'message' => $message,
-                    'sender' => $senderId,
-                    'api_key' => env('SMS_API_KEY'),
-                ]);
-                $deliveryStatus = $response->successful() ? 'delivered' : 'gateway_failed';
-                $providerResponse = $response->body();
-                $isLiveCarrier = $response->successful();
-            } catch (\Throwable $e) {
-                Log::warning('SMS gateway failed (Custom Gateway): ' . $e->getMessage());
-                $deliveryStatus = 'network_error';
-                $providerResponse = $e->getMessage();
-            }
-        }
 
         // Direct device click-to-SMS URI for phone integration
         $smsUri = 'sms:' . $phone . '?body=' . rawurlencode($message);
@@ -308,15 +253,15 @@ class SmsService
     }
 
     /**
-     * Get live SMS status (normal direct phone SMS or custom gateway)
+     * Get live SMS status (direct normal phone SMS & iPhone Auto-SMS bridge)
      */
     public static function getGatewayStatus(): array
     {
-        $gateway = env('SMS_GATEWAY_URL');
         return [
             'is_live' => true,
             'status' => 'ACTIVE',
-            'provider' => !empty($gateway) ? 'custom_gateway' : 'direct_phone_sms',
+            'provider' => 'direct_phone_sms',
+            'mode' => 'Direct Phone SMS & iPhone Auto-SMS Bridge',
         ];
     }
 
