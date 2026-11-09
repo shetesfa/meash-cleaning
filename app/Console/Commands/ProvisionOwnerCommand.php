@@ -94,8 +94,8 @@ class ProvisionOwnerCommand extends Command
             }
         }
 
-        if (strlen($password) < 12 || !preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password)) {
-            $this->error('The Owner password must be at least 12 characters long and include uppercase letters, lowercase letters, and numbers.');
+        if (strlen($password) < 12 || !preg_match('/[A-Z]/', $password) || !preg_match('/[a-z]/', $password) || !preg_match('/[0-9]/', $password) || !preg_match('/[^A-Za-z0-9]/', $password)) {
+            $this->error('The Owner password must be at least 12 characters long and include uppercase letters, lowercase letters, numbers, and special symbols (e.g. !@#$%^&*).');
             return Command::FAILURE;
         }
 

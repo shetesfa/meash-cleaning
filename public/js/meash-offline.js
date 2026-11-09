@@ -302,11 +302,18 @@ class MeashOfflineEngine {
 
             const data = await response.json();
 
-            // 1. Process successfully synced items
+            // 1. Process successfully synced items (only permanently purge completed or already_processed items)
             if (data.synced && Array.isArray(data.synced)) {
                 for (const s of data.synced) {
-                    await this.deleteStoreItem('sync_queue', s.client_uuid);
+                    if (s.status === 'synced' || s.status === 'already_processed') {
+                        await this.deleteStoreItem('sync_queue', s.client_uuid);
+                    }
                 }
+            }
+
+            // 1b. In-progress items from concurrent locks must be retained in queue
+            if (data.in_progress && Array.isArray(data.in_progress)) {
+                console.log('Concurrent sync in progress for items, retaining locally:', data.in_progress);
             }
 
             // 2. Process individual item errors from server
@@ -363,10 +370,19 @@ class MeashOfflineEngine {
     async getPendingItems() {
         const all = await this.getAllItems('sync_queue');
         const currentUserId = this.getCurrentUserId();
+        if (!currentUserId) return [];
+
         return all.filter(it => {
-            if (it.status === 'failed') return false;
-            // Account Isolation: never sync another user's pending operations with current user's token
-            if (currentUserId && it.user_id && it.user_id !== currentUserId) {
+            if (it.status === 'failed' || it.status === 'quarantined') return false;
+            // Account Isolation: Quarantine unowned legacy records missing user_id. Never submit under new user!
+            if (!it.user_id) {
+                it.status = 'quarantined';
+                it.last_error = 'Quarantined: legacy offline operation missing user_id attribution.';
+                this.putStoreItem('sync_queue', it);
+                return false;
+            }
+            // Never sync another user's pending operations with current user's token
+            if (it.user_id !== currentUserId) {
                 return false;
             }
             return true;
@@ -375,12 +391,27 @@ class MeashOfflineEngine {
 
     async getFailedItems() {
         const all = await this.getAllItems('sync_queue');
-        return all.filter(it => it.status === 'failed');
+        const currentUserId = this.getCurrentUserId();
+        return all.filter(it => {
+            const isFailed = it.status === 'failed' || it.status === 'quarantined';
+            if (!isFailed) return false;
+            if (currentUserId && it.user_id) {
+                return it.user_id === currentUserId;
+            }
+            // Legacy unowned items visible only if no user_id and current session needs recovery
+            return !it.user_id;
+        });
     }
 
     async retryFailedItem(clientUuid) {
         const item = await this.getStoreItem('sync_queue', clientUuid);
+        const currentUserId = this.getCurrentUserId();
         if (item) {
+            // Verify ownership before retry: unowned legacy or another user's item cannot be submitted
+            if (!item.user_id || item.user_id !== currentUserId) {
+                console.warn('Cannot retry item: ownership mismatch or missing user attribution.');
+                return;
+            }
             item.status = 'pending';
             item.retries = 0;
             item.last_error = null;
@@ -391,8 +422,27 @@ class MeashOfflineEngine {
     }
 
     async discardFailedItem(clientUuid) {
-        await this.deleteStoreItem('sync_queue', clientUuid);
-        this.notifyStatus();
+        const item = await this.getStoreItem('sync_queue', clientUuid);
+        const currentUserId = this.getCurrentUserId();
+        if (item && (!item.user_id || item.user_id === currentUserId)) {
+            await this.deleteStoreItem('sync_queue', clientUuid);
+            this.notifyStatus();
+        }
+    }
+
+    async exportUserQueue() {
+        const currentUserId = this.getCurrentUserId();
+        const all = await this.getAllItems('sync_queue');
+        const userItems = all.filter(it => it.user_id === currentUserId || (!it.user_id && !currentUserId));
+        const blob = new Blob([JSON.stringify(userItems, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `meash-offline-backup-user-${currentUserId || 'legacy'}-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 
     async showFailedItemsModal() {

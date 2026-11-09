@@ -27,6 +27,11 @@ class Organization extends Model
         return $this->hasMany(SalesVisit::class)->latest('visit_date');
     }
 
+    public function salesVisits(): HasMany
+    {
+        return $this->visits();
+    }
+
     public function proformas(): HasMany
     {
         return $this->hasMany(Proforma::class)->latest();

@@ -154,11 +154,23 @@ class OrderController extends Controller
         $orderData['eth_appointment_en'] = $ethAppt['formatted_en'];
         $orderData['eth_created_date'] = $ethCreated['formatted_am'];
 
-        // Privacy: mask customer personal phone and private address for Finance role
+        // Privacy: mask customer personal phone, private address, and staff phone numbers for Finance role
         if ($user && $user->role === 'finance') {
             if (!empty($orderData['customer'])) {
                 $orderData['customer']['phone'] = substr($orderData['customer']['phone'] ?? '', 0, 4) . '****';
                 $orderData['customer']['address'] = $orderData['customer']['subcity'] ?? 'Addis Ababa';
+            }
+            if (!empty($orderData['assigned_team'])) {
+                if (isset($orderData['assigned_team']['leader'])) {
+                    unset($orderData['assigned_team']['leader']['phone']);
+                }
+                if (!empty($orderData['assigned_team']['members']) && is_array($orderData['assigned_team']['members'])) {
+                    foreach ($orderData['assigned_team']['members'] as $idx => $m) {
+                        if (isset($m['user']['phone'])) {
+                            unset($orderData['assigned_team']['members'][$idx]['user']['phone']);
+                        }
+                    }
+                }
             }
             $orderData['address'] = $order->subcity ?? 'Addis Ababa';
         }

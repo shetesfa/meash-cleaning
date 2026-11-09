@@ -11,10 +11,13 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\SalesVisit;
 use App\Models\SyncConflict;
+use App\Models\SyncIdempotencyRecord;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class SyncController extends Controller
 {
@@ -33,6 +36,9 @@ class SyncController extends Controller
         $synced = [];
         $conflicts = [];
         $errors = [];
+        $inProgress = [];
+
+        $user = $request->user();
 
         foreach ($validated['items'] as $item) {
             $uuid = $item['client_uuid'];
@@ -41,23 +47,49 @@ class SyncController extends Controller
             $payload = $item['payload'];
             $clientVer = $item['client_version'] ?? 1;
 
-            // Atomic concurrency lock and idempotency check
-            $lockKey = "sync_lock_{$uuid}";
-            if (!\Illuminate\Support\Facades\Cache::add($lockKey, true, now()->addMinutes(2))) {
+            // 1. Durable Database-Backed Idempotency Record Check
+            $idempRecord = SyncIdempotencyRecord::where('client_uuid', $uuid)->first();
+
+            if ($idempRecord && $idempRecord->status === 'completed') {
                 $synced[] = [
                     'client_uuid' => $uuid,
                     'status' => 'already_processed',
-                    'message' => 'Concurrent duplicate sync request safely suppressed.',
+                    'entity_id' => $idempRecord->entity_id,
+                    'order_number' => $idempRecord->response_payload['order_number'] ?? null,
                 ];
                 continue;
             }
 
-            // Idempotency check: did we already process this client_uuid?
+            if ($idempRecord && $idempRecord->status === 'in_progress') {
+                // Another concurrent request is actively processing this client_uuid.
+                // NEVER return 'synced' or 'already_processed' so the client preserves its queue!
+                $inProgress[] = [
+                    'client_uuid' => $uuid,
+                    'status' => 'in_progress',
+                    'message' => 'Sync operation currently in progress by another request. Retaining local queue item.',
+                ];
+                continue;
+            }
+
+            // Also inspect durable audit log before running again
             $existingAudit = AuditLog::where('action', 'like', "%{$uuid}%")
                 ->orWhere('new_values->client_uuid', $uuid)
                 ->first();
 
             if ($existingAudit) {
+                if ($idempRecord) {
+                    $idempRecord->update(['status' => 'completed', 'entity_id' => $existingAudit->auditable_id]);
+                } else {
+                    SyncIdempotencyRecord::create([
+                        'client_uuid' => $uuid,
+                        'user_id' => $user?->id,
+                        'entity_type' => $entityType,
+                        'action' => $action,
+                        'status' => 'completed',
+                        'entity_id' => $existingAudit->auditable_id,
+                    ]);
+                }
+
                 $synced[] = [
                     'client_uuid' => $uuid,
                     'status' => 'already_processed',
@@ -66,22 +98,64 @@ class SyncController extends Controller
                 continue;
             }
 
-            try {
-                $user = $request->user();
+            // 2. Atomic Lock Acquisition (DB unique claim + Cache lock defense-in-depth)
+            $lockToken = Str::random(32);
+            $lockKey = "sync_lock_{$uuid}";
+            $cacheLock = Cache::lock($lockKey, 30);
 
+            if (! $cacheLock->get()) {
+                $inProgress[] = [
+                    'client_uuid' => $uuid,
+                    'status' => 'in_progress',
+                    'message' => 'Concurrent duplicate sync request safely held in progress.',
+                ];
+                continue;
+            }
+
+            try {
+                if ($idempRecord && $idempRecord->status === 'failed') {
+                    $idempRecord->update([
+                        'status' => 'in_progress',
+                        'user_id' => $user?->id,
+                        'lock_token' => $lockToken,
+                    ]);
+                } else {
+                    $idempRecord = SyncIdempotencyRecord::create([
+                        'client_uuid' => $uuid,
+                        'user_id' => $user?->id,
+                        'entity_type' => $entityType,
+                        'action' => $action,
+                        'status' => 'in_progress',
+                        'lock_token' => $lockToken,
+                    ]);
+                }
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                $cacheLock->release();
+                $inProgress[] = [
+                    'client_uuid' => $uuid,
+                    'status' => 'in_progress',
+                    'message' => 'Concurrent duplicate sync request safely held.',
+                ];
+                continue;
+            }
+
+            // 3. Processing with Guaranteed Lock Release & State Resolution in finally block
+            $isSuccess = false;
+            $resultEntityId = null;
+            $resultPayload = null;
+
+            try {
                 if ($entityType === 'order' && $action === 'create') {
-                    // Strict positive authorization: Only Owner and Reception (or offline Cleaner in local/test)
-                    $canCreateOrder = $user && ($user->isOwner() || $user->role === 'reception' || ($user->isCleaner() && !app()->environment('production')));
-                    if (!$canCreateOrder) {
-                        $errors[] = [
-                            'client_uuid' => $uuid,
-                            'error' => 'Unauthorized: Only Reception and Owner are permitted to create orders.',
-                        ];
-                        continue;
+                    // Strict explicit role check: Owner, Admin, or Reception only.
+                    $isOwner = $user && ($user->role === 'owner' || $user->role === 'admin');
+                    $isReception = $user && $user->role === 'reception';
+
+                    if (! $isOwner && ! $isReception) {
+                        throw new \Exception('Unauthorized: Only Reception and Owner are permitted to create orders.');
                     }
 
-                    // Create Order
-                    DB::transaction(function () use ($payload, $uuid, $request, &$synced) {
+                    // Create Order in transaction
+                    DB::transaction(function () use ($payload, $uuid, $request, &$synced, &$isSuccess, &$resultEntityId, &$resultPayload) {
                         $orderNumber = Order::generateNextNumber();
                         $assignedTeam = !empty($payload['assigned_team_id']) ? $payload['assigned_team_id'] : (!empty($payload['team_id']) ? $payload['team_id'] : null);
 
@@ -203,6 +277,10 @@ class SyncController extends Controller
                             array_merge($order->toArray(), ['client_uuid' => $uuid])
                         );
 
+                        $isSuccess = true;
+                        $resultEntityId = $order->id;
+                        $resultPayload = ['order_number' => $order->order_number];
+
                         $synced[] = [
                             'client_uuid' => $uuid,
                             'status' => 'synced',
@@ -211,36 +289,24 @@ class SyncController extends Controller
                         ];
                     });
                 } elseif (($entityType === 'order' || $entityType === 'job_action') && ($action === 'status_change' || $action === 'job_action' || $action === 'update')) {
-                    // Positive authorization: Sales and Finance cannot modify orders
-                    if ($user && ($user->isSales() || $user->role === 'finance')) {
-                        $errors[] = [
-                            'client_uuid' => $uuid,
-                            'error' => 'Unauthorized: Sales and Finance roles are not permitted to modify orders.',
-                        ];
-                        continue;
+                    // Explicit role check: Sales and Finance roles cannot modify orders
+                    if ($user && ($user->role === 'sales' || $user->role === 'finance')) {
+                        throw new \Exception('Unauthorized: Sales and Finance roles are not permitted to modify orders.');
                     }
 
                     $order = Order::find($payload['order_id'] ?? $payload['id'] ?? null);
                     if (!$order) {
-                        $errors[] = [
-                            'client_uuid' => $uuid,
-                            'error' => 'Order not found on server',
-                        ];
-                        continue;
+                        throw new \Exception('Order not found on server');
                     }
 
                     // Enforce cleaner team isolation
-                    if ($user && $user->isCleaner()) {
+                    if ($user && $user->role === 'cleaner') {
                         $cleanerTeamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
                             ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
                             ->unique();
 
                         if (!$order->assigned_team_id || !$cleanerTeamIds->contains($order->assigned_team_id)) {
-                            $errors[] = [
-                                'client_uuid' => $uuid,
-                                'error' => 'Unauthorized. Cleaners cannot modify orders belonging to another team.',
-                            ];
-                            continue;
+                            throw new \Exception('Unauthorized. Cleaners cannot modify orders belonging to another team.');
                         }
                     }
 
@@ -251,21 +317,13 @@ class SyncController extends Controller
 
                     $allowedStatuses = ['new', 'confirmed', 'assigned', 'on_the_way', 'cleaning', 'completed', 'cancelled', 'rescheduled', 'issue'];
                     if ($incomingStatus && !in_array($incomingStatus, $allowedStatuses, true)) {
-                        $errors[] = [
-                            'client_uuid' => $uuid,
-                            'error' => "Invalid or unrecognized order status '{$incomingStatus}'.",
-                        ];
-                        continue;
+                        throw new \Exception("Invalid or unrecognized order status '{$incomingStatus}'.");
                     }
 
-                    if ($user && $user->isCleaner() && $incomingStatus) {
+                    if ($user && $user->role === 'cleaner' && $incomingStatus) {
                         $cleanerPermittedStatuses = ['assigned', 'on_the_way', 'cleaning', 'completed', 'issue'];
                         if (!in_array($incomingStatus, $cleanerPermittedStatuses, true)) {
-                            $errors[] = [
-                                'client_uuid' => $uuid,
-                                'error' => "Cleaners are not permitted to set order status to '{$incomingStatus}'.",
-                            ];
-                            continue;
+                            throw new \Exception("Cleaners are not permitted to set order status to '{$incomingStatus}'.");
                         }
                     }
 
@@ -290,6 +348,10 @@ class SyncController extends Controller
                             ],
                             'message' => 'Conflict detected: local change diverged from updated server state.',
                         ];
+
+                        $isSuccess = true;
+                        $resultEntityId = $order->id;
+                        $resultPayload = ['conflict' => true, 'conflict_id' => $conflict->id];
                         continue;
                     }
 
@@ -328,18 +390,21 @@ class SyncController extends Controller
                         ['client_uuid' => $uuid, 'status' => $order->order_status]
                     );
 
+                    $isSuccess = true;
+                    $resultEntityId = $order->id;
+
                     $synced[] = [
                         'client_uuid' => $uuid,
                         'status' => 'synced',
                         'entity_id' => $order->id,
                     ];
                 } elseif ($entityType === 'sales_visit') {
-                    if (!$user || (!$user->isSales() && !$user->isOwner())) {
-                        $errors[] = [
-                            'client_uuid' => $uuid,
-                            'error' => 'Unauthorized: Only Sales or Owner accounts can record sales visits.',
-                        ];
-                        continue;
+                    // Explicit role check: Sales, Owner, or Admin only
+                    $isSales = $user && $user->role === 'sales';
+                    $isOwner = $user && ($user->role === 'owner' || $user->role === 'admin');
+
+                    if (! $isSales && ! $isOwner) {
+                        throw new \Exception('Unauthorized: Only Sales or Owner accounts can record sales visits.');
                     }
 
                     $visit = SalesVisit::create([
@@ -366,18 +431,21 @@ class SyncController extends Controller
                         ['client_uuid' => $uuid]
                     );
 
+                    $isSuccess = true;
+                    $resultEntityId = $visit->id;
+
                     $synced[] = [
                         'client_uuid' => $uuid,
                         'status' => 'synced',
                         'entity_id' => $visit->id,
                     ];
                 } elseif ($entityType === 'expense') {
-                    if (!$user || (!$user->isOwner() && !$user->isFinance())) {
-                        $errors[] = [
-                            'client_uuid' => $uuid,
-                            'error' => 'Unauthorized: Only Finance or Owner accounts can record business expenses.',
-                        ];
-                        continue;
+                    // Explicit role check: Finance, Owner, or Admin only
+                    $isFinance = $user && $user->role === 'finance';
+                    $isOwner = $user && ($user->role === 'owner' || $user->role === 'admin');
+
+                    if (! $isFinance && ! $isOwner) {
+                        throw new \Exception('Unauthorized: Only Finance or Owner accounts can record business expenses.');
                     }
 
                     $expense = Expense::create([
@@ -399,22 +467,40 @@ class SyncController extends Controller
                         ['client_uuid' => $uuid]
                     );
 
+                    $isSuccess = true;
+                    $resultEntityId = $expense->id;
+
                     $synced[] = [
                         'client_uuid' => $uuid,
                         'status' => 'synced',
                         'entity_id' => $expense->id,
                     ];
                 } else {
-                    $errors[] = [
-                        'client_uuid' => $uuid,
-                        'error' => "Unauthorized or unrecognized entity/action: {$entityType}/{$action}",
-                    ];
+                    throw new \Exception("Unauthorized or unrecognized entity/action: {$entityType}/{$action}");
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $errors[] = [
                     'client_uuid' => $uuid,
                     'error' => $e->getMessage(),
                 ];
+            } finally {
+                if ($idempRecord) {
+                    if ($isSuccess) {
+                        $idempRecord->update([
+                            'status' => 'completed',
+                            'entity_id' => $resultEntityId,
+                            'response_payload' => $resultPayload,
+                            'lock_token' => null,
+                        ]);
+                    } else {
+                        // Mark failed so subsequent retries are allowed
+                        $idempRecord->update([
+                            'status' => 'failed',
+                            'lock_token' => null,
+                        ]);
+                    }
+                }
+                $cacheLock->release();
             }
         }
 
@@ -422,9 +508,11 @@ class SyncController extends Controller
             'synced_count' => count($synced),
             'conflict_count' => count($conflicts),
             'error_count' => count($errors),
+            'in_progress_count' => count($inProgress),
             'synced' => $synced,
             'conflicts' => $conflicts,
             'errors' => $errors,
+            'in_progress' => $inProgress,
         ]);
     }
 
@@ -469,11 +557,9 @@ class SyncController extends Controller
             'resolution' => $validated['resolution'],
             'resolved_by_user_id' => $request->user()->id,
             'resolved_at' => now(),
+            'notes' => $validated['notes'] ?? null,
         ]);
 
-        return response()->json([
-            'message' => 'Conflict resolved successfully',
-            'conflict' => $conflict,
-        ]);
+        return response()->json(['message' => 'Conflict resolved successfully', 'conflict' => $conflict]);
     }
 }

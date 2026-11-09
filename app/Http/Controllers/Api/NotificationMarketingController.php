@@ -17,6 +17,11 @@ class NotificationMarketingController extends Controller
     public function notifications(Request $request): JsonResponse
     {
         $userId = $request->user()->id;
+
+        $readBroadcastIds = \App\Models\NotificationRead::where('user_id', $userId)
+            ->pluck('notification_id')
+            ->toArray();
+
         $notifications = Notification::where(function ($q) use ($userId) {
             $q->where('user_id', $userId)
               ->orWhereNull('user_id'); // broadcast
@@ -24,12 +29,24 @@ class NotificationMarketingController extends Controller
         ->latest()
         ->paginate(25);
 
-        $unreadCount = Notification::where(function ($q) use ($userId) {
-            $q->where('user_id', $userId)
-              ->orWhereNull('user_id');
-        })
-        ->where('is_read', false)
-        ->count();
+        // Authoritative per-user read state: transform broadcast notifications for current user
+        $notifications->getCollection()->transform(function ($n) use ($readBroadcastIds) {
+            if ($n->user_id === null) {
+                $n->is_read = in_array($n->id, $readBroadcastIds, true);
+            }
+            return $n;
+        });
+
+        $unreadCount = Notification::where(function ($q) use ($userId, $readBroadcastIds) {
+            $q->where(function ($sub) use ($userId) {
+                $sub->where('user_id', $userId)->where('is_read', false);
+            })->orWhere(function ($sub) use ($readBroadcastIds) {
+                $sub->whereNull('user_id');
+                if (!empty($readBroadcastIds)) {
+                    $sub->whereNotIn('id', $readBroadcastIds);
+                }
+            });
+        })->count();
 
         return response()->json([
             'unread_count' => $unreadCount,
@@ -39,12 +56,33 @@ class NotificationMarketingController extends Controller
 
     public function markAsRead(Request $request, Notification $notification): JsonResponse
     {
-        $notification->update([
-            'is_read' => true,
+        $currentUser = $request->user();
+
+        // 1. Personal Notification: Strict IDOR prevention
+        if ($notification->user_id !== null) {
+            if ($notification->user_id !== $currentUser->id) {
+                return response()->json([
+                    'message' => 'Unauthorized: You cannot mark another user\'s notification as read.',
+                ], 403);
+            }
+
+            $notification->update([
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
+
+            return response()->json(['message' => 'Notification marked as read']);
+        }
+
+        // 2. Global Broadcast Notification: Per-user read state without global mutation
+        \App\Models\NotificationRead::firstOrCreate([
+            'notification_id' => $notification->id,
+            'user_id' => $currentUser->id,
+        ], [
             'read_at' => now(),
         ]);
 
-        return response()->json(['message' => 'Notification marked as read']);
+        return response()->json(['message' => 'Broadcast notification marked as read for current user']);
     }
 
     public function campaigns(): JsonResponse
