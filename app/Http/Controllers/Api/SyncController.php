@@ -47,31 +47,53 @@ class SyncController extends Controller
             $payload = $item['payload'];
             $clientVer = $item['client_version'] ?? 1;
 
-            // 1. Durable Database-Backed Idempotency Record Check
+            // 1. Durable Database-Backed Idempotency Record Check & Scoping
             $idempRecord = SyncIdempotencyRecord::where('client_uuid', $uuid)->first();
 
-            if ($idempRecord && $idempRecord->status === 'completed') {
-                $synced[] = [
-                    'client_uuid' => $uuid,
-                    'status' => 'already_processed',
-                    'entity_id' => $idempRecord->entity_id,
-                    'order_number' => $idempRecord->response_payload['order_number'] ?? null,
-                ];
-                continue;
+            if ($idempRecord) {
+                // Cross-Account UUID Ownership Scoping: Prevent another account from hijacking another user's UUID
+                if ($idempRecord->user_id && $user && $idempRecord->user_id !== $user->id) {
+                    $errors[] = [
+                        'client_uuid' => $uuid,
+                        'error' => 'Unauthorized: UUID ownership mismatch. You cannot claim or reuse another user\'s offline UUID.',
+                    ];
+                    continue;
+                }
+
+                if ($idempRecord->status === 'completed') {
+                    $synced[] = [
+                        'client_uuid' => $uuid,
+                        'status' => 'already_processed',
+                        'entity_id' => $idempRecord->entity_id,
+                        'order_number' => $idempRecord->response_payload['order_number'] ?? null,
+                    ];
+                    continue;
+                }
+
+                if ($idempRecord->status === 'in_progress') {
+                    // Stale in_progress crash recovery: If process crashed or held lock for > 2 minutes, allow safe resumption
+                    $staleThreshold = now()->subMinutes(2);
+                    $isStale = $idempRecord->updated_at && $idempRecord->updated_at->lt($staleThreshold);
+
+                    if (! $isStale) {
+                        // Truly concurrent request actively processing: Never mark synced, retain local queue!
+                        $inProgress[] = [
+                            'client_uuid' => $uuid,
+                            'status' => 'in_progress',
+                            'message' => 'Sync operation currently in progress by another concurrent request. Retaining local queue item.',
+                        ];
+                        continue;
+                    }
+
+                    // Stale recovery: refresh lock timestamp and proceed to recover
+                    $idempRecord->update([
+                        'status' => 'in_progress',
+                        'updated_at' => now(),
+                    ]);
+                }
             }
 
-            if ($idempRecord && $idempRecord->status === 'in_progress') {
-                // Another concurrent request is actively processing this client_uuid.
-                // NEVER return 'synced' or 'already_processed' so the client preserves its queue!
-                $inProgress[] = [
-                    'client_uuid' => $uuid,
-                    'status' => 'in_progress',
-                    'message' => 'Sync operation currently in progress by another request. Retaining local queue item.',
-                ];
-                continue;
-            }
-
-            // Also inspect durable audit log before running again
+            // Inspect durable audit log before running again
             $existingAudit = AuditLog::where('action', 'like', "%{$uuid}%")
                 ->orWhere('new_values->client_uuid', $uuid)
                 ->first();
@@ -113,11 +135,12 @@ class SyncController extends Controller
             }
 
             try {
-                if ($idempRecord && $idempRecord->status === 'failed') {
+                if ($idempRecord && ($idempRecord->status === 'failed' || $idempRecord->status === 'in_progress')) {
                     $idempRecord->update([
                         'status' => 'in_progress',
                         'user_id' => $user?->id,
                         'lock_token' => $lockToken,
+                        'updated_at' => now(),
                     ]);
                 } else {
                     $idempRecord = SyncIdempotencyRecord::create([
@@ -139,10 +162,8 @@ class SyncController extends Controller
                 continue;
             }
 
-            // 3. Processing with Guaranteed Lock Release & State Resolution in finally block
-            $isSuccess = false;
-            $resultEntityId = null;
-            $resultPayload = null;
+            // 3. Atomic Processing: Move business record and idempotency completion into ONE database transaction
+            $isTransactionCommitted = false;
 
             try {
                 if ($entityType === 'order' && $action === 'create') {
@@ -154,8 +175,9 @@ class SyncController extends Controller
                         throw new \Exception('Unauthorized: Only Reception and Owner are permitted to create orders.');
                     }
 
-                    // Create Order in transaction
-                    DB::transaction(function () use ($payload, $uuid, $request, &$synced, &$isSuccess, &$resultEntityId, &$resultPayload) {
+                    DB::transaction(function () use (
+                        $payload, $uuid, $request, $user, &$synced, &$idempRecord, &$isTransactionCommitted
+                    ) {
                         $orderNumber = Order::generateNextNumber();
                         $assignedTeam = !empty($payload['assigned_team_id']) ? $payload['assigned_team_id'] : (!empty($payload['team_id']) ? $payload['team_id'] : null);
 
@@ -182,13 +204,13 @@ class SyncController extends Controller
                         $order = Order::create([
                             'order_number' => $orderNumber,
                             'customer_id' => $customerId,
-                            'created_by_user_id' => $request->user()?->id,
+                            'created_by_user_id' => $user?->id,
                             'assigned_team_id' => $assignedTeam,
                             'source' => $payload['source'] ?? 'phone',
                             'order_status' => $orderStatus,
-                            'payment_status' => 'unpaid', // Authoritative: never trust client payment status
+                            'payment_status' => 'unpaid',
                             'subtotal' => 0,
-                            'discount' => 0,              // Authoritative: never trust client discount
+                            'discount' => 0,
                             'tax' => 0,
                             'total' => 0,
                             'appointment_date' => $payload['appointment_date'] ?? null,
@@ -213,7 +235,6 @@ class SyncController extends Controller
                         $subtotalCalc = 0;
                         if (!empty($payload['items'])) {
                             foreach ($payload['items'] as $it) {
-                                // Authoritative catalogue price lookup - never fall back to forged client price
                                 $service = null;
                                 if (!empty($it['service_id'])) {
                                     $service = \App\Models\Service::where('id', $it['service_id'])->where('is_active', true)->first();
@@ -269,7 +290,7 @@ class SyncController extends Controller
                         $order->save();
 
                         AuditLog::logAction(
-                            $request->user()?->id,
+                            $user?->id,
                             "synced_create_{$uuid}",
                             Order::class,
                             $order->id,
@@ -277,9 +298,13 @@ class SyncController extends Controller
                             array_merge($order->toArray(), ['client_uuid' => $uuid])
                         );
 
-                        $isSuccess = true;
-                        $resultEntityId = $order->id;
-                        $resultPayload = ['order_number' => $order->order_number];
+                        // Complete idempotency INSIDE the same database transaction!
+                        $idempRecord->update([
+                            'status' => 'completed',
+                            'entity_id' => $order->id,
+                            'response_payload' => ['order_number' => $order->order_number],
+                            'lock_token' => null,
+                        ]);
 
                         $synced[] = [
                             'client_uuid' => $uuid,
@@ -287,6 +312,8 @@ class SyncController extends Controller
                             'entity_id' => $order->id,
                             'order_number' => $order->order_number,
                         ];
+
+                        $isTransactionCommitted = true;
                     });
                 } elseif (($entityType === 'order' || $entityType === 'job_action') && ($action === 'status_change' || $action === 'job_action' || $action === 'update')) {
                     // Explicit role check: Sales and Finance roles cannot modify orders
@@ -310,7 +337,6 @@ class SyncController extends Controller
                         }
                     }
 
-                    // Strict status validation - reject arbitrary or unrecognized statuses
                     $incomingStatus = $payload['order_status'] ?? $payload['action'] ?? null;
                     if ($incomingStatus === 'complete') $incomingStatus = 'completed';
                     if ($incomingStatus === 'start') $incomingStatus = 'cleaning';
@@ -328,7 +354,6 @@ class SyncController extends Controller
                     }
 
                     if ($order->version > $clientVer && $order->order_status !== $incomingStatus) {
-                        // Conflict! Store in sync_conflicts
                         $conflict = SyncConflict::create([
                             'entity_type' => 'order',
                             'entity_id' => $order->id,
@@ -349,57 +374,68 @@ class SyncController extends Controller
                             'message' => 'Conflict detected: local change diverged from updated server state.',
                         ];
 
-                        $isSuccess = true;
-                        $resultEntityId = $order->id;
-                        $resultPayload = ['conflict' => true, 'conflict_id' => $conflict->id];
+                        $idempRecord->update([
+                            'status' => 'completed',
+                            'entity_id' => $order->id,
+                            'response_payload' => ['conflict' => true, 'conflict_id' => $conflict->id],
+                            'lock_token' => null,
+                        ]);
+                        $isTransactionCommitted = true;
                         continue;
                     }
 
-                    // Apply update safely
-                    if ($incomingStatus) {
-                        $order->order_status = $incomingStatus;
-                        if ($incomingStatus === 'completed') {
-                            $order->completed_at = now();
-                        } elseif ($incomingStatus === 'on_the_way') {
-                            \App\Services\SmsService::sendTeamDispatched($order);
+                    DB::transaction(function () use (
+                        $order, $incomingStatus, $payload, $user, $uuid, &$synced, &$idempRecord, &$isTransactionCommitted
+                    ) {
+                        if ($incomingStatus) {
+                            $order->order_status = $incomingStatus;
+                            if ($incomingStatus === 'completed') {
+                                $order->completed_at = now();
+                            } elseif ($incomingStatus === 'on_the_way') {
+                                \App\Services\SmsService::sendTeamDispatched($order);
+                            }
                         }
-                    }
 
-                    // Update team live GPS if present
-                    if (!empty($payload['latitude']) && !empty($payload['longitude']) && $order->assigned_team_id) {
-                        \App\Models\CleaningTeam::where('id', $order->assigned_team_id)->update([
-                            'current_latitude' => $payload['latitude'],
-                            'current_longitude' => $payload['longitude'],
-                            'location_updated_at' => now(),
+                        if (!empty($payload['latitude']) && !empty($payload['longitude']) && $order->assigned_team_id) {
+                            \App\Models\CleaningTeam::where('id', $order->assigned_team_id)->update([
+                                'current_latitude' => $payload['latitude'],
+                                'current_longitude' => $payload['longitude'],
+                                'location_updated_at' => now(),
+                            ]);
+                        }
+
+                        if (!empty($payload['completion_notes'])) {
+                            $order->completion_notes = $payload['completion_notes'];
+                        }
+
+                        $order->version += 1;
+                        $order->save();
+
+                        AuditLog::logAction(
+                            $user?->id,
+                            "synced_update_{$uuid}",
+                            Order::class,
+                            $order->id,
+                            null,
+                            ['client_uuid' => $uuid, 'status' => $order->order_status]
+                        );
+
+                        // Complete idempotency INSIDE the same database transaction!
+                        $idempRecord->update([
+                            'status' => 'completed',
+                            'entity_id' => $order->id,
+                            'lock_token' => null,
                         ]);
-                    }
 
-                    if (!empty($payload['completion_notes'])) {
-                        $order->completion_notes = $payload['completion_notes'];
-                    }
+                        $synced[] = [
+                            'client_uuid' => $uuid,
+                            'status' => 'synced',
+                            'entity_id' => $order->id,
+                        ];
 
-                    $order->version += 1;
-                    $order->save();
-
-                    AuditLog::logAction(
-                        $request->user()?->id,
-                        "synced_update_{$uuid}",
-                        Order::class,
-                        $order->id,
-                        null,
-                        ['client_uuid' => $uuid, 'status' => $order->order_status]
-                    );
-
-                    $isSuccess = true;
-                    $resultEntityId = $order->id;
-
-                    $synced[] = [
-                        'client_uuid' => $uuid,
-                        'status' => 'synced',
-                        'entity_id' => $order->id,
-                    ];
+                        $isTransactionCommitted = true;
+                    });
                 } elseif ($entityType === 'sales_visit') {
-                    // Explicit role check: Sales, Owner, or Admin only
                     $isSales = $user && $user->role === 'sales';
                     $isOwner = $user && ($user->role === 'owner' || $user->role === 'admin');
 
@@ -407,40 +443,49 @@ class SyncController extends Controller
                         throw new \Exception('Unauthorized: Only Sales or Owner accounts can record sales visits.');
                     }
 
-                    $visit = SalesVisit::create([
-                        'visit_code' => SalesVisit::generateNextCode(),
-                        'organization_id' => $payload['organization_id'],
-                        'contact_person' => $payload['contact_person'],
-                        'contact_position' => $payload['contact_position'] ?? null,
-                        'phone' => $payload['phone'],
-                        'address' => $payload['address'],
-                        'services_introduced' => $payload['services_introduced'] ?? null,
-                        'interest_level' => $payload['interest_level'] ?? 'medium',
-                        'salesperson_user_id' => $request->user()->id,
-                        'visit_date' => $payload['visit_date'] ?? Carbon::today(),
-                        'notes' => ($payload['notes'] ?? '') . " [Synced offline]",
-                        'stage' => $payload['stage'] ?? 'visited',
-                    ]);
+                    DB::transaction(function () use (
+                        $payload, $user, $uuid, &$synced, &$idempRecord, &$isTransactionCommitted
+                    ) {
+                        $visit = SalesVisit::create([
+                            'visit_code' => SalesVisit::generateNextCode(),
+                            'organization_id' => $payload['organization_id'],
+                            'contact_person' => $payload['contact_person'],
+                            'contact_position' => $payload['contact_position'] ?? null,
+                            'phone' => $payload['phone'],
+                            'address' => $payload['address'],
+                            'services_introduced' => $payload['services_introduced'] ?? null,
+                            'interest_level' => $payload['interest_level'] ?? 'medium',
+                            'salesperson_user_id' => $user->id,
+                            'visit_date' => $payload['visit_date'] ?? Carbon::today(),
+                            'notes' => ($payload['notes'] ?? '') . " [Synced offline]",
+                            'stage' => $payload['stage'] ?? 'visited',
+                        ]);
 
-                    AuditLog::logAction(
-                        $request->user()?->id,
-                        "synced_sales_{$uuid}",
-                        SalesVisit::class,
-                        $visit->id,
-                        null,
-                        ['client_uuid' => $uuid]
-                    );
+                        AuditLog::logAction(
+                            $user->id,
+                            "synced_sales_{$uuid}",
+                            SalesVisit::class,
+                            $visit->id,
+                            null,
+                            ['client_uuid' => $uuid]
+                        );
 
-                    $isSuccess = true;
-                    $resultEntityId = $visit->id;
+                        // Complete idempotency INSIDE the same database transaction!
+                        $idempRecord->update([
+                            'status' => 'completed',
+                            'entity_id' => $visit->id,
+                            'lock_token' => null,
+                        ]);
 
-                    $synced[] = [
-                        'client_uuid' => $uuid,
-                        'status' => 'synced',
-                        'entity_id' => $visit->id,
-                    ];
+                        $synced[] = [
+                            'client_uuid' => $uuid,
+                            'status' => 'synced',
+                            'entity_id' => $visit->id,
+                        ];
+
+                        $isTransactionCommitted = true;
+                    });
                 } elseif ($entityType === 'expense') {
-                    // Explicit role check: Finance, Owner, or Admin only
                     $isFinance = $user && $user->role === 'finance';
                     $isOwner = $user && ($user->role === 'owner' || $user->role === 'admin');
 
@@ -448,33 +493,43 @@ class SyncController extends Controller
                         throw new \Exception('Unauthorized: Only Finance or Owner accounts can record business expenses.');
                     }
 
-                    $expense = Expense::create([
-                        'expense_number' => Expense::generateNextNumber(),
-                        'category' => $payload['category'],
-                        'amount' => $payload['amount'],
-                        'reference_number' => $payload['reference_number'] ?? null,
-                        'description' => ($payload['description'] ?? '') . " [Synced offline]",
-                        'date' => $payload['date'] ?? Carbon::today(),
-                        'entered_by_user_id' => $request->user()->id,
-                    ]);
+                    DB::transaction(function () use (
+                        $payload, $user, $uuid, &$synced, &$idempRecord, &$isTransactionCommitted
+                    ) {
+                        $expense = Expense::create([
+                            'expense_number' => Expense::generateNextNumber(),
+                            'category' => $payload['category'],
+                            'amount' => $payload['amount'],
+                            'reference_number' => $payload['reference_number'] ?? null,
+                            'description' => ($payload['description'] ?? '') . " [Synced offline]",
+                            'date' => $payload['date'] ?? Carbon::today(),
+                            'entered_by_user_id' => $user->id,
+                        ]);
 
-                    AuditLog::logAction(
-                        $request->user()?->id,
-                        "synced_expense_{$uuid}",
-                        Expense::class,
-                        $expense->id,
-                        null,
-                        ['client_uuid' => $uuid]
-                    );
+                        AuditLog::logAction(
+                            $user->id,
+                            "synced_expense_{$uuid}",
+                            Expense::class,
+                            $expense->id,
+                            null,
+                            ['client_uuid' => $uuid]
+                        );
 
-                    $isSuccess = true;
-                    $resultEntityId = $expense->id;
+                        // Complete idempotency INSIDE the same database transaction!
+                        $idempRecord->update([
+                            'status' => 'completed',
+                            'entity_id' => $expense->id,
+                            'lock_token' => null,
+                        ]);
 
-                    $synced[] = [
-                        'client_uuid' => $uuid,
-                        'status' => 'synced',
-                        'entity_id' => $expense->id,
-                    ];
+                        $synced[] = [
+                            'client_uuid' => $uuid,
+                            'status' => 'synced',
+                            'entity_id' => $expense->id,
+                        ];
+
+                        $isTransactionCommitted = true;
+                    });
                 } else {
                     throw new \Exception("Unauthorized or unrecognized entity/action: {$entityType}/{$action}");
                 }
@@ -483,23 +538,15 @@ class SyncController extends Controller
                     'client_uuid' => $uuid,
                     'error' => $e->getMessage(),
                 ];
-            } finally {
-                if ($idempRecord) {
-                    if ($isSuccess) {
-                        $idempRecord->update([
-                            'status' => 'completed',
-                            'entity_id' => $resultEntityId,
-                            'response_payload' => $resultPayload,
-                            'lock_token' => null,
-                        ]);
-                    } else {
-                        // Mark failed so subsequent retries are allowed
-                        $idempRecord->update([
-                            'status' => 'failed',
-                            'lock_token' => null,
-                        ]);
-                    }
+
+                // If transaction failed or uncommitted, update idempotency status to failed so safe retry can occur
+                if (! $isTransactionCommitted && $idempRecord) {
+                    $idempRecord->update([
+                        'status' => 'failed',
+                        'lock_token' => null,
+                    ]);
                 }
+            } finally {
                 $cacheLock->release();
             }
         }

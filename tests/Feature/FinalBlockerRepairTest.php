@@ -571,4 +571,135 @@ class FinalBlockerRepairTest extends TestCase
         $this->assertEquals(0, $idempotentExit);
         $this->assertEquals(1, User::where('username', 'amha')->count());
     }
+
+    public function test_offline_sync_prevents_cross_account_uuid_hijacking(): void
+    {
+        $userA = User::factory()->create(['role' => 'owner']);
+        $userB = User::factory()->create(['role' => 'reception']);
+        $uuid = 'hijack-attempt-uuid-' . uniqid();
+
+        // 1. User A successfully syncs an order with $uuid
+        SyncIdempotencyRecord::create([
+            'client_uuid' => $uuid,
+            'user_id' => $userA->id,
+            'entity_type' => 'order',
+            'action' => 'create',
+            'status' => 'completed',
+            'entity_id' => 999,
+        ]);
+
+        // 2. User B attempts to submit the same UUID under their own session
+        Sanctum::actingAs($userB);
+        $res = $this->postJson('/api/sync/batch', [
+            'items' => [
+                [
+                    'client_uuid' => $uuid,
+                    'entity_type' => 'order',
+                    'action' => 'create',
+                    'client_version' => 1,
+                    'payload' => [
+                        'customer_id' => 1,
+                        'appointment_date' => now()->toDateString(),
+                        'items' => [['service_code' => 'sofa', 'quantity' => 1]],
+                    ],
+                ],
+            ],
+        ])->assertStatus(200);
+
+        // MUST be rejected with UUID ownership mismatch error
+        $this->assertEquals(0, $res->json('synced_count'));
+        $this->assertEquals(1, $res->json('error_count'));
+        $this->assertStringContainsString('ownership mismatch', $res->json('errors.0.error'));
+    }
+
+    public function test_offline_sync_recovers_safely_from_stale_in_progress_records(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $customer = Customer::create([
+            'customer_code' => 'CUST-STALE-01',
+            'full_name' => 'Stale Recovery Customer',
+            'phone' => '0911998877',
+            'address' => 'Bole',
+        ]);
+
+        $uuid = 'stale-crash-uuid-' . uniqid();
+
+        // Simulate server process crashed 10 minutes ago leaving record in_progress
+        $record = SyncIdempotencyRecord::create([
+            'client_uuid' => $uuid,
+            'user_id' => $owner->id,
+            'entity_type' => 'order',
+            'action' => 'create',
+            'status' => 'in_progress',
+            'lock_token' => 'dead-server-token',
+        ]);
+        DB::table('sync_idempotency_records')->where('id', $record->id)->update([
+            'created_at' => now()->subMinutes(10),
+            'updated_at' => now()->subMinutes(10),
+        ]);
+
+        Sanctum::actingAs($owner);
+        $res = $this->postJson('/api/sync/batch', [
+            'items' => [
+                [
+                    'client_uuid' => $uuid,
+                    'entity_type' => 'order',
+                    'action' => 'create',
+                    'client_version' => 1,
+                    'payload' => [
+                        'customer_id' => $customer->id,
+                        'appointment_date' => now()->toDateString(),
+                        'items' => [['service_code' => 'sofa', 'quantity' => 2, 'unit_price' => 350]],
+                    ],
+                ],
+            ],
+        ]);
+        $res->assertStatus(200);
+
+        // Stale record MUST be recovered safely, order created, and record marked completed
+        $this->assertEquals(1, $res->json('synced_count'));
+        $this->assertEquals('synced', $res->json('synced.0.status'));
+        $this->assertEquals('completed', $record->fresh()->status);
+        $this->assertEquals(1, Order::where('customer_id', $customer->id)->count());
+    }
+
+    public function test_atomic_rollback_on_transaction_failure_prevents_false_completed_idempotency(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $customer = Customer::create([
+            'customer_code' => 'CUST-FAIL-01',
+            'full_name' => 'Failing Order Customer',
+            'phone' => '0911778899',
+            'address' => 'Bole',
+        ]);
+
+        $uuid = 'atomic-rollback-uuid-' . uniqid();
+
+        // Inject invalid service that causes exception during transaction
+        Sanctum::actingAs($owner);
+        $res = $this->postJson('/api/sync/batch', [
+            'items' => [
+                [
+                    'client_uuid' => $uuid,
+                    'entity_type' => 'order',
+                    'action' => 'create',
+                    'client_version' => 1,
+                    'payload' => [
+                        'customer_id' => $customer->id,
+                        'appointment_date' => now()->toDateString(),
+                        'items' => [['service_code' => 'invalid_unrecognized_service', 'quantity' => 1]],
+                    ],
+                ],
+            ],
+        ])->assertStatus(200);
+
+        // Failed transaction: zero orders created, record status is 'failed', NEVER 'completed'
+        $this->assertEquals(0, $res->json('synced_count'));
+        $this->assertEquals(1, $res->json('error_count'));
+        $this->assertEquals(0, Order::where('customer_id', $customer->id)->count());
+
+        $record = SyncIdempotencyRecord::where('client_uuid', $uuid)->first();
+        $this->assertNotNull($record);
+        $this->assertEquals('failed', $record->status);
+    }
 }

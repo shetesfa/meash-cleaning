@@ -16,6 +16,7 @@ use App\Models\Payment;
 use App\Models\Proforma;
 use App\Models\ProformaItem;
 use App\Models\SalesVisit;
+use App\Models\SeedProvenance;
 use App\Models\TeamMember;
 use App\Models\TelegramUser;
 use App\Models\User;
@@ -89,36 +90,70 @@ class CleanDemoDataCommand extends Command
      */
     public function handle(): int
     {
-        $this->info('Scanning database for development seed demo records...');
+        $this->info('Scanning database for development seed demo records with verified provenance...');
 
         $isDryRun = (bool) $this->option('dry-run');
         $isForce = (bool) $this->option('force');
         $backupConfirmed = (bool) $this->option('backup-confirmed');
 
+        // Extract explicit IDs from SeedProvenance registry if available
+        $provenances = SeedProvenance::where('seed_key', 'DatabaseSeeder')->get()->groupBy('entity_type');
+
+        $provUserIds = $provenances->get('User')?->pluck('entity_id')->toArray() ?? [];
+        $provCustIds = $provenances->get('Customer')?->pluck('entity_id')->toArray() ?? [];
+        $provOrderIds = $provenances->get('Order')?->pluck('entity_id')->toArray() ?? [];
+        $provExpenseIds = $provenances->get('Expense')?->pluck('entity_id')->toArray() ?? [];
+        $provTeamIds = $provenances->get('CleaningTeam')?->pluck('entity_id')->toArray() ?? [];
+        $provOrgIds = $provenances->get('Organization')?->pluck('entity_id')->toArray() ?? [];
+        $provVisitIds = $provenances->get('SalesVisit')?->pluck('entity_id')->toArray() ?? [];
+        $provProformaIds = $provenances->get('Proforma')?->pluck('entity_id')->toArray() ?? [];
+        $provContractIds = $provenances->get('Contract')?->pluck('entity_id')->toArray() ?? [];
+        $provCampIds = $provenances->get('Campaign')?->pluck('entity_id')->toArray() ?? [];
+        $provTgIds = $provenances->get('TelegramUser')?->pluck('entity_id')->toArray() ?? [];
+
         // 1. Identify demo users (Strict protection: NEVER target legitimate owner 'amha' or staff)
-        $demoUsers = User::whereIn('email', $this->demoEmails)
-            ->where(function ($q) {
-                $q->whereNull('username')->orWhere('username', '!=', 'amha');
-            })
-            ->get();
+        $demoUsers = User::where(function ($q) use ($provUserIds) {
+            $q->whereIn('email', $this->demoEmails);
+            if (!empty($provUserIds)) {
+                $q->orWhereIn('id', $provUserIds);
+            }
+        })
+        ->where(function ($q) {
+            $q->whereNull('username')->orWhere('username', '!=', 'amha');
+        })
+        ->get();
         $demoUserIds = $demoUsers->pluck('id')->toArray();
 
         // 2. Identify demo customers
-        $demoCustomers = Customer::whereIn('phone', $this->demoCustomerPhones)->get();
+        $demoCustomers = Customer::where(function ($q) use ($provCustIds) {
+            $q->whereIn('phone', $this->demoCustomerPhones);
+            if (!empty($provCustIds)) {
+                $q->orWhereIn('id', $provCustIds);
+            }
+        })->get();
         $demoCustomerIds = $demoCustomers->pluck('id')->toArray();
 
         // 3. Identify demo orders (avoid empty nested closure)
         $demoOrders = Order::query();
+        $hasOrderCond = false;
+        if (!empty($provOrderIds)) {
+            $demoOrders->whereIn('id', $provOrderIds);
+            $hasOrderCond = true;
+        }
         if (!empty($demoCustomerIds) && !empty($demoUserIds)) {
-            $demoOrders->where(function ($q) use ($demoCustomerIds, $demoUserIds) {
+            $demoOrders->orWhere(function ($q) use ($demoCustomerIds, $demoUserIds) {
                 $q->whereIn('customer_id', $demoCustomerIds)
                   ->orWhereIn('created_by_user_id', $demoUserIds);
             });
+            $hasOrderCond = true;
         } elseif (!empty($demoCustomerIds)) {
-            $demoOrders->whereIn('customer_id', $demoCustomerIds);
+            $demoOrders->orWhereIn('customer_id', $demoCustomerIds);
+            $hasOrderCond = true;
         } elseif (!empty($demoUserIds)) {
-            $demoOrders->whereIn('created_by_user_id', $demoUserIds);
-        } else {
+            $demoOrders->orWhereIn('created_by_user_id', $demoUserIds);
+            $hasOrderCond = true;
+        }
+        if (!$hasOrderCond) {
             $demoOrders->whereRaw('1 = 0');
         }
         $demoOrders = $demoOrders->get();
@@ -126,33 +161,53 @@ class CleanDemoDataCommand extends Command
 
         // 4. Identify demo expenses (avoid empty nested closure)
         $demoExpenses = Expense::query();
+        $hasExpCond = false;
+        if (!empty($provExpenseIds)) {
+            $demoExpenses->whereIn('id', $provExpenseIds);
+            $hasExpCond = true;
+        }
         if (!empty($demoUserIds)) {
-            $demoExpenses->where(function ($q) use ($demoUserIds) {
+            $demoExpenses->orWhere(function ($q) use ($demoUserIds) {
                 $q->whereIn('reference_number', $this->demoExpenseRefs)
                   ->orWhereIn('entered_by_user_id', $demoUserIds);
             });
+            $hasExpCond = true;
         } else {
-            $demoExpenses->whereIn('reference_number', $this->demoExpenseRefs);
+            $demoExpenses->orWhereIn('reference_number', $this->demoExpenseRefs);
+            $hasExpCond = true;
+        }
+        if (!$hasExpCond) {
+            $demoExpenses->whereRaw('1 = 0');
         }
         $demoExpenses = $demoExpenses->get();
         $demoExpenseIds = $demoExpenses->pluck('id')->toArray();
 
         // 5. Identify demo cleaning teams (avoid empty nested closure)
         $demoTeams = CleaningTeam::query();
+        $hasTeamCond = false;
+        if (!empty($provTeamIds)) {
+            $demoTeams->whereIn('id', $provTeamIds);
+            $hasTeamCond = true;
+        }
         if (!empty($demoUserIds)) {
-            $demoTeams->where(function ($q) use ($demoUserIds) {
+            $demoTeams->orWhere(function ($q) use ($demoUserIds) {
                 $q->whereIn('team_name', [
                     'Team Alpha (Upholstery & Carpet)',
                     'Team Bravo (Rotary Scrub & Mattress)',
                     'Team Delta (Facade & Post-Construction)',
                 ])->orWhereIn('team_leader_id', $demoUserIds);
             });
+            $hasTeamCond = true;
         } else {
-            $demoTeams->whereIn('team_name', [
+            $demoTeams->orWhereIn('team_name', [
                 'Team Alpha (Upholstery & Carpet)',
                 'Team Bravo (Rotary Scrub & Mattress)',
                 'Team Delta (Facade & Post-Construction)',
             ]);
+            $hasTeamCond = true;
+        }
+        if (!$hasTeamCond) {
+            $demoTeams->whereRaw('1 = 0');
         }
         $demoTeams = $demoTeams->get();
         $demoTeamIds = $demoTeams->pluck('id')->toArray();
@@ -160,7 +215,16 @@ class CleanDemoDataCommand extends Command
         // 6. Identify demo organizations:
         // NEVER delete legitimate business organizations matching names unless they have explicit seed provenance!
         // Legitimate organizations (e.g. created by real owner or linked to non-demo visits/orders) MUST BE PRESERVED.
-        $demoOrgs = Organization::where(function ($q) use ($demoUserIds) {
+        $demoOrgs = Organization::query();
+        $hasOrgCond = false;
+
+        if (!empty($provOrgIds)) {
+            $demoOrgs->whereIn('id', $provOrgIds);
+            $hasOrgCond = true;
+        }
+
+        // Fallback provenance check for seed notes or explicit seed markers
+        $demoOrgs->orWhere(function ($q) use ($demoUserIds) {
             $q->where(function ($sub) {
                 $sub->whereIn('email', $this->demoOrgEmails)
                     ->orWhereIn('name', [
@@ -172,7 +236,7 @@ class CleanDemoDataCommand extends Command
                     ]);
             });
 
-            // Provenance verification: Must match known seed notes or be solely attached to demo seed staff
+            // Provenance verification: Must have known seed notes or explicit [Seed marker
             $q->where(function ($prov) use ($demoUserIds) {
                 $prov->where('notes', 'like', '%luxury guest rooms%')
                     ->orWhere('notes', 'like', '%East Africa with 50,000 sqm%')
@@ -188,78 +252,118 @@ class CleanDemoDataCommand extends Command
                     });
                 }
             });
-        })
-        // Safety guard: Never purge an organization if it has legitimate non-demo sales visits or contracts
-        ->whereDoesntHave('salesVisits', function ($sv) use ($demoUserIds) {
+        });
+
+        // Strict Safety guard: Never purge an organization if it has legitimate non-demo sales visits or active contracts
+        $demoOrgs->whereDoesntHave('salesVisits', function ($sv) use ($demoUserIds) {
             if (!empty($demoUserIds)) {
                 $sv->whereNotIn('salesperson_user_id', $demoUserIds);
             }
-        })
-        ->get();
+        });
 
+        $demoOrgs = $demoOrgs->get();
         $demoOrgIds = $demoOrgs->pluck('id')->toArray();
 
         // 7. Identify demo sales visits, proformas, contracts (avoid empty closures)
         $demoSalesVisits = SalesVisit::query();
+        $hasVisitCond = false;
+        if (!empty($provVisitIds)) {
+            $demoSalesVisits->whereIn('id', $provVisitIds);
+            $hasVisitCond = true;
+        }
         if (!empty($demoOrgIds) && !empty($demoUserIds)) {
-            $demoSalesVisits->where(function ($q) use ($demoOrgIds, $demoUserIds) {
+            $demoSalesVisits->orWhere(function ($q) use ($demoOrgIds, $demoUserIds) {
                 $q->whereIn('organization_id', $demoOrgIds)
                   ->orWhereIn('salesperson_user_id', $demoUserIds);
             });
+            $hasVisitCond = true;
         } elseif (!empty($demoOrgIds)) {
-            $demoSalesVisits->whereIn('organization_id', $demoOrgIds);
+            $demoSalesVisits->orWhereIn('organization_id', $demoOrgIds);
+            $hasVisitCond = true;
         } elseif (!empty($demoUserIds)) {
-            $demoSalesVisits->whereIn('salesperson_user_id', $demoUserIds);
-        } else {
+            $demoSalesVisits->orWhereIn('salesperson_user_id', $demoUserIds);
+            $hasVisitCond = true;
+        }
+        if (!$hasVisitCond) {
             $demoSalesVisits->whereRaw('1 = 0');
         }
         $demoSalesVisits = $demoSalesVisits->get();
         $demoVisitIds = $demoSalesVisits->pluck('id')->toArray();
 
         $demoProformas = Proforma::query();
+        $hasProfCond = false;
+        if (!empty($provProformaIds)) {
+            $demoProformas->whereIn('id', $provProformaIds);
+            $hasProfCond = true;
+        }
         if (!empty($demoOrgIds) && !empty($demoVisitIds)) {
-            $demoProformas->where(function ($q) use ($demoOrgIds, $demoVisitIds) {
+            $demoProformas->orWhere(function ($q) use ($demoOrgIds, $demoVisitIds) {
                 $q->whereIn('organization_id', $demoOrgIds)
                   ->orWhereIn('sales_visit_id', $demoVisitIds);
             });
+            $hasProfCond = true;
         } elseif (!empty($demoOrgIds)) {
-            $demoProformas->whereIn('organization_id', $demoOrgIds);
+            $demoProformas->orWhereIn('organization_id', $demoOrgIds);
+            $hasProfCond = true;
         } elseif (!empty($demoVisitIds)) {
-            $demoProformas->whereIn('sales_visit_id', $demoVisitIds);
-        } else {
+            $demoProformas->orWhereIn('sales_visit_id', $demoVisitIds);
+            $hasProfCond = true;
+        }
+        if (!$hasProfCond) {
             $demoProformas->whereRaw('1 = 0');
         }
         $demoProformas = $demoProformas->get();
         $demoProformaIds = $demoProformas->pluck('id')->toArray();
 
-        $demoContracts = !empty($demoOrgIds)
-            ? Contract::whereIn('organization_id', $demoOrgIds)->get()
-            : collect();
+        $demoContracts = Contract::query();
+        $hasContrCond = false;
+        if (!empty($provContractIds)) {
+            $demoContracts->whereIn('id', $provContractIds);
+            $hasContrCond = true;
+        }
+        if (!empty($demoOrgIds)) {
+            $demoContracts->orWhereIn('organization_id', $demoOrgIds);
+            $hasContrCond = true;
+        }
+        if (!$hasContrCond) {
+            $demoContracts->whereRaw('1 = 0');
+        }
+        $demoContracts = $demoContracts->get();
         $demoContractIds = $demoContracts->pluck('id')->toArray();
 
         // 8. Identify demo marketing campaigns & recipients
-        $demoCampaigns = Campaign::where('title', 'like', '%Enkutatash%')
-            ->orWhere('title', 'like', '%የመስከረም አዲስ ዓመት%')
-            ->get();
+        $demoCampaigns = Campaign::query();
+        $hasCampCond = false;
+        if (!empty($provCampIds)) {
+            $demoCampaigns->whereIn('id', $provCampIds);
+            $hasCampCond = true;
+        }
+        $demoCampaigns->orWhere('title', 'like', '%Enkutatash%')
+            ->orWhere('title', 'like', '%የመስከረም አዲስ ዓመት%');
+        $demoCampaigns = $demoCampaigns->get();
         $demoCampaignIds = $demoCampaigns->pluck('id')->toArray();
 
         // 9. Identify demo telegram users
-        $demoTgUsers = TelegramUser::where('telegram_id', 987654321)
-            ->orWhere('username', 'sarayohannes_eth')
-            ->get();
+        $demoTgUsers = TelegramUser::query();
+        if (!empty($provTgIds)) {
+            $demoTgUsers->whereIn('id', $provTgIds);
+        }
+        $demoTgUsers->orWhere('telegram_id', 987654321)
+            ->orWhere('username', 'sarayohannes_eth');
+        $demoTgUsers = $demoTgUsers->get();
         $demoTgUserIds = $demoTgUsers->pluck('id')->toArray();
 
         $summaryTable = [
-            ['Demo Users', count($demoUserIds)],
-            ['Demo Customers', count($demoCustomerIds)],
-            ['Demo Orders & Items', count($demoOrderIds)],
-            ['Demo Expenses', count($demoExpenseIds)],
-            ['Demo Cleaning Teams', count($demoTeamIds)],
-            ['Demo CRM Organizations', count($demoOrgIds)],
-            ['Demo Sales Visits', count($demoVisitIds)],
-            ['Demo Proformas & Contracts', count($demoProformaIds) + count($demoContractIds)],
-            ['Demo Marketing Campaigns', count($demoCampaignIds)],
-            ['Demo Telegram Users', count($demoTgUserIds)],
+            ['Demo Users', count($demoUserIds), implode(', ', array_slice($demoUserIds, 0, 10)) ?: 'None'],
+            ['Demo Customers', count($demoCustomerIds), implode(', ', array_slice($demoCustomerIds, 0, 10)) ?: 'None'],
+            ['Demo Orders & Items', count($demoOrderIds), implode(', ', array_slice($demoOrderIds, 0, 10)) ?: 'None'],
+            ['Demo Expenses', count($demoExpenseIds), implode(', ', array_slice($demoExpenseIds, 0, 10)) ?: 'None'],
+            ['Demo Cleaning Teams', count($demoTeamIds), implode(', ', array_slice($demoTeamIds, 0, 10)) ?: 'None'],
+            ['Demo CRM Organizations', count($demoOrgIds), implode(', ', array_slice($demoOrgIds, 0, 10)) ?: 'None'],
+            ['Demo Sales Visits', count($demoVisitIds), implode(', ', array_slice($demoVisitIds, 0, 10)) ?: 'None'],
+            ['Demo Proformas & Contracts', count($demoProformaIds) + count($demoContractIds), implode(', ', array_slice(array_merge($demoProformaIds, $demoContractIds), 0, 10)) ?: 'None'],
+            ['Demo Marketing Campaigns', count($demoCampaignIds), implode(', ', array_slice($demoCampaignIds, 0, 10)) ?: 'None'],
+            ['Demo Telegram Users', count($demoTgUserIds), implode(', ', array_slice($demoTgUserIds, 0, 10)) ?: 'None'],
         ];
 
         $totalRecords = count($demoUserIds) + count($demoCustomerIds) + count($demoOrderIds) +
@@ -267,15 +371,15 @@ class CleanDemoDataCommand extends Command
             count($demoVisitIds) + count($demoProformaIds) + count($demoContractIds) +
             count($demoCampaignIds) + count($demoTgUserIds);
 
-        $this->table(['Entity Type', 'Sample Records Identified'], $summaryTable);
+        $this->table(['Entity Type', 'Sample Records Identified', 'Exact Sample IDs'], $summaryTable);
 
         if ($totalRecords === 0) {
-            $this->info('No development seed demo records found. Database is already clean.');
+            $this->info('No development seed demo records found with verified provenance. Database is already clean.');
             return Command::SUCCESS;
         }
 
         if ($isDryRun) {
-            $this->warn('DRY RUN COMPLETE: ' . $totalRecords . ' sample records identified. No records were deleted.');
+            $this->warn('DRY RUN COMPLETE: ' . $totalRecords . ' sample records identified with exact IDs. No records were deleted.');
             return Command::SUCCESS;
         }
 
@@ -375,9 +479,12 @@ class CleanDemoDataCommand extends Command
                 DB::table('personal_access_tokens')->whereIn('tokenable_id', $demoUserIds)->where('tokenable_type', User::class)->delete();
                 User::whereIn('id', $demoUserIds)->delete();
             }
+
+            // Delete provenance records
+            SeedProvenance::where('seed_key', 'DatabaseSeeder')->delete();
         });
 
-        $this->info("SUCCESS: Successfully purged {$totalRecords} sample records from the database.");
+        $this->info("SUCCESS: Successfully purged {$totalRecords} sample records with verified provenance.");
         return Command::SUCCESS;
     }
 }

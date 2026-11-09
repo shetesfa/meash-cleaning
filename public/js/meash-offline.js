@@ -392,15 +392,46 @@ class MeashOfflineEngine {
     async getFailedItems() {
         const all = await this.getAllItems('sync_queue');
         const currentUserId = this.getCurrentUserId();
-        return all.filter(it => {
-            const isFailed = it.status === 'failed' || it.status === 'quarantined';
-            if (!isFailed) return false;
-            if (currentUserId && it.user_id) {
-                return it.user_id === currentUserId;
+        if (!currentUserId) return [];
+        // Strict privacy: Only show the authenticated user's own failed operations.
+        // Unowned legacy records are NEVER leaked into ordinary failed items!
+        return all.filter(it => it.status === 'failed' && it.user_id === currentUserId);
+    }
+
+    async getQuarantinedItems() {
+        const all = await this.getAllItems('sync_queue');
+        return all.filter(it => it.status === 'quarantined' || !it.user_id);
+    }
+
+    async exportQuarantinedItems() {
+        const quarantined = await this.getQuarantinedItems();
+        const blob = new Blob([JSON.stringify(quarantined, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `meash-quarantined-legacy-records-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    async recoverQuarantinedItems(targetUserId) {
+        if (!targetUserId) return 0;
+        const all = await this.getAllItems('sync_queue');
+        let count = 0;
+        for (const it of all) {
+            if (it.status === 'quarantined' || !it.user_id) {
+                it.user_id = targetUserId;
+                it.status = 'pending';
+                it.retries = 0;
+                it.last_error = null;
+                await this.putStoreItem('sync_queue', it);
+                count++;
             }
-            // Legacy unowned items visible only if no user_id and current session needs recovery
-            return !it.user_id;
-        });
+        }
+        this.notifyStatus();
+        return count;
     }
 
     async retryFailedItem(clientUuid) {

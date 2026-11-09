@@ -19,6 +19,7 @@ use App\Models\Payment;
 use App\Models\Proforma;
 use App\Models\ProformaItem;
 use App\Models\SalesVisit;
+use App\Models\SeedProvenance;
 use App\Models\Service;
 use App\Models\TeamMember;
 use App\Models\TelegramUser;
@@ -53,6 +54,36 @@ class DatabaseSeeder extends Seeder
             $this->command->info('Database is already seeded. Skipping seeder to prevent duplicate entries.');
             return;
         }
+
+        // Register seed provenance listener for all demo models created during non-production seeding
+        $taggableModels = [
+            User::class,
+            CleaningTeam::class,
+            TeamMember::class,
+            Customer::class,
+            Organization::class,
+            Appointment::class,
+            Order::class,
+            OrderItem::class,
+            Payment::class,
+            Proforma::class,
+            ProformaItem::class,
+            SalesVisit::class,
+            Contract::class,
+            Expense::class,
+            Complaint::class,
+            Feedback::class,
+            Campaign::class,
+            CampaignRecipient::class,
+            Followup::class,
+            TelegramUser::class,
+        ];
+        foreach ($taggableModels as $modelClass) {
+            $modelClass::created(function ($model) {
+                SeedProvenance::tag($model, 'DatabaseSeeder');
+            });
+        }
+
         // 1. CORE USERS ACROSS ALL ROLES
         // ==========================================
         $owner = User::create([
