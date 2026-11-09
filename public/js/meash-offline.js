@@ -180,6 +180,22 @@ class MeashOfflineEngine {
         return null;
     }
 
+    getCurrentUserRole() {
+        try {
+            const u = JSON.parse(localStorage.getItem('meash_user') || '{}');
+            if (u && u.role) return u.role;
+        } catch (e) {}
+        if (window.currentUser && window.currentUser.role) {
+            return window.currentUser.role;
+        }
+        return null;
+    }
+
+    isOwnerOrAdmin() {
+        const role = this.getCurrentUserRole();
+        return role === 'owner' || role === 'admin';
+    }
+
     generateUUID() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -399,25 +415,47 @@ class MeashOfflineEngine {
     }
 
     async getQuarantinedItems() {
+        // Strict privacy: Only authenticated Owner/Admin accounts can inspect quarantined unassigned records
+        if (!this.isOwnerOrAdmin()) {
+            console.warn('Privacy violation prevented: Quarantined records can only be inspected by an authorized Owner.');
+            return [];
+        }
         const all = await this.getAllItems('sync_queue');
         return all.filter(it => it.status === 'quarantined' || !it.user_id);
     }
 
     async exportQuarantinedItems() {
+        if (!this.isOwnerOrAdmin()) {
+            alert('Permission Denied: Only system Owner or Administrator can export quarantined offline records.');
+            return;
+        }
         const quarantined = await this.getQuarantinedItems();
+        if (quarantined.length === 0) {
+            alert('No quarantined records found.');
+            return;
+        }
         const blob = new Blob([JSON.stringify(quarantined, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `meash-quarantined-legacy-records-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `meash-quarantined-records-owner-export-${new Date().toISOString().slice(0, 10)}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
 
-    async recoverQuarantinedItems(targetUserId) {
-        if (!targetUserId) return 0;
+    async recoverQuarantinedItems(targetUserId, ownerConfirmation = false) {
+        if (!this.isOwnerOrAdmin() || !ownerConfirmation) {
+            console.error('Security alert: Quarantined item recovery strictly requires explicit Owner authorization.');
+            throw new Error('Unauthorized: Only an authenticated Owner with explicit confirmation can reassign quarantined offline records.');
+        }
+        const currentUserId = this.getCurrentUserId();
+        // Prevent assigning to arbitrary non-existent or unverified user ID:
+        // Must match currently authenticated user or be strictly verified
+        if (!targetUserId || targetUserId !== currentUserId) {
+            targetUserId = currentUserId;
+        }
         const all = await this.getAllItems('sync_queue');
         let count = 0;
         for (const it of all) {
@@ -426,6 +464,7 @@ class MeashOfflineEngine {
                 it.status = 'pending';
                 it.retries = 0;
                 it.last_error = null;
+                it._recovered_by_owner_at = new Date().toISOString();
                 await this.putStoreItem('sync_queue', it);
                 count++;
             }
@@ -455,7 +494,7 @@ class MeashOfflineEngine {
     async discardFailedItem(clientUuid) {
         const item = await this.getStoreItem('sync_queue', clientUuid);
         const currentUserId = this.getCurrentUserId();
-        if (item && (!item.user_id || item.user_id === currentUserId)) {
+        if (item && item.user_id === currentUserId) {
             await this.deleteStoreItem('sync_queue', clientUuid);
             this.notifyStatus();
         }
@@ -463,13 +502,18 @@ class MeashOfflineEngine {
 
     async exportUserQueue() {
         const currentUserId = this.getCurrentUserId();
+        if (!currentUserId) {
+            console.warn('Cannot export queue: user not authenticated.');
+            return;
+        }
         const all = await this.getAllItems('sync_queue');
-        const userItems = all.filter(it => it.user_id === currentUserId || (!it.user_id && !currentUserId));
+        // Strict account isolation: only export items strictly belonging to current authenticated user
+        const userItems = all.filter(it => it.user_id === currentUserId);
         const blob = new Blob([JSON.stringify(userItems, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `meash-offline-backup-user-${currentUserId || 'legacy'}-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `meash-offline-backup-user-${currentUserId}-${new Date().toISOString().slice(0, 10)}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

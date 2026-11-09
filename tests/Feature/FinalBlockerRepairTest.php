@@ -930,4 +930,73 @@ class FinalBlockerRepairTest extends TestCase
         // Proves that only ONE request can win the stale claim
         $this->assertEquals('winner-token-abc', $record->fresh()->lock_token);
     }
+
+    public function test_genuine_concurrent_requests_for_same_client_uuid_creates_exactly_one_record_and_retry_idempotency(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $customer = Customer::create([
+            'customer_code' => 'CUST-CONCURRENT-01',
+            'full_name' => 'Concurrent Race Customer',
+            'phone' => '0911776655',
+            'address' => 'Bole Medhanialem',
+        ]);
+
+        $uuid = 'genuine-race-uuid-' . uniqid();
+
+        $payload = [
+            'items' => [
+                [
+                    'client_uuid' => $uuid,
+                    'entity_type' => 'order',
+                    'action' => 'create',
+                    'client_version' => 1,
+                    'payload' => [
+                        'customer_id' => $customer->id,
+                        'appointment_date' => now()->toDateString(),
+                        'items' => [['service_code' => 'sofa', 'quantity' => 2, 'unit_price' => 350]],
+                    ],
+                ],
+            ],
+        ];
+
+        Sanctum::actingAs($owner);
+
+        // Concurrency interceptor: When Request 1 is actively inside its transaction creating the order,
+        // trigger Request 2 concurrently with the exact same client_uuid
+        $concurrentResponse = null;
+        $intercepted = false;
+
+        Order::creating(function ($order) use ($payload, &$concurrentResponse, &$intercepted) {
+            if (!$intercepted) {
+                $intercepted = true;
+                // Dispatch parallel Request 2 while Request 1 holds the lock and is mid-transaction
+                $concurrentResponse = $this->postJson('/api/sync/batch', $payload);
+            }
+        });
+
+        // 1. Dispatch Request 1
+        $res1 = $this->postJson('/api/sync/batch', $payload)->assertStatus(200);
+
+        // 2. Verify Request 1 succeeded
+        $this->assertEquals(1, $res1->json('synced_count'));
+        $this->assertEquals('synced', $res1->json('synced.0.status'));
+
+        // 3. Verify concurrent Request 2 was held in_progress and did NOT delete local queue or claim success
+        $this->assertNotNull($concurrentResponse);
+        $this->assertEquals(200, $concurrentResponse->getStatusCode());
+        $this->assertEquals(0, $concurrentResponse->json('synced_count'));
+        $this->assertEquals(1, $concurrentResponse->json('in_progress_count'));
+        $this->assertEquals('in_progress', $concurrentResponse->json('in_progress.0.status'));
+
+        // 4. Exactly ONE business record created in database
+        $this->assertEquals(1, Order::where('customer_id', $customer->id)->count());
+
+        // 5. Retry with Request 2 payload now returns already_processed without duplicating records
+        $retryRes = $this->postJson('/api/sync/batch', $payload)->assertStatus(200);
+        $this->assertEquals(1, $retryRes->json('synced_count'));
+        $this->assertEquals('already_processed', $retryRes->json('synced.0.status'));
+
+        // Still exactly ONE business record
+        $this->assertEquals(1, Order::where('customer_id', $customer->id)->count());
+    }
 }

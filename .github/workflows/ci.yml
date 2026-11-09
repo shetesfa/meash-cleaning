@@ -28,6 +28,8 @@ jobs:
       DB_DATABASE: meash_testing
       DB_USERNAME: root
       DB_PASSWORD: root
+      MYSQL_ATTR_SSL_VERIFY_SERVER_CERT: "false"
+      MYSQL_ATTR_SSL_CA: ""
       APP_ENV: testing
       BCRYPT_ROUNDS: 4
       CACHE_STORE: array
