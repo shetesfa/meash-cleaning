@@ -11,6 +11,30 @@ jobs:
     name: PHPUnit & Security Tests (PHP 8.2)
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: meash_testing
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: meash_testing
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      APP_ENV: testing
+      BCRYPT_ROUNDS: 4
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -38,10 +62,10 @@ jobs:
       - name: Prepare Laravel Environment
         run: |
           cp .env.example .env
-          php artisan key:generate
+          php artisan key:generate --force
 
       - name: Run Database Migrations
-        run: php artisan migrate --force
+        run: php artisan migrate:fresh --force
 
       - name: Execute Full Test Suite
         run: php artisan test --colors=always

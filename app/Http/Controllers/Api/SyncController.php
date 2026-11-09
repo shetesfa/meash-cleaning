@@ -71,12 +71,11 @@ class SyncController extends Controller
                 }
 
                 if ($idempRecord->status === 'in_progress') {
-                    // Stale in_progress crash recovery: If process crashed or held lock for > 2 minutes, allow safe resumption
+                    // Quick check: If not stale, hold in progress immediately
                     $staleThreshold = now()->subMinutes(2);
-                    $isStale = $idempRecord->updated_at && $idempRecord->updated_at->lt($staleThreshold);
+                    $isStale = $idempRecord->updated_at && $idempRecord->updated_at->lte($staleThreshold);
 
                     if (! $isStale) {
-                        // Truly concurrent request actively processing: Never mark synced, retain local queue!
                         $inProgress[] = [
                             'client_uuid' => $uuid,
                             'status' => 'in_progress',
@@ -84,12 +83,6 @@ class SyncController extends Controller
                         ];
                         continue;
                     }
-
-                    // Stale recovery: refresh lock timestamp and proceed to recover
-                    $idempRecord->update([
-                        'status' => 'in_progress',
-                        'updated_at' => now(),
-                    ]);
                 }
             }
 
@@ -135,7 +128,29 @@ class SyncController extends Controller
             }
 
             try {
-                if ($idempRecord && ($idempRecord->status === 'failed' || $idempRecord->status === 'in_progress')) {
+                if ($idempRecord && $idempRecord->status === 'in_progress') {
+                    // Stale in_progress crash recovery: Atomic DB claim to ensure only ONE concurrent process can claim it!
+                    $staleThreshold = now()->subMinutes(2);
+                    $claimed = DB::table('sync_idempotency_records')
+                        ->where('id', $idempRecord->id)
+                        ->where('status', 'in_progress')
+                        ->where('updated_at', '<=', $staleThreshold)
+                        ->update([
+                            'lock_token' => $lockToken,
+                            'updated_at' => now(),
+                        ]);
+
+                    if (! $claimed) {
+                        $cacheLock->release();
+                        $inProgress[] = [
+                            'client_uuid' => $uuid,
+                            'status' => 'in_progress',
+                            'message' => 'Sync operation currently in progress by another concurrent request. Retaining local queue item.',
+                        ];
+                        continue;
+                    }
+                    $idempRecord->refresh();
+                } elseif ($idempRecord && $idempRecord->status === 'failed') {
                     $idempRecord->update([
                         'status' => 'in_progress',
                         'user_id' => $user?->id,
@@ -354,13 +369,26 @@ class SyncController extends Controller
                     }
 
                     if ($order->version > $clientVer && $order->order_status !== $incomingStatus) {
-                        $conflict = SyncConflict::create([
-                            'entity_type' => 'order',
-                            'entity_id' => $order->id,
-                            'client_uuid' => $uuid,
-                            'client_state' => $payload,
-                            'server_state' => $order->toArray(),
-                        ]);
+                        $conflict = null;
+                        DB::transaction(function () use (
+                            $order, $uuid, $payload, &$conflict, &$idempRecord, &$isTransactionCommitted
+                        ) {
+                            $conflict = SyncConflict::create([
+                                'entity_type' => 'order',
+                                'entity_id' => $order->id,
+                                'client_uuid' => $uuid,
+                                'client_state' => $payload,
+                                'server_state' => $order->toArray(),
+                            ]);
+
+                            $idempRecord->update([
+                                'status' => 'completed',
+                                'entity_id' => $order->id,
+                                'response_payload' => ['conflict' => true, 'conflict_id' => $conflict->id],
+                                'lock_token' => null,
+                            ]);
+                            $isTransactionCommitted = true;
+                        });
 
                         $conflicts[] = [
                             'client_uuid' => $uuid,
@@ -373,14 +401,6 @@ class SyncController extends Controller
                             ],
                             'message' => 'Conflict detected: local change diverged from updated server state.',
                         ];
-
-                        $idempRecord->update([
-                            'status' => 'completed',
-                            'entity_id' => $order->id,
-                            'response_payload' => ['conflict' => true, 'conflict_id' => $conflict->id],
-                            'lock_token' => null,
-                        ]);
-                        $isTransactionCommitted = true;
                         continue;
                     }
 

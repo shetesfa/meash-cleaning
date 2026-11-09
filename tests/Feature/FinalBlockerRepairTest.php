@@ -13,8 +13,10 @@ use App\Models\NotificationRead;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Organization;
+use App\Models\Payment;
 use App\Models\Proforma;
 use App\Models\SalesVisit;
+use App\Models\SeedProvenance;
 use App\Models\Service;
 use App\Models\SyncConflict;
 use App\Models\SyncIdempotencyRecord;
@@ -356,7 +358,19 @@ class FinalBlockerRepairTest extends TestCase
 
     public function test_clean_demo_data_preserves_legitimate_organizations_named_cbe_hyatt_skylight(): void
     {
-        // 1. Create a legitimate business organization named Commercial Bank of Ethiopia HQ
+        // 1. Create a demo organization tagged with explicit SeedProvenance
+        $demoOrg = Organization::create([
+            'org_code' => 'ORG-DEMO-CBE',
+            'name' => 'Commercial Bank of Ethiopia HQ',
+            'industry' => 'bank',
+            'email' => 'demo.cbe@meash.com',
+            'phone' => '0115001122',
+            'address' => 'Churchill Avenue, CBE Tower (53 floors)',
+            'notes' => 'Fictional demo organization from seed.',
+        ]);
+        SeedProvenance::tag($demoOrg, 'DatabaseSeeder');
+
+        // 2. Create a legitimate business organization named Commercial Bank of Ethiopia HQ WITHOUT provenance
         $legitStaff = User::factory()->create(['name' => 'Legit Salesperson', 'role' => 'sales', 'email' => 'legit.sales@meash.com']);
         $legitCbe = Organization::create([
             'org_code' => 'ORG-LEGIT-CBE',
@@ -378,7 +392,7 @@ class FinalBlockerRepairTest extends TestCase
             'visit_date' => now()->toDateString(),
         ]);
 
-        // 2. Create legitimate Skylight and Hyatt organizations
+        // 3. Create legitimate Skylight organization WITHOUT provenance
         $legitSkylight = Organization::create([
             'org_code' => 'ORG-LEGIT-SKY',
             'name' => 'Ethiopian Skylight Hotel',
@@ -389,7 +403,7 @@ class FinalBlockerRepairTest extends TestCase
             'notes' => 'Real commercial contract for conference hall maintenance.',
         ]);
 
-        // 3. Create a real owner 'amha'
+        // 4. Create a real owner 'amha'
         $amha = User::create([
             'name' => 'Amha Owner',
             'username' => 'amha',
@@ -399,7 +413,7 @@ class FinalBlockerRepairTest extends TestCase
             'password' => Hash::make('StrongPassword123!'),
         ]);
 
-        // 4. Run cleanup command with backup confirmed and force
+        // 5. Run cleanup command with backup confirmed and force
         $exitCode = Artisan::call('meash:clean-demo-data', [
             '--backup-confirmed' => true,
             '--force' => true,
@@ -407,7 +421,10 @@ class FinalBlockerRepairTest extends TestCase
 
         $this->assertEquals(0, $exitCode);
 
-        // Assert legitimate organizations and owner amha MUST BE PRESERVED
+        // Verified demo organization MUST be purged
+        $this->assertDatabaseMissing('organizations', ['id' => $demoOrg->id]);
+
+        // Legitimate organizations and owner amha MUST BE PRESERVED
         $this->assertDatabaseHas('organizations', ['id' => $legitCbe->id, 'name' => 'Commercial Bank of Ethiopia HQ']);
         $this->assertDatabaseHas('organizations', ['id' => $legitSkylight->id, 'name' => 'Ethiopian Skylight Hotel']);
         $this->assertDatabaseHas('users', ['id' => $amha->id, 'username' => 'amha']);
@@ -415,12 +432,21 @@ class FinalBlockerRepairTest extends TestCase
 
     public function test_clean_demo_data_works_when_demo_user_list_is_empty_and_no_empty_nested_query(): void
     {
-        // Setup campaign and telegram sample without any demo users in the DB
+        // Setup campaign with explicit seed provenance and legitimate campaign without provenance
         $demoCamp = Campaign::create([
             'title' => 'የመስከረም አዲስ ዓመት ልዩ ቅናሽ (Enkutatash New Year Promo)',
             'message_text' => 'Demo text',
             'channel' => 'telegram',
             'status' => 'completed',
+        ]);
+        SeedProvenance::tag($demoCamp, 'DatabaseSeeder');
+
+        // Legitimate marketing campaign with identical title created by real staff
+        $legitCamp = Campaign::create([
+            'title' => 'የመስከረም አዲስ ዓመት ልዩ ቅናሽ (Enkutatash New Year Promo)',
+            'message_text' => 'Real promotional message for 2026',
+            'channel' => 'telegram',
+            'status' => 'scheduled',
         ]);
 
         $exitCode = Artisan::call('meash:clean-demo-data', [
@@ -429,7 +455,10 @@ class FinalBlockerRepairTest extends TestCase
         ]);
 
         $this->assertEquals(0, $exitCode);
+        // Verified demo campaign must be purged
         $this->assertDatabaseMissing('campaigns', ['id' => $demoCamp->id]);
+        // Legitimate campaign matching demo title must be PRESERVED
+        $this->assertDatabaseHas('campaigns', ['id' => $legitCamp->id]);
     }
 
     public function test_finance_role_cannot_view_staff_and_leader_phone_numbers_in_order_show(): void
@@ -701,5 +730,204 @@ class FinalBlockerRepairTest extends TestCase
         $record = SyncIdempotencyRecord::where('client_uuid', $uuid)->first();
         $this->assertNotNull($record);
         $this->assertEquals('failed', $record->status);
+    }
+
+    public function test_clean_demo_data_purges_child_records_through_provenance_and_parent_relationships(): void
+    {
+        $demoUser = User::factory()->create(['email' => 'cleaner_demo_test@meash.com', 'role' => 'cleaner']);
+        SeedProvenance::tag($demoUser, 'DatabaseSeeder');
+
+        $demoCust = Customer::create([
+            'customer_code' => 'CUST-DEMO-CHILD',
+            'full_name' => 'Demo Customer Child Test',
+            'phone' => '0911000777',
+            'address' => 'Bole',
+        ]);
+        SeedProvenance::tag($demoCust, 'DatabaseSeeder');
+
+        $demoTeam = CleaningTeam::create(['team_name' => 'Demo Team Alpha']);
+        SeedProvenance::tag($demoTeam, 'DatabaseSeeder');
+
+        $demoMember = TeamMember::create(['cleaning_team_id' => $demoTeam->id, 'user_id' => $demoUser->id, 'role_in_team' => 'leader']);
+        SeedProvenance::tag($demoMember, 'DatabaseSeeder');
+
+        $demoOrder = Order::create([
+            'order_number' => 'ORD-DEMO-CHILD-TEST',
+            'customer_id' => $demoCust->id,
+            'assigned_team_id' => $demoTeam->id,
+            'address' => 'Bole',
+            'order_status' => 'confirmed',
+            'appointment_date' => now()->toDateString(),
+            'total' => 1000,
+        ]);
+        SeedProvenance::tag($demoOrder, 'DatabaseSeeder');
+
+        $demoItem = OrderItem::create([
+            'order_id' => $demoOrder->id,
+            'item_name' => 'Sofa Cleaning',
+            'quantity' => 2,
+            'unit_price' => 500,
+        ]);
+        SeedProvenance::tag($demoItem, 'DatabaseSeeder');
+
+        $demoPayment = Payment::create([
+            'payment_number' => 'PAY-DEMO-TEST-01',
+            'order_id' => $demoOrder->id,
+            'customer_id' => $demoCust->id,
+            'amount' => 1000,
+            'payment_method' => 'cash',
+            'payment_date' => now()->toDateString(),
+        ]);
+        SeedProvenance::tag($demoPayment, 'DatabaseSeeder');
+
+        // Legitimate client order and child items WITHOUT provenance
+        $legitCust = Customer::create([
+            'customer_code' => 'CUST-LEGIT-CHILD',
+            'full_name' => 'Legitimate Real Customer',
+            'phone' => '0911888111',
+            'address' => 'CMC Michael',
+        ]);
+        $legitOrder = Order::create([
+            'order_number' => 'ORD-LEGIT-CHILD-REAL',
+            'customer_id' => $legitCust->id,
+            'address' => 'CMC Michael',
+            'order_status' => 'confirmed',
+            'appointment_date' => now()->toDateString(),
+            'total' => 1500,
+        ]);
+        $legitItem = OrderItem::create([
+            'order_id' => $legitOrder->id,
+            'item_name' => 'Carpet Cleaning',
+            'quantity' => 1,
+            'unit_price' => 1500,
+        ]);
+        $legitPayment = Payment::create([
+            'payment_number' => 'PAY-LEGIT-TEST-01',
+            'order_id' => $legitOrder->id,
+            'customer_id' => $legitCust->id,
+            'amount' => 1500,
+            'payment_method' => 'cbe_birr',
+            'payment_date' => now()->toDateString(),
+        ]);
+
+        $exitCode = Artisan::call('meash:clean-demo-data', [
+            '--backup-confirmed' => true,
+            '--force' => true,
+        ]);
+
+        $this->assertEquals(0, $exitCode);
+
+        // Verified demo parents and children MUST be purged
+        $this->assertDatabaseMissing('orders', ['id' => $demoOrder->id]);
+        $this->assertDatabaseMissing('order_items', ['id' => $demoItem->id]);
+        $this->assertDatabaseMissing('payments', ['id' => $demoPayment->id]);
+        $this->assertDatabaseMissing('cleaning_teams', ['id' => $demoTeam->id]);
+        $this->assertDatabaseMissing('team_members', ['id' => $demoMember->id]);
+
+        // Legitimate parents and children MUST BE COMPLETELY PRESERVED
+        $this->assertDatabaseHas('orders', ['id' => $legitOrder->id]);
+        $this->assertDatabaseHas('order_items', ['id' => $legitItem->id]);
+        $this->assertDatabaseHas('payments', ['id' => $legitPayment->id]);
+        $this->assertDatabaseHas('customers', ['id' => $legitCust->id]);
+    }
+
+    public function test_order_status_conflict_creation_and_idempotency_are_atomic(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $customer = Customer::create([
+            'customer_code' => 'CUST-CONFLICT-01',
+            'full_name' => 'Conflict Order Customer',
+            'phone' => '0911224466',
+            'address' => 'Bole',
+        ]);
+
+        // Server order is at version 5 with status 'cleaning'
+        $order = Order::create([
+            'order_number' => 'ORD-CONFLICT-TEST',
+            'customer_id' => $customer->id,
+            'address' => 'Bole',
+            'order_status' => 'cleaning',
+            'appointment_date' => now()->toDateString(),
+            'total' => 800,
+            'version' => 5,
+        ]);
+
+        $uuid = 'conflict-atomic-uuid-' . uniqid();
+
+        // Client sends status change with older version 2
+        Sanctum::actingAs($owner);
+        $res = $this->postJson('/api/sync/batch', [
+            'items' => [
+                [
+                    'client_uuid' => $uuid,
+                    'entity_type' => 'order',
+                    'action' => 'status_change',
+                    'client_version' => 2,
+                    'payload' => [
+                        'order_id' => $order->id,
+                        'order_status' => 'completed',
+                    ],
+                ],
+            ],
+        ])->assertStatus(200);
+
+        // Conflict recorded atomically, order status remained intact on server
+        $this->assertEquals(1, $res->json('conflict_count'));
+        $this->assertEquals('cleaning', $order->fresh()->order_status);
+
+        $idemp = SyncIdempotencyRecord::where('client_uuid', $uuid)->first();
+        $this->assertNotNull($idemp);
+        $this->assertEquals('completed', $idemp->status);
+        $this->assertTrue($idemp->response_payload['conflict']);
+
+        $conflict = \App\Models\SyncConflict::where('client_uuid', $uuid)->first();
+        $this->assertNotNull($conflict);
+        $this->assertEquals($order->id, $conflict->entity_id);
+    }
+
+    public function test_stale_recovery_atomic_claim_prevents_simultaneous_processing(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $uuid = 'stale-atomic-claim-uuid-' . uniqid();
+
+        // Create a stale in_progress record
+        $record = SyncIdempotencyRecord::create([
+            'client_uuid' => $uuid,
+            'user_id' => $owner->id,
+            'entity_type' => 'order',
+            'action' => 'create',
+            'status' => 'in_progress',
+            'lock_token' => 'dead-token-123',
+        ]);
+        DB::table('sync_idempotency_records')->where('id', $record->id)->update([
+            'created_at' => now()->subMinutes(10),
+            'updated_at' => now()->subMinutes(10),
+        ]);
+
+        // Request 1 simulates winning atomic claim by updating the lock_token and updated_at
+        $staleThreshold = now()->subMinutes(2);
+        $claimed1 = DB::table('sync_idempotency_records')
+            ->where('id', $record->id)
+            ->where('status', 'in_progress')
+            ->where('updated_at', '<=', $staleThreshold)
+            ->update([
+                'lock_token' => 'winner-token-abc',
+                'updated_at' => now(),
+            ]);
+        $this->assertEquals(1, $claimed1);
+
+        // Request 2 arriving at the exact same moment will find updated_at is no longer <= staleThreshold
+        $claimed2 = DB::table('sync_idempotency_records')
+            ->where('id', $record->id)
+            ->where('status', 'in_progress')
+            ->where('updated_at', '<=', $staleThreshold)
+            ->update([
+                'lock_token' => 'loser-token-xyz',
+                'updated_at' => now(),
+            ]);
+        $this->assertEquals(0, $claimed2);
+
+        // Proves that only ONE request can win the stale claim
+        $this->assertEquals('winner-token-abc', $record->fresh()->lock_token);
     }
 }

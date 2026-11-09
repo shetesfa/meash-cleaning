@@ -19,6 +19,7 @@ use App\Models\Organization;
 use App\Models\Proforma;
 use App\Models\ProformaItem;
 use App\Models\SalesVisit;
+use App\Models\SeedProvenance;
 use App\Models\Service;
 use App\Models\TeamMember;
 use App\Models\TelegramUser;
@@ -406,7 +407,7 @@ class FinalReleaseAuditTest extends TestCase
 
     public function test_clean_demo_data_command_purges_all_seeder_sample_entities_and_preserves_amha(): void
     {
-        // Create sample records covering all DatabaseSeeder entities
+        // Create sample records covering all DatabaseSeeder entities tagged with SeedProvenance
         $demoUser = User::create([
             'name' => 'Cleaner Demo',
             'email' => 'cleaner1@meash.com',
@@ -414,6 +415,7 @@ class FinalReleaseAuditTest extends TestCase
             'role' => 'cleaner',
             'password' => Hash::make('password'),
         ]);
+        SeedProvenance::tag($demoUser, 'DatabaseSeeder');
 
         $legitOwner = User::create([
             'name' => 'Amha Owner',
@@ -430,6 +432,7 @@ class FinalReleaseAuditTest extends TestCase
             'phone' => '0911223344',
             'address' => 'Bole Medhanialem',
         ]);
+        SeedProvenance::tag($demoCust, 'DatabaseSeeder');
 
         $demoOrg = Organization::create([
             'org_code' => 'ORG-DEMO-01',
@@ -438,6 +441,7 @@ class FinalReleaseAuditTest extends TestCase
             'phone' => '0116888000',
             'address' => 'Bole',
         ]);
+        SeedProvenance::tag($demoOrg, 'DatabaseSeeder');
 
         $demoVisit = SalesVisit::create([
             'visit_code' => 'VISIT-DEMO-01',
@@ -448,6 +452,7 @@ class FinalReleaseAuditTest extends TestCase
             'salesperson_user_id' => $demoUser->id,
             'visit_date' => now()->toDateString(),
         ]);
+        SeedProvenance::tag($demoVisit, 'DatabaseSeeder');
 
         $demoProforma = Proforma::create([
             'proforma_number' => 'PRF-DEMO-01',
@@ -458,14 +463,16 @@ class FinalReleaseAuditTest extends TestCase
             'total' => 1000,
             'validity_date' => now()->addDays(30),
         ]);
+        SeedProvenance::tag($demoProforma, 'DatabaseSeeder');
 
-        ProformaItem::create([
+        $demoProfItem = ProformaItem::create([
             'proforma_id' => $demoProforma->id,
             'description' => 'Demo proforma item',
             'quantity' => 10,
             'unit_price' => 100,
             'subtotal' => 1000,
         ]);
+        SeedProvenance::tag($demoProfItem, 'DatabaseSeeder');
 
         $demoContract = Contract::create([
             'contract_number' => 'CNT-DEMO-01',
@@ -474,6 +481,7 @@ class FinalReleaseAuditTest extends TestCase
             'end_date' => now()->addYear()->toDateString(),
             'agreed_value' => 50000,
         ]);
+        SeedProvenance::tag($demoContract, 'DatabaseSeeder');
 
         $demoCamp = Campaign::create([
             'title' => 'የመስከረም አዲስ ዓመት ልዩ ቅናሽ (Enkutatash New Year Promo)',
@@ -481,12 +489,14 @@ class FinalReleaseAuditTest extends TestCase
             'channel' => 'telegram',
             'status' => 'completed',
         ]);
+        SeedProvenance::tag($demoCamp, 'DatabaseSeeder');
 
-        CampaignRecipient::create([
+        $demoRecipient = CampaignRecipient::create([
             'campaign_id' => $demoCamp->id,
             'recipient_id' => '0911223344',
             'status' => 'sent',
         ]);
+        SeedProvenance::tag($demoRecipient, 'DatabaseSeeder');
 
         $demoTg = TelegramUser::create([
             'telegram_id' => 987654321,
@@ -494,6 +504,7 @@ class FinalReleaseAuditTest extends TestCase
             'first_name' => 'Sara',
             'phone_number' => '0912445566',
         ]);
+        SeedProvenance::tag($demoTg, 'DatabaseSeeder');
 
         // 1. Dry Run Mode
         Artisan::call('meash:clean-demo-data', ['--dry-run' => true]);
