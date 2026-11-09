@@ -134,12 +134,12 @@
 
             <form onsubmit="handleAppLoginSubmit(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">ኢሜይል ወይም ስልክ ቁጥር (Email or Phone)</label>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">የተጠቃሚ ስም፣ ኢሜይል ወይም ስልክ ቁጥር</label>
                     <div class="relative">
                         <i data-lucide="user" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="app-login-input" required placeholder="ኢሜይል ወይም ስልክ ቁጥር ያስገቡ (ምሳሌ፦ owner@meash.com ወይም 0911000001)" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="text" id="app-login-input" required placeholder="የተጠቃሚ ስም፣ ኢሜይል ወይም ስልክ (ምሳሌ፦ amha ወይም owner@meash.com)" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1">የስራ አስኪያጅ መለያ፦ <code class="text-cyan-400">owner@meash.com</code> ወይም <code class="text-cyan-400">0911000001</code></p>
+                    <p class="text-[11px] text-slate-500 mt-1">የስራ አስኪያጅ መለያ፦ <code class="text-cyan-400">amha</code> ወይም <code class="text-cyan-400">owner@meash.com</code></p>
                 </div>
 
                 <div>
