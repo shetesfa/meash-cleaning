@@ -500,8 +500,14 @@ class OrderController extends Controller
     {
         $user = $request->user();
 
+        if (!$user || (!$user->isOwner() && !$user->isReception() && !$user->isCleaner())) {
+            return response()->json([
+                'message' => 'Unauthorized. Only owner, reception, or assigned cleaner may update order status.',
+            ], 403);
+        }
+
         // Enforce cleaner team isolation and permissible statuses
-        if ($user && $user->isCleaner()) {
+        if ($user->isCleaner()) {
             $cleanerTeamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
                 ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
                 ->unique();
@@ -687,6 +693,13 @@ class OrderController extends Controller
 
     public function recordPayment(Request $request, Order $order): JsonResponse
     {
+        $user = $request->user();
+        if ($user && !$user->isOwner() && !$user->isReception() && !$user->isFinance()) {
+            return response()->json([
+                'message' => 'Unauthorized. Only owner, reception, or finance may record payments.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'payment_method' => 'required|string|in:cash,telebirr,cbe,cbe_birr,bank_transfer,check',
@@ -756,8 +769,14 @@ class OrderController extends Controller
     {
         $user = $request->user();
 
+        if (!$user || (!$user->isOwner() && !$user->isReception() && !$user->isCleaner())) {
+            return response()->json([
+                'message' => 'Unauthorized. Only owner, reception, or assigned cleaner may submit payments.',
+            ], 403);
+        }
+
         // Enforce cleaner team isolation if caller is cleaner
-        if ($user && $user->isCleaner()) {
+        if ($user->isCleaner()) {
             $cleanerTeamIds = DB::table('team_members')->where('user_id', $user->id)->pluck('cleaning_team_id')
                 ->merge(DB::table('cleaning_teams')->where('team_leader_id', $user->id)->pluck('id'))
                 ->unique();
@@ -828,9 +847,9 @@ class OrderController extends Controller
     public function approvePayment(Request $request, Order $order): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->isOwner() && !$user->isReception()) {
+        if ($user && !$user->isOwner() && !$user->isReception() && !$user->isFinance()) {
             return response()->json([
-                'message' => 'Unauthorized. Only owner or reception may approve payments.',
+                'message' => 'Unauthorized. Only owner, reception, or finance may approve payments.',
             ], 403);
         }
 
@@ -910,9 +929,9 @@ class OrderController extends Controller
     public function rejectPayment(Request $request, Order $order): JsonResponse
     {
         $user = $request->user();
-        if ($user && !$user->isOwner() && !$user->isReception()) {
+        if ($user && !$user->isOwner() && !$user->isReception() && !$user->isFinance()) {
             return response()->json([
-                'message' => 'Unauthorized. Only owner or reception may reject payments.',
+                'message' => 'Unauthorized. Only owner, reception, or finance may reject payments.',
             ], 403);
         }
 

@@ -63,6 +63,11 @@ class User extends Authenticatable
         return $this->role === 'reception' || $this->isOwner();
     }
 
+    public function isFinance(): bool
+    {
+        return $this->role === 'finance' || $this->isOwner();
+    }
+
     public function isCleaner(): bool
     {
         return $this->role === 'cleaner';

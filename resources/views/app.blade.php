@@ -804,6 +804,11 @@
                 { id: 'sales_visits', label_en: 'Visit Logs', label_am: 'የጉብኝት መዝገብ', icon: 'map-pin' },
                 { id: 'sales_proformas', label_en: 'Proformas', label_am: 'ፕሮፎርማዎች', icon: 'file-text' },
                 { id: 'sales_contracts', label_en: 'Contracts', label_am: 'ኮንትራቶች', icon: 'award' },
+            ],
+            finance: [
+                { id: 'finance', label_en: 'Finance & Expenses', label_am: 'ፋይናንስ እና ወጪዎች', icon: 'wallet' },
+                { id: 'orders', label_en: 'Orders & Payments', label_am: 'ትዕዛዞች እና ክፍያዎች', icon: 'clipboard-list' },
+                { id: 'subscriptions', label_en: 'Subscriptions', label_am: 'የደንበኝነት እቅዶች', icon: 'repeat' },
             ]
         };
 
@@ -943,6 +948,9 @@
             } else if (role === 'sales') {
                 currentUser.name = 'ዳንኤል ግርማ (የውጭ ሽያጭ)';
                 activeTab = 'sales_pipeline';
+            } else if (role === 'finance') {
+                currentUser.name = 'ዮናስ ተስፋዬ (ፋይናንስ & ሂሳብ)';
+                activeTab = 'finance';
             }
 
             // Update header badge text
@@ -953,7 +961,8 @@
           owner: ' ዋና ስራ አስኪያጅ',
           reception: ' ሪሴፕሽን & ሽያጭ',
                     cleaner: cleanerLabel,
-          sales: ' የውጭ ሽያጭ'
+          sales: ' የውጭ ሽያጭ',
+          finance: ' ፋይናንስ & ሂሳብ'
                 };
                 badge.innerText = roleLabels[role] || role;
             }
@@ -1122,7 +1131,7 @@
                 renderTeamsModule(viewport);
             } else if (activeTab === 'sales' || activeTab.startsWith('sales_')) {
                 renderSalesModule(viewport);
-            } else if (activeTab === 'finance') {
+            } else if (activeTab === 'finance' || activeTab.startsWith('finance_')) {
                 renderFinanceModule(viewport);
             } else if (activeTab === 'care') {
                 renderCustomerCareModule(viewport);

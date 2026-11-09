@@ -45,7 +45,7 @@ class TelegramController extends Controller
   public function getMiniAppHttpsUrl(): ?string
   {
     $miniAppUrl = config('services.telegram.miniapp_url') ?: env('TELEGRAM_MINIAPP_URL');
-    if (!empty($miniAppUrl) && str_starts_with($miniAppUrl, 'https://') && !str_contains($miniAppUrl, 'shetesfa.github.io')) {
+    if (!empty($miniAppUrl) && str_starts_with($miniAppUrl, 'https://') && !str_contains($miniAppUrl, 'github.io')) {
       return rtrim($miniAppUrl, '/');
     }
 
@@ -100,6 +100,9 @@ class TelegramController extends Controller
 
       return response()->json(['status' => 'ignored']);
     } catch (\Throwable $e) {
+      if (!empty($updateId)) {
+        Cache::forget("tg_update_{$updateId}");
+      }
       Log::error('Telegram webhook error: ' . $e->getMessage(), [
         'file' => $e->getFile(),
         'line' => $e->getLine(),
@@ -108,7 +111,7 @@ class TelegramController extends Controller
       return response()->json([
         'status' => 'error',
         'message' => 'An error occurred while processing the webhook request.',
-      ], 200);
+      ], 500);
     }
   }
 
@@ -1302,7 +1305,8 @@ class TelegramController extends Controller
 
     // Cryptographic validation of Telegram WebApp initData
     $initData = $request->input('init_data');
-    $enforceInitData = filter_var(env('TELEGRAM_ENFORCE_INITDATA', false), FILTER_VALIDATE_BOOLEAN);
+    $isProd = app()->environment('production');
+    $enforceInitData = filter_var(env('TELEGRAM_ENFORCE_INITDATA', $isProd), FILTER_VALIDATE_BOOLEAN);
 
     if (!empty($initData)) {
       $extractedUser = null;
@@ -1557,6 +1561,19 @@ class TelegramController extends Controller
       return false;
     }
 
+    // Freshness & anti-replay check: validate auth_date within 24 hours
+    if (empty($params['auth_date']) || !is_numeric($params['auth_date'])) {
+      Log::warning('Telegram initData verification failed: missing or non-numeric auth_date.');
+      return false;
+    }
+    $authTimestamp = (int)$params['auth_date'];
+    $currentTime = time();
+    $maxAgeSeconds = 86400; // 24 hours max lifetime
+    if (($currentTime - $authTimestamp) > $maxAgeSeconds || $authTimestamp > ($currentTime + 300)) {
+      Log::warning("Telegram initData verification failed: auth_date expired or future timestamp (auth: {$authTimestamp}, current: {$currentTime}).");
+      return false;
+    }
+
     $hash = $params['hash'];
     unset($params['hash']);
 
@@ -1624,8 +1641,7 @@ class TelegramController extends Controller
 
     $url = "https://api.telegram.org/bot{$this->botToken}/{$method}";
     try {
-      $response = Http::withoutVerifying()
-        ->timeout(4)
+      $response = Http::timeout(4)
         ->connectTimeout(2)
         ->post($url, $params);
 
@@ -2842,12 +2858,12 @@ class TelegramController extends Controller
       'webhook_active' => $isWebhookActive,
       'bot' => $getMe['result'] ?? null,
       'webhook' => $wh,
-      'expected_webhook_url' => config('services.telegram.webhook_url') ?: 'https://meash-cleaning-gy5x.onrender.com/api/telegram/webhook',
+      'expected_webhook_url' => config('services.telegram.webhook_url') ?: (config('app.url') ? rtrim(config('app.url'), '/') . '/api/telegram/webhook' : 'https://meashcleaning.com/api/telegram/webhook'),
     ]);
   }
 
   /**
-   * Register or reset Render Cloud Webhook with Telegram
+   * Register or reset Webhook with Telegram
    */
   public function setRenderWebhook(Request $request): JsonResponse
   {
@@ -2874,7 +2890,7 @@ class TelegramController extends Controller
       ], 400);
     }
 
-    $url = config('services.telegram.webhook_url') ?: 'https://meash-cleaning-gy5x.onrender.com/api/telegram/webhook';
+    $url = config('services.telegram.webhook_url') ?: (config('app.url') ? rtrim(config('app.url'), '/') . '/api/telegram/webhook' : 'https://meashcleaning.com/api/telegram/webhook');
     $params = [
       'url' => $url,
       'drop_pending_updates' => true,

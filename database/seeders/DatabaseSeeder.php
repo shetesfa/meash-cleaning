@@ -31,15 +31,26 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $isProduction = app()->environment('production');
         $isLocalOrTesting = app()->environment('local', 'testing');
-        $seedDemoData = env('MEASH_SEED_DEMO_DATA', true);
+        // Never seed demo data in production under any circumstance
+        $seedDemoData = $isProduction ? false : (bool) env('MEASH_SEED_DEMO_DATA', true);
 
-        if (! $isLocalOrTesting && ! $seedDemoData) {
-            $this->command->info('Running DatabaseSeeder in strict production mode.');
+        if ($isProduction || ! $seedDemoData) {
+            $this->command->info('Running DatabaseSeeder in strict production mode. Demo data and default passwords are prohibited.');
             $ownerEmail = env('MEASH_OWNER_EMAIL', env('OWNER_EMAIL', 'owner@meash.com'));
-            $ownerPassword = env('MEASH_OWNER_PASSWORD', env('OWNER_PASSWORD', 'password'));
+            $ownerPassword = env('MEASH_OWNER_PASSWORD', env('OWNER_PASSWORD'));
 
             if (! User::where('role', 'owner')->exists()) {
+                if (empty($ownerPassword) || $ownerPassword === 'password') {
+                    $generatedPassword = \Illuminate\Support\Str::random(16);
+                    $ownerPassword = $generatedPassword;
+                    $this->command->warn("=================================================");
+                    $this->command->warn("SECURITY NOTICE: A secure random password was generated for production owner ({$ownerEmail}): {$generatedPassword}");
+                    $this->command->warn("Store this password immediately. Default passwords are strictly forbidden in production.");
+                    $this->command->warn("=================================================");
+                }
+
                 User::create([
                     'name' => env('MEASH_OWNER_NAME', 'Meash General Manager'),
                     'email' => $ownerEmail,
@@ -48,7 +59,7 @@ class DatabaseSeeder extends Seeder
                     'password' => Hash::make($ownerPassword),
                     'is_active' => true,
                 ]);
-                $this->command->info("Created production owner account ({$ownerEmail}) securely from .env.");
+                $this->command->info("Created production owner account ({$ownerEmail}) securely.");
             }
 
             // In production, seed essential services if none exist
@@ -131,7 +142,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Yonas Tesfaye',
             'email' => 'finance@meash.com',
             'phone' => '0911000008',
-            'role' => 'owner',
+            'role' => 'finance',
             'password' => Hash::make('password'),
             'is_active' => true,
         ]);

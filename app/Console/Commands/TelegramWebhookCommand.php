@@ -24,12 +24,12 @@ class TelegramWebhookCommand extends Command
             $configuredWebhook = config('services.telegram.webhook_url');
             $appUrl = config('app.url') ?: env('APP_URL');
 
-            if (!empty($configuredWebhook) && !str_contains($configuredWebhook, 'meash-cleaning.onrender.com')) {
+            if (!empty($configuredWebhook) && !str_contains($configuredWebhook, 'onrender.com')) {
                 $url = $configuredWebhook;
             } elseif (!empty($appUrl) && $appUrl !== 'http://localhost') {
                 $url = rtrim($appUrl, '/') . '/api/telegram/webhook';
             } else {
-                $url = $configuredWebhook ?: 'https://meash-cleaning-gy5x.onrender.com/api/telegram/webhook';
+                $url = $configuredWebhook ?: 'https://meashcleaning.com/api/telegram/webhook';
             }
 
             $this->info("Setting Webhook to: {$url}...");

@@ -87,13 +87,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders', [OrderController::class, 'store'])->middleware('role:owner,reception');
     Route::match(['put', 'patch'], '/orders/{order}', [OrderController::class, 'update'])->middleware('role:owner,reception');
     Route::match(['put', 'patch', 'post'], '/orders/{order}/update', [OrderController::class, 'update'])->middleware('role:owner,reception');
-    Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus']);
+    Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->middleware('role:owner,reception,cleaner');
     Route::post('/orders/{order}/assign-team', [OrderController::class, 'assignTeam'])->middleware('role:owner,reception');
-    Route::post('/orders/{order}/submit-payment', [OrderController::class, 'submitPayment']);
-    Route::post('/orders/{order}/approve-payment', [OrderController::class, 'approvePayment'])->middleware('role:owner,reception');
-    Route::post('/orders/{order}/reject-payment', [OrderController::class, 'rejectPayment'])->middleware('role:owner,reception');
-    Route::post('/orders/{order}/payment', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception');
-    Route::post('/orders/{order}/payments', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception');
+    Route::post('/orders/{order}/submit-payment', [OrderController::class, 'submitPayment'])->middleware('role:owner,reception,cleaner');
+    Route::post('/orders/{order}/approve-payment', [OrderController::class, 'approvePayment'])->middleware('role:owner,reception,finance');
+    Route::post('/orders/{order}/reject-payment', [OrderController::class, 'rejectPayment'])->middleware('role:owner,reception,finance');
+    Route::post('/orders/{order}/payment', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception,finance');
+    Route::post('/orders/{order}/payments', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception,finance');
     Route::post('/orders/{order}/postpone', [OrderController::class, 'postpone'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/send-review-request', [OrderController::class, 'sendReviewRequest'])->middleware('role:owner,reception');
 
@@ -138,7 +138,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/expenses', [FinanceController::class, 'storeExpense'])->middleware('role:owner,finance');
         Route::post('/payroll', [FinanceController::class, 'recordPayroll'])->middleware('role:owner,finance');
         Route::get('/payments', [FinanceController::class, 'payments'])->middleware('role:owner,reception,finance');
-        Route::get('/profit-report', [FinanceController::class, 'profitReport'])->middleware('role:owner');
+        Route::get('/profit-report', [FinanceController::class, 'profitReport'])->middleware('role:owner,finance');
     });
 
     // I. Customer Care (Follow-ups, Feedback, Complaints)

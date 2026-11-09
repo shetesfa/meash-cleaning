@@ -196,4 +196,35 @@ class WebsiteSetting extends Model
         $stored = static::pluck('value', 'key')->toArray();
         return array_merge($defaults, $stored);
     }
+
+    /**
+     * Get only safe public settings, strictly filtering out tokens, secrets, credentials and admin configs
+     */
+    public static function getPublicKeyValue(): array
+    {
+        $all = static::getAllKeyValue();
+        $sensitiveKeys = [
+            'telegram_bot_token',
+            'telegram_admin_chat_id',
+            'webhook_secret',
+            'admin_secret',
+            'db_password',
+            'sms_gateway_api_key',
+            'api_token',
+            'secret_token',
+            'jwt_secret',
+            'private_key',
+        ];
+
+        return array_filter($all, function ($val, $key) use ($sensitiveKeys) {
+            $keyLower = strtolower($key);
+            if (in_array($keyLower, $sensitiveKeys, true)) {
+                return false;
+            }
+            if (preg_match('/(token|secret|password|credential|private_key)/i', $keyLower)) {
+                return false;
+            }
+            return true;
+        }, ARRAY_FILTER_USE_BOTH);
+    }
 }

@@ -702,7 +702,7 @@ class TelegramBroadcastController extends Controller
             foreach ($chunks as $chunk) {
                 foreach ($chunk as $chatId => $info) {
                     try {
-                        $response = Http::withoutVerifying()->timeout(6)->connectTimeout(2)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                        $response = Http::timeout(6)->connectTimeout(2)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                             'chat_id' => $chatId,
                             'text' => $formattedMessage,
                             'parse_mode' => 'HTML',

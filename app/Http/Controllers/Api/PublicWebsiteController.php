@@ -27,7 +27,7 @@ class PublicWebsiteController extends Controller
      */
     public function settings(): JsonResponse
     {
-        $settings = WebsiteSetting::getAllKeyValue();
+        $settings = WebsiteSetting::getPublicKeyValue();
         $subcities = WebsiteSetting::getJson('subcities', []);
         $timeSlots = WebsiteSetting::getJson('time_slots', []);
         $pricingRules = WebsiteSetting::getJson('pricing_rules', []);
