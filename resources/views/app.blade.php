@@ -240,6 +240,15 @@
         </div>
     </header>
 
+    <!-- UNIVERSAL OFFLINE MODE PERSISTENT BANNER -->
+    <div id="universal-offline-banner" class="hidden bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white px-3 sm:px-6 py-2 text-xs font-bold flex items-center justify-between shadow-md transition-all z-30 shrink-0">
+        <div class="flex items-center gap-2">
+            <i data-lucide="wifi-off" class="w-4 h-4 text-amber-200 animate-pulse shrink-0"></i>
+            <span id="universal-offline-banner-text">📶 ከመስመር ውጭ ሁነታ (Offline Mode) — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።</span>
+        </div>
+        <span class="text-[10px] bg-black/30 border border-white/20 px-2.5 py-0.5 rounded-full font-extrabold uppercase tracking-wider shrink-0">ያለ ኢንተርኔት ይሰራል</span>
+    </div>
+
     <!-- MOBILE SIDEBAR SLIDE-OVER DRAWER (Android / iPhone) -->
     <div id="mobile-sidebar-drawer" class="fixed inset-0 z-50 hidden transition-all">
         <div class="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity cursor-pointer" onclick="toggleMobileSidebar()"></div>
@@ -707,6 +716,153 @@
             return localStorage.getItem('meash_token') || null;
         }
 
+        // ========================================================
+        // UNIVERSAL OFFLINE ENGINE: Caching, Fallbacks & Preloading
+        // ========================================================
+        function createMockResponse(data, status = 200, url = '') {
+            const textData = typeof data === 'string' ? data : JSON.stringify(data);
+            return {
+                ok: status >= 200 && status < 300,
+                status: status,
+                statusText: 'OK (Offline Cache)',
+                headers: new Headers({
+                    'content-type': 'application/json',
+                    'x-meash-offline': 'true',
+                    'x-meash-url': url
+                }),
+                json: async () => (typeof data === 'string' ? JSON.parse(data) : data),
+                text: async () => textData,
+                clone: function() { return createMockResponse(data, status, url); }
+            };
+        }
+
+        function getSafeOfflineFallback(url) {
+            const cleanUrl = (url || '').split('?')[0];
+            if (cleanUrl.includes('/api/dashboard/owner')) {
+                return { today: { eth_date: 'የከመስመር ውጭ እይታ (Offline)' }, month_to_date: {} };
+            }
+            if (cleanUrl.includes('/api/dashboard/reception')) {
+                return { eth_date: 'የከመስመር ውጭ እይታ (Offline)', channel_counts: {}, today_unassigned: [], pending_approvals: [], active_cleanings: [] };
+            }
+            if (cleanUrl.includes('/api/customers')) {
+                return { data: [], stage_counts: { all: 0, normal_active: 0, comment_waiting: 0, in_service: 0 } };
+            }
+            if (cleanUrl.includes('/api/orders')) {
+                return { data: [], orders: [] };
+            }
+            if (cleanUrl.includes('/api/subscriptions')) {
+                return { data: [], subscriptions: { data: [] }, stats: { total_active: 0, mrr: 0 } };
+            }
+            if (cleanUrl.includes('/api/appointments')) {
+                return { data: [] };
+            }
+            if (cleanUrl.includes('/api/teams') || cleanUrl.includes('/api/employees')) {
+                return { data: [] };
+            }
+            if (cleanUrl.includes('/api/sales/visits') || cleanUrl.includes('/api/sales/organizations')) {
+                return { data: [] };
+            }
+            if (cleanUrl.includes('/api/finance/profit-report')) {
+                return { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, breakdown: [] };
+            }
+            if (cleanUrl.includes('/api/finance/expenses') || cleanUrl.includes('/api/expenses')) {
+                return { data: [] };
+            }
+            if (cleanUrl.includes('/api/care/followups') || cleanUrl.includes('/api/care/complaints') || cleanUrl.includes('/api/care/feedbacks')) {
+                return { data: [] };
+            }
+            if (cleanUrl.includes('/api/telegram-broadcast/recipients')) {
+                return { users: [], total_count: 0, active_count: 0, with_phone_count: 0, with_telegram_count: 0, eligible_count: 0 };
+            }
+            if (cleanUrl.includes('/api/campaigns')) {
+                return { data: [] };
+            }
+            if (cleanUrl.includes('/api/admin/website/settings')) {
+                return { settings: {} };
+            }
+            if (cleanUrl.includes('/api/services') || cleanUrl.includes('/api/public/services')) {
+                return [];
+            }
+            return { success: true, data: [] };
+        }
+
+        function setOfflineBanner(show, msg = '', isBackOnline = false) {
+            const banner = document.getElementById('universal-offline-banner');
+            const bannerText = document.getElementById('universal-offline-banner-text');
+            if (!banner) return;
+            if (show) {
+                banner.classList.remove('hidden');
+                if (isBackOnline) {
+                    banner.className = 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-3 sm:px-6 py-2 text-xs font-bold flex items-center justify-between shadow-md transition-all z-30 shrink-0';
+                    if (bannerText) bannerText.innerText = msg || '🌐 ኢንተርኔት ተመልሷል (Back Online) — መረጃዎች በራስ-ሰር እየታደሱ ነው...';
+                    setTimeout(() => {
+                        banner.classList.add('hidden');
+                    }, 4000);
+                } else {
+                    banner.className = 'bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white px-3 sm:px-6 py-2 text-xs font-bold flex items-center justify-between shadow-md transition-all z-30 shrink-0';
+                    if (bannerText) bannerText.innerText = msg || '📶 ከመስመር ውጭ ሁነታ (Offline Mode) — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።';
+                }
+            } else {
+                banner.classList.add('hidden');
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function pruneOfflineCache() {
+            try {
+                const keys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith('meash_api_cache_')) keys.push(k);
+                }
+                if (keys.length > 80) {
+                    for (let i = 0; i < 20; i++) {
+                        localStorage.removeItem(keys[i]);
+                    }
+                }
+            } catch (_) {}
+        }
+
+        async function preloadAllAdminOfflineData() {
+            if (!navigator.onLine) return;
+            const endpoints = [
+                '/api/dashboard/owner',
+                '/api/dashboard/reception',
+                '/api/orders?per_page=50',
+                '/api/customers?per_page=50',
+                '/api/customers?lifecycle_stage=normal_active&per_page=50',
+                '/api/customers?lifecycle_stage=comment_waiting&per_page=50',
+                '/api/customers?lifecycle_stage=in_service&per_page=50',
+                '/api/subscriptions',
+                '/api/subscriptions?per_page=50',
+                '/api/appointments?',
+                '/api/appointments?view=all',
+                '/api/teams',
+                '/api/employees',
+                '/api/sales/visits?per_page=100',
+                '/api/sales/organizations?per_page=100',
+                '/api/finance/profit-report?period=all_time',
+                '/api/finance/expenses?per_page=50',
+                '/api/care/followups',
+                '/api/care/complaints',
+                '/api/care/feedbacks',
+                '/api/telegram-broadcast/recipients',
+                '/api/campaigns',
+                '/api/admin/website/settings',
+                '/api/services/all',
+                '/api/admin/website/feedbacks',
+                '/api/services',
+                '/api/teams/my-jobs'
+            ];
+            console.log('🔄 Preloading all offline admin tabs in background...');
+            for (const ep of endpoints) {
+                try {
+                    await apiFetch(ep);
+                } catch (_) {}
+            }
+            console.log('✅ All offline admin tabs preloaded successfully!');
+        }
+
         async function apiFetch(url, options = {}) {
             const token = await getAuthToken();
             const headers = Object.assign({
@@ -718,17 +874,74 @@
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            let res = await fetch(url, { ...options, headers });
+            const method = (options.method || 'GET').toUpperCase();
+            const isGet = (method === 'GET');
+            const cacheKey = 'meash_api_cache_' + url;
+            const isOffline = !navigator.onLine || (window.meashOffline && !window.meashOffline.isOnline);
 
-            // CRITICAL ZERO-LOGOUT RULE: Never break script on 401
-            if (res.status === 401) {
-                console.warn('API 401 Unauthorized for ' + url + ' - session expired');
-                localStorage.removeItem('meash_token');
-                localStorage.removeItem('meash_user');
-                currentUser = { role: 'cleaner', name: '', id: null, phone: '' };
-                showLoginScreen('የሴሽን ጊዜዎ አልቋል፤ እባክዎ እንደገና ይግቡ (Session expired. Please login again.)');
+            // 1. FAST OFFLINE PATH FOR GET REQUESTS (0ms response)
+            if (isGet && isOffline) {
+                setOfflineBanner(true);
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    try {
+                        const parsed = JSON.parse(cached);
+                        console.info('⚡ Served from offline local cache (0ms):', url);
+                        return createMockResponse(parsed, 200, url);
+                    } catch (_) {}
+                }
+                console.warn('⚠️ No local cache for:', url, '- returning safe offline fallback');
+                const fallback = getSafeOfflineFallback(url);
+                return createMockResponse(fallback, 200, url);
             }
-            return res;
+
+            // 2. ONLINE OR NON-GET REQUESTS
+            try {
+                let res = await fetch(url, { ...options, headers });
+
+                // CRITICAL ZERO-LOGOUT RULE: Never break script on 401
+                if (res.status === 401) {
+                    console.warn('API 401 Unauthorized for ' + url + ' - session expired');
+                    localStorage.removeItem('meash_token');
+                    localStorage.removeItem('meash_user');
+                    currentUser = { role: 'cleaner', name: '', id: null, phone: '' };
+                    showLoginScreen('የሴሽን ጊዜዎ አልቋል፤ እባክዎ እንደገና ይግቡ (Session expired. Please login again.)');
+                    return res;
+                }
+
+                // Cache successful GET responses in background
+                if (isGet && res.ok) {
+                    res.clone().json().then(data => {
+                        try {
+                            localStorage.setItem(cacheKey, JSON.stringify(data));
+                        } catch (quotaErr) {
+                            pruneOfflineCache();
+                            try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch (_) {}
+                        }
+                    }).catch(() => {});
+                }
+
+                return res;
+            } catch (netErr) {
+                console.warn('API fetch network error for ' + url + ':', netErr.message);
+                if (isGet) {
+                    setOfflineBanner(true);
+                    const cached = localStorage.getItem(cacheKey);
+                    if (cached) {
+                        try {
+                            const parsed = JSON.parse(cached);
+                            console.info('⚡ Network failed, falling back to offline cache:', url);
+                            return createMockResponse(parsed, 200, url);
+                        } catch (_) {}
+                    }
+                    console.warn('⚠️ Network failed and no cache for:', url, '- returning safe offline fallback');
+                    const fallback = getSafeOfflineFallback(url);
+                    return createMockResponse(fallback, 200, url);
+                }
+
+                // If non-GET failed offline, rethrow
+                throw netErr;
+            }
         }
 
         async function loadJson(url, options = {}) {
@@ -753,17 +966,22 @@
 
         function renderErrorCard(container, message, retryFn) {
             if (!container) return;
+            const isOffline = !navigator.onLine || (window.meashOffline && !window.meashOffline.isOnline);
             container.innerHTML = `
-                <div class="p-8 text-center bg-slate-900/80 border border-red-500/30 rounded-3xl max-w-md mx-auto my-12 shadow-2xl space-y-4">
-                    <div class="w-14 h-14 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center mx-auto shadow-inner">
-                        <i data-lucide="alert-circle" class="w-7 h-7"></i>
+                <div class="p-8 text-center bg-slate-900/80 border ${isOffline ? 'border-amber-500/30' : 'border-red-500/30'} rounded-3xl max-w-md mx-auto my-12 shadow-2xl space-y-4">
+                    <div class="w-14 h-14 rounded-2xl ${isOffline ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'} flex items-center justify-center mx-auto shadow-inner">
+                        <i data-lucide="${isOffline ? 'wifi-off' : 'alert-circle'}" class="w-7 h-7"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-white mb-1">መረጃውን መጫን አልተቻለም (Failed to Load)</h3>
-                        <p class="text-xs text-red-300 font-medium">${message || 'የኔትወርክ ወይም የሰርቨር ችግር አጋጥሟል'}</p>
+                        <h3 class="text-base font-bold text-white mb-1">${isOffline ? '📶 ከመስመር ውጭ ነዎት (Offline Mode)' : 'መረጃውን መጫን አልተቻለም (Failed to Load)'}</h3>
+                        <p class="text-xs ${isOffline ? 'text-amber-300' : 'text-red-300'} font-medium">${isOffline ? 'ይህ መረጃ እስካሁን በስልክዎ ላይ አልተቀመጠም። ኢንተርኔት ሲያገኙ በራስ-ሰር ይጫናል።' : (message || 'የኔትወርክ ወይም የሰርቨር ችግር አጋጥሟል')}</p>
                     </div>
                     ${retryFn ? `
                     <button onclick="${retryFn}" class="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 mx-auto transition">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> እንደገና ሞክር (Retry)
+                    </button>
+                    ` : ''}
+                </div>
                         <i data-lucide="refresh-cw" class="w-4 h-4"></i> እንደገና ሞክር (Retry)
                     </button>
                     ` : ''}
@@ -835,9 +1053,14 @@
                 loadActiveTab();
             });
             await switchRole(currentUser.role || 'owner');
+            setTimeout(() => {
+                preloadAllAdminOfflineData().catch(() => {});
+            }, 1200);
         }
 
         function setupOfflineListener() {
+            let wasOffline = false;
+
             window.meashOffline.onStatusChange((status) => {
                 const pill = document.getElementById('sync-status-pill');
                 const dot = document.getElementById('sync-indicator-dot');
@@ -854,6 +1077,26 @@
                         pill.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-950/80 border border-amber-500/30 text-amber-400 flex items-center gap-2 shadow-sm';
                     }
                 }
+
+                if (!status.online) {
+                    wasOffline = true;
+                    setOfflineBanner(true, '📶 ከመስመር ውጭ ሁነታ (Offline Mode) — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።');
+                } else if (wasOffline) {
+                    wasOffline = false;
+                    setOfflineBanner(true, '🌐 ኢንተርኔት ተመልሷል (Back Online) — መረጃዎች በራስ-ሰር እየታደሱ ነው...', true);
+                    loadActiveTab();
+                    preloadAllAdminOfflineData().catch(() => {});
+                }
+            });
+
+            window.addEventListener('online', () => {
+                setOfflineBanner(true, '🌐 ኢንተርኔት ተመልሷል (Back Online) — መረጃዎች በራስ-ሰር እየታደሱ ነው...', true);
+                loadActiveTab();
+                preloadAllAdminOfflineData().catch(() => {});
+            });
+
+            window.addEventListener('offline', () => {
+                setOfflineBanner(true, '📶 ከመስመር ውጭ ሁነታ (Offline Mode) — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።');
             });
 
             window.addEventListener('meash-sync-conflict', (e) => {
@@ -2239,7 +2482,7 @@
                 `;
                 lucide.createIcons();
             } catch (err) {
-                container.innerHTML = `<div class="p-6 text-center text-red-400">Failed to load Sales Activity Log: ${err.message}</div>`;
+                renderErrorCard(container, 'የውጭ ሽያጭ መረጃዎችን መጫን አልተቻለም፡ ' + err.message, 'renderSalesModule(document.getElementById(\'app-viewport\'))');
             }
         }
 
@@ -2756,7 +2999,7 @@
                 `;
                 lucide.createIcons();
             } catch (e) {
-                container.innerHTML = `<div class="p-6 text-red-400">Failed to load subscriptions: ${e.message}</div>`;
+                renderErrorCard(container, 'የደንበኝነት እቅዶችን መጫን አልተቻለም፡ ' + e.message, 'renderSubscriptionsModule(document.getElementById(\'app-viewport\'))');
             }
         }
 
@@ -3141,7 +3384,7 @@
                 `;
                 if (window.lucide) lucide.createIcons();
             } catch (e) {
-                container.innerHTML = `<div class="p-6 text-red-400">Failed to load customers: ${e.message}</div>`;
+                renderErrorCard(container, 'የደንበኞች መረጃዎችን መጫን አልተቻለም፡ ' + e.message, 'renderCustomersModule(document.getElementById(\'app-viewport\'))');
             }
         }
 
@@ -3389,10 +3632,10 @@
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white">&times;</button>
                         </div>
                         <form onsubmit="submitAdminOrder(event)" class="space-y-4">
-                            ${!pricesLive ? `
+                            ${!navigator.onLine ? `
                             <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
-                                <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
-                <span> የቀጥታ የዋጋ መረጃ አልተገኘም (Prices may be old)። ኢንተርኔት እስኪመጣ ድረስ አዲስ ትዕዛዝ መመዝገብ ተከልክሏል።</span>
+                                <i data-lucide="wifi-off" class="w-4 h-4 shrink-0"></i>
+                                <span>📶 ከመስመር ውጭ ነዎት (Offline Mode)። ትዕዛዙ በስልክዎ ላይ ተቀምጦ ኢንተርኔት ሲያገኙ በራስ-ሰር ይላካል።</span>
                             </div>
                             ` : ''}
                             <div class="grid grid-cols-2 gap-3">
@@ -3516,7 +3759,7 @@
 
                             <div class="flex justify-end gap-2 pt-2">
                                 <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">ሰርዝ</button>
-                                <button type="submit" ${!pricesLive ? 'disabled' : ''} class="px-5 py-2 ${!pricesLive ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg'} text-xs font-bold rounded-xl">ትዕዛዝ መዝግብ</button>
+                                <button type="submit" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg text-xs font-bold rounded-xl cursor-pointer">ትዕዛዝ መዝግብ</button>
                             </div>
                         </form>
                     </div>
@@ -4519,7 +4762,7 @@
                 `;
                 lucide.createIcons();
             } catch (err) {
-                container.innerHTML = `<div class="p-6 text-red-400">Failed to load cleaning teams: ${err.message}</div>`;
+                renderErrorCard(container, 'የቡድኖችና የሰራተኞች መረጃ መጫን አልተቻለም፡ ' + err.message, 'renderTeamsModule(document.getElementById(\'app-viewport\'))');
             }
         }
 
@@ -5101,9 +5344,9 @@
                 const followupsData = await followupsRes.json();
                 const complaintsData = await complaintsRes.json();
                 const feedbacksData = await feedbacksRes.json();
-                const followups = followupsData.data || [];
-                const complaints = complaintsData.data || [];
-                const feedbacks = feedbacksData.data || [];
+                const followups = Array.isArray(followupsData) ? followupsData : (followupsData.data || []);
+                const complaints = Array.isArray(complaintsData) ? complaintsData : (complaintsData.data || []);
+                const feedbacks = Array.isArray(feedbacksData) ? feedbacksData : (feedbacksData.data || []);
 
                 container.innerHTML = `
                     <div class="max-w-7xl mx-auto space-y-8">
@@ -5227,7 +5470,7 @@
                 `;
                 lucide.createIcons();
             } catch (err) {
-                container.innerHTML = `<div class="p-6 text-red-400">Failed to load Customer Care: ${err.message}</div>`;
+                renderErrorCard(container, 'የደንበኞች እንክብካቤ መረጃዎችን መጫን አልተቻለም፡ ' + err.message, 'renderCustomerCareModule(document.getElementById(\'app-viewport\'))');
             }
         }
 
@@ -5394,7 +5637,7 @@
                     await loadAndRenderCampaignHistory();
                 }
             } catch (err) {
-                container.innerHTML = `<div class="p-6 text-red-400">Failed to load ማስታወቂያ እና ፕሮሞሽን Campaigns: ${err.message}</div>`;
+                renderErrorCard(container, 'የማስታወቂያ ዘመቻዎች መረጃ መጫን አልተቻለም፡ ' + err.message, 'renderCampaignsModule(document.getElementById(\'app-viewport\'))');
             }
         }
 
@@ -6984,7 +7227,7 @@
                     cmsServicesData = await res.json();
                     renderCmsServicesTab(container);
                 } catch (e) {
-                    container.innerHTML = `<div class="p-6 bg-red-950/40 border border-red-500/30 rounded-2xl text-red-400 text-xs">አገልግሎቶችን መጫን አልተቻለም፡ ${e.message}</div>`;
+                    renderErrorCard(container, 'አገልግሎቶችን መጫን አልተቻለም፡ ' + e.message, 'loadCmsTabData()');
                 }
             } else if (currentCmsSubTab === 'contact') {
                 container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">ቅንብሮችን በመጫን ላይ...</div>`;
@@ -6994,7 +7237,7 @@
                     cmsSettingsData = d.settings || {};
                     renderCmsContactTab(container);
                 } catch (e) {
-                    container.innerHTML = `<div class="p-6 bg-red-950/40 border border-red-500/30 rounded-2xl text-red-400 text-xs">ቅንብሮችን መጫን አልተቻለም፡ ${e.message}</div>`;
+                    renderErrorCard(container, 'ቅንብሮችን መጫን አልተቻለም፡ ' + e.message, 'loadCmsTabData()');
                 }
             } else if (currentCmsSubTab === 'reviews') {
                 container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">አስተያየቶችን በመጫን ላይ...</div>`;
@@ -7004,7 +7247,7 @@
                     cmsFeedbacksData = d.data || d || [];
                     renderCmsReviewsTab(container);
                 } catch (e) {
-                    container.innerHTML = `<div class="p-6 bg-red-950/40 border border-red-500/30 rounded-2xl text-red-400 text-xs">አስተያየቶችን መጫን አልተቻለም፡ ${e.message}</div>`;
+                    renderErrorCard(container, 'አስተያየቶችን መጫን አልተቻለም፡ ' + e.message, 'loadCmsTabData()');
                 }
             } else if (currentCmsSubTab === 'about') {
                 if (!Object.keys(cmsSettingsData).length) {
@@ -7873,7 +8116,7 @@
                     }
                 }, 25000);
             } catch (err) {
-                container.innerHTML = `<div class="p-6 text-red-400">Failed to load Calendar: ${err.message}</div>`;
+                renderErrorCard(container, 'የካላንደር ቀጠሮዎችን መጫን አልተቻለም፡ ' + err.message, 'renderCalendarModule(document.getElementById(\'app-viewport\'))');
             }
         }
 

@@ -41,8 +41,25 @@
   $facebookUrl = $websiteSettings['facebook'] ?? 'https://facebook.com/meashcleaningsolution';
   $socialHandle = $websiteSettings['social_handle'] ?? '@meashcleaningsolution';
 @endphp
-<html lang="am" data-lang="am" class="scroll-smooth">
+<html lang="am" data-lang="am" class="scroll-smooth dark">
 <head>
+<script>
+  (function() {
+    try {
+      var saved = localStorage.getItem('meash_theme');
+      if (saved === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+      } else {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        if (!saved) localStorage.setItem('meash_theme', 'dark');
+      }
+    } catch (e) {
+      document.documentElement.classList.add('dark');
+    }
+  })();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>{{ $companyName }} | Best Commercial & Deep Cleaning in Addis Ababa | {{ $companyNameAm }}</title>
@@ -114,9 +131,20 @@
         }
     </script>
     <style>
-  body { font-family: 'Inter', 'Noto Sans Ethiopic', sans-serif; background:#FFFFFF; color:#0B1220; transition: background-color 0.3s ease, color 0.3s ease; }
+  :root {
+    color-scheme: dark;
+  }
+  body {
+    font-family: 'Inter', 'Noto Sans Ethiopic', sans-serif;
+    background: #0B1220;
+    color: #F1F5F9;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
   .font-serif { font-family: 'Fraunces', 'Noto Sans Ethiopic', serif; }
-  ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background:#D7DCE2; border-radius:8px; }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #0B1220; }
+  ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 8px; border: 2px solid #0B1220; }
+  ::-webkit-scrollbar-thumb:hover { background: #334155; }
   [data-lang-block] { display: none; }
   html:not([data-lang]) [data-lang-block="am"],
   html[data-lang="am"] [data-lang-block="am"] { display: block; }
@@ -127,26 +155,141 @@
   html[data-lang="both"] [data-lang-block] { display: block; }
   html[data-lang="both"] span[data-lang-block] { display: inline; }
   .lang-both-stack > [data-lang-block="en"] { opacity:.62; font-size:.82em; margin-top:.2em; font-weight:500; }
-  .duo { background: linear-gradient(160deg, #0E7C7B 0%, #0B1220 100%); }
+  .duo { background: linear-gradient(160deg, #0A5F5E 0%, #070D18 100%); }
   .grain { background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px); background-size: 14px 14px; }
 
-  /* ================= DARK MODE STYLES ================= */
-  html.dark body { background: #0B1220 !important; color: #F1F5F9 !important; }
-  html.dark header { background: rgba(11, 18, 32, 0.95) !important; border-color: #1E293B !important; }
-  html.dark .text-navy { color: #F1F5F9 !important; }
-  html.dark .text-navy\/70, html.dark .text-navy\/65, html.dark .text-navy\/60, html.dark .text-navy\/55, html.dark .text-navy\/50 { color: #94A3B8 !important; }
-  html.dark .border-navy\/10, html.dark .border-navy\/15 { border-color: #1E293B !important; }
-  html.dark .bg-fog { background: #111B2E !important; }
-  html.dark .bg-white { background: #1E293B !important; color: #F1F5F9 !important; }
-  html.dark .bg-white\/95 { background: rgba(30, 41, 59, 0.95) !important; }
-  html.dark .bg-slate-50, html.dark .bg-gray-50 { background: #1E293B !important; }
-  html.dark .border-gray-200, html.dark .border-slate-200 { border-color: #334155 !important; }
-  html.dark input, html.dark select, html.dark textarea { background: #0F172A !important; color: #FFFFFF !important; border-color: #334155 !important; }
-  html.dark .shadow-xl, html.dark .shadow-lg, html.dark .shadow-md, html.dark .shadow-sm { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important; }
+  /* ================= EXCLUSIVE DARK MODE SYSTEM (WHITE REMOVED BY DEFAULT) ================= */
+  html.dark, html:not(.light) {
+    color-scheme: dark;
+    background-color: #0B1220;
+  }
+  html.dark body, html:not(.light) body {
+    background-color: #0B1220 !important;
+    color: #F1F5F9 !important;
+  }
+  html.dark header, html:not(.light) header {
+    background-color: rgba(11, 18, 32, 0.95) !important;
+    border-color: #1E293B !important;
+  }
+  html.dark nav, html:not(.light) nav {
+    color: #E2E8F0 !important;
+  }
+
+  /* All white surfaces converted to elegant Dark Slate/Navy */
+  html.dark .bg-white, html:not(.light) .bg-white {
+    background-color: #162032 !important;
+    color: #F1F5F9 !important;
+    border-color: #23354E !important;
+  }
+  html.dark .bg-white\/95, html:not(.light) .bg-white\/95,
+  html.dark .bg-white\/90, html:not(.light) .bg-white\/90 {
+    background-color: rgba(22, 32, 50, 0.95) !important;
+    color: #F1F5F9 !important;
+  }
+  html.dark .bg-fog, html:not(.light) .bg-fog {
+    background-color: #0F172A !important;
+  }
+  html.dark .bg-slate-50, html.dark .bg-gray-50,
+  html:not(.light) .bg-slate-50, html:not(.light) .bg-gray-50 {
+    background-color: #162032 !important;
+  }
+  html.dark .bg-slate-100, html.dark .bg-gray-100,
+  html:not(.light) .bg-slate-100, html:not(.light) .bg-gray-100 {
+    background-color: #1E293B !important;
+    color: #E2E8F0 !important;
+  }
+  html.dark .bg-teal-light\/20, html.dark .bg-teal-light\/30, html.dark .bg-teal-light\/40,
+  html:not(.light) .bg-teal-light\/20, html:not(.light) .bg-teal-light\/30, html:not(.light) .bg-teal-light\/40 {
+    background-color: rgba(14, 124, 123, 0.18) !important;
+  }
+
+  /* Typography & High-Contrast Text in Dark Mode */
+  html.dark .text-navy, html:not(.light) .text-navy {
+    color: #F8FAFC !important;
+  }
+  html.dark .text-navy\/90, html:not(.light) .text-navy\/90,
+  html.dark .text-navy\/85, html:not(.light) .text-navy\/85,
+  html.dark .text-navy\/80, html:not(.light) .text-navy\/80,
+  html.dark .text-navy\/75, html:not(.light) .text-navy\/75 {
+    color: #CBD5E1 !important;
+  }
+  html.dark .text-navy\/70, html:not(.light) .text-navy\/70,
+  html.dark .text-navy\/65, html:not(.light) .text-navy\/65,
+  html.dark .text-navy\/60, html:not(.light) .text-navy\/60,
+  html.dark .text-navy\/55, html:not(.light) .text-navy\/55 {
+    color: #94A3B8 !important;
+  }
+  html.dark .text-navy\/50, html:not(.light) .text-navy\/50,
+  html.dark .text-navy\/40, html:not(.light) .text-navy\/40,
+  html.dark .text-navy\/30, html:not(.light) .text-navy\/30,
+  html.dark .text-navy\/20, html:not(.light) .text-navy\/20 {
+    color: #64748B !important;
+  }
+  html.dark .text-slate-900, html.dark .text-slate-800, html.dark .text-slate-700,
+  html:not(.light) .text-slate-900, html:not(.light) .text-slate-800, html:not(.light) .text-slate-700 {
+    color: #E2E8F0 !important;
+  }
+  html.dark .text-slate-600, html.dark .text-slate-500,
+  html:not(.light) .text-slate-600, html:not(.light) .text-slate-500 {
+    color: #94A3B8 !important;
+  }
+  html.dark .text-teal-dark, html:not(.light) .text-teal-dark {
+    color: #2DD4BF !important;
+  }
+
+  /* Borders & Dividers */
+  html.dark .border-navy\/10, html.dark .border-navy\/15, html.dark .border-navy\/20,
+  html:not(.light) .border-navy\/10, html:not(.light) .border-navy\/15, html:not(.light) .border-navy\/20 {
+    border-color: #23354E !important;
+  }
+  html.dark .border-slate-200, html.dark .border-gray-200,
+  html:not(.light) .border-slate-200, html:not(.light) .border-gray-200 {
+    border-color: #23354E !important;
+  }
+  html.dark .border-slate-100, html:not(.light) .border-slate-100 {
+    border-color: #1E293B !important;
+  }
+
+  /* Form Elements & Inputs */
+  html.dark input, html.dark select, html.dark textarea,
+  html:not(.light) input, html:not(.light) select, html:not(.light) textarea {
+    background-color: #0F172A !important;
+    color: #FFFFFF !important;
+    border-color: #334155 !important;
+  }
+  html.dark select option, html:not(.light) select option {
+    background-color: #0F172A !important;
+    color: #FFFFFF !important;
+  }
+  html.dark input::placeholder, html.dark textarea::placeholder,
+  html:not(.light) input::placeholder, html:not(.light) textarea::placeholder {
+    color: #64748B !important;
+  }
+
+  /* Cards & Shadows */
+  html.dark .shadow-xl, html.dark .shadow-lg, html.dark .shadow-md, html.dark .shadow-sm,
+  html:not(.light) .shadow-xl, html:not(.light) .shadow-lg, html:not(.light) .shadow-md, html:not(.light) .shadow-sm {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+  }
 
   /* Active Language Button Styles */
   .lang-btn.active-lang, .lang-btn.bg-teal, .lang-btn.bg-navy { background-color: #0E7C7B !important; color: #FFFFFF !important; }
-  html.dark .lang-btn.active-lang, html.dark .lang-btn.bg-teal, html.dark .lang-btn.bg-navy { background-color: #0E7C7B !important; color: #FFFFFF !important; }
+  html.dark .lang-btn.active-lang, html.dark .lang-btn.bg-teal, html.dark .lang-btn.bg-navy,
+  html:not(.light) .lang-btn.active-lang, html:not(.light) .lang-btn.bg-teal, html:not(.light) .lang-btn.bg-navy { background-color: #0E7C7B !important; color: #FFFFFF !important; }
+
+  /* ================= OPTIONAL LIGHT MODE OVERRIDES (IF EXPLICITLY TOGGLED) ================= */
+  html.light {
+    color-scheme: light;
+    background-color: #FFFFFF;
+  }
+  html.light body { background: #FFFFFF !important; color: #0B1220 !important; }
+  html.light header { background: rgba(255, 255, 255, 0.95) !important; border-color: #E2E8F0 !important; }
+  html.light .text-navy { color: #0B1220 !important; }
+  html.light .text-navy\/70 { color: rgba(11, 18, 32, 0.7) !important; }
+  html.light .bg-fog { background: #F6F7F9 !important; }
+  html.light .bg-white { background: #FFFFFF !important; color: #0B1220 !important; border-color: rgba(11, 18, 32, 0.1) !important; }
+  html.light .bg-slate-50, html.light .bg-gray-50 { background: #F8FAFC !important; }
+  html.light input, html.light select, html.light textarea { background: #FFFFFF !important; color: #0B1220 !important; border-color: #CBD5E1 !important; }
 
   /* Mobile Responsiveness & Zero Horizontal Overflow */
   *, *::before, *::after { box-sizing: border-box; }
@@ -266,9 +409,9 @@
         <i data-lucide="phone" class="w-4 h-4"></i>
       </a>
 
-      <!-- Dark Mode Toggle Button -->
-      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 rounded-full border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
-        <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
+      <!-- Dark Mode Toggle Button (Default Dark) -->
+      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 rounded-full border border-slate-700 text-amber-400 hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
+        <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
       </button>
 
       <!-- Language Selector (Desktop / Tablet) -->
@@ -3407,7 +3550,12 @@
 
   // ---- Theme (Dark/Light Mode) Engine ----
   function initTheme() {
-    const saved = localStorage.getItem('meash_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    let saved = localStorage.getItem('meash_theme');
+    // STRICT DEFAULT: Always dark mode for website unless user explicitly chose light
+    if (saved !== 'light') {
+      saved = 'dark';
+      localStorage.setItem('meash_theme', 'dark');
+    }
     applyTheme(saved);
   }
 
@@ -3416,6 +3564,7 @@
     const btn = document.getElementById('theme-toggle-btn');
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
       if (icon) {
         icon.setAttribute('data-lucide', 'sun');
       }
@@ -3425,6 +3574,7 @@
       }
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
       if (icon) {
         icon.setAttribute('data-lucide', 'moon');
       }
