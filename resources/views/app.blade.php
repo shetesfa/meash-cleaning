@@ -244,7 +244,7 @@
     <div id="universal-offline-banner" class="hidden bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white px-3 sm:px-6 py-2 text-xs font-bold flex items-center justify-between shadow-md transition-all z-30 shrink-0">
         <div class="flex items-center gap-2">
             <i data-lucide="wifi-off" class="w-4 h-4 text-amber-200 animate-pulse shrink-0"></i>
-            <span id="universal-offline-banner-text">📶 ከመስመር ውጭ ሁነታ (Offline Mode) — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።</span>
+            <span id="universal-offline-banner-text">📶 Offline Mode — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።</span>
         </div>
         <span class="text-[10px] bg-black/30 border border-white/20 px-2.5 py-0.5 rounded-full font-extrabold uppercase tracking-wider shrink-0">ያለ ኢንተርኔት ይሰራል</span>
     </div>
@@ -739,10 +739,10 @@
         function getSafeOfflineFallback(url) {
             const cleanUrl = (url || '').split('?')[0];
             if (cleanUrl.includes('/api/dashboard/owner')) {
-                return { today: { eth_date: 'የከመስመር ውጭ እይታ (Offline)' }, month_to_date: {} };
+                return { today: { eth_date: 'Offline View' }, month_to_date: {} };
             }
             if (cleanUrl.includes('/api/dashboard/reception')) {
-                return { eth_date: 'የከመስመር ውጭ እይታ (Offline)', channel_counts: {}, today_unassigned: [], pending_approvals: [], active_cleanings: [] };
+                return { eth_date: 'Offline View', channel_counts: {}, today_unassigned: [], pending_approvals: [], active_cleanings: [] };
             }
             if (cleanUrl.includes('/api/customers')) {
                 return { data: [], stage_counts: { all: 0, normal_active: 0, comment_waiting: 0, in_service: 0 } };
@@ -794,13 +794,13 @@
                 banner.classList.remove('hidden');
                 if (isBackOnline) {
                     banner.className = 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-3 sm:px-6 py-2 text-xs font-bold flex items-center justify-between shadow-md transition-all z-30 shrink-0';
-                    if (bannerText) bannerText.innerText = msg || '🌐 ኢንተርኔት ተመልሷል (Back Online) — መረጃዎች በራስ-ሰር እየታደሱ ነው...';
+                    if (bannerText) bannerText.innerText = msg || '🌐 Back Online — መረጃዎች Sync እየሆኑ ነው...';
                     setTimeout(() => {
                         banner.classList.add('hidden');
                     }, 4000);
                 } else {
                     banner.className = 'bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-white px-3 sm:px-6 py-2 text-xs font-bold flex items-center justify-between shadow-md transition-all z-30 shrink-0';
-                    if (bannerText) bannerText.innerText = msg || '📶 ከመስመር ውጭ ሁነታ (Offline Mode) — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።';
+                    if (bannerText) bannerText.innerText = msg || '📶 Offline Mode — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።';
                 }
             } else {
                 banner.classList.add('hidden');
@@ -973,15 +973,11 @@
                         <i data-lucide="${isOffline ? 'wifi-off' : 'alert-circle'}" class="w-7 h-7"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-white mb-1">${isOffline ? '📶 ከመስመር ውጭ ነዎት (Offline Mode)' : 'መረጃውን መጫን አልተቻለም (Failed to Load)'}</h3>
-                        <p class="text-xs ${isOffline ? 'text-amber-300' : 'text-red-300'} font-medium">${isOffline ? 'ይህ መረጃ እስካሁን በስልክዎ ላይ አልተቀመጠም። ኢንተርኔት ሲያገኙ በራስ-ሰር ይጫናል።' : (message || 'የኔትወርክ ወይም የሰርቨር ችግር አጋጥሟል')}</p>
+                        <h3 class="text-base font-bold text-white mb-1">${isOffline ? '📶 Offline' : 'መረጃውን መጫን አልተቻለም (Failed to Load)'}</h3>
+                        <p class="text-xs ${isOffline ? 'text-amber-300' : 'text-red-300'} font-medium">${isOffline ? 'ይህ መረጃ እስካሁን አልተቀመጠም። ኢንተርኔት ሲያገኙ Sync ይሆናል።' : (message || 'የኔትወርክ ወይም የሰርቨር ችግር አጋጥሟል')}</p>
                     </div>
                     ${retryFn ? `
                     <button onclick="${retryFn}" class="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 mx-auto transition">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i> እንደገና ሞክር (Retry)
-                    </button>
-                    ` : ''}
-                </div>
                         <i data-lucide="refresh-cw" class="w-4 h-4"></i> እንደገና ሞክር (Retry)
                     </button>
                     ` : ''}
@@ -1080,23 +1076,23 @@
 
                 if (!status.online) {
                     wasOffline = true;
-                    setOfflineBanner(true, '📶 ከመስመር ውጭ ሁነታ (Offline Mode) — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።');
+                    setOfflineBanner(true, '📶 Offline Mode — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።');
                 } else if (wasOffline) {
                     wasOffline = false;
-                    setOfflineBanner(true, '🌐 ኢንተርኔት ተመልሷል (Back Online) — መረጃዎች በራስ-ሰር እየታደሱ ነው...', true);
+                    setOfflineBanner(true, '🌐 Back Online — መረጃዎች Sync እየሆኑ ነው...', true);
                     loadActiveTab();
                     preloadAllAdminOfflineData().catch(() => {});
                 }
             });
 
             window.addEventListener('online', () => {
-                setOfflineBanner(true, '🌐 ኢንተርኔት ተመልሷል (Back Online) — መረጃዎች በራስ-ሰር እየታደሱ ነው...', true);
+                setOfflineBanner(true, '🌐 Back Online — መረጃዎች Sync እየሆኑ ነው...', true);
                 loadActiveTab();
                 preloadAllAdminOfflineData().catch(() => {});
             });
 
             window.addEventListener('offline', () => {
-                setOfflineBanner(true, '📶 ከመስመር ውጭ ሁነታ (Offline Mode) — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።');
+                setOfflineBanner(true, '📶 Offline Mode — የተቀመጡ መረጃዎች እየታዩ ነው። ያለ ኢንተርኔት መስራት ይችላሉ።');
             });
 
             window.addEventListener('meash-sync-conflict', (e) => {
@@ -1419,7 +1415,7 @@
                     }
                 }
                 if (!data) {
-                    data = { today: { eth_date: 'የከመስመር ውጭ እይታ (Offline View)' }, month_to_date: {} };
+                    data = { today: { eth_date: 'Offline View' }, month_to_date: {} };
                 }
                 const today = data.today || {};
                 const mtd = data.month_to_date || {};
@@ -1778,7 +1774,7 @@
                     }
                 }
                 if (!data) {
-                    data = { eth_date: 'የከመስመር ውጭ እይታ (Offline View)', channel_counts: {}, today_unassigned: [], pending_approvals: [], active_cleanings: [] };
+                    data = { eth_date: 'Offline View', channel_counts: {}, today_unassigned: [], pending_approvals: [], active_cleanings: [] };
                 }
 
                 container.innerHTML = `
@@ -3635,7 +3631,7 @@
                             ${!navigator.onLine ? `
                             <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
                                 <i data-lucide="wifi-off" class="w-4 h-4 shrink-0"></i>
-                                <span>📶 ከመስመር ውጭ ነዎት (Offline Mode)። ትዕዛዙ በስልክዎ ላይ ተቀምጦ ኢንተርኔት ሲያገኙ በራስ-ሰር ይላካል።</span>
+                                <span>📶 Offline Mode። ትዕዛዙ በስልክዎ ላይ ተቀምጦ ኢንተርኔት ሲያገኙ Sync ይሆናል።</span>
                             </div>
                             ` : ''}
                             <div class="grid grid-cols-2 gap-3">
@@ -4523,7 +4519,7 @@
             } catch (err) {
                 if (window.meashOffline && typeof window.meashOffline.enqueue === 'function') {
                     await window.meashOffline.enqueue('expense', 'create', payload);
-                    alert('ከመስመር ውጭ ስለሆኑ ወጪው በስልክዎ ላይ ተቀምጧል፤ ኢንተርኔት ሲመጣ ወደ ዳታቤዝ ይገባል::');
+                    alert('Offline ስለሆኑ ወጪው በስልክዎ ላይ ተቀምጧል፤ ኢንተርኔት ሲመጣ Sync ይሆናል::');
                     closeModal();
                     loadActiveTab();
                 } else {
@@ -5281,7 +5277,7 @@
                     <div class="p-8 text-center text-slate-500 rounded-2xl bg-slate-950/50 border border-slate-800 space-y-2">
                         <i data-lucide="briefcase" class="w-8 h-8 mx-auto text-slate-600"></i>
                         <p class="font-bold text-white text-xs">ለዚህ ሰራተኛ እስካሁን የተመዘገበ የስራ ስምሪት የለም።</p>
-                        <p class="text-[11px] text-slate-400">ሰራተኛው በፅዳት ቡድን ተመድቦ ስራ ሲሰራ ታሪኩ እዚህ በራስ-ሰር ይሰበሰባል።</p>
+                        <p class="text-[11px] text-slate-400">ሰራተኛው በፅዳት ቡድን ተመድቦ ስራ ሲሰራ ታሪኩ እዚህ Sync ይሆናል።</p>
                     </div>
                 `;
             }

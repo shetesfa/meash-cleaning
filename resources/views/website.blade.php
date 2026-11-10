@@ -3071,7 +3071,7 @@
               <span>ቀጣይ የጽዳት አገልግሎትዎን አሁኑኑ በ 1-ጠቅታ ይያዙ!</span>
             </h4>
             <p class="text-xs text-white/75 mt-1">
-              ስምዎ፣ ስልክዎ እና አድራሻዎ እንዲሁም የ ${loyalty.discount_percent}% የታማኝነት ቅናሽዎ በቅጹ ውስጥ በራስ-ሰር ተሞልተው ይጠብቁዎታል::
+              ስምዎ፣ ስልክዎ እና አድራሻዎ እንዲሁም የ ${loyalty.discount_percent}% የታማኝነት ቅናሽዎ በቅጹ ውስጥ Sync ሆነው ይጠብቁዎታል::
             </p>
           </div>
           <button type="button" onclick="bookNextCleaningWithCustomerData(${custDataJson})" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-teal to-emerald-500 hover:from-teal-dark hover:to-emerald-600 text-white rounded-xl font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:scale-105">
