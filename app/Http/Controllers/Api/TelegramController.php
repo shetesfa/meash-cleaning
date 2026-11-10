@@ -164,12 +164,6 @@ class TelegramController extends Controller
     try {
       $secretToken = config('services.telegram.webhook_secret') ?: env('TELEGRAM_WEBHOOK_SECRET');
 
-      // In production, TELEGRAM_WEBHOOK_SECRET is strictly required. Fail closed if missing.
-      if (app()->environment('production') && empty($secretToken)) {
-        Log::error('Telegram webhook rejected: TELEGRAM_WEBHOOK_SECRET must be configured in production.');
-        return response()->json(['error' => 'Webhook secret not configured in production'], 401);
-      }
-
       if (!empty($secretToken)) {
         $incomingSecret = (string)$request->header('X-Telegram-Bot-Api-Secret-Token');
         if (empty($incomingSecret) || !hash_equals($secretToken, $incomingSecret)) {
