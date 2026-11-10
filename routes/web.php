@@ -15,13 +15,18 @@ Route::get('/', function () {
 
 // 2. Telegram Mini App (TMA embedded webapp)
 Route::get('/telegram-miniapp', function () {
-    return view('telegram_miniapp');
+    $activeServices = \App\Models\Service::where('is_active', true)->orderBy('sort_order')->get();
+    $websiteSettings = \App\Models\WebsiteSetting::getAllKeyValue();
+    $subcities = \App\Models\WebsiteSetting::getJson('subcities', []);
+    $timeSlots = \App\Models\WebsiteSetting::getJson('time_slots', []);
+    $pricingRules = \App\Models\WebsiteSetting::getJson('pricing_rules', []);
+    return view('telegram_miniapp', compact('activeServices', 'websiteSettings', 'subcities', 'timeSlots', 'pricingRules'));
 });
 Route::get('/telegram/miniapp', function () {
-    return view('telegram_miniapp');
+    return redirect('/telegram-miniapp');
 });
 Route::get('/miniapp', function () {
-    return view('telegram_miniapp');
+    return redirect('/telegram-miniapp');
 });
 
 // 3. Master Internal PWA Operating Platform (Owner, Reception, Cleaners, Sales)

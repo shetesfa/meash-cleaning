@@ -167,8 +167,8 @@
       <!-- 2. Quantity Counter -->
       <div class="p-3.5 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-between">
         <div>
-          <span class="text-xs font-bold text-white block" id="tma-selected-service-name">የሶፋ ጥልቅ እጥበት</span>
-          <span class="text-[11px] text-slate-400" id="tma-unit-desc">መቀመጫ / SEATS</span>
+          <span class="text-xs font-bold text-white block" id="tma-selected-service-name">{{ $activeServices->first()?->name_am ?? 'የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ' }}</span>
+          <span class="text-[11px] text-slate-400 font-semibold" id="tma-unit-desc">{{ strtoupper($activeServices->first()?->unit ?? 'seat') }}</span>
         </div>
         <div class="flex items-center gap-3">
           <button type="button" onclick="changeQty(-1)" class="w-9 h-9 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-lg flex items-center justify-center active:scale-95 transition-all">-</button>
@@ -180,7 +180,7 @@
       <!-- Total Preview -->
       <div class="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/80 to-blue-950/80 border border-cyan-500/40 flex justify-between items-center shadow-md">
         <span class="text-xs font-semibold text-slate-300" id="lbl-total-est">ጠቅላላ ክፍያ / ዋጋ:</span>
-        <span id="tma-total-preview" class="text-base font-extrabold text-cyan-300">1,750.00 ብር</span>
+        <span id="tma-total-preview" class="text-base font-extrabold text-cyan-300">{{ number_format(($activeServices->first()?->base_price ?? 350) * 5) }} ብር</span>
       </div>
 
       <!-- 3. Address & Location -->
@@ -359,7 +359,7 @@
       unit: initialLiveServices[0].pricing_unit_am || initialLiveServices[0].unit || 'መቀመጫ',
       nameAm: initialLiveServices[0].name_am || initialLiveServices[0].name_en,
       nameEn: initialLiveServices[0].name_en || initialLiveServices[0].name_am
-    } : { id: 1, code: 'floor_ceramic', price: 120, unit: 'ካሬ / sqm', nameAm: 'የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት', nameEn: 'Ceramic & Hardwood Floor Cleaning' };
+    } : { id: 1, code: 'floor_ceramic', price: 500, unit: 'ካሬ / sqm', nameAm: 'የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት', nameEn: 'Ceramic & Hardwood Floor Cleaning' };
     let qty = (currentSvc.code === 'carpet' || currentSvc.id === 2) ? 10 : ((currentSvc.code === 'sofa' || currentSvc.id === 1) ? 5 : 1);
     let tgUser = null;
 
