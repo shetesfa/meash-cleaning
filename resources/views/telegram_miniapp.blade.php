@@ -260,29 +260,7 @@
       <div>
         <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" id="lbl-step3">4. የእርስዎ መረጃ (Contact Details)</label>
         <input type="text" id="tma-name" required placeholder="ሙሉ ስምዎ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 mb-2">
-        <input type="tel" id="tma-phone" required placeholder="ስልክ ቁጥር (ለምሳሌ 0911223344)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500">
-      </div>
-
-      <!-- 6. Payment Method -->
-      <div>
-        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2" id="lbl-step-payment">5. የክፍያ መንገድ (Payment Method)</label>
-        <div class="grid grid-cols-3 gap-2">
-          <label class="p-2.5 rounded-xl bg-slate-900 border border-slate-700 flex flex-col items-center text-center cursor-pointer hover:border-cyan-500 transition-all">
-            <input type="radio" name="tma_payment_method" value="cash" checked class="text-cyan-500 mb-1">
-            <span class="text-xs font-bold text-white block">ጥሬ ገንዘብ</span>
-            <span class="text-[9px] text-slate-400">Cash on Service</span>
-          </label>
-          <label class="p-2.5 rounded-xl bg-slate-900 border border-slate-700 flex flex-col items-center text-center cursor-pointer hover:border-cyan-500 transition-all">
-            <input type="radio" name="tma_payment_method" value="telebirr" class="text-cyan-500 mb-1">
-            <span class="text-xs font-bold text-cyan-400 block">ቴሌብር</span>
-            <span class="text-[9px] text-slate-400">Telebirr</span>
-          </label>
-          <label class="p-2.5 rounded-xl bg-slate-900 border border-slate-700 flex flex-col items-center text-center cursor-pointer hover:border-cyan-500 transition-all">
-            <input type="radio" name="tma_payment_method" value="cbe" class="text-cyan-500 mb-1">
-            <span class="text-xs font-bold text-purple-400 block">ንግድ ባንክ</span>
-            <span class="text-[9px] text-slate-400">CBE / CBE Birr</span>
-          </label>
-        </div>
+        <input type="tel" id="tma-phone" required placeholder="ስልክ ቁጥር (ለምሳሌ 0970075509)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500">
       </div>
 
       <button type="submit" id="tma-submit-btn" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-xl shadow-cyan-500/25 flex items-center justify-center gap-2 active:scale-98 transition-all">
@@ -303,15 +281,16 @@
         <span class="text-2xl font-black text-cyan-400 tracking-wider" id="tma-result-id">ORD-2026-0001</span>
       </div>
 
-      <!-- Payment Accounts Info in TMA Confirmation -->
+      <!-- Payment Notice -->
       <div id="tma-payment-notice" class="p-3.5 rounded-2xl bg-slate-900/90 border border-cyan-500/30 mb-5 text-left text-xs">
         <div class="flex items-center gap-2 mb-2">
-          <span class="text-cyan-400 font-bold">የክፍያ ማስተላለፊያ መረጃ / Payment Accounts</span>
+          <i data-lucide="info" class="w-4 h-4 text-cyan-400"></i>
+          <span class="text-cyan-400 font-bold">የክፍያ ሁኔታ (Payment Policy)</span>
         </div>
-        <div class="space-y-1.5 text-slate-300 text-[11px]">
-          <p><span class="font-bold text-cyan-400">ቴሌብር (Telebirr):</span> <span class="font-mono text-white font-bold">{{ $telebirrNo }}</span> <span class="text-[10px] text-slate-400">({{ $telebirrName }})</span></p>
-          <p><span class="font-bold text-purple-400">ንግድ ባንክ (CBE):</span> <span class="font-mono text-white font-bold">{{ $cbeNo }}</span> <span class="text-[10px] text-slate-400">({{ $cbeName }})</span></p>
-          <p class="text-[10px] text-slate-400 pt-1 border-t border-slate-800">ማስታወሻ፦ በቴሌብር ወይም በባንክ ሲከፍሉ የትዕዛዝ መለያ ቁጥርዎን በምክንያት/Reason ማስታወሻ ላይ ያስገቡ::</p>
+        <div class="space-y-1.5 text-slate-300 text-[11px] leading-relaxed">
+          <p>• <strong>ምንም ዓይነት ቅድመ ክፍያ አይጠየቅም!</strong></p>
+          <p>• ክፍያ የሚፈጸመው ስራው ሙሉ ለሙሉ ተጠናቆ በባለሙያዎቻችን ሲረከቡ ብቻ ነው።</p>
+          <p>• <strong>ክፍያዎን በጥሬ ገንዘብ (Cash)፣ በቴሌብር (Telebirr)፣ ወይም በሚመችዎት የኢትዮጵያ ባንክ</strong> (CBE፣ አዋሽ፣ አቢሲንያ ወዘተ) በሞባይል ባንኪንግ መክፈል ይችላሉ።</p>
         </div>
       </div>
 
@@ -684,7 +663,7 @@
       btn.innerText = currentLang === 'am' ? 'በመመዝገብ ላይ...' : 'Submitting...';
 
       const plan = document.querySelector('input[name="tma_sub_plan"]:checked')?.value || 'one_time';
-      const payMethod = document.querySelector('input[name="tma_payment_method"]:checked')?.value || 'cash';
+      const payMethod = 'cash';
 
       const payload = {
         customer_name: document.getElementById('tma-name').value,
