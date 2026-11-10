@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Complaint;
+use App\Models\Customer;
 use App\Models\Feedback;
 use App\Models\Followup;
 use App\Services\EthiopianCalendarService;
+use App\Services\OrderLifecycleService;
+use App\Services\SmsService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,6 +32,7 @@ class CustomerCareController extends Controller
             Followup::create([
                 'order_id' => $cOrder->id,
                 'customer_id' => $cOrder->customer_id,
+                'type' => 'review',
                 'due_date' => Carbon::today(),
                 'status' => 'pending',
                 'notes' => 'Post-service follow-up call',
@@ -36,31 +40,49 @@ class CustomerCareController extends Controller
         }
 
         $query = Followup::with([
-            'order:id,order_number,total,appointment_date',
+            'order:id,order_number,total,appointment_date,payment_status,order_status',
             'order.items.service:id,name_en,name_am',
-            'customer:id,customer_code,full_name,phone,subcity',
+            'customer:id,customer_code,full_name,phone,subcity,lifecycle_stage',
             'handledBy:id,name',
         ]);
 
         if ($request->input('filter') === 'due_today') {
-            $query->whereDate('due_date', '<=', Carbon::today())
-                  ->where('status', 'pending');
+            // Include due today or created today without hiding any pending review
+            $query->where(function ($q) {
+                $q->whereDate('due_date', '<=', Carbon::today())
+                  ->orWhereDate('created_at', Carbon::today());
+            })->where('status', 'pending');
         } elseif ($request->has('status') && $request->input('status') !== 'all') {
             $query->where('status', $request->input('status'));
         } elseif (!$request->has('status') && !$request->has('filter')) {
-            // Default to pending follow-up queue only so completed ones leave the queue!
+            // Default to all pending follow-up queue so today's created orders are displayed immediately!
             $query->where('status', 'pending');
         }
 
-        $followups = $query->latest('due_date')->paginate(20);
+        $followups = $query->latest('id')->paginate($request->input('per_page', 25));
 
         $followups->getCollection()->transform(function ($item) {
-            $eth = EthiopianCalendarService::toEthiopian($item->due_date);
+            $eth = EthiopianCalendarService::toEthiopian($item->due_date ?: $item->created_at);
             $item->eth_due_date = $eth['formatted_am'];
+            $item->order_number = $item->order?->order_number;
+            $item->customer_name = $item->customer?->full_name;
+            $item->customer_phone = $item->customer?->phone;
+            $item->order_total = (float)($item->order?->total ?? 0);
             return $item;
         });
 
-        return response()->json($followups);
+        $commentWaitingCount = Followup::where('status', 'pending')->count();
+        $completedFollowupCount = Followup::where('status', 'completed')->count();
+
+        return response()->json([
+            'followups' => $followups,
+            'comment_waiting_count' => $commentWaitingCount,
+            'completed_count' => $completedFollowupCount,
+            'data' => $followups->items(),
+            'current_page' => $followups->currentPage(),
+            'last_page' => $followups->lastPage(),
+            'total' => $followups->total(),
+        ]);
     }
 
     public function updateFollowup(Request $request, Followup $followup): JsonResponse
@@ -74,23 +96,19 @@ class CustomerCareController extends Controller
             $outcome = ($rating >= 4) ? 'satisfied' : (($rating <= 2) ? 'complaint' : 'satisfied');
         }
 
-        $followup->update([
-            'status' => 'completed',
-            'outcome' => $outcome,
-            'notes' => $notes,
-            'handled_by_user_id' => $request->user()?->id,
-            'completed_at' => now(),
-        ]);
+        $followup->loadMissing(['customer', 'order']);
+        $customer = $followup->customer ?: \App\Models\Customer::findOrFail($followup->customer_id);
+        $order = $followup->order;
 
-        // Record feedback into customer's profile history
-        Feedback::create([
-            'order_id' => $followup->order_id,
-            'customer_id' => $followup->customer_id,
-            'rating' => (int) $rating,
-            'comment' => $notes ?: 'Customer feedback recorded via post-service follow-up call.',
-            'source' => 'phone',
-            'is_approved' => true,
-        ]);
+        // Record feedback and promote customer out of Comment Waiting queue
+        $feedback = OrderLifecycleService::recordCustomerReviewAndPromote(
+            $customer,
+            $order,
+            (int) $rating,
+            $notes ?: 'Customer feedback recorded via post-service follow-up call.',
+            'phone',
+            $request->user()?->id
+        );
 
         if ($outcome === 'complaint' || $rating <= 2) {
             Complaint::create([
@@ -108,7 +126,16 @@ class CustomerCareController extends Controller
             'success' => true,
             'message' => 'የክትትል ጥሪው እና የደንበኛው አስተያየት በተሳካ ሁኔታ ተመዝግቧል!',
             'followup' => $followup->fresh(['customer', 'order']),
+            'feedback' => $feedback,
         ]);
+    }
+
+    /**
+     * Alias for completing a followup record
+     */
+    public function completeFollowup(Request $request, Followup $followup): JsonResponse
+    {
+        return $this->updateFollowup($request, $followup);
     }
 
     public function feedbacks(Request $request): JsonResponse
@@ -157,7 +184,17 @@ class CustomerCareController extends Controller
             'source' => 'nullable|string|in:web,telegram,phone',
         ]);
 
-        $feedback = Feedback::create($validated);
+        $customer = \App\Models\Customer::findOrFail($validated['customer_id']);
+        $order = !empty($validated['order_id']) ? \App\Models\Order::find($validated['order_id']) : null;
+
+        $feedback = OrderLifecycleService::recordCustomerReviewAndPromote(
+            $customer,
+            $order,
+            (int)$validated['rating'],
+            $validated['comment'] ?? null,
+            $validated['source'] ?? 'phone',
+            $request->user()?->id
+        );
 
         return response()->json([
             'message' => 'Feedback saved successfully',
@@ -233,6 +270,10 @@ class CustomerCareController extends Controller
 
     public function resolveComplaint(Request $request, Complaint $complaint): JsonResponse
     {
+        if (!$request->has('resolution_notes') && $request->has('resolution_action')) {
+            $request->merge(['resolution_notes' => $request->input('resolution_action')]);
+        }
+
         $validated = $request->validate([
             'resolution_notes' => 'required|string',
             'status' => 'nullable|string|in:in_progress,resolved,closed',
@@ -241,15 +282,16 @@ class CustomerCareController extends Controller
         $old = $complaint->toArray();
 
         $status = $validated['status'] ?? 'resolved';
+        $userId = $request->user()?->id ?? auth()->id();
         $complaint->update([
             'resolution_notes' => $validated['resolution_notes'],
             'status' => $status,
             'resolved_at' => in_array($status, ['resolved', 'closed']) ? now() : null,
-            'assigned_to_user_id' => $request->user()->id,
+            'assigned_to_user_id' => $userId,
         ]);
 
         AuditLog::logAction(
-            $request->user()->id,
+            $userId,
             'complaint_resolved',
             Complaint::class,
             $complaint->id,
@@ -261,5 +303,153 @@ class CustomerCareController extends Controller
             'message' => 'Complaint updated successfully',
             'complaint' => $complaint->fresh(['customer', 'assignedTo']),
         ]);
+    }
+
+    /**
+     * 1-to-1 SMS messaging to a customer
+     */
+    public function sendSms(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'customer_id' => 'nullable|exists:customers,id',
+            'phone' => 'nullable|string',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        $phone = $validated['phone'] ?? null;
+        $customer = null;
+        if (!empty($validated['customer_id'])) {
+            $customer = Customer::find($validated['customer_id']);
+            if ($customer && empty($phone)) {
+                $phone = $customer->phone;
+            }
+        }
+
+        if (empty($phone)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'እባክዎ ትክክለኛ የደንበኛ ስልክ ቁጥር ያስገቡ!',
+            ], 422);
+        }
+
+        $cleanPhone = SmsService::normalizeEthiopianPhone($phone);
+        $result = SmsService::sendDirectSms($cleanPhone, $validated['message']);
+
+        AuditLog::logAction(
+            $request->user()?->id,
+            'customer_care_sms_sent',
+            Customer::class,
+            $customer?->id,
+            null,
+            [
+                'phone' => $cleanPhone,
+                'message' => $validated['message'],
+                'customer_name' => $customer?->full_name,
+                'result' => $result,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'የኤስኤምኤስ (SMS) መልእክቱ ለደንበኛው በተሳካ ሁኔታ ተልኳል!',
+            'phone' => $cleanPhone,
+            'details' => $result,
+        ]);
+    }
+
+    /**
+     * 1-to-1 Telegram messaging with safe phone-only fallback to SMS without throwing errors
+     */
+    public function sendTelegram(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'customer_id' => 'nullable|exists:customers,id',
+            'telegram_chat_id' => 'nullable',
+            'phone' => 'nullable|string',
+            'message' => 'required|string|max:4000',
+        ]);
+
+        $chatId = $validated['telegram_chat_id'] ?? null;
+        $phone = $validated['phone'] ?? null;
+        $customer = null;
+
+        if (!empty($validated['customer_id'])) {
+            $customer = Customer::find($validated['customer_id']);
+            if ($customer) {
+                $chatId = $chatId ?: $customer->telegram_user_id;
+                $phone = $phone ?: $customer->phone;
+            }
+        }
+
+        // Validate telegram_chat_id
+        $hasValidTelegram = !empty($chatId) && is_numeric($chatId) && (int)$chatId > 10000;
+
+        $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
+
+        if ($hasValidTelegram && !empty($botToken)) {
+            try {
+                $response = \Illuminate\Support\Facades\Http::timeout(8)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                    'chat_id' => (int)$chatId,
+                    'text' => $validated['message'],
+                    'parse_mode' => 'HTML',
+                ]);
+
+                if ($response->successful()) {
+                    AuditLog::logAction(
+                        $request->user()?->id,
+                        'customer_care_telegram_sent',
+                        Customer::class,
+                        $customer?->id,
+                        null,
+                        [
+                            'chat_id' => $chatId,
+                            'message' => $validated['message'],
+                            'customer_name' => $customer?->full_name,
+                        ]
+                    );
+
+                    return response()->json([
+                        'success' => true,
+                        'channel' => 'telegram',
+                        'message' => 'የቴሌግራም መልእክቱ ለደንበኛው በተሳካ ሁኔታ ተልኳል!',
+                        'chat_id' => $chatId,
+                    ]);
+                }
+            } catch (\Throwable $th) {
+                \Illuminate\Support\Facades\Log::warning("1-to-1 Telegram error, falling back to SMS: " . $th->getMessage());
+            }
+        }
+
+        // Fallback or route phone-only contacts to SMS safely without throwing errors
+        if (!empty($phone)) {
+            $cleanPhone = SmsService::normalizeEthiopianPhone($phone);
+            $smsResult = SmsService::sendDirectSms($cleanPhone, $validated['message']);
+
+            AuditLog::logAction(
+                $request->user()?->id,
+                'customer_care_telegram_routed_to_sms',
+                Customer::class,
+                $customer?->id,
+                null,
+                [
+                    'phone' => $cleanPhone,
+                    'message' => $validated['message'],
+                    'customer_name' => $customer?->full_name,
+                    'sms_result' => $smsResult,
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'channel' => 'sms_fallback',
+                'message' => 'ደንበኛው የቴሌግራም መለያ ስለሌለው መልእክቱ በቀጥታ በ SMS (ኤስኤምኤስ) ተልኳል!',
+                'phone' => $cleanPhone,
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'ደንበኛው የቴሌግራም መለያም ሆነ ስልክ ቁጥር አልተገኘለትም!',
+        ], 422);
     }
 }

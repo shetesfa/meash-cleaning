@@ -315,10 +315,14 @@
         </div>
       </div>
 
-      <!-- MiniApp 5-Star Review Widget -->
-      <div id="tma-review-box" class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/40 mb-6 text-left shadow-lg">
-        <div class="flex items-center gap-2 mb-1.5">
-          <span class="text-xs font-bold text-white">አገልግሎታችን እንዴት ነበር? ደረጃ ይስጡን</span>
+      <!-- MiniApp 5-Star Review Widget (Waiting for Review Screen) -->
+      <div id="tma-review-box" class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/50 mb-5 text-left shadow-lg">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-black uppercase tracking-wider mb-2 animate-pulse">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>የእርስዎን አስተያየት በመጠባበቅ ላይ (Waiting for Review)</span>
+        </div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-bold text-white">አገልግሎታችን እንዴት ነበር? ባለ 5-ኮከብ ደረጃ ይስጡን</span>
         </div>
         <p class="text-[11px] text-slate-300 mb-3">ከ1 እስከ 5 ኮከብ በመስጠት እና አስተያየትዎን በማጋራት ያግዙን፦</p>
         <div class="flex items-center justify-center gap-2 mb-3">
@@ -332,6 +336,10 @@
         <button type="button" id="tma-review-btn" onclick="submitTmaReview()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition-all shadow-md cursor-pointer">ደረጃውን መዝግብ (Submit Rating)</button>
         <div id="tma-review-msg" class="hidden mt-2 p-2.5 rounded-xl text-center text-xs font-bold"></div>
       </div>
+
+      <!-- Normal Customer Portal Container -->
+      <div id="tma-customer-portal" class="hidden mb-5 text-left"></div>
+
       <button onclick="window.Telegram?.WebApp?.close()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold rounded-xl transition-all" id="btn-close-app">ዝጋ (Close)</button>
     </div>
 
@@ -774,12 +782,10 @@
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          if (msgEl) {
-            msgEl.className = 'mt-2 p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs font-bold text-center';
-            msgEl.innerText = 'እናመሰግናለን! ደረጃዎ በተሳካ ሁኔታ ተመዝግቧል።';
-            msgEl.classList.remove('hidden');
-          }
-          if (btnEl) btnEl.classList.add('hidden');
+          // Immediately transition UI to Normal Customer Portal!
+          const revBox = document.getElementById('tma-review-box');
+          if (revBox) revBox.classList.add('hidden');
+          showTmaCustomerPortal(orderNo);
         } else {
           if (msgEl) {
             msgEl.className = 'mt-2 p-2.5 rounded-xl bg-red-950/80 border border-red-500/40 text-red-200 text-xs font-bold text-center';
@@ -803,6 +809,160 @@
         }
       }
     }
+
+    // MiniApp Normal Customer Portal Renderer
+    async function showTmaCustomerPortal(orderNo) {
+      try {
+        const res = await fetch(`/api/public/track-order?tracking_id=${encodeURIComponent(orderNo)}`);
+        const data = await res.json();
+        const portalEl = document.getElementById('tma-customer-portal');
+        if (!portalEl) return;
+
+        const ord = data.order || data;
+        const summary = data.customer_summary || ord.customer_summary || {};
+        const loyalty = summary.loyalty_status || { tier: 'bronze', label: 'ነሐስ ደንበኛ (Bronze)', discount_percent: 5 };
+        const receipt = summary.receipt || { payment_number: 'REC-' + orderNo, amount: ord.total || 0, payment_method: 'CASH', reference_number: 'VERIFIED-OK' };
+        const completed = summary.completed_summary || {};
+        const custName = summary.full_name || ord.customer_name || 'ውድ ደንበኛችን';
+        const custPhone = summary.phone || ord.customer_phone || '';
+        const custSubcity = summary.subcity || ord.subcity || '';
+
+        portalEl.innerHTML = `
+          <div class="p-4 rounded-2xl bg-slate-900/95 border border-cyan-500/40 shadow-xl space-y-4">
+            <!-- Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                  ⭐ ${loyalty.label}
+                </span>
+                <h4 class="text-sm font-black text-white mt-1">እንኳን ደህና መጡ፣ ${custName}!</h4>
+                <p class="text-[10px] text-slate-400">የሜሽ የደንበኛ ፖርታል (Customer Portal)</p>
+              </div>
+              <span class="text-xs font-mono font-bold text-cyan-400">#${orderNo}</span>
+            </div>
+
+            <!-- Loyalty Status -->
+            <div class="p-3 rounded-xl bg-gradient-to-r from-cyan-950/80 to-blue-950/80 border border-cyan-500/30 flex items-center justify-between">
+              <div>
+                <p class="text-[11px] font-extrabold text-white">${loyalty.label}</p>
+                <p class="text-[10px] text-cyan-300 font-bold">${loyalty.perks || 'የታማኝነት ቅናሽ'}</p>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-slate-400 block">ጠቅላላ ትዕዛዝ</span>
+                <span class="text-xs font-bold text-white">${summary.total_orders || 1} ጊዜ</span>
+              </div>
+            </div>
+
+            <!-- Verified Digital Receipt -->
+            <div class="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 space-y-2 text-xs">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-700">
+                <span class="font-extrabold text-white text-[11px] flex items-center gap-1.5">
+                  <i data-lucide="receipt" class="w-3.5 h-3.5 text-cyan-400"></i> የተረጋገጠ ዲጂታል ደረሰኝ
+                </span>
+                <span class="text-[9px] font-black px-2 py-0.5 rounded bg-emerald-600 text-white">VERIFIED PAID</span>
+              </div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-slate-400">ደረሰኝ #:</span>
+                <span class="font-mono text-white font-bold">${receipt.payment_number}</span>
+              </div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-slate-400">የክፍያ መንገድ:</span>
+                <span class="text-white font-bold">${receipt.payment_method}</span>
+              </div>
+              <div class="flex justify-between text-[11px]">
+                <span class="text-slate-400">ግብይት Ref #:</span>
+                <span class="font-mono text-cyan-300">${receipt.reference_number}</span>
+              </div>
+              <div class="flex justify-between pt-1 border-t border-slate-700">
+                <span class="font-bold text-white">የተከፈለ መጠን:</span>
+                <span class="font-extrabold text-emerald-400 text-sm">${Number(receipt.amount || ord.total).toLocaleString()} ብር</span>
+              </div>
+            </div>
+
+            <!-- Completed Summary -->
+            <div class="p-3.5 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1.5 text-xs">
+              <span class="font-extrabold text-white text-[11px] flex items-center gap-1.5 pb-1 border-b border-slate-700">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i> የተጠናቀቀ አገልግሎት ማጠቃለያ
+              </span>
+              <p class="text-[11px] text-slate-300"><span class="text-slate-400">አገልግሎት:</span> <strong>${completed.service_names || 'የፅዳት አገልግሎት'}</strong></p>
+              <p class="text-[11px] text-slate-300"><span class="text-slate-400">ቀን:</span> <strong>${completed.eth_appointment_date || ord.eth_appointment_date || ord.appointment_date}</strong></p>
+              <p class="text-[11px] text-slate-300"><span class="text-slate-400">ያከናወነው ቡድን:</span> <strong>${completed.team_name || 'የሜሽ ቡድን'}</strong></p>
+            </div>
+
+            <!-- 1-Click Book Next Cleaning Button -->
+            <button type="button" onclick="tmaBookNextCleaning('${custName}', '${custPhone}', '${custSubcity}')" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 cursor-pointer transition-all">
+              <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+              <span>ቀጣይ ጽዳትዎን በ 1-ጠቅታ ይያዙ (Book Next Cleaning)</span>
+            </button>
+          </div>
+        `;
+        portalEl.classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+      } catch (e) {
+        console.warn('Error loading customer portal in TMA:', e);
+      }
+    }
+
+    // Pre-fill TMA booking form for next cleaning
+    function tmaBookNextCleaning(name, phone, subcity) {
+      const nameEl = document.getElementById('tma-name');
+      const phoneEl = document.getElementById('tma-phone');
+      const subcityEl = document.getElementById('tma-subcity');
+
+      if (nameEl && name) nameEl.value = name;
+      if (phoneEl && phone) phoneEl.value = phone;
+      if (subcityEl && subcity) {
+        for (let opt of subcityEl.options) {
+          if (opt.value.toLowerCase().includes(subcity.toLowerCase()) || subcity.toLowerCase().includes(opt.value.toLowerCase())) {
+            subcityEl.value = opt.value;
+            break;
+          }
+        }
+      }
+
+      const formEl = document.getElementById('tma-booking-form');
+      const succEl = document.getElementById('tma-success');
+      if (succEl) succEl.classList.add('hidden');
+      if (formEl) {
+        formEl.classList.remove('hidden');
+        formEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Auto-detect order parameter in TMA
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderParam = urlParams.get('order') || urlParams.get('track') || urlParams.get('review_order');
+        if (orderParam) {
+          const res = await fetch(`/api/public/track-order?tracking_id=${encodeURIComponent(orderParam)}`);
+          const data = await res.json();
+          if (res.ok && (data.found || data.success)) {
+            const formEl = document.getElementById('tma-booking-form');
+            const succEl = document.getElementById('tma-success');
+            const resIdEl = document.getElementById('tma-result-id');
+            const payNoticeEl = document.getElementById('tma-payment-notice');
+            const revBox = document.getElementById('tma-review-box');
+
+            if (formEl) formEl.classList.add('hidden');
+            if (succEl) succEl.classList.remove('hidden');
+            if (resIdEl) resIdEl.innerText = orderParam;
+
+            const stage = data.customer_stage || (data.order?.customer_stage);
+            if (stage === 'comment_waiting') {
+              if (payNoticeEl) payNoticeEl.classList.add('hidden');
+              if (revBox) revBox.classList.remove('hidden');
+            } else if (stage === 'normal_customer') {
+              if (payNoticeEl) payNoticeEl.classList.add('hidden');
+              if (revBox) revBox.classList.add('hidden');
+              showTmaCustomerPortal(orderParam);
+            }
+          }
+        }
+      } catch (err) {
+        // Safe fallback
+      }
+    });
   </script>
 
 <script>

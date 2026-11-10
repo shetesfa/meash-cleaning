@@ -13,6 +13,7 @@ use App\Models\Service;
 use App\Models\Subscription;
 use App\Models\WebsiteSetting;
 use App\Services\EthiopianCalendarService;
+use App\Services\OrderLifecycleService;
 use App\Services\SecurityTokenService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -294,12 +295,12 @@ class PublicWebsiteController extends Controller
             $hasValidToken = false;
 
             if ($verifiedPayload) {
-                $order = Order::with(['customer:id,full_name,subcity', 'items.service:id,name_en,name_am', 'assignedTeam'])
+                $order = Order::with(['customer', 'items.service:id,name_en,name_am', 'assignedTeam', 'payments', 'feedbacks'])
                     ->find($verifiedPayload['order_id']);
                 $hasValidToken = true;
             } elseif (!empty($search)) {
-                // Public lookup without token: find by order_number only (not open by arbitrary phone)
-                $order = Order::with(['customer:id,full_name,subcity', 'items.service:id,name_en,name_am', 'assignedTeam'])
+                // Public lookup: find by order_number
+                $order = Order::with(['customer', 'items.service:id,name_en,name_am', 'assignedTeam', 'payments', 'feedbacks'])
                     ->where('order_number', $search)
                     ->latest()
                     ->first();
@@ -312,6 +313,19 @@ class PublicWebsiteController extends Controller
                 ], 404);
             }
 
+            $customer = $order->customer ?: Customer::find($order->customer_id);
+
+            // Review presence and lifecycle determination
+            $hasReview = $order->feedbacks()->exists() || ($customer && Feedback::where('customer_id', $customer->id)->where('order_id', $order->id)->exists());
+            $isPaid = ($order->payment_status === 'paid');
+            $isCompleted = ($order->order_status === 'completed');
+
+            if ($isPaid && $isCompleted) {
+                $customerStage = $hasReview ? 'normal_customer' : 'comment_waiting';
+            } else {
+                $customerStage = 'in_progress';
+            }
+
             $eth = !empty($order->appointment_date)
                 ? EthiopianCalendarService::toEthiopian($order->appointment_date)
                 : ['formatted_am' => 'ቀን አልተወሰነም'];
@@ -322,8 +336,7 @@ class PublicWebsiteController extends Controller
                 ? (is_object($order->appointment_date) ? $order->appointment_date->toDateString() : substr((string)$order->appointment_date, 0, 10))
                 : now()->toDateString();
 
-            // Mask customer name for privacy (e.g. "Abebe K***")
-            $rawName = $order->customer?->full_name ?? 'ውድ ደንበኛችን';
+            $rawName = $customer?->full_name ?? 'ውድ ደንበኛችን';
             $nameParts = explode(' ', trim($rawName));
             $maskedName = $nameParts[0] . (count($nameParts) > 1 ? ' ' . mb_substr($nameParts[1], 0, 1) . '***' : '');
 
@@ -332,34 +345,130 @@ class PublicWebsiteController extends Controller
                 return [
                     'item_name' => $item->item_name,
                     'quantity' => (float)$item->quantity,
+                    'unit_price' => (float)($item->unit_price ?? 0),
+                    'subtotal' => (float)($item->subtotal ?? 0),
                 ];
             });
 
-            // If request has a verified token, provide authorized status details
-            // Never expose live GPS, exact house numbers, or financial details publicly
+            // Loyalty tier calculation
+            $totalOrders = (int)($customer?->total_orders ?? Order::where('customer_id', $order->customer_id)->count());
+            $totalSpent = (float)($customer?->total_spent ?? Payment::where('customer_id', $order->customer_id)->sum('amount'));
+            if ($totalSpent <= 0) {
+                $totalSpent = (float)Order::where('customer_id', $order->customer_id)->where('payment_status', 'paid')->sum('total');
+            }
+
+            $loyalty = match (true) {
+                $totalOrders >= 10 || $totalSpent >= 20000 => [
+                    'tier' => 'gold',
+                    'label' => 'ወርቅ ደረጃ (Gold VIP)',
+                    'discount_percent' => 15,
+                    'badge_class' => 'bg-amber-100 text-amber-800 border-amber-300',
+                    'perks' => 'የ 15% ቋሚ ቅናሽ እና ቅድሚያ የሚሰጠው የጽዳት መርሃ-ግብር',
+                ],
+                $totalOrders >= 4 || $totalSpent >= 8000 => [
+                    'tier' => 'silver',
+                    'label' => 'ብር ደረጃ (Silver)',
+                    'discount_percent' => 10,
+                    'badge_class' => 'bg-slate-200 text-slate-800 border-slate-300',
+                    'perks' => 'የ 10% ቋሚ ቅናሽ በሁሉም የጽዳት አገልግሎቶች ላይ',
+                ],
+                $totalOrders >= 1 => [
+                    'tier' => 'bronze',
+                    'label' => 'ነሐስ ደረጃ (Bronze Member)',
+                    'discount_percent' => 5,
+                    'badge_class' => 'bg-orange-100 text-orange-800 border-orange-300',
+                    'perks' => 'የ 5% ቅናሽ በቀጣይ የጽዳት ትዕዛዝዎ ላይ',
+                ],
+                default => [
+                    'tier' => 'new',
+                    'label' => 'አዲስ ደንበኛ (Standard)',
+                    'discount_percent' => 0,
+                    'badge_class' => 'bg-teal-50 text-teal-800 border-teal-200',
+                    'perks' => 'አስተማማኝ እና ጥራት ያለው የጽዳት አገልግሎት በሜሽ',
+                ],
+            };
+
+            // Verified payment receipt
+            $lastPayment = $order->payments->sortByDesc('id')->first();
+            $receipt = [
+                'payment_number' => $lastPayment?->payment_number ?? ('REC-' . $order->order_number),
+                'amount' => (float)($lastPayment?->amount ?? $order->total),
+                'payment_method' => strtoupper($lastPayment?->payment_method ?? $order->payment_method ?? 'CASH'),
+                'reference_number' => $lastPayment?->reference_number ?? $order->payment_reference ?? 'VERIFIED-OK',
+                'payment_status' => $order->payment_status,
+                'payment_date' => $lastPayment?->payment_date 
+                    ? (is_object($lastPayment->payment_date) ? $lastPayment->payment_date->toDateString() : substr((string)$lastPayment->payment_date, 0, 10)) 
+                    : ($order->payment_approved_at ? $order->payment_approved_at->toDateString() : now()->toDateString()),
+                'is_verified' => $isPaid,
+            ];
+
+            // Completed service summary
+            $completedServiceSummary = [
+                'order_number' => $order->order_number,
+                'service_names' => $safeItems->pluck('item_name')->filter()->implode(', ') ?: 'የፅዳት አገልግሎት',
+                'items' => $safeItems,
+                'appointment_date' => $apptDateStr,
+                'eth_appointment_date' => $eth['formatted_am'] ?? $apptDateStr,
+                'time_slot' => $order->appointment_time_slot === 'morning' ? 'ጠዋት (ከ 2:00 - 6:00)' : ($order->appointment_time_slot === 'afternoon' ? 'ከሰዓት (ከ 7:00 - 11:00)' : ($order->appointment_time_slot ?: 'ቀን')),
+                'subcity' => $order->subcity,
+                'address' => $order->address,
+                'team_name' => $order->assignedTeam?->name ?? 'የሜሽ ፕሮፌሽናል ቡድን',
+                'subtotal' => (float)$order->subtotal,
+                'discount' => (float)$order->discount,
+                'total' => (float)$order->total,
+                'is_completed' => $isCompleted,
+            ];
+
+            // Full customer summary
+            $customerSummary = [
+                'customer_code' => $customer?->customer_code,
+                'full_name' => $customer?->full_name ?? $rawName,
+                'phone' => $customer?->phone ?? '',
+                'subcity' => $order->subcity ?? $customer?->subcity ?? '',
+                'address' => $order->address ?? $customer?->address ?? '',
+                'total_orders' => $totalOrders,
+                'total_spent' => $totalSpent,
+                'loyalty_status' => $loyalty,
+                'receipt' => $receipt,
+                'completed_summary' => $completedServiceSummary,
+            ];
+
             $orderData = [
                 'order_number' => $order->order_number,
-                'customer_name' => $hasValidToken ? $rawName : $maskedName,
+                'customer_name' => $hasValidToken ? $rawName : ($isCompleted ? $rawName : $maskedName),
                 'subcity' => $order->subcity,
                 'status' => $order->order_status,
                 'appointment_date' => $apptDateStr,
                 'eth_appointment_date' => $eth['formatted_am'] ?? $apptDateStr,
                 'appointment_time_slot' => $order->appointment_time_slot,
                 'subscription_plan' => $order->subscription_plan ?? 'one_time',
-                'team_assigned' => $order->assignedTeam ? 'የተመደበ የሜሽ ቡድን' : 'Pending Assignment',
+                'team_assigned' => $order->assignedTeam ? ($order->assignedTeam->name ?? 'የሜሽ ቡድን') : 'Pending Assignment',
                 'items' => $safeItems,
                 'has_secure_token' => $hasValidToken,
                 'is_tracking_expired' => $isCompletedOrCancelled,
+                'customer_stage' => $customerStage,
+                'has_review' => $hasReview,
+                'customer_summary' => $hasValidToken ? $customerSummary : null,
                 'privacy_notice' => 'ለደንበኞች እና ለሰራተኞች ደህንነት ሲባል ትክክለኛ አድራሻ፣ የክፍያ ዝርዝር እና የቀጥታ GPS በይፋ አይጋለጡም።',
             ];
 
             if ($hasValidToken) {
+                $orderData['customer_phone'] = $customer?->phone ?? '';
+                $orderData['phone'] = $customer?->phone ?? '';
+                $orderData['address'] = $order->address;
+                $orderData['payment_status'] = $order->payment_status;
+                $orderData['subtotal'] = (float)$order->subtotal;
+                $orderData['discount'] = (float)$order->discount;
+                $orderData['total'] = (float)$order->total;
                 $orderData['reschedule_token'] = SecurityTokenService::generateActionToken($order, 'reschedule');
             }
 
             return response()->json([
                 'success' => true,
                 'found' => true,
+                'customer_stage' => $customerStage,
+                'has_review' => $hasReview,
+                'customer_summary' => $customerSummary,
                 'order' => $orderData,
             ]);
         } catch (\Throwable $e) {
@@ -432,15 +541,20 @@ class PublicWebsiteController extends Controller
         $rating = (int)$validated['rating'];
         $comment = trim($validated['comment'] ?? '');
 
-        $feedback = Feedback::updateOrCreate(
-            ['order_id' => $order->id],
-            [
-                'customer_id' => $order->customer_id,
-                'rating' => $rating,
-                'comment' => $comment ?: null,
-                'source' => $request->input('source', 'website'),
-                'is_approved' => ($rating >= 4),
-            ]
+        $customer = $order->customer ?: \App\Models\Customer::find($order->customer_id);
+        if (!$customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'የደንበኛ መረጃ አልተገኘም::',
+            ], 404);
+        }
+
+        $feedback = OrderLifecycleService::recordCustomerReviewAndPromote(
+            $customer,
+            $order,
+            $rating,
+            $comment,
+            $request->input('source', 'website')
         );
 
         return response()->json([

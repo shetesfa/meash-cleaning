@@ -12,6 +12,7 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Service;
 use App\Services\EthiopianCalendarService;
+use App\Services\OrderLifecycleService;
 use App\Services\SecurityTokenService;
 use App\Services\SmsService;
 use Carbon\Carbon;
@@ -594,17 +595,6 @@ class OrderController extends Controller
 
         if ($validated['order_status'] === 'completed' && !$order->completed_at) {
             $order->completed_at = now();
-
-            // Auto schedule next-day follow-up
-            Followup::firstOrCreate(
-                ['order_id' => $order->id],
-                [
-                    'customer_id' => $order->customer_id,
-                    'due_date' => Carbon::tomorrow(),
-                    'status' => 'pending',
-                    'notes' => 'Next-day customer satisfaction inquiry',
-                ]
-            );
         }
 
         $order->version += 1;
@@ -619,7 +609,7 @@ class OrderController extends Controller
             $order->toArray()
         );
 
-        // Send customer SMS on key milestones
+        // Send customer SMS on key milestones and trigger review lifecycle transition
         if ($validated['order_status'] === 'on_the_way') {
             try {
                 SmsService::sendTeamDispatched($order);
@@ -627,14 +617,7 @@ class OrderController extends Controller
                 Log::warning('Team dispatched SMS failed: ' . $th->getMessage());
             }
         } elseif ($validated['order_status'] === 'completed') {
-            try {
-                $sentViaTelegram = TelegramController::sendOrderReviewRequest($order);
-                if (!$sentViaTelegram) {
-                    SmsService::sendJobCompleted($order);
-                }
-            } catch (\Throwable $th) {
-                Log::warning('Job completed notification failed: ' . $th->getMessage());
-            }
+            OrderLifecycleService::checkCompletionAndTriggerReview($order);
         }
 
         return response()->json([
@@ -879,7 +862,7 @@ class OrderController extends Controller
      * Owner & Reception approve a pending payment (or record verified direct payment).
      * Sets payment_status = 'paid' and creates the official Payment record.
      */
-    public function approvePayment(Request $request, Order $order): JsonResponse
+    public function approvePayment(Request $request, Order $order, ?Payment $payment = null): JsonResponse
     {
         $user = $request->user();
         if ($user && !$user->isOwner() && !$user->isReception() && !$user->isFinance()) {
@@ -897,65 +880,16 @@ class OrderController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        return DB::transaction(function () use ($request, $order, $validated, $user) {
-            $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
+        $result = OrderLifecycleService::approveAndVerifyPayment($order, $validated, $user, $payment);
+        return response()->json($result);
+    }
 
-            $alreadyPaid = (float)$lockedOrder->payments()->sum('amount');
-            $remaining = max(0, (float)$lockedOrder->total - $alreadyPaid);
-
-            $amount = !empty($validated['amount']) ? (float)$validated['amount'] : ($remaining > 0 ? $remaining : (float)$lockedOrder->total);
-            $method = $validated['payment_method'] ?? $lockedOrder->payment_method ?? 'cash';
-            if ($method === 'cbe_birr') {
-                $method = 'cbe';
-            }
-            $ref = $validated['reference_number'] ?? $validated['payment_reference'] ?? $lockedOrder->payment_reference ?? null;
-
-            // Create the official Payment record that impacts FinanceController revenue immediately
-            $payment = Payment::create([
-                'payment_number' => Payment::generateNextNumber(),
-                'order_id' => $lockedOrder->id,
-                'customer_id' => $lockedOrder->customer_id,
-                'amount' => $amount,
-                'payment_method' => $method,
-                'reference_number' => $ref,
-                'payment_date' => $validated['payment_date'] ?? Carbon::today(),
-                'recorded_by_user_id' => $user?->id,
-                'notes' => $validated['notes'] ?? ("በ{$user?->name} የጸደቀ ክፍያ"),
-            ]);
-
-            $old = $lockedOrder->toArray();
-
-            $lockedOrder->payment_status = 'paid';
-            $lockedOrder->payment_method = $method;
-            $lockedOrder->payment_reference = $ref;
-            $lockedOrder->payment_approved_at = now();
-            $lockedOrder->payment_approved_by_user_id = $user?->id;
-            $lockedOrder->version += 1;
-            $lockedOrder->save();
-
-            AuditLog::logAction(
-                $user?->id,
-                'payment_approved',
-                Order::class,
-                $lockedOrder->id,
-                $old,
-                [
-                    'payment_id' => $payment->id,
-                    'payment_number' => $payment->payment_number,
-                    'payment_status' => 'paid',
-                    'payment_method' => $method,
-                    'amount' => $amount,
-                    'approved_by' => $user?->name,
-                ]
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'ክፍያው በተሳካ ሁኔታ ጸድቋል (Payment approved and recorded).',
-                'order' => $lockedOrder->fresh(['customer', 'assignedTeam', 'items', 'payments']),
-                'payment' => $payment,
-            ]);
-        });
+    /**
+     * Verifies an order payment using the shared lifecycle transition method.
+     */
+    public function verifyPayment(Request $request, Order $order, ?Payment $payment = null): JsonResponse
+    {
+        return $this->approvePayment($request, $order, $payment);
     }
 
     /**

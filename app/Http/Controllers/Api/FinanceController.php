@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\Proforma;
 use App\Models\SalesVisit;
 use App\Services\EthiopianCalendarService;
+use App\Services\OrderLifecycleService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -148,6 +149,33 @@ class FinanceController extends Controller
         });
 
         return response()->json($payments);
+    }
+
+    /**
+     * Verifies a payment record and updates the associated order status using the shared transition method.
+     */
+    public function verifyPayment(Request $request, Payment $payment): JsonResponse
+    {
+        $user = $request->user();
+        if ($user && !$user->isOwner() && !$user->isReception() && !$user->isFinance()) {
+            return response()->json([
+                'message' => 'Unauthorized. Only owner, reception, or finance may verify payments.',
+            ], 403);
+        }
+
+        $order = $payment->order ?: Order::findOrFail($payment->order_id);
+
+        $validated = $request->validate([
+            'payment_method' => 'nullable|string|in:cash,telebirr,cbe,cbe_birr,bank_transfer,check',
+            'reference_number' => 'nullable|string|max:64',
+            'payment_reference' => 'nullable|string|max:64',
+            'amount' => 'nullable|numeric|min:0.01',
+            'payment_date' => 'nullable|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        $result = OrderLifecycleService::approveAndVerifyPayment($order, $validated, $user, $payment);
+        return response()->json($result);
     }
 
     public function profitReport(Request $request): JsonResponse

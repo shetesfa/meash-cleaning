@@ -162,6 +162,37 @@ class OutdoorSalesController extends Controller
 
         $visit = SalesVisit::create($validated);
 
+        // Sync lead to Message Send recipient list with 'Outdoor Sales Leads' tag
+        if (!empty($validated['phone'])) {
+            try {
+                $cleanPhone = Customer::normalizePhone($validated['phone']);
+                if ($cleanPhone) {
+                    $tgLead = \App\Models\TelegramUser::where('phone_number', $cleanPhone)->first();
+                    if ($tgLead) {
+                        $existingTags = array_filter(array_map('trim', explode(',', $tgLead->tags ?? '')));
+                        if (!in_array('Outdoor Sales Leads', $existingTags)) {
+                            $existingTags[] = 'Outdoor Sales Leads';
+                            $tgLead->tags = implode(', ', $existingTags);
+                            $tgLead->save();
+                        }
+                    } else {
+                        \App\Models\TelegramUser::create([
+                            'first_name' => $validated['contact_person'] ?: ($org?->name ?: 'የውጭ ሽያጭ ደንበኛ'),
+                            'phone_number' => $cleanPhone,
+                            'is_active' => true,
+                            'is_excluded' => false,
+                            'source' => 'outdoor_sales',
+                            'tags' => 'Outdoor Sales Leads',
+                            'marketing_consent' => true,
+                            'last_interaction_at' => now(),
+                        ]);
+                    }
+                }
+            } catch (\Throwable $th) {
+                \Illuminate\Support\Facades\Log::warning('OutdoorSales lead sync error: ' . $th->getMessage());
+            }
+        }
+
         AuditLog::logAction(
             $request->user()->id,
             'sales_visit_logged',
@@ -195,19 +226,25 @@ class OutdoorSalesController extends Controller
         $oldStage = $visit->stage;
         $visit->update($validated);
 
-        // If stage is WON, ensure corporate customer record exists
+        // If stage is WON, ensure corporate customer record exists and sync to Message Send list
         if ($validated['stage'] === 'won' && $oldStage !== 'won') {
             $org = $visit->organization;
-            Customer::firstOrCreate(
+            $customer = Customer::firstOrCreate(
                 ['phone' => $org->phone],
                 [
                     'customer_code' => Customer::generateNextCode(),
                     'full_name' => $org->name,
                     'customer_type' => 'corporate',
+                    'lifecycle_stage' => 'normal_active',
+                    'status' => 'active',
                     'address' => $org->address,
                     'notes' => "Converted from Outdoor Sales visit {$visit->visit_code}. Contact: {$visit->contact_person} ({$visit->contact_position})",
                 ]
             );
+            if ($customer->lifecycle_stage !== 'normal_active') {
+                $customer->update(['lifecycle_stage' => 'normal_active', 'status' => 'active']);
+            }
+            Customer::syncToBroadcastList($customer, 'outdoor_sales', null, 'Outdoor Sales Leads, Normal Active Customers');
         }
 
         AuditLog::logAction(

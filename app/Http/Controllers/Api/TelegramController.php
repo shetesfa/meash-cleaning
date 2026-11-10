@@ -13,6 +13,7 @@ use App\Models\Subscription;
 use App\Models\TelegramUser;
 use App\Models\WebsiteSetting;
 use App\Services\EthiopianCalendarService;
+use App\Services\OrderLifecycleService;
 use App\Services\SmsService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -751,10 +752,21 @@ class TelegramController extends Controller
         return;
       } elseif (!empty($text) && !empty($feedbackSession['feedback_id'])) {
         try {
-          $fb = Feedback::find($feedbackSession['feedback_id']);
+          $fb = Feedback::with(['customer', 'order'])->find($feedbackSession['feedback_id']);
           if ($fb) {
-            $fb->comment = ($fb->comment ? $fb->comment . "\n" : '') . $text;
+            $isPlaceholder = empty($fb->comment) || $fb->comment === 'አስተያየት ተመዝግቧል' || $fb->comment === 'ደንበኛ የሰጠው ደረጃ';
+            $finalComment = $isPlaceholder ? $text : ($fb->comment . "\n" . $text);
+            $fb->comment = $finalComment;
             $fb->save();
+            if ($fb->customer) {
+              OrderLifecycleService::recordCustomerReviewAndPromote(
+                $fb->customer,
+                $fb->order,
+                $fb->rating,
+                $finalComment,
+                'telegram'
+              );
+            }
           }
         } catch (\Throwable $th) {
           Log::warning('Saving feedback comment failed: ' . $th->getMessage());
@@ -1087,16 +1099,14 @@ class TelegramController extends Controller
       $stars = isset($parts[2]) ? (int)$parts[2] : 5;
       $stars = max(1, min(5, $stars));
 
-      $order = Order::find($orderId);
-      if ($order) {
-        $feedback = Feedback::updateOrCreate(
-          ['order_id' => $order->id],
-          [
-            'customer_id' => $order->customer_id,
-            'rating' => $stars,
-            'source' => 'telegram',
-            'is_approved' => ($stars >= 4),
-          ]
+      $order = Order::with('customer')->find($orderId);
+      if ($order && $order->customer) {
+        $feedback = OrderLifecycleService::recordCustomerReviewAndPromote(
+          $order->customer,
+          $order,
+          $stars,
+          null,
+          'telegram'
         );
 
         Cache::put("tg_awaiting_feedback_{$chatId}", [

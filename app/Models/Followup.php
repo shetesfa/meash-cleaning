@@ -14,6 +14,7 @@ class Followup extends Model
         'order_id',
         'customer_id',
         'due_date',
+        'type',
         'status',
         'outcome',
         'notes',

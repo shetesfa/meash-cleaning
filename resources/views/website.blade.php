@@ -2699,8 +2699,246 @@
     }
   }
 
+  // Tracked order global state
+  window.currentTrackedOrderData = null;
+
+  // Helper: 1-Click Pre-fill for Booking
+  window.bookNextCleaningWithCustomerData = function(cust) {
+    if (!cust) return;
+    const nameEl = document.getElementById('book-name');
+    const phoneEl = document.getElementById('book-phone');
+    const subcityEl = document.getElementById('book-subcity');
+    const addressEl = document.getElementById('book-address');
+
+    if (nameEl && cust.full_name) nameEl.value = cust.full_name;
+    if (phoneEl && cust.phone) phoneEl.value = cust.phone;
+    if (subcityEl && cust.subcity) {
+      for (let i = 0; i < subcityEl.options.length; i++) {
+        const val = subcityEl.options[i].value.toLowerCase();
+        const text = subcityEl.options[i].text.toLowerCase();
+        const match = cust.subcity.toLowerCase();
+        if (val.includes(match) || text.includes(match) || match.includes(val)) {
+          subcityEl.selectedIndex = i;
+          break;
+        }
+      }
+    }
+    if (addressEl && cust.address) addressEl.value = cust.address;
+
+    const bookSec = document.getElementById('booking') || document.getElementById('book');
+    if (bookSec) {
+      bookSec.scrollIntoView({ behavior: 'smooth' });
+      if (typeof showWizardStep === 'function') {
+        showWizardStep(1);
+      }
+    }
+  };
+
+  // Render: Waiting for Your Comment & 5-Star Rating Screen
+  function renderCommentWaitingScreen(data) {
+    const ord = data.order || data;
+    const summary = data.customer_summary || ord.customer_summary || {};
+    const custName = summary.full_name || ord.customer_name || 'ውድ ደንበኛችን';
+
+    return `
+      <div class="bg-gradient-to-br from-amber-50 via-orange-50/40 to-amber-100/30 border-2 border-amber-400 rounded-3xl p-6 sm:p-8 shadow-xl text-center relative overflow-hidden">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-900 border border-amber-400 text-xs font-black uppercase tracking-wider mb-4 animate-pulse">
+          <i data-lucide="clock" class="w-4 h-4 text-amber-600"></i>
+          <span>የእርስዎን አስተያየት በመጠባበቅ ላይ (Waiting for Review)</span>
+        </div>
+
+        <h3 class="text-xl sm:text-2xl font-black text-navy mb-2">አገልግሎታችን ተጠናቋል! የእርስዎን ባለ 5-ኮከብ ደረጃ ይስጡን</h3>
+        <p class="text-xs sm:text-sm text-navy/70 max-w-lg mx-auto mb-6">
+          ክቡር ደንበኛችን <strong>${escapeHtml(custName)}</strong>፣ የትዕዛዝ ቁጥር <strong>#${escapeHtml(ord.order_number)}</strong> ክፍያ እና የፅዳት አገልግሎት በተሳካ ሁኔታ ተጠናቋል:: አገልግሎታችንን እንዴት አገኙት? ከ 1 እስከ 5 ኮከብ በመምረጥ እና አስተያየትዎን በማጋራት ያግዙን፦
+        </p>
+
+        <!-- 5-Star Rating Buttons -->
+        <div class="flex items-center justify-center gap-2 sm:gap-3 mb-5">
+          <button type="button" onclick="setReviewRating(1)" class="p-1.5 hover:scale-125 transition cursor-pointer" title="1 ኮከብ"><svg id="review-star-1" class="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button type="button" onclick="setReviewRating(2)" class="p-1.5 hover:scale-125 transition cursor-pointer" title="2 ኮከብ"><svg id="review-star-2" class="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button type="button" onclick="setReviewRating(3)" class="p-1.5 hover:scale-125 transition cursor-pointer" title="3 ኮከብ"><svg id="review-star-3" class="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button type="button" onclick="setReviewRating(4)" class="p-1.5 hover:scale-125 transition cursor-pointer" title="4 ኮከብ"><svg id="review-star-4" class="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+          <button type="button" onclick="setReviewRating(5)" class="p-1.5 hover:scale-125 transition cursor-pointer" title="5 ኮከብ"><svg id="review-star-5" class="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+        </div>
+
+        <!-- Comment Box -->
+        <div class="max-w-xl mx-auto mb-5 text-left">
+          <label class="block text-xs font-bold text-navy/80 mb-1.5">የእርስዎ አስተያየት (አማራጭ)፦</label>
+          <textarea id="website-review-comment" rows="3" placeholder="ስለ አገልግሎቱ ጥራት እና ስለ ሰራተኞቻችን ያለዎትን አስተያየት እዚህ ይጻፉ..." class="w-full text-xs sm:text-sm p-3.5 rounded-2xl border-2 border-amber-300 focus:border-teal focus:ring-2 focus:ring-teal/20 outline-none bg-white text-navy shadow-inner"></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="button" id="website-review-btn" onclick="submitWebsiteReview('${escapeHtml(ord.order_number)}')" class="px-8 py-3.5 bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-navy text-white rounded-2xl font-black text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 mx-auto">
+          <i data-lucide="send" class="w-4 h-4"></i>
+          <span>ደረጃውን መዝግብ እና የደንበኛ ፖርታልን ክፈት (Submit &amp; Open Portal)</span>
+        </button>
+        <div id="website-review-msg" class="hidden max-w-md mx-auto mt-4"></div>
+      </div>`;
+  }
+
+  // Render: Normal Customer Portal (Verified Receipt + Service Summary + Loyalty + 1-Click Booking)
+  function renderNormalCustomerPortal(data) {
+    const ord = data.order || data;
+    const summary = data.customer_summary || ord.customer_summary || {};
+    const loyalty = summary.loyalty_status || { tier: 'bronze', label: 'ነሐስ ደንበኛ (Bronze Member)', discount_percent: 5, badge_class: 'bg-orange-100 text-orange-800 border-orange-300' };
+    const receipt = summary.receipt || {
+      payment_number: 'REC-' + ord.order_number,
+      amount: ord.total || 0,
+      payment_method: 'CASH',
+      reference_number: 'VERIFIED-OK',
+      payment_date: ord.appointment_date,
+      is_verified: true
+    };
+    const completed = summary.completed_summary || {};
+    const custName = summary.full_name || ord.customer_name || 'ውድ ደንበኛችን';
+    const custPhone = summary.phone || ord.customer_phone || '';
+    const custAddress = summary.address || ord.address || '';
+    const custSubcity = summary.subcity || ord.subcity || '';
+    const custDataJson = JSON.stringify({ full_name: custName, phone: custPhone, subcity: custSubcity, address: custAddress }).replace(/"/g, '&quot;');
+
+    return `
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-navy/10 shadow-xl space-y-6">
+        <!-- Portal Header -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-navy/10">
+          <div>
+            <div class="flex flex-wrap items-center gap-2 mb-1.5">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${loyalty.badge_class || 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                <span>${loyalty.label}</span>
+              </span>
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i>
+                <span>ክፍያው የተረጋገጠ (Verified Paid)</span>
+              </span>
+            </div>
+            <h3 class="text-xl sm:text-2xl font-black text-navy">እንኳን ደህና መጡ፣ ${escapeHtml(custName)}!</h3>
+            <p class="text-xs text-navy/60 mt-0.5">የሜሽ መደበኛ እና የተከበሩ ደንበኛ ፖርታል (Customer Portal)</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-navy/50 block font-semibold">የትዕዛዝ ቁጥር</span>
+            <span class="font-serif text-lg font-black text-teal-dark">#${escapeHtml(ord.order_number)}</span>
+          </div>
+        </div>
+
+        <!-- Loyalty & Rewards Card -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-teal-50 via-cyan-50 to-emerald-50 border border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-teal text-white flex items-center justify-center shrink-0 shadow-md">
+              <i data-lucide="gift" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h4 class="font-black text-navy text-sm sm:text-base">የደንበኝነት የታማኝነት ማዕረግ፡ ${loyalty.label}</h4>
+              <p class="text-xs text-teal-dark font-bold mt-0.5">${loyalty.perks || 'የታማኝነት ቅናሽ በሁሉም የጽዳት አገልግሎቶች ላይ'}</p>
+              <p class="text-[11px] text-navy/60 mt-1">አጠቃላይ የተጠናቀቁ ትዕዛዞች፡ <strong>${summary.total_orders || 1}</strong> | የወጣ ወጪ፡ <strong>${Number(summary.total_spent || ord.total).toLocaleString()} ETB</strong></p>
+            </div>
+          </div>
+          <button type="button" onclick="bookNextCleaningWithCustomerData(${custDataJson})" class="px-5 py-3 bg-teal hover:bg-teal-dark text-white rounded-xl font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:shadow-lg">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>ቀጣይ ጽዳት በ 1-ጠቅታ ያዙ</span>
+          </button>
+        </div>
+
+        <!-- 2 Columns: Digital Receipt & Completed Service Summary -->
+        <div class="grid md:grid-cols-2 gap-5">
+          <!-- Verified Digital Receipt -->
+          <div class="p-5 rounded-2xl bg-fog/70 border border-navy/15 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-navy/10">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="receipt" class="w-4 h-4 text-teal"></i>
+                  <h4 class="font-black text-navy text-xs uppercase tracking-wider">የተረጋገጠ ዲጂታል ደረሰኝ (Official Receipt)</h4>
+                </div>
+                <span class="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-600 text-white">PAID</span>
+              </div>
+              <div class="space-y-2 text-xs">
+                <div class="flex justify-between py-1 border-b border-navy/5">
+                  <span class="text-navy/60">የደረሰኝ ቁጥር:</span>
+                  <span class="font-mono font-bold text-navy">${escapeHtml(receipt.payment_number)}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-navy/5">
+                  <span class="text-navy/60">የተከፈለበት መንገድ:</span>
+                  <span class="font-bold text-navy">${escapeHtml(receipt.payment_method)}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-navy/5">
+                  <span class="text-navy/60">የግብይት መለያ (Ref #):</span>
+                  <span class="font-mono font-bold text-teal-dark">${escapeHtml(receipt.reference_number)}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-navy/5">
+                  <span class="text-navy/60">የክፍያ ቀን:</span>
+                  <span class="font-bold text-navy">${escapeHtml(receipt.payment_date || ord.appointment_date)}</span>
+                </div>
+                <div class="flex justify-between pt-2">
+                  <span class="font-bold text-navy text-sm">ጠቅላላ የተከፈለ:</span>
+                  <span class="font-black text-emerald-700 text-base font-serif">${Number(receipt.amount || ord.total).toLocaleString()} ETB</span>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-navy/10 flex items-center justify-between text-[11px] text-navy/50">
+              <span>Mesh Cleaning Solution</span>
+              <span class="text-emerald-700 font-bold">✓ በሲስተም የተረጋገጠ ክፍያ</span>
+            </div>
+          </div>
+
+          <!-- Completed Service Summary -->
+          <div class="p-5 rounded-2xl bg-fog/70 border border-navy/15 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-navy/10">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                  <h4 class="font-black text-navy text-xs uppercase tracking-wider">የተጠናቀቀ አገልግሎት ማጠቃለያ</h4>
+                </div>
+                <span class="text-[10px] font-bold text-teal-dark bg-teal-light px-2 py-0.5 rounded-full">ተጠናቋል</span>
+              </div>
+              <div class="space-y-2 text-xs">
+                <div class="flex justify-between py-1 border-b border-navy/5">
+                  <span class="text-navy/60">የአገልግሎት አይነት:</span>
+                  <span class="font-bold text-navy text-right">${escapeHtml(completed.service_names || 'የፅዳት አገልግሎት')}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-navy/5">
+                  <span class="text-navy/60">የተከናወነበት ቀን:</span>
+                  <span class="font-bold text-navy">${escapeHtml(completed.eth_appointment_date || ord.eth_appointment_date || ord.appointment_date)}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-navy/5">
+                  <span class="text-navy/60">የቀጠሮ ክፍለ ጊዜ:</span>
+                  <span class="font-bold text-navy">${escapeHtml(completed.time_slot || ord.appointment_time_slot || 'ቀን')}</span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-navy/5">
+                  <span class="text-navy/60">ያከናወነው ቡድን:</span>
+                  <span class="font-bold text-teal-dark">${escapeHtml(completed.team_name || ord.team_assigned || 'የሜሽ ቡድን')}</span>
+                </div>
+                <div class="flex justify-between py-1">
+                  <span class="text-navy/60">አድራሻ:</span>
+                  <span class="font-bold text-navy text-right">${escapeHtml((custSubcity ? custSubcity + ', ' : '') + custAddress)}</span>
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-navy/10 text-right">
+              <span class="text-[11px] text-teal-dark font-extrabold">Your Environment, Our Responsibility.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prominent 1-Click Book Next Cleaning Banner -->
+        <div class="p-6 rounded-2xl bg-navy text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+          <div>
+            <h4 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
+              <span>ቀጣይ የጽዳት አገልግሎትዎን አሁኑኑ በ 1-ጠቅታ ይያዙ!</span>
+            </h4>
+            <p class="text-xs text-white/75 mt-1">
+              ስምዎ፣ ስልክዎ እና አድራሻዎ እንዲሁም የ ${loyalty.discount_percent}% የታማኝነት ቅናሽዎ በቅጹ ውስጥ በራስ-ሰር ተሞልተው ይጠብቁዎታል::
+            </p>
+          </div>
+          <button type="button" onclick="bookNextCleaningWithCustomerData(${custDataJson})" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-teal to-emerald-500 hover:from-teal-dark hover:to-emerald-600 text-white rounded-xl font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:scale-105">
+            <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+            <span>ቀጣይ ጽዳት ያዙ (Book Next Cleaning)</span>
+          </button>
+        </div>
+      </div>`;
+  }
+
   async function trackOrder(e){
-    e.preventDefault();
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
     const q = document.getElementById('track-input').value.trim();
     const box = document.getElementById('track-result');
     box.classList.remove('hidden');
@@ -2708,8 +2946,26 @@
     try {
       const res = await fetch(`/api/public/track-order?tracking_id=${encodeURIComponent(q)}`);
       const data = await res.json();
-      if (res.ok && data.found && data.order) {
-        const ord = data.order;
+      if (res.ok && (data.found || data.success) && (data.order || data)) {
+        window.currentTrackedOrderData = data;
+        const ord = data.order || data;
+        const customerStage = data.customer_stage || ord.customer_stage || (ord.status === 'completed' && ord.payment_status === 'paid' ? (data.has_review ? 'normal_customer' : 'comment_waiting') : 'in_progress');
+
+        // 1. Comment Waiting Screen (Paid & Completed, no review yet)
+        if (customerStage === 'comment_waiting') {
+          box.innerHTML = renderCommentWaitingScreen(data);
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        // 2. Normal Customer Portal Screen (Paid & Completed, review submitted)
+        if (customerStage === 'normal_customer') {
+          box.innerHTML = renderNormalCustomerPortal(data);
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
+
+        // 3. In-Progress Cleaning & Schedule Status
         const isEnRoute = ord.status === 'on_the_way';
         const isCleaning = ord.status === 'cleaning' || ord.status === 'in_progress';
         const isCompleted = ord.status === 'completed';
@@ -2820,35 +3076,6 @@
             </div>`;
         }
 
-        let reviewWidgetHtml = '';
-        if (isCompleted || ord.status === 'completed') {
-          reviewWidgetHtml = `
-            <div id="website-review-container" class="mt-4 pt-4 border-t border-navy/10 bg-gradient-to-br from-amber-50/70 to-orange-50/40 rounded-2xl p-4 border border-amber-200/80 shadow-sm">
-              <div class="flex items-center gap-2 mb-1.5">
-                <h4 class="font-extrabold text-navy text-xs sm:text-sm">የፅዳት አገልግሎታችን እንዴት ነበር? ደረጃ ይስጡን</h4>
-              </div>
-              <p class="text-[11px] text-navy/70 mb-3">እባክዎ ከ1 እስከ 5 ኮከብ በመምረጥ እና አስተያየትዎን በማጋራት ያግዙን፦</p>
-
-              <div class="flex items-center gap-2 mb-3">
-                <button type="button" onclick="setReviewRating(1)" class="p-1 hover:scale-110 transition cursor-pointer" title="1 ኮከብ"><svg id="review-star-1" class="w-7 h-7 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-                <button type="button" onclick="setReviewRating(2)" class="p-1 hover:scale-110 transition cursor-pointer" title="2 ኮከብ"><svg id="review-star-2" class="w-7 h-7 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-                <button type="button" onclick="setReviewRating(3)" class="p-1 hover:scale-110 transition cursor-pointer" title="3 ኮከብ"><svg id="review-star-3" class="w-7 h-7 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-                <button type="button" onclick="setReviewRating(4)" class="p-1 hover:scale-110 transition cursor-pointer" title="4 ኮከብ"><svg id="review-star-4" class="w-7 h-7 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-                <button type="button" onclick="setReviewRating(5)" class="p-1 hover:scale-110 transition cursor-pointer" title="5 ኮከብ"><svg id="review-star-5" class="w-7 h-7 text-amber-400 fill-amber-400 transition" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
-              </div>
-
-              <textarea id="website-review-comment" rows="2" placeholder="ተጨማሪ አስተያየት ካለዎት እዚህ ይጻፉ (አማራጭ)..." class="w-full text-xs p-2.5 rounded-xl border border-navy/20 focus:border-teal focus:ring-1 focus:ring-teal outline-none bg-white text-navy mb-2.5"></textarea>
-
-              <div class="flex items-center justify-end">
-                <button type="button" id="website-review-btn" onclick="submitWebsiteReview('${escapeHtml(ord.order_number)}')" class="px-4 py-2 bg-teal hover:bg-teal-dark text-white rounded-xl font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
-                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                  <span>ደረጃውን መዝግብ (Submit Rating)</span>
-                </button>
-              </div>
-              <div id="website-review-msg" class="hidden"></div>
-            </div>`;
-        }
-
         box.innerHTML = `
           <div class="bg-white rounded-2xl p-6 border border-navy/10 shadow-lg">
             ${postponeAlertHtml}
@@ -2891,7 +3118,6 @@
             ${teamInfoHtml}
             ${addressSummaryHtml}
             ${rescheduleBtnHtml}
-            ${reviewWidgetHtml}
           </div>`;
 
         if (window.lucide) lucide.createIcons();
@@ -2948,13 +3174,19 @@
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        if (msgEl) {
-          msgEl.className = 'mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center';
-          msgEl.innerHTML = 'እናመሰግናለን! የሰጡት ደረጃ እና አስተያየት በተሳካ ሁኔታ ተመዝግቧል።';
-          msgEl.classList.remove('hidden');
+        // Immediately transition UI to Normal Customer Portal!
+        if (window.currentTrackedOrderData) {
+          window.currentTrackedOrderData.customer_stage = 'normal_customer';
+          window.currentTrackedOrderData.has_review = true;
+          const box = document.getElementById('track-result');
+          if (box) {
+            box.innerHTML = renderNormalCustomerPortal(window.currentTrackedOrderData);
+            if (window.lucide) lucide.createIcons();
+            box.scrollIntoView({ behavior: 'smooth' });
+          }
+        } else {
+          trackOrder();
         }
-        if (commentEl) commentEl.disabled = true;
-        if (btnEl) btnEl.classList.add('hidden');
       } else {
         if (msgEl) {
           msgEl.className = 'mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center';
@@ -2980,19 +3212,32 @@
       }
     }
   }
+    } catch (e) {
+      if (msgEl) {
+        msgEl.className = 'mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center';
+        msgEl.innerText = 'የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ እንደገና ይሞክሩ።';
+        msgEl.classList.remove('hidden');
+      }
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5"></i><span>ደረጃውን መዝግብ (Submit Rating)</span>';
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+  }
 
-  // Auto-trigger review if review_order query parameter is present in URL
+  // Auto-trigger review if order or review_order query parameter is present in URL
   document.addEventListener('DOMContentLoaded', () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const reviewOrderParam = urlParams.get('review_order');
+      const reviewOrderParam = urlParams.get('order') || urlParams.get('review_order');
       if (reviewOrderParam) {
         const trackInput = document.getElementById('track-input');
         if (trackInput) {
           trackInput.value = reviewOrderParam;
           setTimeout(() => {
             trackOrder();
-            const trackSection = document.getElementById('track-order') || document.getElementById('track-result');
+            const trackSection = document.getElementById('track-order') || document.getElementById('track') || document.getElementById('track-result');
             if (trackSection) {
               trackSection.scrollIntoView({ behavior: 'smooth' });
             }

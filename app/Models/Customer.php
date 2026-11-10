@@ -26,6 +26,10 @@ class Customer extends Model
         'notes',
         'preferred_contact_method',
         'telegram_user_id',
+        'lifecycle_stage',
+        'status',
+        'total_orders',
+        'total_spent',
         'marketing_consent',
         'consent_timestamp',
     ];
@@ -76,12 +80,22 @@ class Customer extends Model
         return $digits;
     }
 
-    public static function syncToBroadcastList(Customer $customer, ?string $source = null, ?int $telegramChatId = null): ?TelegramUser
+    public static function syncToBroadcastList(Customer $customer, ?string $source = null, ?int $telegramChatId = null, ?string $overrideTag = null): ?TelegramUser
     {
         try {
             $cleanPhone = self::normalizePhone($customer->phone);
             $altPhone = self::normalizePhone($customer->alt_phone);
             $chatId = $telegramChatId ?: (!empty($customer->telegram_user_id) && is_numeric($customer->telegram_user_id) ? (int)$customer->telegram_user_id : null);
+
+            $stage = $customer->lifecycle_stage ?: 'normal_active';
+            $defaultTag = match ($stage) {
+                'normal_active' => 'Normal Active Customers',
+                'comment_waiting' => 'Comment Waiting',
+                'in_service' => 'In Service',
+                default => 'Normal Active Customers',
+            };
+
+            $assignedTag = $overrideTag ?: $defaultTag;
 
             $tgUser = null;
             if ($chatId) {
@@ -110,6 +124,15 @@ class Customer extends Model
                 $tgUser->is_active = true;
                 $tgUser->source = $determinedSource;
                 $tgUser->marketing_consent = true;
+                $tgUser->lifecycle_stage = $stage;
+
+                // Merge tags cleanly without duplicating
+                $existingTags = array_filter(array_map('trim', explode(',', $tgUser->tags ?? '')));
+                if (!in_array($assignedTag, $existingTags)) {
+                    $existingTags[] = $assignedTag;
+                }
+                $tgUser->tags = implode(', ', $existingTags);
+
                 $tgUser->last_interaction_at = now();
                 $tgUser->save();
                 return $tgUser;
@@ -123,6 +146,8 @@ class Customer extends Model
                 'is_active' => true,
                 'is_excluded' => false,
                 'source' => $determinedSource,
+                'lifecycle_stage' => $stage,
+                'tags' => $assignedTag,
                 'marketing_consent' => true,
                 'last_interaction_at' => now(),
             ]);

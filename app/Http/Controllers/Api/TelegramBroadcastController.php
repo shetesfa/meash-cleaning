@@ -27,6 +27,7 @@ class TelegramBroadcastController extends Controller
         $search = trim($request->query('search', ''));
         $sourceFilter = $request->query('source', '');
         $statusFilter = $request->query('status', ''); // 'all', 'excluded', 'non_excluded'
+        $tagFilter = trim($request->query('tag') ?: $request->query('tags') ?: '');
 
         // Auto-sync all Customers and System Users into TelegramUser table so contacts are 100% unified
         try {
@@ -52,6 +53,7 @@ class TelegramBroadcastController extends Controller
                             'is_active' => true,
                             'is_excluded' => false,
                             'source' => 'system_user',
+                            'tags' => 'Imported Contacts',
                             'marketing_consent' => true,
                         ]
                     );
@@ -69,12 +71,30 @@ class TelegramBroadcastController extends Controller
                   ->orWhere('last_name', 'like', "%{$search}%")
                   ->orWhere('username', 'like', "%{$search}%")
                   ->orWhere('phone_number', 'like', "%{$search}%")
-                  ->orWhere('telegram_id', 'like', "%{$search}%");
+                  ->orWhere('telegram_id', 'like', "%{$search}%")
+                  ->orWhere('tags', 'like', "%{$search}%");
             });
         }
 
         if (!empty($sourceFilter)) {
             $query->where('source', $sourceFilter);
+        }
+
+        if (!empty($tagFilter)) {
+            $query->where(function ($q) use ($tagFilter) {
+                $q->where('tags', 'like', "%{$tagFilter}%");
+                if ($tagFilter === 'Normal Active Customers') {
+                    $q->orWhere('lifecycle_stage', 'normal_active');
+                } elseif ($tagFilter === 'Comment Waiting') {
+                    $q->orWhere('lifecycle_stage', 'comment_waiting');
+                } elseif ($tagFilter === 'Imported Contacts') {
+                    $q->orWhere('source', 'imported')
+                      ->orWhere('source', 'bulk_import')
+                      ->orWhere('source', 'system_user');
+                } elseif ($tagFilter === 'Outdoor Sales Leads') {
+                    $q->orWhere('source', 'outdoor_sales');
+                }
+            });
         }
 
         if ($statusFilter === 'excluded') {
@@ -94,10 +114,21 @@ class TelegramBroadcastController extends Controller
                 $fullName = $u->username ? '@' . ltrim($u->username, '@') : ($u->phone_number ? 'ደንበኛ (' . $u->phone_number . ')' : 'ተጠቃሚ #' . $u->id);
             }
 
+            $tags = $u->tags;
+            if (empty($tags)) {
+                $tags = match ($u->lifecycle_stage) {
+                    'normal_active' => 'Normal Active Customers',
+                    'comment_waiting' => 'Comment Waiting',
+                    default => ($u->source === 'outdoor_sales' ? 'Outdoor Sales Leads' : ($u->source === 'imported' || $u->source === 'bulk_import' ? 'Imported Contacts' : 'Normal Active Customers')),
+                };
+            }
+
             return [
                 'id' => $u->id,
                 'db_id' => $u->id,
                 'source' => $u->source ?: 'imported',
+                'tags' => $tags,
+                'lifecycle_stage' => $u->lifecycle_stage ?: 'normal_active',
                 'telegram_id' => $u->telegram_id ? (string)$u->telegram_id : null,
                 'name' => $fullName,
                 'username' => $u->username ? '@' . ltrim($u->username, '@') : '',
@@ -114,12 +145,38 @@ class TelegramBroadcastController extends Controller
         $withPhoneCount = TelegramUser::whereNotNull('phone_number')->where('phone_number', '!=', '')->count();
         $withTelegramCount = TelegramUser::whereNotNull('telegram_id')->where('telegram_id', '!=', '')->count();
 
+        $normalActiveCount = TelegramUser::where(function($q) {
+            $q->where('tags', 'like', '%Normal Active Customers%')
+              ->orWhere('lifecycle_stage', 'normal_active');
+        })->count();
+
+        $commentWaitingCount = TelegramUser::where(function($q) {
+            $q->where('tags', 'like', '%Comment Waiting%')
+              ->orWhere('lifecycle_stage', 'comment_waiting');
+        })->count();
+
+        $importedCount = TelegramUser::where(function($q) {
+            $q->where('tags', 'like', '%Imported Contacts%')
+              ->orWhereIn('source', ['imported', 'bulk_import', 'system_user']);
+        })->count();
+
+        $outdoorCount = TelegramUser::where(function($q) {
+            $q->where('tags', 'like', '%Outdoor Sales Leads%')
+              ->orWhere('source', 'outdoor_sales');
+        })->count();
+
         return response()->json([
             'total_count' => $totalCount,
             'active_count' => $activeNonExcluded,
             'excluded_count' => $excludedCount,
             'with_phone_count' => $withPhoneCount,
             'with_telegram_count' => $withTelegramCount,
+            'tag_counts' => [
+                'normal_active' => $normalActiveCount,
+                'comment_waiting' => $commentWaitingCount,
+                'imported_contacts' => $importedCount,
+                'outdoor_sales' => $outdoorCount,
+            ],
             'users' => $formatted,
             'bot_username' => config('services.telegram.bot_username') ?: env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'),
         ]);
@@ -763,56 +820,96 @@ class TelegramBroadcastController extends Controller
     }
 
     /**
-     * Dispatch 1-Click Telegram Broadcast to non-excluded users
+     * Dispatch / Send Broadcast with chat_id validation and phone-only SMS routing/skipping
      */
-    public function dispatchBroadcast(Request $request): JsonResponse
+    public function sendBroadcast(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'message' => 'required|string|max:4000',
             'excluded_telegram_ids' => 'nullable|array',
             'excluded_telegram_ids.*' => 'nullable',
+            'recipient_ids' => 'nullable|array',
+            'tag' => 'nullable|string',
+            'route_phone_to_sms' => 'nullable|boolean',
         ]);
 
         $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
-        if (empty($botToken)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'የቴሌግራም ቦት ቶከን (TELEGRAM_BOT_TOKEN) በሲስተሙ ውስጥ አልተዋቀረም!',
-            ], 422);
-        }
 
         $explicitExcluded = array_map('strval', $validated['excluded_telegram_ids'] ?? []);
+        $recipientIds = $validated['recipient_ids'] ?? [];
+        $tag = $validated['tag'] ?? null;
+        $routePhoneToSms = (bool)($request->input('route_phone_to_sms', true));
 
-        // Query non-excluded users who have a valid numeric telegram_id
-        $tgUsers = TelegramUser::where('is_excluded', false)
-            ->whereNotNull('telegram_id')
-            ->where('telegram_id', '!=', '')
-            ->get();
+        // Query candidate recipients
+        $query = TelegramUser::where('is_excluded', false);
 
-        $targetChatIds = [];
-        foreach ($tgUsers as $u) {
-            $chatId = (string)$u->telegram_id;
-            if (!empty($chatId) && !in_array($chatId, $explicitExcluded)) {
-                $targetChatIds[$chatId] = [
-                    'name' => $u->name,
-                    'phone' => $u->phone_number,
-                ];
-            }
+        if (!empty($recipientIds)) {
+            $query->whereIn('id', $recipientIds);
         }
 
-        $totalTargets = count($targetChatIds);
+        if (!empty($tag)) {
+            $query->where(function ($q) use ($tag) {
+                $q->where('tags', 'like', "%{$tag}%");
+                if ($tag === 'Normal Active Customers') {
+                    $q->orWhere('lifecycle_stage', 'normal_active');
+                } elseif ($tag === 'Comment Waiting') {
+                    $q->orWhere('lifecycle_stage', 'comment_waiting');
+                } elseif ($tag === 'Imported Contacts') {
+                    $q->orWhereIn('source', ['imported', 'bulk_import', 'system_user']);
+                } elseif ($tag === 'Outdoor Sales Leads') {
+                    $q->orWhere('source', 'outdoor_sales');
+                }
+            });
+        }
+
+        $allCandidates = $query->get();
+
+        $telegramTargets = [];
+        $phoneOnlyTargets = [];
+
+        foreach ($allCandidates as $u) {
+            $chatId = $u->telegram_id ? (string)$u->telegram_id : null;
+            $phone = $u->phone_number;
+
+            // Validate telegram_chat_id: must be numeric and valid Telegram ID (typically > 10000)
+            $isValidTelegram = !empty($chatId) && is_numeric($chatId) && (int)$chatId > 10000 && !in_array($chatId, $explicitExcluded);
+
+            if ($isValidTelegram) {
+                $telegramTargets[$chatId] = [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'phone' => $phone,
+                ];
+            } elseif (!empty($phone)) {
+                // Phone-only contact without valid telegram_id
+                $cleanPhone = Customer::normalizePhone($phone);
+                if ($cleanPhone) {
+                    $phoneOnlyTargets[] = [
+                        'id' => $u->id,
+                        'name' => $u->name,
+                        'phone' => $cleanPhone,
+                    ];
+                }
+            }
+            // Contacts without telegram_id and without phone are skipped automatically without error
+        }
+
+        $totalTelegram = count($telegramTargets);
+        $totalPhoneOnly = count($phoneOnlyTargets);
+        $totalTargets = $totalTelegram + ($routePhoneToSms ? $totalPhoneOnly : 0);
+
         if ($totalTargets === 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'ምንም የሚላክለት የቴሌግራም ደንበኛ አልተገኘም (ወይም ሁሉም ተገልለዋል)!',
+                'message' => 'ምንም የሚላክለት የቴሌግራም ወይም የስልክ ደንበኛ አልተገኘም (ወይም ሁሉም ተገልለዋል)!',
             ], 422);
         }
 
         $campaign = Campaign::create([
             'title' => $validated['title'],
-            'channel' => 'telegram',
-            'audience_filter' => 'custom_broadcast_selection',
+            'channel' => ($totalTelegram > 0 && $totalPhoneOnly > 0) ? 'omni_broadcast' : ($totalTelegram > 0 ? 'telegram' : 'sms'),
+            'audience_filter' => $tag ?: 'custom_broadcast_selection',
             'message_text' => $validated['message'],
             'status' => 'sending',
             'total_targets' => $totalTargets,
@@ -827,34 +924,59 @@ class TelegramBroadcastController extends Controller
         $formattedMessage = "<b>" . htmlspecialchars($title) . "</b>\n\n" . htmlspecialchars($body) . "\n\n—\n<b>ሜሽ የፅዳት አገልግሎት (Meash Cleaning)</b>\n 0970075509 / 0998142190";
         $userId = $request->user()?->id;
 
-        dispatch(function () use ($targetChatIds, $botToken, $formattedMessage, $campaign, $title, $totalTargets, $userId) {
+        dispatch(function () use ($telegramTargets, $phoneOnlyTargets, $routePhoneToSms, $botToken, $formattedMessage, $body, $campaign, $title, $totalTargets, $userId) {
             $sentSuccess = 0;
             $failedCount = 0;
 
-            $chunks = array_chunk($targetChatIds, 20, true);
-            foreach ($chunks as $chunk) {
-                foreach ($chunk as $chatId => $info) {
-                    try {
-                        $response = Http::timeout(6)->connectTimeout(2)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                            'chat_id' => $chatId,
-                            'text' => $formattedMessage,
-                            'parse_mode' => 'HTML',
-                            'disable_web_page_preview' => false,
-                        ]);
+            // 1. Process Telegram targets with validated chat IDs
+            if (!empty($botToken) && !empty($telegramTargets)) {
+                $chunks = array_chunk($telegramTargets, 20, true);
+                foreach ($chunks as $chunk) {
+                    foreach ($chunk as $chatId => $info) {
+                        // Double check chat_id validation before calling Telegram API
+                        if (empty($chatId) || !is_numeric($chatId) || (int)$chatId <= 10000) {
+                            continue; // Skip invalid IDs without throwing errors
+                        }
 
-                        if ($response->successful()) {
+                        try {
+                            $response = Http::timeout(6)->connectTimeout(2)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                                'chat_id' => (int)$chatId,
+                                'text' => $formattedMessage,
+                                'parse_mode' => 'HTML',
+                                'disable_web_page_preview' => false,
+                            ]);
+
+                            if ($response->successful()) {
+                                $sentSuccess++;
+                            } else {
+                                $failedCount++;
+                                $resJson = $response->json();
+                                if (isset($resJson['parameters']['retry_after'])) {
+                                    sleep(min((int)$resJson['parameters']['retry_after'], 5));
+                                }
+                            }
+                        } catch (\Throwable $e) {
+                            $failedCount++;
+                        }
+                        usleep(50000);
+                    }
+                }
+            }
+
+            // 2. Process Phone-only targets (routed to SMS safely without throwing errors)
+            if ($routePhoneToSms && !empty($phoneOnlyTargets)) {
+                foreach ($phoneOnlyTargets as $pTarget) {
+                    try {
+                        $smsResult = SmsService::sendDirectSms($pTarget['phone'], $body);
+                        if (!empty($smsResult['success'])) {
                             $sentSuccess++;
                         } else {
                             $failedCount++;
-                            $resJson = $response->json();
-                            if (isset($resJson['parameters']['retry_after'])) {
-                                sleep(min((int)$resJson['parameters']['retry_after'], 5));
-                            }
                         }
                     } catch (\Throwable $e) {
-                        $failedCount++;
+                        $failedCount++; // Continue without failing the entire queue
                     }
-                    usleep(50000);
+                    usleep(100000); // 100ms gap
                 }
             }
 
@@ -865,22 +987,40 @@ class TelegramBroadcastController extends Controller
             ]);
 
             if ($userId) {
-                AuditLog::logAction($userId, 'telegram_broadcast_completed', Campaign::class, $campaign->id, null, [
+                AuditLog::logAction($userId, 'broadcast_completed', Campaign::class, $campaign->id, null, [
                     'title' => $title,
                     'total_targets' => $totalTargets,
+                    'telegram_targets' => count($telegramTargets),
+                    'phone_sms_targets' => count($phoneOnlyTargets),
                     'sent_success' => $sentSuccess,
                     'failed_count' => $failedCount,
                 ]);
             }
         })->afterResponse();
 
+        $msgParts = [];
+        if ($totalTelegram > 0) $msgParts[] = "{$totalTelegram} በቴሌግራም";
+        if ($routePhoneToSms && $totalPhoneOnly > 0) $msgParts[] = "{$totalPhoneOnly} በ SMS";
+
+        $destStr = implode(' እና ', $msgParts);
+
         return response()->json([
             'success' => true,
-            'message' => "የቴሌግራም መልእክት ስርጭት ለ {$totalTargets} ደንበኞች በጀርባ (background) በመላክ ላይ ነው!",
+            'message' => "መልእክቱ ለ {$destStr} በጀርባ (background) በመላክ ላይ ነው!",
             'campaign_id' => $campaign->id,
+            'telegram_targets' => $totalTelegram,
+            'sms_targets' => $routePhoneToSms ? $totalPhoneOnly : 0,
             'total_targets' => $totalTargets,
             'status' => 'processing',
         ]);
+    }
+
+    /**
+     * Alias for sendBroadcast to maintain full backwards compatibility
+     */
+    public function dispatchBroadcast(Request $request): JsonResponse
+    {
+        return $this->sendBroadcast($request);
     }
 
     // =========================================================================

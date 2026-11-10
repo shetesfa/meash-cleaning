@@ -76,7 +76,7 @@ class SmsService
 
         $formattedPhone = self::normalizeEthiopianPhone($phone);
         $baseUrl = rtrim(config('app.url') ?: env('APP_URL', url('/')), '/');
-        $reviewUrl = "{$baseUrl}/?review_order={$order->order_number}#track-order";
+        $reviewUrl = "{$baseUrl}/?order={$order->order_number}&review=1#track-order";
         $msg = "ውድ {$name}፣ የፅዳት አገልግሎቱ ተጠናቋል:: ስለመረጡን እናመሰግናለን! እባክዎ ከ1-5 ኮከብ ደረጃ ይስጡን፦ {$reviewUrl} | ሪሴፕሽን: 0970075509";
 
         return self::sendDirectSms($formattedPhone, $msg, [
@@ -99,7 +99,7 @@ class SmsService
 
         $formattedPhone = self::normalizeEthiopianPhone($phone);
         $baseUrl = rtrim(config('app.url') ?: env('APP_URL', url('/')), '/');
-        $reviewUrl = "{$baseUrl}/?review_order={$order->order_number}#track-order";
+        $reviewUrl = "{$baseUrl}/?order={$order->order_number}&review=1#track-order";
 
         $msg = "ውድ {$name}፣ የሜአሽ ጽዳት አገልግሎታችን እንዴት ነበር? እባክዎ ከ1 እስከ 5 ኮከብ በመስጠት ደረጃ ይስጡን፦ {$reviewUrl} | ሪሴፕሽን: 0970075509";
 

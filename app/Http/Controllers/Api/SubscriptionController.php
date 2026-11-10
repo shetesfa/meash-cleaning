@@ -110,6 +110,15 @@ class SubscriptionController extends Controller
             'notes' => $validated['notes'] ?? null,
         ]);
 
+        // Promote and sync customer to Normal Active Customers on subscription activation
+        $subCustomer = Customer::find($validated['customer_id']);
+        if ($subCustomer) {
+            if ($subCustomer->lifecycle_stage !== 'normal_active') {
+                $subCustomer->update(['lifecycle_stage' => 'normal_active', 'status' => 'active']);
+            }
+            Customer::syncToBroadcastList($subCustomer, 'subscription_customer', null, 'Normal Active Customers');
+        }
+
         AuditLog::logAction(
             $request->user()?->id,
             'subscription_created',
@@ -138,6 +147,16 @@ class SubscriptionController extends Controller
             $subscription->notes = ($subscription->notes ? $subscription->notes . "\n" : '') . $validated['notes'];
         }
         $subscription->save();
+
+        if ($subscription->status === 'active') {
+            $subCustomer = Customer::find($subscription->customer_id);
+            if ($subCustomer) {
+                if ($subCustomer->lifecycle_stage !== 'normal_active') {
+                    $subCustomer->update(['lifecycle_stage' => 'normal_active', 'status' => 'active']);
+                }
+                Customer::syncToBroadcastList($subCustomer, 'subscription_customer', null, 'Normal Active Customers');
+            }
+        }
 
         AuditLog::logAction(
             $request->user()?->id,

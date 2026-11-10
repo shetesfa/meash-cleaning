@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Customer;
 use App\Services\EthiopianCalendarService;
+use App\Services\OrderLifecycleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,7 +20,7 @@ class CustomerController extends Controller
             return response()->json(['message' => 'Unauthorized. Cleaners cannot access customer records.'], 403);
         }
 
-        $query = Customer::query()->withCount('orders');
+        $query = Customer::query()->withCount('orders')->with(['feedbacks' => fn($q) => $q->latest()->limit(1)]);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -35,9 +36,50 @@ class CustomerController extends Controller
             $query->where('customer_type', $type);
         }
 
+        // Filter tabs: normal_active (reviewed), comment_waiting, in_service, new
+        $stage = $request->input('lifecycle_stage') ?: $request->input('stage');
+        if ($stage && $stage !== 'all') {
+            if ($stage === 'normal_active' || $stage === 'reviewed') {
+                $query->where(function ($q) {
+                    $q->where('lifecycle_stage', 'normal_active')
+                      ->orWhereHas('feedbacks');
+                });
+            } else {
+                $query->where('lifecycle_stage', $stage);
+            }
+        }
+
         $customers = $query->latest()->paginate($request->input('per_page', 20));
 
-        return response()->json($customers);
+        // Format customer fields for UI display
+        $customers->getCollection()->transform(function ($cust) {
+            $latestFb = $cust->feedbacks->first();
+            $cust->latest_rating = $latestFb ? (int)$latestFb->rating : null;
+            $cust->latest_comment = $latestFb ? $latestFb->comment : null;
+            $cust->latest_feedback_date = $latestFb ? $latestFb->created_at->toIso8601String() : null;
+            $cust->total_orders = $cust->total_orders ?: $cust->orders_count;
+            if ((float)$cust->total_spent <= 0) {
+                $cust->total_spent = (float)\App\Models\Payment::where('customer_id', $cust->id)->sum('amount');
+            }
+            return $cust;
+        });
+
+        $stageCounts = [
+            'all' => Customer::count(),
+            'normal_active' => Customer::where('lifecycle_stage', 'normal_active')->orWhereHas('feedbacks')->count(),
+            'comment_waiting' => Customer::where('lifecycle_stage', 'comment_waiting')->count(),
+            'in_service' => Customer::where('lifecycle_stage', 'in_service')->count(),
+        ];
+
+        return response()->json([
+            'customers' => $customers,
+            'stage_counts' => $stageCounts,
+            // Maintain backwards compatibility if frontend expects raw paginator
+            'data' => $customers->items(),
+            'current_page' => $customers->currentPage(),
+            'last_page' => $customers->lastPage(),
+            'total' => $customers->total(),
+        ]);
     }
 
     public function show(Request $request, Customer $customer): JsonResponse
@@ -153,6 +195,10 @@ class CustomerController extends Controller
             'house_no' => 'nullable|string|max:32',
             'landmark' => 'nullable|string',
             'customer_type' => 'nullable|string|in:individual,corporate',
+            'lifecycle_stage' => 'nullable|string|in:new,in_service,comment_waiting,normal_active',
+            'status' => 'nullable|string|in:active,inactive',
+            'total_orders' => 'nullable|integer|min:0',
+            'total_spent' => 'nullable|numeric|min:0',
             'preferred_contact_method' => 'nullable|string',
             'telegram_user_id' => 'nullable|string',
             'marketing_consent' => 'nullable|boolean',
@@ -165,6 +211,7 @@ class CustomerController extends Controller
         }
 
         $customer = Customer::create($validated);
+        OrderLifecycleService::syncCustomerToTelegramUsers($customer);
 
         AuditLog::logAction(
             $request->user()?->id,
@@ -199,6 +246,10 @@ class CustomerController extends Controller
             'house_no' => 'nullable|string|max:32',
             'landmark' => 'nullable|string',
             'customer_type' => 'nullable|string|in:individual,corporate',
+            'lifecycle_stage' => 'nullable|string|in:new,in_service,comment_waiting,normal_active',
+            'status' => 'nullable|string|in:active,inactive',
+            'total_orders' => 'nullable|integer|min:0',
+            'total_spent' => 'nullable|numeric|min:0',
             'preferred_contact_method' => 'nullable|string',
             'telegram_user_id' => 'nullable|string',
             'marketing_consent' => 'nullable|boolean',
@@ -211,6 +262,7 @@ class CustomerController extends Controller
         }
 
         $customer->update($validated);
+        OrderLifecycleService::syncCustomerToTelegramUsers($customer);
 
         AuditLog::logAction(
             $request->user()?->id,

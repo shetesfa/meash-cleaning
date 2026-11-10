@@ -137,16 +137,15 @@
                     <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">የተጠቃሚ ስም ወይም ስልክ (Username or Phone)</label>
                     <div class="relative">
                         <i data-lucide="user" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="app-login-input" required placeholder="የተጠቃሚ ስም ወይም ስልክ ያስገቡ (ምሳሌ፦ amha)" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="text" id="app-login-input" required placeholder="የተጠቃሚ ስም ወይም ስልክ ያስገቡ" autocomplete="username" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1">የስራ አስኪያጅ መለያ፦ <code class="text-cyan-400 font-bold">amha</code></p>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">የይለፍ ቃል (Password)</label>
                     <div class="relative">
                         <i data-lucide="lock" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="password" id="app-password-input" required placeholder="••••••••••••" class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
+                        <input type="password" id="app-password-input" required placeholder="••••••••••••" autocomplete="current-password" class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:border-cyan-500">
                         <button type="button" onclick="togglePasswordVisibility('app-password-input')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
                             <i data-lucide="eye" class="w-4 h-4"></i>
                         </button>
@@ -1324,9 +1323,9 @@
                                 <div>
                                     <h3 class="text-base font-bold text-white flex items-center gap-2">
                                         <i data-lucide="layers" class="w-4 h-4 text-cyan-400"></i>
-                                        <span>የትዕዛዝ ሰርጦች አፈፃፀም (Channel Source Performance)</span>
+                                        <span>የትዕዛዝ መነሻ መንገዶች አፈፃፀም (Order Sources)</span>
                                     </h3>
-                                    <p class="text-xs text-slate-400">ከድረ-ገጽ፣ ቴሌግራም ሚኒአፕ፣ ቦት እና ስልክ የመጡ ትዕዛዞች እና የገቢ ክፍፍል።</p>
+                                    <p class="text-xs text-slate-400">ከድረ-ገጽ፣ ቴሌግራም ሚኒአፕ፣ ቦት፣ ስልክ ጥሪ እና ሌሎች የመጡ ትዕዛዞች እና የገቢ ክፍፍል።</p>
                                 </div>
                                 <span class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
                                     የቀጥታ ስታቲስቲክስ
@@ -2830,7 +2829,7 @@
                                 </div>
                                 <div>
                                     <h3 class="text-base font-bold text-white">ለደንበኛ SMS መልእክት ማዘጋጃ</h3>
-                                    <p class="text-[11px] text-slate-400">ደረሰኝ ቆራጩ መልእክቱን ሲያዘጋጅ ባለቤቱ በስልካቸው ስካን አድርገው ይልካሉ</p>
+                                    <p class="text-[11px] text-slate-400">የተዘጋጀውን መልእክት በስልክዎ በቀላሉ ስካን አድርገው ለደንበኛው በ SMS ይላኩ</p>
                                 </div>
                             </div>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
@@ -2879,14 +2878,14 @@
                                 </div>
                                 <div class="space-y-1.5 flex-1">
                                     <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
-                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">ለ iPhone እና Android</span>
-                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1 animate-pulse">
+                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">ለማንኛውም ስማርት ስልክ</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                            <span>ባለቤቱ ስካን እስኪያደርግ ዝግጁ ሆኖ ይጠብቃል</span>
+                                            <span>ስካን ለማድረግ ዝግጁ</span>
                                         </span>
                                     </div>
                                     <p class="text-[11px] text-slate-300">
-                                        ደረሰኝ ቆራጩ መልእክቱን እዚህ አዘጋጅቶ ያቆየዋል፤ የድርጅቱ ባለቤት በ iPhone ስልካቸው ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ ወዲያውኑ መልእክቱን በ Messages አፕ አዘጋጅቶ ያቀርብላቸዋል!
+                                        በስልክዎ ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ መልእክቱ በቀጥታ በስልክዎ SMS መላኪያ አፕ ተዘጋጅቶ ይከፈታል::
                                     </p>
                                     <p class="text-[10px] text-slate-400 font-mono">
                                         ተቀባይ ደንበኛ ስልክ፦ <span id="direct-sms-target-display" class="text-cyan-400 font-bold">+251970075509</span>
@@ -3021,40 +3020,30 @@
         }
 
         // ==========================================
-        // 6. CUSTOMERS MODULE (With Timeline)
+        // 6. CUSTOMERS MODULE (With CRM Filter Tabs, Ratings & 1-Click Message)
         // ==========================================
+        window._currentCustomerStage = window._currentCustomerStage || 'all';
+
+        async function switchCustomerStageTab(stage) {
+            window._currentCustomerStage = stage;
+            const container = document.getElementById('module-viewport');
+            if (container) {
+                renderCustomersModule(container);
+            }
+        }
+
         async function renderCustomersModule(container) {
             try {
+                const stage = window._currentCustomerStage || 'all';
                 let customers = [];
-                if (navigator.onLine) {
-                    try {
-                        const res = await apiFetch('/api/customers');
-                        if (res.ok) {
-                            const data = await res.json();
-                            customers = data.data || [];
-                            if (window.meashOffline && typeof window.meashOffline.cacheItems === 'function') {
-                                window.meashOffline.cacheItems('customers', customers).catch(() => {});
-                            }
-                            try { localStorage.setItem('meash_cached_customers_list', JSON.stringify(customers)); } catch (_) {}
-                        }
-                    } catch (netErr) {
-                        console.warn('Customers fetch failed, falling back to cache:', netErr);
-                    }
-                }
+                let stageCounts = { all: 0, normal_active: 0, comment_waiting: 0, in_service: 0 };
 
-                if (customers.length === 0) {
-                    if (window.meashOffline && typeof window.meashOffline.getAllItems === 'function') {
-                        try {
-                            const cached = await window.meashOffline.getAllItems('customers');
-                            if (cached && cached.length > 0) customers = cached;
-                        } catch (_) {}
-                    }
-                    if (customers.length === 0) {
-                        const localCached = localStorage.getItem('meash_cached_customers_list');
-                        if (localCached) {
-                            try { customers = JSON.parse(localCached); } catch (_) {}
-                        }
-                    }
+                const url = stage === 'all' ? '/api/customers?per_page=50' : `/api/customers?lifecycle_stage=${stage}&per_page=50`;
+                const res = await apiFetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    customers = data.data || (data.customers ? (data.customers.data || data.customers) : []);
+                    stageCounts = data.stage_counts || stageCounts;
                 }
 
                 container.innerHTML = `
@@ -3062,34 +3051,95 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                                 <h2 class="text-2xl font-black text-white">የደንበኞች መረጃ ቋት (Customer CRM)</h2>
-                                <p class="text-xs text-slate-400 mt-1">የደንበኞች ሙሉ መረጃ፣ የቀድሞ የአገልግሎት ታሪክ፣ ክፍያዎች እና ምርጫዎች።</p>
+                                <p class="text-xs text-slate-400 mt-1">የደንበኞች የህይወት ኡደት፣ የኮከብ ደረጃ፣ የአስተያየት ጽሁፍ፣ እና የተጠናቀቀ አገልግሎት ታሪክ።</p>
                             </div>
+                            <button onclick="openRegisterCustomerModal()" class="px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                <span>+ አዲስ ደንበኛ መዝግብ</span>
+                            </button>
                         </div>
 
+                        <!-- Filter Tabs: All, Normal Active Customers (Reviewed), Comment Waiting, In Service -->
+                        <div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
+                            <button onclick="switchCustomerStageTab('all')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${stage === 'all' ? 'bg-cyan-500 text-slate-950 font-black shadow-lg shadow-cyan-500/20' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                                ሁሉም ደንበኞች (${stageCounts.all || customers.length})
+                            </button>
+                            <button onclick="switchCustomerStageTab('normal_active')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${stage === 'normal_active' ? 'bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/20' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                                ✓ Normal Active Customers (Reviewed) (${stageCounts.normal_active || 0})
+                            </button>
+                            <button onclick="switchCustomerStageTab('comment_waiting')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${stage === 'comment_waiting' ? 'bg-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/20' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                                ⌛ Comment Waiting (${stageCounts.comment_waiting || 0})
+                            </button>
+                            <button onclick="switchCustomerStageTab('in_service')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${stage === 'in_service' ? 'bg-blue-500 text-slate-950 font-black shadow-lg shadow-blue-500/20' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                                🛠 In Service (${stageCounts.in_service || 0})
+                            </button>
+                        </div>
+
+                        <!-- Customer Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            ${customers.map(c => `
-                                <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-3">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">${escapeHtml(c.customer_code)}</span>
-                                            <h3 class="text-base font-bold text-white">${escapeHtml(c.full_name)}</h3>
-                                        </div>
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-slate-800 text-slate-300">${escapeHtml(c.customer_type)}</span>
-                                    </div>
-                  <p class="text-xs text-slate-400"> ${escapeHtml(c.phone)} | ${escapeHtml(c.subcity || 'Addis Ababa')}</p>
-                                    <div class="pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
-                                        <button data-phone="${escapeHtml(c.phone)}" data-name="${escapeHtml(c.full_name)}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30 flex items-center gap-1">
-                                            <i data-lucide="send" class="w-3 h-3"></i>
-                      <span> SMS</span>
-                                        </button>
-                                        <button onclick="openCustomerProfileModal(${c.id})" class="text-cyan-400 font-bold hover:underline">የአገልግሎት ታሪክ እይ &rarr;</button>
-                                    </div>
+                            ${customers.length === 0 ? `
+                                <div class="col-span-full py-12 text-center text-slate-500 text-xs">
+                                    በዚህ የማጣሪያ ክፍል የተገኘ ደንበኛ የለም።
                                 </div>
-                            `).join('')}
+                            ` : customers.map(c => {
+                                const stageBadge = c.lifecycle_stage === 'normal_active'
+                                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">✓ Normal Active</span>'
+                                    : (c.lifecycle_stage === 'comment_waiting'
+                                        ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">⌛ Comment Waiting</span>'
+                                        : (c.lifecycle_stage === 'in_service'
+                                            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-500/20 text-blue-400 border border-blue-500/30">🛠 In Service</span>'
+                                            : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400">አዲስ (New)</span>'));
+
+                                const ratingDisplay = c.latest_rating 
+                                    ? `<div class="flex items-center gap-1 text-amber-400 text-xs font-bold">${'★'.repeat(c.latest_rating)}${'☆'.repeat(5 - c.latest_rating)} <span class="text-white text-[11px] font-bold ml-1">${c.latest_rating}.0</span></div>`
+                                    : '<span class="text-slate-500 text-[10px] italic">ደረጃ አልተሰጠም</span>';
+
+                                return `
+                                    <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all space-y-3 flex flex-col justify-between">
+                                        <div class="space-y-2.5">
+                                            <div class="flex justify-between items-start gap-2">
+                                                <div>
+                                                    <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">${escapeHtml(c.customer_code || 'CUST')}</span>
+                                                    <h3 class="text-base font-black text-white">${escapeHtml(c.full_name)}</h3>
+                                                </div>
+                                                ${stageBadge}
+                                            </div>
+
+                                            <p class="text-xs text-slate-300 font-semibold">${escapeHtml(c.phone)} ${c.subcity ? '| ' + escapeHtml(c.subcity) : ''}</p>
+
+                                            <!-- Rating & Comment Section -->
+                                            <div class="p-2.5 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-1.5">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-[10px] text-slate-400 font-bold">የቅርብ ጊዜ ደረጃ:</span>
+                                                    ${ratingDisplay}
+                                                </div>
+                                                ${c.latest_comment ? `
+                                                    <p class="text-[11px] text-slate-300 italic line-clamp-2 pt-1 border-t border-slate-700/50">“${escapeHtml(c.latest_comment)}”</p>
+                                                ` : '<p class="text-[10px] text-slate-500 italic">አስተያየት አልተመዘገበም</p>'}
+                                            </div>
+
+                                            <!-- Total Spend & Orders Stats -->
+                                            <div class="flex items-center justify-between text-xs px-1">
+                                                <span class="text-slate-400 font-semibold">አጠቃላይ ወጪ:</span>
+                                                <span class="font-mono font-black text-emerald-400 text-sm">${Number(c.total_spent || 0).toLocaleString()} ETB <span class="text-[10px] text-slate-400 font-normal">(${c.total_orders || 0} ትዕዛዝ)</span></span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Actions: 1-Click Send Message & View Profile -->
+                                        <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                                            <button data-phone="${escapeHtml(c.phone)}" data-name="${escapeHtml(c.full_name)}" data-tg="${escapeHtml(c.telegram_user_id || '')}" onclick="openDirectCustomerMessageModal(this.dataset.phone, this.dataset.name, this.dataset.tg)" class="flex-1 px-3 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                                                <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                                                <span>💬 Send Message</span>
+                                            </button>
+                                            <button onclick="openCustomerProfileModal(${c.id})" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-xs rounded-xl border border-slate-700 transition-colors">ታሪክ &rarr;</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
-                lucide.createIcons();
+                if (window.lucide) lucide.createIcons();
             } catch (e) {
                 container.innerHTML = `<div class="p-6 text-red-400">Failed to load customers: ${e.message}</div>`;
             }
@@ -3395,11 +3445,10 @@
 
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-400 mb-1">የትዕዛዝ ምንጭ (Channel Source) *</label>
+                                    <label class="block text-xs font-semibold text-slate-400 mb-1">የትዕዛዝ መነሻ መንገድ (Order Source) *</label>
                                     <select id="mo-source" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer font-bold">
                                         <option value="phone">ስልክ ጥሪ (Phone Call)</option>
                                         <option value="walk_in">በአካል የመጣ (Walk-in)</option>
-                                        <option value="internal">ውስጣዊ / ሪሴፕሽን (Internal)</option>
                                         <option value="website">ድረ-ገጽ (Website)</option>
                                         <option value="telegram_miniapp">ቴሌግራም ሚኒአፕ (MiniApp)</option>
                                         <option value="telegram_bot">ቴሌግራም ቦት (Telegram Bot)</option>
@@ -3994,11 +4043,12 @@
         }
         window.submitCleanerPayment = submitCleanerPayment;
 
-        function openApprovePaymentModal(orderId, orderNumber, totalAmount, currentMethod, currentRef) {
+        function openApprovePaymentModal(orderId, orderNumber, totalAmount, currentMethod, currentRef, paymentId = null) {
             const container = document.getElementById('generic-modal-container');
             const total = parseFloat(totalAmount || 0);
             const method = currentMethod || 'cash';
             const ref = currentRef || '';
+            const pIdArg = (paymentId && parseInt(paymentId) > 0) ? parseInt(paymentId) : 'null';
 
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
@@ -4011,7 +4061,7 @@
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
 
-                        <form onsubmit="submitApprovePayment(event, ${orderId})" class="space-y-3.5 text-xs">
+                        <form onsubmit="submitApprovePayment(event, ${orderId}, ${pIdArg})" class="space-y-3.5 text-xs">
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">የተከፈለበት መንገድ (Payment Method) *</label>
                                 <select id="appr-pay-method" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer focus:outline-none focus:border-cyan-500">
@@ -4051,7 +4101,7 @@
         }
         window.openApprovePaymentModal = openApprovePaymentModal;
 
-        async function submitApprovePayment(e, orderId) {
+        async function submitApprovePayment(e, orderId, paymentId = null) {
             e.preventDefault();
             const btn = document.getElementById('appr-btn');
             if (btn) {
@@ -4065,7 +4115,11 @@
             const notes = document.getElementById('appr-pay-notes').value;
 
             try {
-                const res = await apiFetch(`/api/orders/${orderId}/approve-payment`, {
+                const endpoint = (paymentId && paymentId !== 'null' && parseInt(paymentId) > 0)
+                    ? `/api/orders/${orderId}/payments/${paymentId}/verify`
+                    : `/api/orders/${orderId}/approve-payment`;
+
+                const res = await apiFetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -5065,26 +5119,40 @@
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <!-- Follow-ups Column -->
-                            <div class="p-5 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                                        <i data-lucide="phone-call" class="w-4 h-4 text-blue-400"></i>
-                                        የክትትል ጥሪዎች (${followups.length})
+                            <!-- Comment Waiting (Paid Orders) Column -->
+                            <div class="p-5 rounded-3xl bg-slate-900 border border-amber-500/30 space-y-4">
+                                <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                                    <h3 class="text-sm font-black text-white flex items-center gap-2">
+                                        <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i>
+                                        <span>Comment Waiting (Paid Orders) (${followups.length})</span>
                                     </h3>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">ክፍት አስተያየቶች</span>
                                 </div>
                                 <div class="space-y-3">
-                                    ${followups.length === 0 ? '<p class="text-xs text-slate-500 text-center py-6">ምንም የሚጠበቅ የክትትል ጥሪ የለም!</p>' : ''}
+                                    ${followups.length === 0 ? '<p class="text-xs text-slate-500 text-center py-6">ምንም የሚጠበቅ የክትትል ጥሪ የለም! ሁሉም ደንበኞች አስተያየታቸውን ሰጥተዋል።</p>' : ''}
                                     ${followups.map(f => `
-                                        <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between gap-2">
-                                            <div>
-                                                <h4 class="text-xs font-bold text-white">${escapeHtml(f.customer?.full_name || '')}</h4>
-                        <p class="text-[11px] text-slate-400"> ${escapeHtml(f.customer?.phone || '')}</p>
-                                                <span class="text-[9px] px-2 py-0.5 rounded-full uppercase font-bold ${f.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}">${escapeHtml(f.status || '')}</span>
+                                        <div class="p-4 rounded-2xl bg-slate-800/90 border border-slate-700/80 hover:border-amber-500/40 transition-all space-y-2.5">
+                                            <div class="flex items-start justify-between gap-2">
+                                                <div>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <h4 class="text-xs font-black text-white">${escapeHtml(f.customer_name || f.customer?.full_name || '')}</h4>
+                                                        <span class="text-[9px] px-1.5 py-0.2 rounded-full font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">PAID</span>
+                                                    </div>
+                                                    <p class="text-[11px] text-slate-300 font-semibold mt-0.5">${escapeHtml(f.customer_phone || f.customer?.phone || '')}</p>
+                                                    <p class="text-[10px] text-slate-400 mt-0.5">Order #${escapeHtml(f.order_number || f.order?.order_number || '')} | ${Number(f.order_total || f.order?.total || 0).toLocaleString()} ETB</p>
+                                                </div>
+                                                <span class="text-[10px] text-slate-400 font-bold bg-slate-900/80 px-2 py-0.5 rounded-lg border border-slate-700">${escapeHtml(f.eth_due_date || f.due_date || 'ዛሬ')}</span>
                                             </div>
-                                            <div class="flex items-center gap-1 shrink-0">
-                        <button data-phone="${escapeHtml(f.customer?.phone || '')}" data-name="${escapeHtml(f.customer?.full_name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold"> SMS</button>
-                                                <button data-name="${escapeHtml(f.customer?.full_name || '')}" data-phone="${escapeHtml(f.customer?.phone || '')}" onclick="openFollowupCallModal(${f.id}, this.dataset.name, this.dataset.phone)" class="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold">መዝግብ</button>
+
+                                            <div class="pt-2 border-t border-slate-700/60 flex items-center justify-between gap-1.5">
+                                                <button data-phone="${escapeHtml(f.customer_phone || f.customer?.phone || '')}" data-name="${escapeHtml(f.customer_name || f.customer?.full_name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1.5 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer">
+                                                    <i data-lucide="message-square" class="w-3 h-3"></i>
+                                                    <span>SMS</span>
+                                                </button>
+                                                <button data-id="${f.id}" data-name="${escapeHtml(f.customer_name || f.customer?.full_name || '')}" data-phone="${escapeHtml(f.customer_phone || f.customer?.phone || '')}" data-order="${escapeHtml(f.order_number || f.order?.order_number || '')}" onclick="openRecordCommentAndRatingModal(this.dataset.id, this.dataset.name, this.dataset.phone, this.dataset.order)" class="flex-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                                                    <i data-lucide="star" class="w-3.5 h-3.5 fill-slate-950"></i>
+                                                    <span>Record Comment & Rating (1–5 ★)</span>
+                                                </button>
                                             </div>
                                         </div>
                                     `).join('')}
@@ -5136,8 +5204,8 @@
                                         <div class="p-3.5 rounded-2xl bg-slate-800/80 border ${fb.is_approved ? 'border-emerald-500/40' : 'border-slate-700'} space-y-2">
                                             <div class="flex items-center justify-between">
                                                 <div>
-                                                    <span class="text-xs font-bold text-white">${fb.customer?.full_name || 'ውድ ደንበኛ'}</span>
-                          <span class="text-[10px] text-amber-400 ml-1.5 font-bold">${''.repeat(fb.rating)}${''.repeat(5 - fb.rating)}</span>
+                                                    <span class="text-xs font-bold text-white">${escapeHtml(fb.customer?.full_name || 'ውድ ደንበኛ')}</span>
+                                                    <span class="text-[10px] text-amber-400 ml-1.5 font-bold">${'⭐'.repeat(Math.max(1, Math.min(5, fb.rating || 5)))}</span>
                                                 </div>
                                                 <span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${fb.is_approved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-400'}">
                                                     ${fb.is_approved ? 'በድረ-ገጽ ይታያል' : 'ተደብቋል'}
@@ -5295,7 +5363,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                                 <h2 class="text-2xl sm:text-3xl font-black text-white">የደንበኞች መልእክት እና የስልክ አድራሻዎች ማዕከል (ወሰን አልባ / Unlimited ∞)</h2>
-                                <p class="text-xs text-slate-400 mt-1">በ iPhone 1-Scan Auto-SMS፣ በቴሌግራም ቦት፣ እና በደንበኞች ስልክ ዝርዝር የተደገፈ</p>
+                                <p class="text-xs text-slate-400 mt-1">በቀጥታ SMS፣ በቴሌግራም ቦት እና በደንበኞች ስልክ ዝርዝር የተደገፈ</p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button type="button" onclick="switchMarketingTab('telegram_broadcast')" id="tab-btn-broadcast" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${currentMarketingTab === 'telegram_broadcast' ? 'bg-cyan-600 text-white shadow-lg' : 'bg-slate-800 text-slate-300 hover:text-white'}">
@@ -5415,7 +5483,7 @@
                             <span class="text-2xl font-black text-blue-400 font-mono">${withPhoneCount.toLocaleString()}</span>
                             <span class="text-[10px] text-slate-500">ስልኮች</span>
                         </div>
-                        <p class="text-[10px] text-slate-400 truncate">ለ iPhone SMS ዝግጁ</p>
+                        <p class="text-[10px] text-slate-400 truncate">ለቀጥታ SMS ዝግጁ</p>
                     </div>
 
                     <div class="p-4 rounded-2xl bg-slate-900 border border-teal-500/30 space-y-1 shadow-lg">
@@ -5437,7 +5505,7 @@
                             </div>
                             <div>
                                 <h3 class="text-base font-black text-white">የመልእክት መጻፊያ እና ስርጭት ማዕከል</h3>
-                                <p class="text-xs text-slate-400">መልእክትዎን እዚህ ይጻፉ፤ በ iPhone 1-Scan Auto-SMS ወይም በቴሌግራም ቦት ይላኩ</p>
+                                <p class="text-xs text-slate-400">መልእክትዎን እዚህ ይጻፉ፤ በስልክ SMS ወይም በቴሌግራም ቦት ይላኩ</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2 text-xs">
@@ -5485,9 +5553,9 @@
                             <p>• የሚላክላቸው ጠቅላላ፦ <strong class="text-emerald-400 font-mono font-bold" id="label-send-count">${eligibleCount.toLocaleString()}</strong> ደንበኞች</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-3">
-                            <!-- 1. iPhone 1-Scan Auto-SMS Button -->
+                            <!-- 1. Phone SMS Button -->
                             <button type="button" id="btn-iphone-sms" onclick="openIphoneSmsModal()" class="px-6 py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-slate-950 font-black text-sm rounded-2xl shadow-xl shadow-emerald-500/20 flex items-center gap-2 cursor-pointer transition transform active:scale-95">
-                                <span>በስልክ SMS ላክ (iPhone 1-Scan Auto-Send)</span>
+                                <span>በስልክ SMS ላክ</span>
                             </button>
 
                             <!-- 2. 1-Click Telegram Bot Broadcast Button -->
@@ -5529,13 +5597,16 @@
                         </div>
                     </div>
 
-                    <!-- Category Pills Filter: Clean 4 filters without friend exclusions -->
+                    <!-- Category Pills Filter: Filterable Tags -->
                     <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/80 text-xs">
-                        <span class="text-slate-400 font-bold text-[11px] mr-1">አጣራ፦</span>
+                        <span class="text-slate-400 font-bold text-[11px] mr-1">አጣራ (Tags)፦</span>
                         <button type="button" onclick="filterBroadcastTable('all')" id="pill-filter-all" class="px-3 py-1 rounded-xl font-bold bg-cyan-600 text-white transition cursor-pointer">ሁሉም (${totalCount.toLocaleString()})</button>
-                        <button type="button" onclick="filterBroadcastTable('active')" id="pill-filter-active" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">ለንግድ ንቁ (${eligibleCount.toLocaleString()})</button>
-                        <button type="button" onclick="filterBroadcastTable('with_phone')" id="pill-filter-phone" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">ስልክ ያላቸው (${withPhoneCount.toLocaleString()})</button>
-                        <button type="button" onclick="filterBroadcastTable('with_tg')" id="pill-filter-tg" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">ቴሌግራም ያላቸው (${withTgCount.toLocaleString()})</button>
+                        <button type="button" onclick="filterBroadcastTable('normal_active')" id="pill-filter-normal_active" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Normal Active (${(data.tag_counts?.normal_active || 0).toLocaleString()})</button>
+                        <button type="button" onclick="filterBroadcastTable('comment_waiting')" id="pill-filter-comment_waiting" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Comment Waiting (${(data.tag_counts?.comment_waiting || 0).toLocaleString()})</button>
+                        <button type="button" onclick="filterBroadcastTable('imported_contacts')" id="pill-filter-imported_contacts" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Imported Contacts (${(data.tag_counts?.imported_contacts || 0).toLocaleString()})</button>
+                        <button type="button" onclick="filterBroadcastTable('outdoor_sales')" id="pill-filter-outdoor_sales" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Outdoor Sales (${(data.tag_counts?.outdoor_sales || 0).toLocaleString()})</button>
+                        <button type="button" onclick="filterBroadcastTable('with_phone')" id="pill-filter-phone" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">ስልክ (SMS) (${withPhoneCount.toLocaleString()})</button>
+                        <button type="button" onclick="filterBroadcastTable('with_tg')" id="pill-filter-tg" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">ቴሌግራም (${withTgCount.toLocaleString()})</button>
                     </div>
 
                     <!-- Directory Table -->
@@ -5578,11 +5649,12 @@
             return usersList.map(u => {
                 const isExcluded = excludedBroadcastIds.has(String(u.id));
                 const isChecked = selectedContactIds.has(Number(u.id));
-                const searchTokens = `${u.name || ''} ${u.username || ''} ${u.phone || ''} ${u.telegram_id || ''} ${u.source || ''}`.toLowerCase();
-                const sourceBadge = formatRecipientSourceBadge(u.source);
+                const tagsStr = (u.tags || '').toLowerCase();
+                const searchTokens = `${u.name || ''} ${u.username || ''} ${u.phone || ''} ${u.telegram_id || ''} ${u.source || ''} ${u.tags || ''}`.toLowerCase();
+                const sourceBadge = formatRecipientSourceBadge(u.source, u.tags, u.lifecycle_stage);
 
                 return `
-                <tr id="bc-row-${u.id}" data-id="${u.id}" data-tokens="${encodeURIComponent(searchTokens)}" data-excluded="${isExcluded ? '1' : '0'}" data-has-phone="${u.phone ? '1' : '0'}" data-has-tg="${u.telegram_id ? '1' : '0'}" class="hover:bg-slate-800/40 transition ${isExcluded ? 'opacity-45 bg-slate-950/40' : ''}">
+                <tr id="bc-row-${u.id}" data-id="${u.id}" data-tokens="${encodeURIComponent(searchTokens)}" data-tags="${encodeURIComponent(tagsStr)}" data-lifecycle="${u.lifecycle_stage || ''}" data-excluded="${isExcluded ? '1' : '0'}" data-has-phone="${u.phone ? '1' : '0'}" data-has-tg="${u.telegram_id ? '1' : '0'}" class="hover:bg-slate-800/40 transition ${isExcluded ? 'opacity-45 bg-slate-950/40' : ''}">
                     <td class="p-3 text-center">
                         <input type="checkbox" id="bc-cb-${u.id}" ${isChecked ? 'checked' : ''} onchange="toggleSelectContactRow(${u.id}, this.checked)" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0 cursor-pointer">
                     </td>
@@ -5602,6 +5674,10 @@
                     </td>
                     <td class="p-3 text-right whitespace-nowrap">
                         <div class="flex items-center justify-end gap-1.5">
+                            <button type="button" onclick="openDirectCustomerMessageModal('${u.phone || ''}', '${encodeURIComponent(u.name || '')}', '${u.telegram_id || ''}')" class="p-1 px-2 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 transition cursor-pointer text-[10px] font-bold flex items-center gap-1" title="1-ለ-1 መልእክት ላክ">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                <span>መልእክት</span>
+                            </button>
                             <button type="button" onclick="openEditRecipientModal(${u.id})" class="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 transition cursor-pointer" title="አስተካክል (Edit)">
                                 <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                             </button>
@@ -5615,7 +5691,21 @@
             }).join('');
         }
 
-        function formatRecipientSourceBadge(source) {
+        function formatRecipientSourceBadge(source, tags, stage) {
+            const lowerTags = (tags || '').toLowerCase();
+            if (lowerTags.includes('normal active') || stage === 'normal_active') {
+                return '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Normal Active</span>';
+            }
+            if (lowerTags.includes('comment waiting') || stage === 'comment_waiting') {
+                return '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">Comment Waiting</span>';
+            }
+            if (lowerTags.includes('outdoor') || source === 'outdoor_sales') {
+                return '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">Outdoor Sales</span>';
+            }
+            if (lowerTags.includes('imported') || source === 'imported' || source === 'bulk_import') {
+                return '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-700/50 text-slate-300 border border-slate-600">Imported Contact</span>';
+            }
+
             switch(source) {
                 case 'website_customer':
                     return '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">ዌብሳይት ደንበኛ</span>';
@@ -5628,7 +5718,7 @@
                 case 'system_user':
                     return '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">የሲስተም አባል</span>';
                 default:
-                    return '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-700/50 text-slate-300 border border-slate-600">Imported</span>';
+                    return '<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-700/50 text-slate-300 border border-slate-600">Normal Active</span>';
             }
         }
 
@@ -5639,7 +5729,7 @@
 
         function filterBroadcastTable(type) {
             currentRecipientFilter = type;
-            ['all', 'active', 'phone', 'tg'].forEach(k => {
+            ['all', 'normal_active', 'comment_waiting', 'imported_contacts', 'outdoor_sales', 'phone', 'tg'].forEach(k => {
                 const el = document.getElementById(`pill-filter-${k}`);
                 if (el) {
                     el.className = 'px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer';
@@ -5657,31 +5747,27 @@
             const rows = document.querySelectorAll('#broadcast-table-body tr[data-tokens]');
             rows.forEach(r => {
                 const tokens = decodeURIComponent(r.getAttribute('data-tokens') || '');
+                const tags = decodeURIComponent(r.getAttribute('data-tags') || '');
+                const lifecycle = r.getAttribute('data-lifecycle') || '';
                 const hasPhone = r.getAttribute('data-has-phone') === '1';
                 const hasTg = r.getAttribute('data-has-tg') === '1';
 
                 const matchesSearch = !broadcastSearchQuery || tokens.includes(broadcastSearchQuery);
                 let matchesCategory = true;
-                if (currentRecipientFilter === 'active') matchesCategory = true;
-                else if (currentRecipientFilter === 'with_phone') matchesCategory = hasPhone;
-                else if (currentRecipientFilter === 'with_tg') matchesCategory = hasTg;
 
-                r.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
-            });
-        }
-            const rows = document.querySelectorAll('#broadcast-table-body tr[data-tokens]');
-            rows.forEach(r => {
-                const tokens = decodeURIComponent(r.getAttribute('data-tokens') || '');
-                const isExcluded = r.getAttribute('data-excluded') === '1';
-                const hasPhone = r.getAttribute('data-has-phone') === '1';
-                const hasTg = r.getAttribute('data-has-tg') === '1';
-
-                const matchesSearch = !broadcastSearchQuery || tokens.includes(broadcastSearchQuery);
-                let matchesCategory = true;
-                if (currentRecipientFilter === 'active') matchesCategory = !isExcluded;
-                else if (currentRecipientFilter === 'excluded') matchesCategory = isExcluded;
-                else if (currentRecipientFilter === 'with_phone') matchesCategory = hasPhone;
-                else if (currentRecipientFilter === 'with_tg') matchesCategory = hasTg;
+                if (currentRecipientFilter === 'normal_active') {
+                    matchesCategory = tags.includes('normal active') || lifecycle === 'normal_active';
+                } else if (currentRecipientFilter === 'comment_waiting') {
+                    matchesCategory = tags.includes('comment waiting') || lifecycle === 'comment_waiting';
+                } else if (currentRecipientFilter === 'imported_contacts') {
+                    matchesCategory = tags.includes('imported') || tokens.includes('imported') || tokens.includes('system_user');
+                } else if (currentRecipientFilter === 'outdoor_sales') {
+                    matchesCategory = tags.includes('outdoor') || tokens.includes('outdoor_sales');
+                } else if (currentRecipientFilter === 'with_phone') {
+                    matchesCategory = hasPhone;
+                } else if (currentRecipientFilter === 'with_tg') {
+                    matchesCategory = hasTg;
+                }
 
                 r.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
             });
@@ -5914,7 +6000,7 @@
                 <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
                     <div class="bg-slate-900 border border-emerald-500/50 rounded-3xl max-w-md w-full p-6 text-center space-y-4">
                         <div class="animate-spin w-10 h-10 border-3 border-emerald-500 border-t-transparent rounded-full mx-auto"></div>
-                        <p class="text-sm font-bold text-white">የ iPhone Auto-SMS ክፍለ-ጊዜ በማዘጋጀት ላይ...</p>
+                        <p class="text-sm font-bold text-white">የቀጥታ ስልክ SMS ክፍለ-ጊዜ በማዘጋጀት ላይ...</p>
                     </div>
                 </div>
             `;
@@ -5946,8 +6032,8 @@
                             <!-- Modal Header -->
                             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                                 <div>
-                                    <h3 class="text-base font-black text-white">iPhone 1-Scan Auto-SMS Bridge</h3>
-                                    <p class="text-[11px] text-emerald-400 font-bold">ለ ${data.total_targets} ደንበኞች ከእርስዎ iPhone ሲም ካርድ ይላካል</p>
+                                    <h3 class="text-base font-black text-white">በስልክ SMS መላኪያ ማዕከል</h3>
+                                    <p class="text-[11px] text-emerald-400 font-bold">ለ ${data.total_targets} ደንበኞች ከእርስዎ ስልክ ሲም ካርድ ይላካል</p>
                                 </div>
                                 <button onclick="closeSmsBridgeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                             </div>
@@ -5955,7 +6041,7 @@
                             <!-- QR Code & Instructions -->
                             <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-3">
                                 <p class="text-xs text-slate-300 font-semibold">
-                                    በእርስዎ <strong>iPhone ካሜራ</strong> ይህንን QR ኮድ ስካን ያድርጉ፦
+                                    በእርስዎ <strong>ስልክ ካሜራ</strong> ይህንን QR ኮድ ስካን ያድርጉ፦
                                 </p>
                                 <div class="bg-white p-3 rounded-2xl inline-block shadow-xl border-2 border-emerald-500">
                                     <img src="${qrUrl}" alt="SMS QR Code" class="w-48 h-48 sm:w-56 sm:h-56 mx-auto object-contain">
@@ -6516,21 +6602,21 @@
                                     </button>
                                     <a id="btn-owner-direct-sim-sms" href="#" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
                                         <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
-                                        <span>በስልክ SIM ላክ (iPhone)</span>
+                                        <span>በስልክ SIM ላክ</span>
                                     </a>
                                 </div>
 
-                                <!-- iPhone & Android QR Code Camera Scan Card -->
+                                <!-- Phone QR Code Camera Scan Card -->
                                 <div class="mt-3 p-3 rounded-2xl bg-slate-950/70 border border-cyan-500/30 flex items-center gap-3">
                                     <div class="bg-white p-2 rounded-xl flex-shrink-0 shadow-md">
                                         <img id="qr-sim-sms" src="" alt="SMS QR Code" class="w-24 h-24 object-contain">
                                     </div>
                                     <div class="space-y-1">
                                         <div class="flex items-center gap-1.5">
-                                            <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">ለ iPhone እና Android</span>
+                                            <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">ለማንኛውም ስማርት ስልክ</span>
                                             <span class="text-xs font-bold text-white">ካሜራ ስካን QR ኮድ</span>
                                         </div>
-                                        <p class="text-[10px] text-slate-300">በእርሶ iPhone ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ ወዲያውኑ መልእክቱን በ Messages አፕ አዘጋጅቶ ያቀርብልዎታል።</p>
+                                        <p class="text-[10px] text-slate-300">በስልክዎ ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ መልእክቱ በቀጥታ በስልክዎ SMS መላኪያ አፕ ተዘጋጅቶ ይከፈታል::</p>
                                     </div>
                                 </div>
                             </div>
@@ -8342,6 +8428,198 @@
             }
         }
 
+        function openDirectCustomerMessageModal(phone, name, tgId) {
+            const container = document.getElementById('generic-modal-container');
+            const cleanPhone = (phone || '').replace(/\s+/g, '');
+            const decodedName = decodeURIComponent(name || 'ውድ ደንበኛ');
+            const hasTg = tgId && String(tgId).length >= 5 && String(tgId) !== 'null';
+
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+                    <div class="bg-slate-900 border border-teal-500/50 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center">
+                                    <i data-lucide="message-square" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-black text-white">1-ለ-1 መልእክት መላኪያ</h3>
+                                    <p class="text-xs text-slate-400">${decodedName} (${cleanPhone})</p>
+                                </div>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+
+                        <div class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የመልእክት ቻናል ምረጡ *</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="flex items-center gap-2 p-2.5 rounded-xl border border-teal-500/40 bg-teal-950/20 cursor-pointer">
+                                        <input type="radio" name="direct-msg-channel" value="telegram" ${hasTg ? 'checked' : ''} class="text-teal-500">
+                                        <div>
+                                            <span class="font-bold text-white block">Telegram Bot</span>
+                                            <span class="text-[10px] text-teal-400">${hasTg ? 'መለያ ተገኝቷል' : 'ካልተገኘ ወደ SMS ይዞራል'}</span>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-700 bg-slate-800/40 cursor-pointer">
+                                        <input type="radio" name="direct-msg-channel" value="sms" ${!hasTg ? 'checked' : ''} class="text-cyan-500">
+                                        <div>
+                                            <span class="font-bold text-white block">ቀጥታ SMS</span>
+                                            <span class="text-[10px] text-slate-400">በሲስተም SMS API</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">የመልእክቱ ዝርዝር *</label>
+                                <textarea id="direct-care-msg" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white text-xs leading-relaxed focus:border-teal-400 outline-none" placeholder="መልእክትዎን እዚህ ይጻፉ...">${decodedName !== 'ውድ ደንበኛ' ? 'ሰላም ' + decodedName + '፤ ' : ''}የሜሽ ክሊኒንግ አገልግሎታችንን በተመለከተ ለማነጋገር ፈልገን ነበር። ጥያቄ ወይም አስተያየት ካለዎት በ 0970075509 ሊደውሉልን ይችላሉ::</textarea>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                                <a href="sms:${cleanPhone}?&body=${encodeURIComponent('ሰላም ' + decodedName + '፤')}" class="text-[11px] text-teal-400 hover:underline flex items-center gap-1">
+                                    <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+                                    <span>በ Messages App ክፈት</span>
+                                </a>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 cursor-pointer">ሰርዝ</button>
+                                    <button type="button" id="btn-send-care-msg" onclick="submit1To1CustomerCareMessage('${cleanPhone}', '${tgId || ''}')" class="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-400 hover:to-cyan-500 text-white font-black rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer">
+                                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                        <span>ላክ (Send)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function submit1To1CustomerCareMessage(phone, tgId) {
+            const channel = document.querySelector('input[name="direct-msg-channel"]:checked')?.value || 'telegram';
+            const msg = (document.getElementById('direct-care-msg')?.value || '').trim();
+            if (!msg) {
+                alert('እባክዎ የመልእክት ዝርዝር ያስገቡ!');
+                return;
+            }
+
+            const btn = document.getElementById('btn-send-care-msg');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="animate-spin mr-1"></span> በመላክ ላይ...`;
+            }
+
+            try {
+                const endpoint = channel === 'sms' ? '/api/customer-care/send-sms' : '/api/customer-care/send-telegram';
+                const res = await apiFetch(endpoint, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        phone: phone,
+                        telegram_chat_id: tgId || null,
+                        message: msg,
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert(' ' + data.message);
+                    closeModal();
+                } else {
+                    alert('ስህተት፡ ' + (data.message || 'መልእክቱን መላክ አልተቻለም!'));
+                }
+            } catch (err) {
+                alert('የኔትወርክ ስህተት፡ ' + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<span>ላክ (Send)</span>`;
+                }
+            }
+        }
+
+        function openRecordCommentAndRatingModal(followupId, name, phone, orderNumber) {
+            const container = document.getElementById('generic-modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-md w-full p-6 shadow-2xl">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                            <div>
+                                <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase mb-1">
+                                    ⭐ Phone Feedback
+                                </div>
+                                <h3 class="text-base font-black text-white">Record Comment & Rating (1–5 ★)</h3>
+                                <p class="text-xs text-slate-300">${name} (${phone}) | Order #${orderNumber || ''}</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+                        <form onsubmit="submitRecordCommentAndRating(event, ${followupId})" class="space-y-4 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1.5">የደንበኛ የእርካታ ደረጃ (Rating 1–5 ★) *</label>
+                                <select id="care-f-rating" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-bold focus:border-amber-400 outline-none">
+                                    <option value="5">⭐⭐⭐⭐⭐ 5 Stars - እጅግ በጣም ረክቷል (Promote to Active)</option>
+                                    <option value="4">⭐⭐⭐⭐ 4 Stars - ጥሩ / ረክቷል (Promote to Active)</option>
+                                    <option value="3">⭐⭐⭐ 3 Stars - መካከለኛ (Promote to Active)</option>
+                                    <option value="2">⭐⭐ 2 Stars - አልረካም (Escalate Complaint)</option>
+                                    <option value="1">⭐ 1 Star - ቅሬታ አለው (Escalate Complaint)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1.5">የደንበኛው አስተያየት ወይም ማስታወሻ *</label>
+                                <textarea id="care-f-notes" required rows="3" placeholder="በስልክ የተናገሩትን ቀጥተኛ አስተያየት እዚህ ይጻፉ... (ምሳሌ፦ ቡድኑ በሰዓቱ ደርሶ እጅግ በጣም በጥራት አጽድቷል)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:border-amber-400 outline-none"></textarea>
+                            </div>
+                            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
+                                <button type="submit" id="care-f-submit-btn" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer">
+                                    <span>መዝግብ እና ወደ Normal Customer አሸጋግር</span>
+                                    <span>&rarr;</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function submitRecordCommentAndRating(e, followupId) {
+            e.preventDefault();
+            const rating = parseInt(document.getElementById('care-f-rating').value);
+            const notes = document.getElementById('care-f-notes').value.trim();
+            const btn = document.getElementById('care-f-submit-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'በማስገባት ላይ...';
+            }
+
+            try {
+                const res = await apiFetch(`/api/care/followups/${followupId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        status: 'completed',
+                        rating: rating,
+                        notes: notes,
+                        feedback_notes: notes,
+                        satisfaction_score: rating
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(' የደንበኛው አስተያየት ተመዝግቧል! ደንበኛው ወዲያውኑ ወደ Normal Customers ተሸጋግሯል።');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert(' ስህተት: ' + (data.message || 'አስተያየቱን መመዝገብ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'መዝግብ እና ወደ Normal Customer አሸጋግር →';
+                }
+            }
+        }
+
         function openFollowupCallModal(followupId, name, phone) {
             const container = document.getElementById('generic-modal-container');
             container.innerHTML = `
@@ -8358,16 +8636,16 @@
                             <div>
                                 <label class="block text-slate-400 mb-1">የደንበኛ የእርካታ ደረጃ (ከ 1 እስከ 5 ኮከብ) *</label>
                                 <select id="f-rating" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                                    <option value="5"> Excellent (5)</option>
-                                    <option value="4"> Very Good (4)</option>
-                                    <option value="3"> Neutral / Okay (3)</option>
-                                    <option value="2"> Dissatisfied (2)</option>
-                                    <option value="1"> Unacceptable (1)</option>
+                                    <option value="5">⭐⭐⭐⭐⭐ እጅግ በጣም ረክቷል (5)</option>
+                                    <option value="4">⭐⭐⭐⭐ ጥሩ / ረክቷል (4)</option>
+                                    <option value="3">⭐⭐⭐ መካከለኛ (3)</option>
+                                    <option value="2">⭐⭐ አልረካም (2)</option>
+                                    <option value="1">⭐ ቅሬታ አለው / በጣም ቅር ተሰኝቷል (1)</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-slate-400 mb-1">የደንበኛው አስተያየት *</label>
-                                <textarea id="f-notes" required rows="3" placeholder="Customer said carpets look brand new..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
+                                <textarea id="f-notes" required rows="3" placeholder="የደንበኛውን ቀጥተኛ አስተያየት እዚህ ይፃፉ... (ለምሳሌ፦ ምንጣፉ ልክ እንደ አዲስ ሆኖ ፀድቷል፣ አመስግነዋል)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
                             </div>
                             <div class="flex justify-end gap-2 pt-2">
                                 <button type="button" onclick="closeModal()" class="px-3 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
@@ -8416,17 +8694,17 @@
                 <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-                            <h3 class="text-base font-bold text-white">መፍትሄ ስጥ Customer Complaint</h3>
+                            <h3 class="text-base font-bold text-white">የደንበኛ ቅሬታ መፍትሄ መዝገብ</h3>
                             <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                         </div>
                         <form onsubmit="submitResolveComplaint(event, ${complaintId})" class="space-y-3 text-xs">
                             <div>
                                 <label class="block text-slate-400 mb-1">የተወሰደ የመፍትሄ እርምጃ *</label>
-                                <textarea id="comp-action" required rows="3" placeholder="Dispatched supervisor to re-clean spot free of charge..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
+                                <textarea id="comp-action" required rows="3" placeholder="የተወሰደውን የመፍትሄ እርምጃ እዚህ ይፃፉ... (ምሳሌ፦ ተቆጣጣሪ ተልኮ ድጋሚ በነጻ እንዲታጠብ ተደርጓል)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></textarea>
                             </div>
                             <div class="flex justify-end gap-2 pt-2">
                                 <button type="button" onclick="closeModal()" class="px-3 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
-                                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl">Mark መፍትሄ ስጥd</button>
+                                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl">መፍትሄውን መዝግብ (ተፈቷል)</button>
                             </div>
                         </form>
                     </div>
@@ -8439,7 +8717,7 @@
             const action = document.getElementById('comp-action').value;
             await apiFetch(`/api/care/complaints/${complaintId}/resolve`, {
                 method: 'POST',
-                body: JSON.stringify({ resolution_action: action })
+                body: JSON.stringify({ resolution_action: action, resolution_notes: action, status: 'resolved' })
             });
             closeModal();
             loadActiveTab();
@@ -8955,10 +9233,10 @@
                             </div>
                             <div class="space-y-1">
                                 <div class="flex items-center justify-center sm:justify-start gap-1.5">
-                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-900 border border-blue-200">ለ iPhone እና Android</span>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-900 border border-blue-200">ለማንኛውም ስማርት ስልክ</span>
                                     <span class="text-xs font-bold text-blue-950">የፕሮፎርማ SMS መላኪያ QR ኮድ</span>
                                 </div>
-                                <p class="text-[11px] text-slate-700">በእርሶ iPhone ወይም Android ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ የዚህን ፕሮፎርማ ዝርዝር እና አጠቃላይ ዋጋ የያዘውን SMS በ Messages አፕ ያዘጋጅልዎታል።</p>
+                                <p class="text-[11px] text-slate-700">በስልክዎ ካሜራ ይህንን QR ኮድ ስካን ሲያደርጉ የፕሮፎርማውን ዝርዝር እና አጠቃላይ ዋጋ የያዘውን SMS በስልክዎ መልእክት መላኪያ አፕ ያዘጋጅልዎታል::</p>
                                 <p class="text-[10px] text-slate-500 font-mono">ተቀባይ ደንበኛ ስልክ፦ <span id="prof-sms-phone-display" class="text-blue-700 font-bold">+251...</span></p>
                             </div>
                         </div>

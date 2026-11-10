@@ -11,6 +11,7 @@ use App\Models\Followup;
 use App\Models\Order;
 use App\Models\TeamMember;
 use App\Services\EthiopianCalendarService;
+use App\Services\OrderLifecycleService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -255,17 +256,6 @@ class TeamController extends Controller
             if (!empty($notesParts)) {
                 $order->completion_notes = implode("\n\n", $notesParts);
             }
-
-            // Create next-day follow-up
-            Followup::firstOrCreate(
-                ['order_id' => $order->id],
-                [
-                    'customer_id' => $order->customer_id,
-                    'due_date' => Carbon::tomorrow(),
-                    'status' => 'pending',
-                    'notes' => 'Next-day automated follow-up scheduled upon cleaning completion',
-                ]
-            );
         } elseif ($validated['action'] === 'report_problem') {
             $order->order_status = 'problem_reported';
             if (!empty($validated['notes'])) {
@@ -295,6 +285,22 @@ class TeamController extends Controller
             ['status' => $oldStatus],
             ['status' => $order->order_status, 'notes' => $validated['notes'] ?? null]
         );
+
+        if ($order->order_status === 'completed') {
+            \App\Models\Followup::firstOrCreate(
+                [
+                    'order_id' => $order->id,
+                    'type' => 'review',
+                ],
+                [
+                    'customer_id' => $order->customer_id,
+                    'due_date' => \Carbon\Carbon::today(),
+                    'status' => 'pending',
+                    'notes' => 'Post-service customer satisfaction & review follow-up',
+                ]
+            );
+            OrderLifecycleService::checkCompletionAndTriggerReview($order);
+        }
 
         return response()->json([
             'message' => "Job updated to {$order->order_status}",

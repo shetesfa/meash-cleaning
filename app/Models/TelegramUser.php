@@ -21,6 +21,8 @@ class TelegramUser extends Model
         'is_excluded',
         'is_active',
         'source',
+        'tags',
+        'lifecycle_stage',
         'marketing_consent',
         'consent_timestamp',
         'last_interaction_at',

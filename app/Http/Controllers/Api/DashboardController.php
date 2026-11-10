@@ -71,7 +71,7 @@ class DashboardController extends Controller
             'telegram_bot' => ['label_am' => 'ቴሌግራም ቦት', 'label_en' => 'Telegram Bot', 'icon' => 'bot', 'color' => 'cyan'],
             'phone' => ['label_am' => 'ስልክ ጥሪ', 'label_en' => 'Phone Call', 'icon' => 'phone', 'color' => 'emerald'],
             'walk_in' => ['label_am' => 'በአካል የመጣ', 'label_en' => 'Walk-in', 'icon' => 'footprints', 'color' => 'purple'],
-            'internal' => ['label_am' => 'ውስጣዊ / ሪሴፕሽን', 'label_en' => 'Internal', 'icon' => 'building', 'color' => 'slate'],
+            'internal' => ['label_am' => 'ውስጣዊ / ሪሴፕሽን', 'label_en' => 'Internal / Reception', 'icon' => 'home', 'color' => 'indigo'],
             'corporate_contract' => ['label_am' => 'ኮርፖሬት ውል', 'label_en' => 'Corporate', 'icon' => 'briefcase', 'color' => 'amber'],
         ];
 

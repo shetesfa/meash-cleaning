@@ -91,6 +91,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/{order}/assign-team', [OrderController::class, 'assignTeam'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/submit-payment', [OrderController::class, 'submitPayment'])->middleware('role:owner,reception,cleaner');
     Route::post('/orders/{order}/approve-payment', [OrderController::class, 'approvePayment'])->middleware('role:owner,reception,finance');
+    Route::post('/orders/{order}/payments/{payment}/approve', [OrderController::class, 'approvePayment'])->middleware('role:owner,reception,finance');
+    Route::post('/orders/{order}/verify-payment', [OrderController::class, 'verifyPayment'])->middleware('role:owner,reception,finance');
+    Route::post('/orders/{order}/payments/{payment}/verify', [OrderController::class, 'verifyPayment'])->middleware('role:owner,reception,finance');
     Route::post('/orders/{order}/reject-payment', [OrderController::class, 'rejectPayment'])->middleware('role:owner,reception,finance');
     Route::post('/orders/{order}/payment', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception,finance');
     Route::post('/orders/{order}/payments', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception,finance');
@@ -139,19 +142,28 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/expenses', [FinanceController::class, 'storeExpense'])->middleware('role:owner,finance');
         Route::post('/payroll', [FinanceController::class, 'recordPayroll'])->middleware('role:owner,finance');
         Route::get('/payments', [FinanceController::class, 'payments'])->middleware('role:owner,reception,finance');
+        Route::post('/payments/{payment}/verify', [FinanceController::class, 'verifyPayment'])->middleware('role:owner,reception,finance');
         Route::get('/profit-report', [FinanceController::class, 'profitReport'])->middleware('role:owner,finance');
     });
 
-    // I. Customer Care (Follow-ups, Feedback, Complaints)
+    // I. Customer Care (Follow-ups, Feedback, Complaints, 1-to-1 Messaging)
     Route::prefix('care')->middleware('role:owner,reception')->group(function () {
         Route::get('/followups', [CustomerCareController::class, 'followups']);
         Route::put('/followups/{followup}', [CustomerCareController::class, 'updateFollowup']);
+        Route::match(['post', 'put', 'patch'], '/followups/{followup}/complete', [CustomerCareController::class, 'completeFollowup']);
         Route::get('/feedbacks', [CustomerCareController::class, 'feedbacks']);
         Route::post('/feedbacks', [CustomerCareController::class, 'storeFeedback']);
         Route::post('/feedbacks/{feedback}/approve', [CustomerCareController::class, 'approveFeedback']);
         Route::get('/complaints', [CustomerCareController::class, 'complaints']);
         Route::post('/complaints', [CustomerCareController::class, 'storeComplaint']);
         Route::post('/complaints/{complaint}/resolve', [CustomerCareController::class, 'resolveComplaint']);
+        Route::post('/send-sms', [CustomerCareController::class, 'sendSms']);
+        Route::post('/send-telegram', [CustomerCareController::class, 'sendTelegram']);
+    });
+
+    Route::prefix('customer-care')->middleware('role:owner,reception')->group(function () {
+        Route::post('/send-sms', [CustomerCareController::class, 'sendSms']);
+        Route::post('/send-telegram', [CustomerCareController::class, 'sendTelegram']);
     });
 
     // J. Notifications & Marketing
@@ -173,6 +185,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/export', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'exportRecipients']);
         Route::post('/import', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'bulkImportRecipients']);
         Route::post('/dispatch', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'dispatchBroadcast']);
+        Route::post('/send-broadcast', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'sendBroadcast']);
         Route::post('/create-sms-session', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'createSmsSession']);
         Route::get('/campaign-status/{id}', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'getCampaignStatus']);
     });
