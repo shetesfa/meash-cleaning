@@ -49,12 +49,12 @@
   $monthlyDisc = (int)($pricingRules['monthly_discount_percent'] ?? 5);
 
   $telebirrNo = $websiteSettings['telebirr_account_number'] ?? '0970075509';
-  $telebirrName = $websiteSettings['telebirr_account_name'] ?? 'ሜአሽ የጽዳት አገልግሎት / MEASH CLEANING';
+  $telebirrName = $websiteSettings['telebirr_account_name'] ?? 'ሜሽ የጽዳት አገልግሎት / MEASH CLEANING';
   $cbeNo = $websiteSettings['cbe_account_number'] ?? '1000123456789';
-  $cbeName = $websiteSettings['cbe_account_name'] ?? 'ሜአሽ የጽዳት አገልግሎት / MEASH CLEANING';
+  $cbeName = $websiteSettings['cbe_account_name'] ?? 'ሜሽ የጽዳት አገልግሎት / MEASH CLEANING';
   $contactPhone = $websiteSettings['contact_phone_1'] ?? '0970075509';
   $contactPhone2 = $websiteSettings['contact_phone_2'] ?? '0998142190';
-  $companyName = $websiteSettings['company_name_am'] ?? ($websiteSettings['company_name'] ?? 'ሜአሽ የጽዳት አገልግሎት');
+  $companyName = $websiteSettings['company_name_am'] ?? ($websiteSettings['company_name'] ?? 'ሜሽ የጽዳት አገልግሎት');
   $companySlogan = 'Your Environment, Our Responsibility.';
   $addressAm = $websiteSettings['company_address_am'] ?? ($websiteSettings['office_address_am'] ?? 'አያት አደባባይ፣ አዲስ አበባ');
 @endphp
@@ -380,7 +380,7 @@
         submitBtn: 'ቀጠሮውን አረጋግጥ (Submit Booking)',
         submitting: 'በመመዝገብ ላይ...',
         successTitle: ' ቀጠሮዎ በተሳካ ሁኔታ ተመዝግቧል!',
-        successDesc: 'የሜአሽ ሪሴፕሽን ሰራተኞቻችን የቡድን ምደባውን በስልክ ደውለው ያረጋግጡልዎታል::',
+        successDesc: 'የሜሽ ሪሴፕሽን ሰራተኞቻችን የቡድን ምደባውን በስልክ ደውለው ያረጋግጡልዎታል::',
         trackingId: 'የትዕዛዝ መለያ ቁጥር (Order ID)',
         closeApp: 'ዝጋ (Close)',
         currency: 'ብር',

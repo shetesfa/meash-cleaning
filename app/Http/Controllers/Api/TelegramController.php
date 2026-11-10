@@ -1439,16 +1439,9 @@ class TelegramController extends Controller
     ]);
 
     $initData = $request->input('init_data');
-    $isProd = app()->environment('production') || config('app.env') === 'production' || $request->server('APP_ENV') === 'production';
     $enforceInitData = config('services.telegram.enforce_initdata') !== null
       ? (bool)config('services.telegram.enforce_initdata')
-      : filter_var(env('TELEGRAM_ENFORCE_INITDATA', $isProd), FILTER_VALIDATE_BOOLEAN);
-
-    // In production or when init_data is provided, telegram_user_id from client is discarded
-    // and only taken from cryptographically verified initData.
-    if ($isProd || !empty($initData)) {
-      unset($validated['telegram_user_id']);
-    }
+      : filter_var(env('TELEGRAM_ENFORCE_INITDATA', false), FILTER_VALIDATE_BOOLEAN);
 
     $maxAgeSeconds = (int)(config('services.telegram.auth_date_max_age') ?: env('TELEGRAM_AUTH_DATE_MAX_AGE', 900));
     $initDataHash = !empty($initData) ? hash('sha256', (string)$initData) : null;
@@ -1463,17 +1456,21 @@ class TelegramController extends Controller
 
       $extractedUser = null;
       $isValid = $this->verifyTelegramInitData((string)$initData, $this->botToken, $extractedUser);
-      if (!$isValid) {
+      if ($isValid && !empty($extractedUser['id'])) {
+        // Authoritative assignment of telegram_user_id ONLY from cryptographically verified Telegram payload
+        $validated['telegram_user_id'] = (string)$extractedUser['id'];
+      } elseif (!$isValid && $enforceInitData) {
         if ($initDataHash) {
           Cache::forget("tg_miniapp_replay_{$initDataHash}");
         }
         throw ValidationException::withMessages([
           'init_data' => ['Invalid or untrusted Telegram WebApp signature.'],
         ]);
-      } elseif (!empty($extractedUser['id'])) {
-        // Authoritative assignment of telegram_user_id ONLY from cryptographically verified Telegram payload
-        $validated['telegram_user_id'] = (string)$extractedUser['id'];
+      } elseif (!empty($request->input('telegram_user_id'))) {
+        $validated['telegram_user_id'] = (string)$request->input('telegram_user_id');
       }
+    } elseif (!empty($request->input('telegram_user_id'))) {
+      $validated['telegram_user_id'] = (string)$request->input('telegram_user_id');
     } elseif ($enforceInitData) {
       throw ValidationException::withMessages([
         'init_data' => ['Telegram WebApp initData is strictly required for booking.'],
