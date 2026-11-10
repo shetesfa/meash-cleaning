@@ -41,7 +41,7 @@
   $facebookUrl = $websiteSettings['facebook'] ?? 'https://facebook.com/meashcleaningsolution';
   $socialHandle = $websiteSettings['social_handle'] ?? '@meashcleaningsolution';
 @endphp
-<html lang="am" class="scroll-smooth">
+<html lang="am" data-lang="am" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
@@ -118,7 +118,9 @@
   .font-serif { font-family: 'Fraunces', 'Noto Sans Ethiopic', serif; }
   ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background:#D7DCE2; border-radius:8px; }
   [data-lang-block] { display: none; }
+  html:not([data-lang]) [data-lang-block="am"],
   html[data-lang="am"] [data-lang-block="am"] { display: block; }
+  html:not([data-lang]) span[data-lang-block="am"],
   html[data-lang="am"] span[data-lang-block="am"] { display: inline; }
   html[data-lang="en"] [data-lang-block="en"] { display: block; }
   html[data-lang="en"] span[data-lang-block="en"] { display: inline; }
@@ -3199,19 +3201,6 @@
           if (window.lucide) lucide.createIcons();
         }
       }
-    } catch (e) {
-      if (msgEl) {
-        msgEl.className = 'mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center';
-        msgEl.innerText = 'የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ እንደገና ይሞክሩ።';
-        msgEl.classList.remove('hidden');
-      }
-      if (btnEl) {
-        btnEl.disabled = false;
-        btnEl.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5"></i><span>ደረጃውን መዝግብ (Submit Rating)</span>';
-        if (window.lucide) lucide.createIcons();
-      }
-    }
-  }
     } catch (e) {
       if (msgEl) {
         msgEl.className = 'mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold text-center';
