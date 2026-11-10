@@ -7444,12 +7444,12 @@
 
                             <div>
                                 <label class="text-xs font-bold text-slate-300 block mb-1">የቦቱ የእንኳን ደህና መጡ መልእክት በአማርኛ (Bot Welcome AM):</label>
-                                <textarea id="set-bot-welcome-am" rows="3" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_welcome_am || "እንኳን ወደ ሜአሽ ጥልቅ የፅዳት አገልግሎት በደህና መጡ!\n\nለሶፋ፣ ምንጣፍ፣ ፍራሽ፣ መስታወትና ለቤትዎ አስተማማኝና ዘመናዊ የጽዳት አገልግሎት እንሰጣለን:: የሚፈልጉትን አገልግሎት ከታች ባሉት አማራጮች ይምረጡ፦")}</textarea>
+                                <textarea id="set-bot-welcome-am" rows="3" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_welcome_am || "እንኳን ወደ ሜሽ የጽዳት አገልግሎት በደህና መጡ!\n\n\"Your Environment, Our Responsibility.\"\n\nከፍተኛ ጥራት የጠበቀ የንግድ ተቋማት የጽዳት አገልግሎት — ሆቴሎች | ሬስቶራንቶች | ካፌዎች | ቢሮዎች። የሚፈልጉትን አገልግሎት ከታች ባሉት አማራጮች ይምረጡ፦")}</textarea>
                             </div>
 
                             <div>
                                 <label class="text-xs font-bold text-slate-300 block mb-1">የቦቱ የእንኳን ደህና መጡ መልእክት በእንግሊዝኛ (Bot Welcome EN):</label>
-                                <textarea id="set-bot-welcome-en" rows="2" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_welcome_en || "Welcome to Meash Deep Cleaning Solution!\n\nWe provide professional cleaning for sofas, carpets, mattresses, windows, and entire residential or office spaces.")}</textarea>
+                                <textarea id="set-bot-welcome-en" rows="2" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">${escapeHtml(s.bot_welcome_en || "Welcome to MEASH CLEANING SOLUTION!\n\n\"Your Environment, Our Responsibility.\"\n\nPremium Commercial Cleaning Solutions — Hotels | Restaurants | Cafés | Offices.")}</textarea>
                             </div>
 
                             <div>
@@ -9733,8 +9733,9 @@
                                         <div class="flex items-center gap-2">
                                             <div class="w-10 h-10 rounded-xl bg-cyan-700 text-white flex items-center justify-center font-black text-xl">M</div>
                                             <div>
-                                                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900">MEASH DEEP CLEANING</h1>
-                                                <p class="text-[11px] font-bold text-cyan-700 tracking-wide">ሜሽ ጥልቅ የጽዳት አገልግሎት</p>
+                                                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900">MEASH CLEANING SOLUTION</h1>
+                                                <p class="text-[11px] font-bold text-cyan-700 tracking-wide">ሜሽ የጽዳት አገልግሎት</p>
+                                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">"Your Environment, Our Responsibility."</p>
                                             </div>
                                         </div>
                                         <p class="text-xs text-slate-500 mt-2">ስልክ፡ 0970075509 / 0998142190 | አዲስ አበባ፣ ኢትዮጵያ</p>
@@ -9778,7 +9779,7 @@
                                         <tbody class="divide-y divide-slate-100">
                                             ${items.length === 0 ? `
                                                 <tr>
-                                                    <td colspan="5" class="p-4 text-center text-slate-400 italic">መደበኛ ጥልቅ የጽዳት አገልግሎት</td>
+                                                    <td colspan="5" class="p-4 text-center text-slate-400 italic">መደበኛ የጽዳት አገልግሎት</td>
                                                 </tr>
                                             ` : items.map((it, idx) => `
                                                 <tr>
@@ -9802,7 +9803,7 @@
                                 <!-- Footer Signatures -->
                                 <div class="pt-6 border-t border-slate-200 flex justify-between items-end text-xs text-slate-500">
                                     <div>
-                                        <p class="font-bold text-slate-700">ሜሽ ጥልቅ የጽዳት አገልግሎት</p>
+                                        <p class="font-bold text-slate-700">ሜሽ የጽዳት አገልግሎት</p>
                                         <p class="text-[10px] mt-0.5">አገልግሎታችንን ስለመረጡ እናመሰግናለን!</p>
                                     </div>
                                     <div class="text-right">
