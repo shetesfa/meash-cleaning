@@ -103,6 +103,12 @@
       background-color: var(--tg-theme-bg-color, #0F172A);
       color: var(--tg-theme-text-color, #F8FAFC);
     }
+    .tma-svc-btn.active {
+      border-color: #22d3ee !important;
+      background-color: rgba(6, 182, 212, 0.25) !important;
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4) !important;
+      transform: scale(1.02);
+    }
   </style>
 </head>
 <body class="p-4 pb-20">
@@ -152,9 +158,14 @@
             @endphp
             <button type="button"
               onclick="selectTmaService({{ $svc->id }}, {{ $priceVal }}, '{{ addslashes($pUnit) }}', '{{ addslashes($nameAm) }}', '{{ addslashes($nameEn) }}', '{{ addslashes($svc->code) }}')"
-              class="tma-svc-btn p-3 rounded-xl border {{ $index === 0 ? 'border-cyan-500 bg-cyan-950/40' : 'border-slate-700 bg-slate-900' }} text-left transition-all"
-              data-service-id="{{ $svc->id }}">
-              <i data-lucide="{{ $lucideIcon }}" class="w-5 h-5 text-cyan-400 mb-1"></i>
+              class="tma-svc-btn p-3 rounded-xl border relative {{ $index === 0 ? 'active border-cyan-400 bg-cyan-950/70 ring-2 ring-cyan-400/50 shadow-lg shadow-cyan-500/20' : 'border-slate-700 bg-slate-900' }} text-left transition-all cursor-pointer"
+              id="tma-svc-btn-{{ $svc->id }}"
+              data-service-id="{{ $svc->id }}"
+              data-service-code="{{ $svc->code }}">
+              <div class="flex items-center justify-between mb-1">
+                <i data-lucide="{{ $lucideIcon }}" class="w-5 h-5 text-cyan-400"></i>
+                <span class="tma-svc-check w-4 h-4 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-black flex items-center justify-center {{ $index === 0 ? '' : 'hidden' }}">✓</span>
+              </div>
               <span class="text-xs font-bold text-white block svc-title">{{ $nameAm }}</span>
               <span class="text-[10px] text-cyan-400 font-semibold svc-price">{{ number_format($priceVal) }} ብር / {{ $pUnit }}</span>
             </button>
@@ -319,7 +330,13 @@
       <!-- Normal Customer Portal Container -->
       <div id="tma-customer-portal" class="hidden mb-5 text-left"></div>
 
-      <button onclick="window.Telegram?.WebApp?.close()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold rounded-xl transition-all" id="btn-close-app">ዝጋ (Close)</button>
+      <div class="space-y-2 mb-2">
+        <button type="button" onclick="tmaShowBookingForm()" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-black rounded-xl shadow-lg shadow-cyan-500/25 transition-all cursor-pointer flex items-center justify-center gap-2">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i>
+          <span id="txt-book-another">አዲስ ቀጠሮ ያዙ (Book Another Cleaning)</span>
+        </button>
+        <button onclick="if(window.Telegram?.WebApp?.close){window.Telegram.WebApp.close();}else{window.location.href='https://t.me/meash_cleaning_solution_bot';}" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer" id="btn-close-app">ዝጋ (Close)</button>
+      </div>
     </div>
 
     <p class="text-center text-[11px] text-slate-500 pt-3 border-t border-slate-800/80">
@@ -498,27 +515,51 @@
         if (list.length > 0) {
           const grid = document.getElementById('tma-services-grid');
           if (grid) {
+            const iconEmojiMap = {
+              floor_ceramic: '✨',
+              facilities_general: '🏢',
+              kitchen_dining: '🍽️',
+              post_construction: '🏗️',
+              glass: '🪟',
+              upholstery_carpet: '🛋️',
+              sofa: '🛋️',
+              carpet: '🧼',
+              mattress: '🛏️',
+              residential_deep: '🏠',
+              commercial: '🏢'
+            };
             grid.innerHTML = list.map((svc, i) => {
               const price = parseFloat(svc.base_price || 0);
               const unit = svc.pricing_unit_am || svc.pricing_unit || 'አገልግሎት';
               const nameAm = svc.name_am || svc.name_en;
               const nameEn = svc.name_en || svc.name_am;
-              const icon = svc.icon || (svc.category === 'furniture' ? '' : (svc.category === 'carpet' ? '' : (svc.category === 'mattress' ? '' : (svc.category === 'glass' ? '' : ''))));
+              const iconEmoji = svc.icon && svc.icon.length <= 4 ? svc.icon : (iconEmojiMap[svc.code] || '✨');
               const isSelected = String(currentSvc.id) === String(svc.id) || (!currentSvc.id && i === 0);
               if (isSelected) {
                 currentSvc = { id: Number(svc.id), code: svc.code, price, unit, nameAm, nameEn };
-                document.getElementById('tma-selected-service-name').innerText = currentLang === 'am' ? nameAm : nameEn;
-                document.getElementById('tma-unit-desc').innerText = unit.toUpperCase();
+                const nameEl = document.getElementById('tma-selected-service-name');
+                if (nameEl) nameEl.innerText = currentLang === 'am' ? nameAm : nameEn;
+                const unitEl = document.getElementById('tma-unit-desc');
+                if (unitEl) unitEl.innerText = unit.toUpperCase();
               }
               return `
-                <button type="button" onclick="selectTmaService(${svc.id}, ${price}, '${unit.replace(/'/g, "\\'")}', '${nameAm.replace(/'/g, "\\'")}', '${nameEn.replace(/'/g, "\\'")}', '${(svc.code || '').replace(/'/g, "\\'")}')" class="tma-svc-btn p-3 rounded-xl border ${isSelected ? 'border-cyan-500 bg-cyan-950/40' : 'border-slate-700 bg-slate-900'} text-left transition-all" data-service-id="${svc.id}">
-                  <span class="text-xl block mb-1">${icon}</span>
+                <button type="button"
+                  onclick="selectTmaService(${svc.id}, ${price}, '${unit.replace(/'/g, "\\'")}', '${nameAm.replace(/'/g, "\\'")}', '${nameEn.replace(/'/g, "\\'")}', '${(svc.code || '').replace(/'/g, "\\'")}')"
+                  class="tma-svc-btn p-3 rounded-xl border relative cursor-pointer ${isSelected ? 'active border-cyan-400 bg-cyan-950/70 ring-2 ring-cyan-400/50 shadow-lg shadow-cyan-500/20' : 'border-slate-700 bg-slate-900'} text-left transition-all"
+                  id="tma-svc-btn-${svc.id}"
+                  data-service-id="${svc.id}"
+                  data-service-code="${svc.code || ''}">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xl block">${iconEmoji}</span>
+                    <span class="tma-svc-check w-4 h-4 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-black flex items-center justify-center ${isSelected ? '' : 'hidden'}">✓</span>
+                  </div>
                   <span class="text-xs font-bold text-white block svc-title">${nameAm}</span>
                   <span class="text-[10px] text-cyan-400 font-semibold svc-price">${price.toLocaleString()} ብር / ${unit}</span>
                 </button>
               `;
             }).join('');
             updateTotal();
+            if (window.lucide) lucide.createIcons();
           }
         }
       } catch(err) {
@@ -569,20 +610,44 @@
     function selectTmaService(idOrCode, price, unit, nameAm, nameEn, code) {
       const numericId = Number.isInteger(Number(idOrCode)) ? Number(idOrCode) : (initialLiveServices.find(s => s.code === idOrCode)?.id || null);
       const finalCode = code || (numericId ? (initialLiveServices.find(s => s.id === numericId)?.code || '') : String(idOrCode));
-      currentSvc = { id: numericId, code: finalCode, price: Number(price), unit, nameAm, nameEn };
-      qty = (finalCode === 'carpet' || numericId === 2) ? 10 : ((finalCode === 'sofa' || numericId === 1) ? 5 : 1);
-      document.getElementById('tma-qty').innerText = qty;
-      document.getElementById('tma-selected-service-name').innerText = currentLang === 'am' ? nameAm : nameEn;
-      document.getElementById('tma-unit-desc').innerText = unit.toUpperCase();
+      currentSvc = { id: numericId, code: finalCode, price: Number(price), unit: unit || 'ስራ', nameAm, nameEn };
+      
+      // Smart default quantity per service type
+      const unitStr = String(unit || '').toLowerCase();
+      if (finalCode === 'floor_ceramic' || finalCode === 'glass' || unitStr.includes('ካሬ') || unitStr.includes('sqm')) {
+        qty = 20;
+      } else if (finalCode === 'sofa' || finalCode === 'upholstery_carpet' || unitStr.includes('መቀመጫ') || unitStr.includes('seat')) {
+        qty = 5;
+      } else if (finalCode === 'carpet') {
+        qty = 10;
+      } else {
+        qty = 1;
+      }
+
+      const qtyEl = document.getElementById('tma-qty');
+      if (qtyEl) qtyEl.innerText = qty;
+
+      const nameEl = document.getElementById('tma-selected-service-name');
+      if (nameEl) nameEl.innerText = currentLang === 'am' ? nameAm : nameEn;
+
+      const unitEl = document.getElementById('tma-unit-desc');
+      if (unitEl) unitEl.innerText = (unit || 'ስራ').toUpperCase();
 
       document.querySelectorAll('.tma-svc-btn').forEach(btn => {
-        btn.classList.remove('border-cyan-500', 'bg-cyan-950/40');
+        btn.classList.remove('active', 'border-cyan-400', 'bg-cyan-950/70', 'ring-2', 'ring-cyan-400/50', 'shadow-lg', 'shadow-cyan-500/20');
         btn.classList.add('border-slate-700', 'bg-slate-900');
-        if (btn.getAttribute('data-service-id') == numericId) {
-          btn.classList.add('border-cyan-500', 'bg-cyan-950/40');
+        const checkEl = btn.querySelector('.tma-svc-check');
+        if (checkEl) checkEl.classList.add('hidden');
+
+        const bId = btn.getAttribute('data-service-id');
+        const bCode = btn.getAttribute('data-service-code');
+        if ((numericId && String(bId) === String(numericId)) || (finalCode && bCode === finalCode)) {
+          btn.classList.remove('border-slate-700', 'bg-slate-900');
+          btn.classList.add('active', 'border-cyan-400', 'bg-cyan-950/70', 'ring-2', 'ring-cyan-400/50', 'shadow-lg', 'shadow-cyan-500/20');
+          if (checkEl) checkEl.classList.remove('hidden');
         }
       });
-      event?.currentTarget?.classList?.add('border-cyan-500', 'bg-cyan-950/40');
+
       updateTotal();
     }
 
@@ -882,6 +947,19 @@
       }
     }
 
+    // Return to TMA booking form
+    function tmaShowBookingForm() {
+      const formEl = document.getElementById('tma-form');
+      const succEl = document.getElementById('tma-success');
+      const portalEl = document.getElementById('tma-customer-portal');
+      if (succEl) succEl.classList.add('hidden');
+      if (portalEl) portalEl.classList.add('hidden');
+      if (formEl) {
+        formEl.classList.remove('hidden');
+        formEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
     // Pre-fill TMA booking form for next cleaning
     function tmaBookNextCleaning(name, phone, subcity) {
       const nameEl = document.getElementById('tma-name');
@@ -899,13 +977,7 @@
         }
       }
 
-      const formEl = document.getElementById('tma-booking-form');
-      const succEl = document.getElementById('tma-success');
-      if (succEl) succEl.classList.add('hidden');
-      if (formEl) {
-        formEl.classList.remove('hidden');
-        formEl.scrollIntoView({ behavior: 'smooth' });
-      }
+      tmaShowBookingForm();
     }
 
     // Auto-detect order parameter in TMA
@@ -913,33 +985,35 @@
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const orderParam = urlParams.get('order') || urlParams.get('track') || urlParams.get('review_order');
-        if (orderParam) {
-          const res = await fetch(`/api/public/track-order?tracking_id=${encodeURIComponent(orderParam)}`);
-          const data = await res.json();
-          if (res.ok && (data.found || data.success)) {
-            const formEl = document.getElementById('tma-booking-form');
-            const succEl = document.getElementById('tma-success');
-            const resIdEl = document.getElementById('tma-result-id');
-            const payNoticeEl = document.getElementById('tma-payment-notice');
-            const revBox = document.getElementById('tma-review-box');
+        if (orderParam && typeof orderParam === 'string' && orderParam.trim().length >= 4 && !orderParam.includes('{') && !orderParam.includes('tgWebAppData')) {
+          const res = await fetch(`/api/public/track-order?tracking_id=${encodeURIComponent(orderParam.trim())}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && (data.found || data.success)) {
+              const formEl = document.getElementById('tma-form');
+              const succEl = document.getElementById('tma-success');
+              const resIdEl = document.getElementById('tma-result-id');
+              const payNoticeEl = document.getElementById('tma-payment-notice');
+              const revBox = document.getElementById('tma-review-box');
 
-            if (formEl) formEl.classList.add('hidden');
-            if (succEl) succEl.classList.remove('hidden');
-            if (resIdEl) resIdEl.innerText = orderParam;
+              if (formEl) formEl.classList.add('hidden');
+              if (succEl) succEl.classList.remove('hidden');
+              if (resIdEl) resIdEl.innerText = orderParam.trim();
 
-            const stage = data.customer_stage || (data.order?.customer_stage);
-            if (stage === 'comment_waiting') {
-              if (payNoticeEl) payNoticeEl.classList.add('hidden');
-              if (revBox) revBox.classList.remove('hidden');
-            } else if (stage === 'normal_customer') {
-              if (payNoticeEl) payNoticeEl.classList.add('hidden');
-              if (revBox) revBox.classList.add('hidden');
-              showTmaCustomerPortal(orderParam);
+              const stage = data.customer_stage || (data.order?.customer_stage);
+              if (stage === 'comment_waiting') {
+                if (payNoticeEl) payNoticeEl.classList.add('hidden');
+                if (revBox) revBox.classList.remove('hidden');
+              } else if (stage === 'normal_customer') {
+                if (payNoticeEl) payNoticeEl.classList.add('hidden');
+                if (revBox) revBox.classList.add('hidden');
+                showTmaCustomerPortal(orderParam.trim());
+              }
             }
           }
         }
       } catch (err) {
-        // Safe fallback
+        // Safe fallback - preserve default booking form
       }
     });
   </script>

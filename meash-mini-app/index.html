@@ -17,9 +17,10 @@
             color: var(--tg-theme-text-color, #F8FAFC);
         }
         .service-card.active {
-            border-color: #06B6D4;
-            background-color: rgba(6, 182, 212, 0.15);
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+            border-color: #22d3ee !important;
+            background-color: rgba(6, 182, 212, 0.25) !important;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4) !important;
+            transform: scale(1.02);
         }
     </style>
 </head>
@@ -124,7 +125,13 @@
                 <span class="text-[11px] font-semibold text-slate-400 block mb-1" id="lbl-tracking-id">የትዕዛዝ መለያ ቁጥር (Order ID)</span>
                 <span class="text-2xl font-black text-cyan-400 tracking-wider" id="tma-result-id">ORD-2026-0001</span>
             </div>
-            <button onclick="if(window.Telegram?.WebApp?.close){window.Telegram.WebApp.close();}else{window.location.href='https://t.me/meash_cleaning_solution_bot';}" class="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold rounded-xl transition-all" id="btn-close-app">ዝጋ (Close)</button>
+            <div class="space-y-2 mb-2">
+                <button type="button" onclick="tmaShowBookingForm()" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-black rounded-xl shadow-lg shadow-cyan-500/25 transition-all cursor-pointer flex items-center justify-center gap-2">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>አዲስ ቀጠሮ ያዙ (Book Another Cleaning)</span>
+                </button>
+                <button onclick="if(window.Telegram?.WebApp?.close){window.Telegram.WebApp.close();}else{window.location.href='https://t.me/meash_cleaning_solution_bot';}" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer" id="btn-close-app">ዝጋ (Close)</button>
+            </div>
         </div>
 
         <!-- Official Footer -->
@@ -386,7 +393,7 @@
         function renderServices() {
             const grid = document.getElementById('tma-services-grid');
             grid.innerHTML = services.map(svc => {
-                const isSelected = selectedService && selectedService.id === svc.id;
+                const isSelected = selectedService && String(selectedService.id) === String(svc.id);
                 const title = currentLang === 'am' ? svc.name_am : svc.name_en;
                 const unit = currentLang === 'am' ? (svc.unit_label_am || svc.unit) : (svc.unit_label_en || svc.unit);
                 const cur = currentLang === 'am' ? 'ብር' : 'ETB';
@@ -394,9 +401,13 @@
 
                 return `
                     <button type="button" onclick="selectServiceById(${svc.id})"
-                        class="service-card p-3 rounded-xl border text-left transition-all ${isSelected ? 'active border-cyan-500 bg-cyan-950/40' : 'border-slate-700 bg-slate-900'}"
-                        id="svc-btn-${svc.id}">
-                        <span class="text-xl block mb-1">${icon}</span>
+                        class="service-card p-3 rounded-xl border relative cursor-pointer text-left transition-all ${isSelected ? 'active border-cyan-400 bg-cyan-950/70 ring-2 ring-cyan-400/50 shadow-lg shadow-cyan-500/20' : 'border-slate-700 bg-slate-900'}"
+                        id="svc-btn-${svc.id}"
+                        data-service-id="${svc.id}">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xl block">${icon}</span>
+                            <span class="tma-svc-check w-4 h-4 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-black flex items-center justify-center ${isSelected ? '' : 'hidden'}">✓</span>
+                        </div>
                         <span class="text-xs font-bold text-white block leading-snug mb-1">${title}</span>
                         <span class="text-[10px] text-cyan-400 font-semibold block">${svc.base_price.toLocaleString()} ${cur} / ${unit}</span>
                     </button>
@@ -432,28 +443,58 @@
         }
 
         function selectServiceById(id) {
-            const svc = services.find(s => s.id === id);
+            const svc = services.find(s => String(s.id) === String(id) || s.code === id) || services[0];
             if (!svc) return;
 
             selectedService = svc;
-            qty = svc.default_qty || 1;
+            
+            // Set standard starting quantity based on service type
+            const unitStr = String(svc.unit_label_am || svc.unit || '').toLowerCase();
+            if (svc.code === 'floor_ceramic' || svc.code === 'glass' || unitStr.includes('ካሬ') || unitStr.includes('sqm')) {
+                qty = 20;
+            } else if (svc.code === 'upholstery_carpet' || unitStr.includes('መቀመጫ') || unitStr.includes('seat')) {
+                qty = 5;
+            } else if (svc.code === 'carpet') {
+                qty = 10;
+            } else {
+                qty = 1;
+            }
 
-            document.getElementById('tma-qty').innerText = qty;
-            document.getElementById('tma-selected-service-name').innerText = currentLang === 'am' ? svc.name_am : svc.name_en;
-            document.getElementById('tma-unit-desc').innerText = (currentLang === 'am' ? (svc.unit_label_am || svc.unit) : (svc.unit_label_en || svc.unit)).toUpperCase();
+            const qtyEl = document.getElementById('tma-qty');
+            if (qtyEl) qtyEl.innerText = qty;
+
+            const nameEl = document.getElementById('tma-selected-service-name');
+            if (nameEl) nameEl.innerText = currentLang === 'am' ? svc.name_am : svc.name_en;
+
+            const unitEl = document.getElementById('tma-unit-desc');
+            if (unitEl) unitEl.innerText = (currentLang === 'am' ? (svc.unit_label_am || svc.unit) : (svc.unit_label_en || svc.unit)).toUpperCase();
 
             document.querySelectorAll('.service-card').forEach(b => {
-                b.classList.remove('active', 'border-cyan-500', 'bg-cyan-950/40');
+                b.classList.remove('active', 'border-cyan-400', 'bg-cyan-950/70', 'ring-2', 'ring-cyan-400/50', 'shadow-lg', 'shadow-cyan-500/20');
                 b.classList.add('border-slate-700', 'bg-slate-900');
+                const checkEl = b.querySelector('.tma-svc-check');
+                if (checkEl) checkEl.classList.add('hidden');
             });
 
-            const activeBtn = document.getElementById(`svc-btn-${id}`);
+            const activeBtn = document.getElementById(`svc-btn-${svc.id}`);
             if (activeBtn) {
                 activeBtn.classList.remove('border-slate-700', 'bg-slate-900');
-                activeBtn.classList.add('active', 'border-cyan-500', 'bg-cyan-950/40');
+                activeBtn.classList.add('active', 'border-cyan-400', 'bg-cyan-950/70', 'ring-2', 'ring-cyan-400/50', 'shadow-lg', 'shadow-cyan-500/20');
+                const checkEl = activeBtn.querySelector('.tma-svc-check');
+                if (checkEl) checkEl.classList.remove('hidden');
             }
 
             updateTotal();
+        }
+
+        function tmaShowBookingForm() {
+            const formEl = document.getElementById('tma-form');
+            const succEl = document.getElementById('tma-success');
+            if (succEl) succEl.classList.add('hidden');
+            if (formEl) {
+                formEl.classList.remove('hidden');
+                formEl.scrollIntoView({ behavior: 'smooth' });
+            }
         }
 
         function changeQty(delta) {
