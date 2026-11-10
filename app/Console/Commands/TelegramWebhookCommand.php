@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 
 class TelegramWebhookCommand extends Command
 {
-    protected $signature = 'telegram:webhook {action=status : status, set, or delete}';
+    protected $signature = 'telegram:webhook {action=status : status, set, or delete} {--url= : Custom webhook URL}';
     protected $description = 'Manage Telegram Bot Webhook (status, set to production domain, or delete for local polling)';
 
     public function handle(): int
@@ -21,10 +21,13 @@ class TelegramWebhookCommand extends Command
         }
 
         if ($action === 'set') {
+            $customUrl = $this->option('url');
             $configuredWebhook = config('services.telegram.webhook_url');
             $appUrl = config('app.url') ?: env('APP_URL');
 
-            if (!empty($configuredWebhook)) {
+            if (!empty($customUrl)) {
+                $url = $customUrl;
+            } elseif (!empty($configuredWebhook)) {
                 $url = $configuredWebhook;
             } elseif (!empty($appUrl)) {
                 $url = rtrim($appUrl, '/') . '/api/telegram/webhook';

@@ -17,6 +17,12 @@ Route::get('/', function () {
 Route::get('/telegram-miniapp', function () {
     return view('telegram_miniapp');
 });
+Route::get('/telegram/miniapp', function () {
+    return view('telegram_miniapp');
+});
+Route::get('/miniapp', function () {
+    return view('telegram_miniapp');
+});
 
 // 3. Master Internal PWA Operating Platform (Owner, Reception, Cleaners, Sales)
 Route::get('/app/{any?}', function () {
