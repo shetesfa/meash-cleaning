@@ -17,8 +17,11 @@ class CustomerCareController extends Controller
 {
     public function followups(Request $request): JsonResponse
     {
-        // Auto-create pending followups for completed orders that don't have one yet
-        $completedOrdersWithoutFollowup = \App\Models\Order::where('order_status', 'completed')
+        // Auto-create pending followups for completed or paid orders that don't have one yet
+        $completedOrdersWithoutFollowup = \App\Models\Order::where(function ($q) {
+                $q->where('order_status', 'completed')
+                  ->orWhere('payment_status', 'paid');
+            })
             ->whereDoesntHave('followups')
             ->get();
         

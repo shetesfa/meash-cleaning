@@ -195,16 +195,16 @@
 
     <!-- Right: Hotlines & Shortcuts -->
     <div class="flex items-center gap-3">
-      <a href="tel:0970075509" class="hover:text-teal-400 transition flex items-center gap-1 font-bold text-white">
+      <a href="tel:{{ $phone1 }}" class="hover:text-teal-400 transition flex items-center gap-1 font-bold text-white">
         <i data-lucide="phone-call" class="w-3 h-3 text-teal-400"></i>
-        <span>0970 07 55 09</span>
+        <span>{{ $phone1 }}</span>
       </a>
       <span class="text-slate-600">/</span>
-      <a href="tel:0998142190" class="hover:text-teal-400 transition flex items-center gap-1 font-bold text-white">
-        <span>0998 14 21 90</span>
+      <a href="tel:{{ $phone2 }}" class="hover:text-teal-400 transition flex items-center gap-1 font-bold text-white">
+        <span>{{ $phone2 }}</span>
       </a>
       <span class="text-slate-600">|</span>
-      <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition flex items-center gap-1 text-cyan-300 font-semibold">
+      <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition flex items-center gap-1 text-cyan-300 font-semibold">
         <i data-lucide="send" class="w-3 h-3 text-cyan-400"></i>
         <span>Telegram Bot</span>
       </a>
@@ -256,11 +256,11 @@
     <!-- Header Action Controls -->
     <div class="flex items-center gap-1.5 sm:gap-2">
       <!-- Direct Call Button (Desktop / Mobile Icon) -->
-      <a href="tel:0970075509" class="hidden sm:flex xl:hidden items-center gap-1.5 text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-1.5 rounded-full transition shadow-sm" title="Call Now">
+      <a href="tel:{{ $phone1 }}" class="hidden sm:flex xl:hidden items-center gap-1.5 text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-1.5 rounded-full transition shadow-sm" title="Call Now">
         <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-500"></i>
-        <span class="hidden md:inline font-mono">0970 07 55 09</span>
+        <span class="hidden md:inline font-mono">{{ $phone1 }}</span>
       </a>
-      <a href="tel:0970075509" class="flex sm:hidden p-2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition items-center justify-center shrink-0" title="Call Meash">
+      <a href="tel:{{ $phone1 }}" class="flex sm:hidden p-2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition items-center justify-center shrink-0" title="Call Meash">
         <i data-lucide="phone" class="w-4 h-4"></i>
       </a>
 
@@ -353,11 +353,11 @@
 
       <!-- Quick Action Cards in Mobile Menu -->
       <div class="pt-2 space-y-2 border-t border-slate-200 dark:border-slate-800">
-        <a href="tel:0970075509" class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+        <a href="tel:{{ $phone1 }}" class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
           <i data-lucide="phone-call" class="w-4 h-4"></i>
-          <span>ቀጥታ ይደውሉ፡ 0970 07 55 09</span>
+          <span>ቀጥታ ይደውሉ፡ {{ $phone1 }}</span>
         </a>
-        <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 rounded-xl bg-[#0088cc] hover:bg-[#0077b5] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow">
+        <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 rounded-xl bg-[#0088cc] hover:bg-[#0077b5] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow">
           <i data-lucide="send" class="w-4 h-4"></i>
           <span>ቴሌግራም ቦት (Telegram Order)</span>
         </a>
@@ -426,16 +426,16 @@
       <!-- Quick Contact Pills (Direct Call, WhatsApp & Telegram) -->
       <div class="mt-6 flex flex-wrap items-center gap-3 text-xs font-bold text-navy">
         <span class="text-navy/50 font-medium"><span data-lang-block="am">አሁኑኑ ይደውሉ፡</span><span data-lang-block="en">Call Now:</span></span>
-        <a href="tel:0970075509" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
-          <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0970 07 55 09
+        <a href="tel:{{ $phone1 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
+          <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone1 }}
         </a>
-        <a href="tel:0998142190" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
-          <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0998 14 21 90
+        <a href="tel:{{ $phone2 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
+          <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone2 }}
         </a>
-        <a href="https://wa.me/251970075509?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20inquire%20about%20your%20services" target="_blank" class="hover:opacity-90 flex items-center gap-1.5 bg-[#25D366]/15 text-[#128C7E] dark:text-[#25D366] border border-[#25D366]/30 px-3 py-1.5 rounded-md">
+        <a href="https://wa.me/251{{ ltrim($phone1, '0') }}?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20inquire%20about%20your%20services" target="_blank" class="hover:opacity-90 flex items-center gap-1.5 bg-[#25D366]/15 text-[#128C7E] dark:text-[#25D366] border border-[#25D366]/30 px-3 py-1.5 rounded-md">
           <i data-lucide="message-circle" class="w-3.5 h-3.5 text-[#25D366]"></i> WhatsApp
         </a>
-        <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="hover:text-teal flex items-center gap-1.5 bg-teal/10 text-teal-dark border border-teal/20 px-3 py-1.5 rounded-md">
+        <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 bg-teal/10 text-teal-dark border border-teal/20 px-3 py-1.5 rounded-md">
           <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram Bot
         </a>
       </div>
@@ -575,42 +575,42 @@
           <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ዋና መስሪያ ቤት አድራሻ</span><span data-lang-block="en">Head Office Location</span></div>
           <div class="font-semibold flex items-center gap-2">
             <i data-lucide="map-pin" class="w-4 h-4 text-teal"></i>
-            <span>አያት አደባባይ፣ አዲስ አበባ • Ayat Square, Addis Ababa</span>
+            <span>{{ $addressAm }} • {{ $addressEn }}</span>
           </div>
         </div>
 
         <div class="border-b border-white/10 pb-3">
           <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ቀጥታ ስልክ መስመሮች (24/7)</span><span data-lang-block="en">Direct Hotlines</span></div>
           <div class="flex flex-wrap gap-3 mt-1.5">
-            <a href="tel:0970075509" class="font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
-              <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0970 07 55 09
+            <a href="tel:{{ $phone1 }}" class="font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
+              <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone1 }}
             </a>
-            <a href="tel:0998142190" class="font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
-              <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0998 14 21 90
+            <a href="tel:{{ $phone2 }}" class="font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
+              <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone2 }}
             </a>
           </div>
         </div>
 
         <div class="border-b border-white/10 pb-3">
           <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ኢሜይል (Official Email)</span><span data-lang-block="en">Official Email</span></div>
-          <a href="mailto:meashcleaningsolution@gmail.com" class="font-semibold text-teal-light hover:underline flex items-center gap-2">
-            <i data-lucide="mail" class="w-4 h-4 text-teal"></i> meashcleaningsolution@gmail.com
+          <a href="mailto:{{ $email }}" class="font-semibold text-teal-light hover:underline flex items-center gap-2">
+            <i data-lucide="mail" class="w-4 h-4 text-teal"></i> {{ $email }}
           </a>
         </div>
 
         <div>
-          <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ማህበራዊ ትስስር ገጾች (@meashcleaningsolution)</span><span data-lang-block="en">Social Channels</span></div>
+          <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ማህበራዊ ትስስር ገጾች ({{ $socialHandle }})</span><span data-lang-block="en">Social Channels</span></div>
           <div class="flex flex-wrap items-center gap-2 mt-1.5">
-            <a href="https://www.tiktok.com/@meashcleaningsolution" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
+            <a href="{{ $tiktokUrl }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
               <i data-lucide="video" class="w-3.5 h-3.5"></i> TikTok
             </a>
-            <a href="https://instagram.com/meashcleaningsolution" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
+            <a href="{{ $instagramUrl }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
               <i data-lucide="camera" class="w-3.5 h-3.5"></i> Instagram
             </a>
-            <a href="https://facebook.com/meashcleaningsolution" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
+            <a href="{{ $facebookUrl }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
               <i data-lucide="facebook" class="w-3.5 h-3.5"></i> Facebook
             </a>
-            <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
+            <a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleaning' }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
               <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram
             </a>
           </div>
@@ -863,7 +863,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-white/20 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-light"><span data-lang-block="am">እስከ 15% የኮንትራት ቅናሽ</span><span data-lang-block="en">Up to 15% Off</span></span>
-          <a href="tel:0970075509" class="text-xs font-bold bg-teal text-white px-3.5 py-1.5 rounded hover:bg-teal-dark transition flex items-center gap-1">
+          <a href="tel:{{ $phone1 }}" class="text-xs font-bold bg-teal text-white px-3.5 py-1.5 rounded hover:bg-teal-dark transition flex items-center gap-1">
             <i data-lucide="phone-call" class="w-3 h-3"></i> ደውለው ይወያዩ
           </a>
         </div>
@@ -890,131 +890,63 @@
   </div>
 
   <div id="services-list" class="divide-y divide-navy/10 border-t border-b border-navy/10">
-    <!-- 1. Ceramic & Hardwood Floor Cleaning -->
-    <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="1">
-      <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center shrink-0">
-        <i data-lucide="sparkles" class="w-6 h-6"></i>
+    @forelse($activeServices as $idx => $svc)
+      @php
+        $svcNum = $idx + 1;
+        $unitLabel = ($svc->unit && $svc->unit !== 'service') ? ' / ' . $svc->unit : '';
+        $iconName = $svc->icon ?: match($svc->code) {
+          'floor_ceramic' => 'sparkles',
+          'facilities_general' => 'building-2',
+          'kitchen_dining' => 'utensils',
+          'post_construction' => 'home',
+          'glass' => 'sun',
+          'upholstery_carpet' => 'sofa',
+          default => 'sparkles'
+        };
+      @endphp
+      <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="{{ $svcNum }}">
+        <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center shrink-0">
+          <i data-lucide="{{ $iconName }}" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h3 class="font-serif font-bold text-xl text-navy">
+            <span data-lang-block="am">{{ $svcNum }}. {{ $svc->name_am ?: $svc->name_en }}</span>
+            <span data-lang-block="en">{{ $svcNum }}. {{ $svc->name_en ?: $svc->name_am }}</span>
+          </h3>
+          <p class="text-navy/65 text-sm mt-1">
+            <span data-lang-block="am">{{ $svc->description_am ?: $svc->description_en }}</span>
+            <span data-lang-block="en">{{ $svc->description_en ?: $svc->description_am }}</span>
+          </p>
+        </div>
+        <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price">
+          {{ number_format($svc->base_price) }} ETB{{ $unitLabel }}
+        </div>
+        <a href="#book" onclick="preselectService('{{ $svc->code }}')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+          <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
       </div>
-      <div>
-        <h3 class="font-serif font-bold text-xl text-navy">
-          <span data-lang-block="am">1. የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት</span>
-          <span data-lang-block="en">1. Ceramic &amp; Hardwood Floor Cleaning</span>
-        </h3>
-        <p class="text-navy/65 text-sm mt-1">
-          <span data-lang-block="am">የሴራሚክ፣ የግራናይት እና የእንጨት ወለሎች ጥልቅ የማሽን እጥበት፣ ነጠብጣብ ማስወገድ እና የወለል ማደስ (Deep tile &amp; grout restoration)።</span>
-          <span data-lang-block="en">Deep tile &amp; grout restoration, single-disc rotary scrub, and hardwood revitalization.</span>
-        </p>
+    @empty
+      <!-- Fallback when database is empty -->
+      <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="1">
+        <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center shrink-0">
+          <i data-lucide="sparkles" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h3 class="font-serif font-bold text-xl text-navy">
+            <span data-lang-block="am">1. የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት</span>
+            <span data-lang-block="en">1. Ceramic &amp; Hardwood Floor Cleaning</span>
+          </h3>
+          <p class="text-navy/65 text-sm mt-1">
+            <span data-lang-block="am">የሴራሚክ፣ የግራናይት እና የእንጨት ወለሎች ጥልቅ የማሽን እጥበት፣ ነጠብጣብ ማስወገድ እና የወለል ማደስ (Deep tile &amp; grout restoration)።</span>
+            <span data-lang-block="en">Deep tile &amp; grout restoration, single-disc rotary scrub, and hardwood revitalization.</span>
+          </p>
+        </div>
+        <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price">500 ETB / sqm</div>
+        <a href="#book" onclick="preselectService('floor_ceramic')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+          <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
       </div>
-      <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price">60 ETB / sqm</div>
-      <a href="#book" onclick="preselectService('floor_ceramic')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0">
-        <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </a>
-    </div>
-
-    <!-- 2. Deep & General Facilities Cleaning -->
-    <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="2">
-      <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center shrink-0">
-        <i data-lucide="building-2" class="w-6 h-6"></i>
-      </div>
-      <div>
-        <h3 class="font-serif font-bold text-xl text-navy">
-          <span data-lang-block="am">2. የተቋማት አጠቃላይ እና ጥልቅ ጽዳት</span>
-          <span data-lang-block="en">2. Deep &amp; General Facilities Cleaning</span>
-        </h3>
-        <p class="text-navy/65 text-sm mt-1">
-          <span data-lang-block="am">ለቢሮዎች፣ ለባንኮች፣ ለድርጅቶች እና ለተቋማት አጠቃላይ ጥልቅ ጽዳት (Corporate spaces &amp; offices)።</span>
-          <span data-lang-block="en">Corporate spaces &amp; offices — comprehensive turn-key hygiene, workstation and executive room care.</span>
-        </p>
-      </div>
-      <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price">3,500 ETB</div>
-      <a href="#book" onclick="preselectService('facilities_general')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0">
-        <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </a>
-    </div>
-
-    <!-- 3. Kitchen & Dining Sanitation -->
-    <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="3">
-      <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center shrink-0">
-        <i data-lucide="utensils" class="w-6 h-6"></i>
-      </div>
-      <div>
-        <h3 class="font-serif font-bold text-xl text-navy">
-          <span data-lang-block="am">3. የወጥ ቤት እና የምግብ ማስተናገጃ ቦታዎች ጽዳት</span>
-          <span data-lang-block="en">3. Kitchen &amp; Dining Sanitation</span>
-        </h3>
-        <p class="text-navy/65 text-sm mt-1">
-          <span data-lang-block="am">ለሆቴል፣ ካፌ እና ሬስቶራንት የወጥ ቤት ቅባት ማስወገድና የምግብ ማስተናገጃ ሳኒታይዜሽን (Hotels, Cafés &amp; Restaurants)።</span>
-          <span data-lang-block="en">Hotels, Cafés &amp; Restaurants — heavy grease exhaust hoods, prep tables &amp; food-safe disinfection.</span>
-        </p>
-      </div>
-      <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price">3,000 ETB</div>
-      <a href="#book" onclick="preselectService('kitchen_dining')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0">
-        <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </a>
-    </div>
-
-    <!-- 4. Post-Construction Handover Cleaning -->
-    <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="4">
-      <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center shrink-0">
-        <i data-lucide="home" class="w-6 h-6"></i>
-      </div>
-      <div>
-        <h3 class="font-serif font-bold text-xl text-navy">
-          <span data-lang-block="am">4. ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት</span>
-          <span data-lang-block="en">4. Post-Construction Handover Cleaning</span>
-        </h3>
-        <p class="text-navy/65 text-sm mt-1">
-          <span data-lang-block="am">ከአዲስ ህንፃ ወይም እድሳት ማጠናቀቅ በኋላ የቀለም፣ የሲሚንቶ እና የአቧራ ቅሪቶችን አጽድቶ ለርክክብ ማዘጋጀት (For new developments)።</span>
-          <span data-lang-block="en">For new developments — paint scraping, cement haze clearance &amp; move-in ready handover.</span>
-        </p>
-      </div>
-      <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price">4,500 ETB</div>
-      <a href="#book" onclick="preselectService('post_construction')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0">
-        <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </a>
-    </div>
-
-    <!-- 5. High-Rise Window & Glass Cleaning -->
-    <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="5">
-      <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center shrink-0">
-        <i data-lucide="sun" class="w-6 h-6"></i>
-      </div>
-      <div>
-        <h3 class="font-serif font-bold text-xl text-navy">
-          <span data-lang-block="am">5. የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት</span>
-          <span data-lang-block="en">5. High-Rise Window &amp; Glass Cleaning</span>
-        </h3>
-        <p class="text-navy/65 text-sm mt-1">
-          <span data-lang-block="am">የህንፃ እና የመኖሪያ ቤት መስታወቶች ከውስጥ እና ከውጭ በዘመናዊ እቃዎች ንፁህ እና ብሩህ አድርጎ ማፅዳት።</span>
-          <span data-lang-block="en">Crystal-clear streak-free window washing for multi-story buildings, facades &amp; glass showrooms.</span>
-        </p>
-      </div>
-      <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price">70 ETB / sqm</div>
-      <a href="#book" onclick="preselectService('glass')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0">
-        <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </a>
-    </div>
-
-    <!-- 6. Upholstery & Carpet Deep Care -->
-    <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="6">
-      <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center shrink-0">
-        <i data-lucide="sofa" class="w-6 h-6"></i>
-      </div>
-      <div>
-        <h3 class="font-serif font-bold text-xl text-navy">
-          <span data-lang-block="am">6. የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ</span>
-          <span data-lang-block="en">6. Upholstery &amp; Carpet Deep Care</span>
-        </h3>
-        <p class="text-navy/65 text-sm mt-1">
-          <span data-lang-block="am">ለሶፋ፣ ምንጣፍ፣ ፍራሽ እና ወንበሮች ጥልቅ የስቲም እና የሻምፖ እጥበት (ቴክኖሎጂን ሳይጎዱ ማፅዳት)።</span>
-          <span data-lang-block="en">High-tech deep shampoo extraction for sofas, carpets, rugs, and mattresses without fabric damage.</span>
-        </p>
-      </div>
-      <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price">350 ETB / seat</div>
-      <a href="#book" onclick="preselectService('upholstery_carpet')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0">
-        <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
-      </a>
-    </div>
+    @endforelse
   </div>
 </section>
 
@@ -1145,9 +1077,9 @@
       </p>
     </div>
     <div class="flex flex-col sm:flex-row items-center justify-end gap-3.5">
-      <a href="tel:0970075509" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
+      <a href="tel:{{ $phone1 }}" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
         <i data-lucide="phone-call" class="w-4 h-4"></i>
-        <span>0970 07 55 09 / 0998 14 21 90</span>
+        <span>{{ $phone1 }} / {{ $phone2 }}</span>
       </a>
       <a href="#book" class="w-full sm:w-auto bg-white hover:bg-slate-100 text-navy font-black text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow">
         <i data-lucide="calendar" class="w-4 h-4 text-teal"></i>
@@ -1829,8 +1761,8 @@
               <i data-lucide="phone-call" class="w-5 h-5"></i>
             </div>
             <h4 class="font-bold text-xs uppercase tracking-wider text-navy/50 dark:text-slate-400 mb-1"><span data-lang-block="am">ቀጥታ ስልክ መስመሮች (24/7)</span><span data-lang-block="en">Direct Hotlines</span></h4>
-            <a href="tel:0970075509" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition">0970 07 55 09</a>
-            <a href="tel:0998142190" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition mt-0.5">0998 14 21 90</a>
+            <a href="tel:{{ $phone1 }}" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition">{{ $phone1 }}</a>
+            <a href="tel:{{ $phone2 }}" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition mt-0.5">{{ $phone2 }}</a>
           </div>
 
           <div class="bg-fog dark:bg-slate-800 p-5 rounded-2xl border border-navy/10">
@@ -1839,16 +1771,16 @@
                 <i data-lucide="message-square" class="w-5 h-5"></i>
               </div>
               <div class="flex gap-2">
-                <a href="https://wa.me/251970075509?text=Hello%20Meash%20Cleaning%20Solution" target="_blank" rel="noopener noreferrer" class="text-[#25D366] hover:opacity-80" title="WhatsApp"><i data-lucide="message-circle" class="w-5 h-5"></i></a>
-                <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" rel="noopener noreferrer" class="text-teal-dark hover:opacity-80" title="Telegram"><i data-lucide="send" class="w-5 h-5"></i></a>
+                <a href="https://wa.me/251{{ ltrim($phone1, '0') }}?text=Hello%20Meash%20Cleaning%20Solution" target="_blank" rel="noopener noreferrer" class="text-[#25D366] hover:opacity-80" title="WhatsApp"><i data-lucide="message-circle" class="w-5 h-5"></i></a>
+                <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" rel="noopener noreferrer" class="text-teal-dark hover:opacity-80" title="Telegram"><i data-lucide="send" class="w-5 h-5"></i></a>
               </div>
             </div>
             <h4 class="font-bold text-xs uppercase tracking-wider text-navy/50 dark:text-slate-400 mb-1"><span data-lang-block="am">ኦንላይን መልእክት እና ኢሜይል</span><span data-lang-block="en">Official Email &amp; Messaging</span></h4>
-            <a href="mailto:meashcleaningsolution@gmail.com" class="block font-semibold text-xs text-navy dark:text-white hover:text-teal transition truncate">meashcleaningsolution@gmail.com</a>
+            <a href="mailto:{{ $email }}" class="block font-semibold text-xs text-navy dark:text-white hover:text-teal transition truncate">{{ $email }}</a>
             <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
-              <a href="https://wa.me/251970075509?text=Hello%20Meash%20Cleaning%20Solution" target="_blank" rel="noopener noreferrer" class="font-bold text-[#128C7E] dark:text-[#25D366] hover:underline flex items-center gap-1"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i> WhatsApp</a>
+              <a href="https://wa.me/251{{ ltrim($phone1, '0') }}?text=Hello%20Meash%20Cleaning%20Solution" target="_blank" rel="noopener noreferrer" class="font-bold text-[#128C7E] dark:text-[#25D366] hover:underline flex items-center gap-1"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i> WhatsApp</a>
               <span class="text-navy/30 dark:text-slate-500">•</span>
-              <a href="https://t.me/meash_cleaning_solution_bot" target="_blank" rel="noopener noreferrer" class="font-bold text-teal-dark hover:underline flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram</a>
+              <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" rel="noopener noreferrer" class="font-bold text-teal-dark hover:underline flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram</a>
             </div>
           </div>
         </div>
@@ -1859,14 +1791,14 @@
             <i data-lucide="map-pin" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
             <div>
               <h5 class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">ዋና ቢሮ አድራሻ</span><span data-lang-block="en">Head Office Location</span></h5>
-              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">አያት አደባባይ፣ አዲስ አበባ፣ ኢትዮጵያ • Ayat Square, Addis Ababa, Ethiopia</p>
+              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">{{ $addressAm }} • {{ $addressEn }}</p>
             </div>
           </div>
           <div class="flex items-start gap-3">
             <i data-lucide="clock" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
             <div>
-              <h5 class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">የስራ ሰዓት (24/7)</span><span data-lang-block="en">Working Hours</span></h5>
-              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">ከሰኞ እስከ እሁድ 24 ሰዓት ክፍት — የቀን እና የሌሊት ፈረቃ (24/7 Open — Day, Evening &amp; Night Shifts)</p>
+              <h5 class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">የስራ ሰዓት</span><span data-lang-block="en">Working Hours</span></h5>
+              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">{{ $hoursAm }} • {{ $hoursEn }}</p>
             </div>
           </div>
         </div>
@@ -1978,26 +1910,25 @@
         ሜአሽ የጽዳት አገልግሎት ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማትና ለመኖሪያ ቤቶች ፕሪሚየም የጥልቅ ጽዳት አገልግሎት የሚሰጥ ተቋም ነው።
       </p>
       <div class="font-bold text-white text-sm space-y-1">
-        <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0970 07 55 09</p>
-        <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> 0998 14 21 90</p>
+        <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> <a href="tel:{{ $phone1 }}" class="hover:text-teal transition">{{ $phone1 }}</a></p>
+        <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> <a href="tel:{{ $phone2 }}" class="hover:text-teal transition">{{ $phone2 }}</a></p>
       </div>
     </div>
     <div>
       <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ይፋዊ የጽዳት አገልግሎቶች</p>
       <ul class="space-y-2 text-xs">
-        <li><a href="#services" onclick="preselectService('floor_ceramic')" class="hover:text-teal transition">1. የሴራሚክ እና እንጨት ወለሎች ጥልቅ ጽዳት</a></li>
-        <li><a href="#services" onclick="preselectService('facilities_general')" class="hover:text-teal transition">2. የተቋማት አጠቃላይ እና ጥልቅ ጽዳት (ቢሮዎች)</a></li>
-        <li><a href="#services" onclick="preselectService('kitchen_dining')" class="hover:text-teal transition">3. የወጥ ቤት እና ምግብ ማስተናገጃ ጽዳት</a></li>
-        <li><a href="#services" onclick="preselectService('post_construction')" class="hover:text-teal transition">4. የግንባታ ማጠናቀቅ ርክክብ ጽዳት</a></li>
-        <li><a href="#services" onclick="preselectService('glass')" class="hover:text-teal transition">5. የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት</a></li>
-        <li><a href="#services" onclick="preselectService('upholstery_carpet')" class="hover:text-teal transition">6. የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ</a></li>
+        @forelse($activeServices as $s)
+          <li><a href="#services" onclick="preselectService('{{ $s->code }}')" class="hover:text-teal transition">{{ $s->name_am ?: $s->name_en }}</a></li>
+        @empty
+          <li><a href="#services" class="hover:text-teal transition">የወለል፣ የተቋማትና የሶፋ ጥልቅ ጽዳት</a></li>
+        @endforelse
       </ul>
     </div>
     <div>
       <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ድርጅት እና መረጃ</p>
       <ul class="space-y-2 text-xs">
         <li><a href="#about" class="hover:text-teal transition">ስለ እኛ (About Us)</a></li>
-        <li><a href="#pillars" class="hover:text-teal transition">ለምን ሜአሽን ይመርጣሉ? (5 Pillars)</a></li>
+        <li><a href="#advantage" class="hover:text-teal transition">ለምን ሜአሽን ይመርጣሉ? (5 Pillars)</a></li>
         <li><a href="#process" class="hover:text-teal transition">ቀላል አሰራራችን (5-Step Process)</a></li>
         <li><a href="#gallery" class="hover:text-teal transition">የስራ ጋለሪ (Before &amp; After)</a></li>
         <li><a href="#reviews" class="hover:text-teal transition">የደንበኞች አስተያየት (Reviews)</a></li>
@@ -2012,16 +1943,16 @@
       </ul>
     </div>
     <div>
-      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ማህበራዊ ትስስር (@meashcleaningsolution)</p>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ማህበራዊ ትስስር ({{ $socialHandle }})</p>
       <ul class="space-y-2 text-xs">
-        <li><a href="https://t.me/meashdeepcleaning" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashdeepcleaning)</a></li>
-        <li><a href="https://t.me/meash_cleaning_solution_bot" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="bot" class="w-3.5 h-3.5 text-teal"></i> Telegram Bot (@meash_cleaning_solution_bot)</a></li>
-        <li><a href="https://www.tiktok.com/@meashcleaningsolution" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="video" class="w-3.5 h-3.5 text-teal"></i> TikTok (@meashcleaningsolution)</a></li>
-        <li><a href="https://instagram.com/meashcleaningsolution" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="camera" class="w-3.5 h-3.5 text-teal"></i> Instagram (@meashcleaningsolution)</a></li>
-        <li><a href="https://facebook.com/meashcleaningsolution" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="facebook" class="w-3.5 h-3.5 text-teal"></i> Facebook (@meashcleaningsolution)</a></li>
+        <li><a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleaning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel</a></li>
+        <li><a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="bot" class="w-3.5 h-3.5 text-teal"></i> Telegram Bot</a></li>
+        <li><a href="{{ $tiktokUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="video" class="w-3.5 h-3.5 text-teal"></i> TikTok</a></li>
+        <li><a href="{{ $instagramUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="camera" class="w-3.5 h-3.5 text-teal"></i> Instagram</a></li>
+        <li><a href="{{ $facebookUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="facebook" class="w-3.5 h-3.5 text-teal"></i> Facebook</a></li>
       </ul>
       <div class="mt-4 pt-4 border-t border-white/10 text-xs text-white/50">
-        አያት አደባባይ፣ አዲስ አበባ፣ ኢትዮጵያ (Ayat Square, Addis Ababa, Ethiopia)
+        {{ $addressAm }} ({{ $addressEn }})
       </div>
     </div>
   </div>
@@ -2661,10 +2592,10 @@
         document.getElementById('success-booking-id').innerText = data.order_number || data.booking_id;
         if (window.lucide) lucide.createIcons();
       } else {
-        alert('Error: ' + (data.message || 'Could not create booking. Please call 0970075509.'));
+        alert('Error: ' + (data.message || 'Could not create booking. Please call {{ $phone1 }}.'));
       }
     } catch (err) {
-      alert('Connection error: ' + err.message + ' — please call 0970075509 directly.');
+      alert('Connection error: ' + err.message + ' — please call {{ $phone1 }} directly.');
     } finally {
       btn.disabled = false;
     }
@@ -2820,7 +2751,7 @@
                 </div>
                 <div>
                   <p class="font-extrabold text-amber-950 text-xs">የፅዳት ቡድኑ ወደ እርሶ በመጓዝ ላይ ይገኛል (Team En Route)</p>
-                  <p class="text-[10px] text-amber-800 mt-0.5">ቡድኑ በተያዘው ሰዓት ደርሶ አገልግሎቱን ይሰጣል። ጥያቄ ካለዎት በ 0970075509 ይደውሉ።</p>
+                  <p class="text-[10px] text-amber-800 mt-0.5">ቡድኑ በተያዘው ሰዓት ደርሶ አገልግሎቱን ይሰጣል። ጥያቄ ካለዎት በ {{ $phone1 }} ይደውሉ።</p>
                 </div>
               </div>
             ` : (isCleaning ? `
@@ -2971,7 +2902,7 @@
         </div>`;
       }
     } catch (err) {
-      box.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-xs">የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ በ 0970075509 በቀጥታ ይደውሉ።</div>';
+      box.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-xs">የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ በ {{ $phone1 }} በቀጥታ ይደውሉ።</div>';
     }
   }
 

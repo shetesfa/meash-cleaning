@@ -106,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/teams', [TeamController::class, 'store'])->middleware('role:owner,reception');
     Route::get('/employees', [TeamController::class, 'getEmployees'])->middleware('role:owner,reception');
     Route::post('/employees', [TeamController::class, 'storeEmployee'])->middleware('role:owner');
+    Route::get('/employees/{id}/history', [TeamController::class, 'getEmployeeHistory'])->middleware('role:owner,reception,finance');
     Route::get('/teams/my-jobs', [TeamController::class, 'myJobs'])->middleware('role:cleaner,owner');
     Route::post('/teams/jobs/{order}/action', [TeamController::class, 'handleJobAction'])->middleware('role:cleaner,owner');
     Route::post('/teams/location', [TeamController::class, 'updateLocation'])->middleware('role:cleaner,owner');

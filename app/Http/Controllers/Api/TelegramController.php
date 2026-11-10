@@ -42,6 +42,101 @@ class TelegramController extends Controller
     $this->botUsername = (string)(config('services.telegram.bot_username') ?: env('TELEGRAM_BOT_USERNAME', 'meash_cleaning_solution_bot'));
   }
 
+  public function getPhone1(): string
+  {
+    try {
+      return (string)WebsiteSetting::getVal('contact_phone_1', '0970075509');
+    } catch (\Throwable $e) {
+      return '0970075509';
+    }
+  }
+
+  public function getPhone2(): string
+  {
+    try {
+      return (string)WebsiteSetting::getVal('contact_phone_2', '0998142190');
+    } catch (\Throwable $e) {
+      return '0998142190';
+    }
+  }
+
+  public function getPhonesCombined(): string
+  {
+    $p1 = $this->getPhone1();
+    $p2 = $this->getPhone2();
+    return ($p2 && $p2 !== $p1) ? "{$p1} / {$p2}" : $p1;
+  }
+
+  public function getReceptionTelegramUrl(): string
+  {
+    try {
+      $val = WebsiteSetting::getVal('telegram_reception_url');
+      if ($val) return $val;
+      $bot = WebsiteSetting::getVal('telegram_bot');
+      if ($bot) {
+        $username = ltrim(str_replace('https://t.me/', '', $bot), '@');
+        return "https://t.me/{$username}";
+      }
+      return 'https://t.me/Shetesfa';
+    } catch (\Throwable $e) {
+      return 'https://t.me/Shetesfa';
+    }
+  }
+
+  public function getTiktokUrl(): string
+  {
+    try {
+      return (string)WebsiteSetting::getVal('tiktok', 'https://www.tiktok.com/@meashcleaningsolution');
+    } catch (\Throwable $e) {
+      return 'https://www.tiktok.com/@meashcleaningsolution';
+    }
+  }
+
+  public function getFacebookUrl(): string
+  {
+    try {
+      return (string)WebsiteSetting::getVal('facebook', 'https://facebook.com/meashcleaningsolution');
+    } catch (\Throwable $e) {
+      return 'https://facebook.com/meashcleaningsolution';
+    }
+  }
+
+  public function getInstagramUrl(): string
+  {
+    try {
+      return (string)WebsiteSetting::getVal('instagram', 'https://instagram.com/meashcleaningsolution');
+    } catch (\Throwable $e) {
+      return 'https://instagram.com/meashcleaningsolution';
+    }
+  }
+
+  public function getTelegramChannelUrl(): string
+  {
+    try {
+      return (string)WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashdeepcleaning');
+    } catch (\Throwable $e) {
+      return 'https://t.me/meashdeepcleaning';
+    }
+  }
+
+  public function getEmail(): string
+  {
+    try {
+      return (string)WebsiteSetting::getVal('company_email', 'meashcleaningsolution@gmail.com');
+    } catch (\Throwable $e) {
+      return 'meashcleaningsolution@gmail.com';
+    }
+  }
+
+  public function getAddress(): string
+  {
+    try {
+      return (string)WebsiteSetting::getVal('office_address_am', 'አያት አደባባይ፣ አዲስ አበባ');
+    } catch (\Throwable $e) {
+      return 'አያት አደባባይ፣ አዲስ አበባ';
+    }
+  }
+
   public function getMiniAppHttpsUrl(): ?string
   {
     $miniAppUrl = config('services.telegram.miniapp_url') ?: env('TELEGRAM_MINIAPP_URL');
@@ -176,13 +271,28 @@ class TelegramController extends Controller
     $mattressP = number_format((float)($servicesMap->get('mattress')?->base_price ?? 600));
     $glassP = number_format((float)($servicesMap->get('glass')?->base_price ?? 70));
     $homeP = number_format((float)($servicesMap->get('residential_deep')?->base_price ?? ($servicesMap->get('residential')?->base_price ?? 2500)));
+    $ceramicP = number_format((float)($servicesMap->get('floor_ceramic')?->base_price ?? ($servicesMap->get('floor')?->base_price ?? 60)));
+    $facilityP = number_format((float)($servicesMap->get('commercial_deep')?->base_price ?? ($servicesMap->get('office')?->base_price ?? 3500)));
+    $kitchenP = number_format((float)($servicesMap->get('kitchen_deep')?->base_price ?? 3000));
+    $postConstP = number_format((float)($servicesMap->get('post_construction')?->base_price ?? 4500));
+
+    $phone1 = $this->getPhone1();
+    $phone2 = $this->getPhone2();
+    $combinedPhones = $this->getPhonesCombined();
+    $receptionUrl = $this->getReceptionTelegramUrl();
+    $tiktokUrl = $this->getTiktokUrl();
+    $facebookUrl = $this->getFacebookUrl();
+    $instagramUrl = $this->getInstagramUrl();
+    $tgChannelUrl = $this->getTelegramChannelUrl();
+    $companyEmail = $this->getEmail();
+    $officeAddress = $this->getAddress();
 
     $allCards = [
       // CARD 1: All-in-One Official Showcase (Shown first on empty search)
       [
         'id' => 'meash_all_in_one',
         'title' => 'ሜአሽ የጽዳት አገልግሎት | MEASH CLEANING SOLUTION',
-        'description' => '6ቱ አገልግሎቶች | "Your Environment, Our Responsibility." | 0970075509 / 0998142190',
+        'description' => "6ቱ አገልግሎቶች | \"Your Environment, Our Responsibility.\" | {$combinedPhones}",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=240&h=240&fit=crop',
         'message_text' => "<b>ሜአሽ የጽዳት አገልግሎት | MEASH CLEANING SOLUTION</b>\n" .
           "<b>\"Your Environment, Our Responsibility.\"</b>\n" .
@@ -200,9 +310,9 @@ class TelegramController extends Controller
           "• Instagram: @meashcleaningsolution\n" .
           "• Facebook: @meashcleaningsolution\n" .
           "• ቴሌግራም ቻናል: @meashdeepcleaning\n\n" .
-          "<b>የሪሴፕሽን ስልክ:</b> 0970075509 / 0998142190\n" .
-          "<b>ኢሜይል:</b> meashcleaningsolution@gmail.com\n" .
-          "<b>አድራሻ:</b> አያት አደባባይ፣ አዲስ አበባ\n\n" .
+          "<b>የሪሴፕሽን ስልክ:</b> {$combinedPhones}\n" .
+          "<b>ኢሜይል:</b> {$companyEmail}\n" .
+          "<b>አድራሻ:</b> {$officeAddress}\n\n" .
           "ቦታ ለማስያዝ ወይም ለመደወል ከታች ያሉትን አማራጮች ይጫኑ",
         'buttons' => [
           [
@@ -210,15 +320,15 @@ class TelegramController extends Controller
             ['text' => 'አገልግሎቶች | Services', 'switch_inline_query_current_chat' => 'አገልግሎቶች'],
           ],
           [
-            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-            ['text' => 'TikTok', 'url' => 'https://www.tiktok.com/@meashcleaningsolution'],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => $tgChannelUrl],
+            ['text' => 'TikTok', 'url' => $tiktokUrl],
           ],
           [
-            ['text' => 'Facebook', 'url' => 'https://facebook.com/meashcleaningsolution'],
-            ['text' => 'Instagram', 'url' => 'https://instagram.com/meashcleaningsolution'],
+            ['text' => 'Facebook', 'url' => $facebookUrl],
+            ['text' => 'Instagram', 'url' => $instagramUrl],
           ],
           [
-            ['text' => 'ሪሴፕሽን ያናግሩ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => "ሪሴፕሽን ያናግሩ ({$phone1})", 'url' => $receptionUrl],
           ],
         ],
         'keywords' => ['all', 'official', 'about', 'meash', 'ሜአሽ', 'ሜሽ', 'ጽዳት', 'አዲስ አበባ', 'ዋጋ', 'ስልክ', 'ሶሻል', 'social', 'booking'],
@@ -234,27 +344,27 @@ class TelegramController extends Controller
           "<b>\"Your Environment, Our Responsibility.\"</b>\n" .
           "<i>(Official 6 Core Cleaning Services)</i>\n\n" .
           "1. <b>የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት</b>\n" .
-          "  • Ceramic & Hardwood Floor Cleaning (Deep tile & grout restoration)\n\n" .
+          "  • Ceramic & Hardwood Floor Cleaning ({$ceramicP} ETB / sqm)\n\n" .
           "2. <b>የተቋማት አጠቃላይ እና ጥልቅ ጽዳት</b>\n" .
-          "  • Deep & General Facilities Cleaning (Corporate spaces & offices)\n\n" .
+          "  • Deep & General Facilities Cleaning ({$facilityP} ETB)\n\n" .
           "3. <b>የወጥ ቤት እና የምግብ ማስተናገጃ ቦታዎች ጽዳት</b>\n" .
-          "  • Kitchen & Dining Sanitation (Hotels, Cafés & Restaurants)\n\n" .
+          "  • Kitchen & Dining Sanitation ({$kitchenP} ETB)\n\n" .
           "4. <b>ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት</b>\n" .
-          "  • Post-Construction Handover Cleaning (For new developments)\n\n" .
+          "  • Post-Construction Handover Cleaning ({$postConstP} ETB)\n\n" .
           "5. <b>የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት</b>\n" .
-          "  • High-Rise Window & Glass Cleaning\n\n" .
+          "  • High-Rise Window & Glass Cleaning ({$glassP} ETB / sqm)\n\n" .
           "6. <b>የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ</b>\n" .
-          "  • Upholstery & Carpet Deep Care (ቴክኖሎጂን ሳይጎዱ ማፅዳት)\n\n" .
-          "<b>የሪሴፕሽን ስልክ:</b> 0970075509 / 0998142190\n" .
-          "<b>አድራሻ:</b> አያት አደባባይ፣ አዲስ አበባ",
+          "  • Upholstery & Carpet Deep Care ({$sofaP} ETB / seat)\n\n" .
+          "<b>የሪሴፕሽን ስልክ:</b> {$combinedPhones}\n" .
+          "<b>አድራሻ:</b> {$officeAddress}",
         'buttons' => [
           [
             $bookingButton,
-            ['text' => 'ሪሴፕሽን (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => "ሪሴፕሽን ({$phone1})", 'url' => $receptionUrl],
           ],
           [
-            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
-            ['text' => 'TikTok', 'url' => 'https://www.tiktok.com/@meashcleaningsolution'],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => $tgChannelUrl],
+            ['text' => 'TikTok', 'url' => $tiktokUrl],
           ],
         ],
         'keywords' => ['services', 'pricing', 'rates', 'አገልግሎቶች', 'ዋጋ', 'ዝርዝር', 'ስንት', 'ምን'],
@@ -264,32 +374,32 @@ class TelegramController extends Controller
       [
         'id' => 'meash_social_media',
         'title' => 'ሶሻል ሚዲያ እና አድራሻ | Social Media & Hotline',
-        'description' => 'TikTok | Instagram | Facebook: @meashcleaningsolution | ስልክ 0970075509 / 0998142190',
+        'description' => "TikTok | Instagram | Facebook | ስልክ {$combinedPhones}",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=240&h=240&fit=crop',
         'message_text' => "<b>ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION)</b>\n" .
           "<b>\"Your Environment, Our Responsibility.\"</b>\n\n" .
           "የስራዎቻችንን ቪዲዮዎች፣ ቅናሾችና ጠቃሚ የጽዳት ምክሮችን ለማግኘት ይከተሉን:\n\n" .
-          "• <b>TikTok:</b> https://www.tiktok.com/@meashcleaningsolution\n" .
-          "• <b>Instagram:</b> https://instagram.com/meashcleaningsolution\n" .
-          "• <b>Facebook:</b> https://facebook.com/meashcleaningsolution\n" .
-          "• <b>ቴሌግራም ቻናል:</b> https://t.me/meashdeepcleaning\n\n" .
+          "• <b>TikTok:</b> {$tiktokUrl}\n" .
+          "• <b>Instagram:</b> {$instagramUrl}\n" .
+          "• <b>Facebook:</b> {$facebookUrl}\n" .
+          "• <b>ቴሌግራም ቻናል:</b> {$tgChannelUrl}\n\n" .
           "<b>የሪሴፕሽን ስልክ መስመሮች:</b>\n" .
-          "• ዋና ስልክ: <b>0970075509</b>\n" .
-          "• ተጨማሪ ስልክ: <b>0998142190</b>\n" .
-          "• ኢሜይል: <b>meashcleaningsolution@gmail.com</b>\n\n" .
+          "• ዋና ስልክ: <b>{$phone1}</b>\n" .
+          ($phone2 ? "• ተጨማሪ ስልክ: <b>{$phone2}</b>\n" : "") .
+          "• ኢሜይል: <b>{$companyEmail}</b>\n\n" .
           "<b>የስራ ሰዓት:</b> ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)\n" .
-          "<b>አድራሻ:</b> አያት አደባባይ፣ አዲስ አበባ",
+          "<b>አድራሻ:</b> {$officeAddress}",
         'buttons' => [
           [
-            ['text' => 'TikTok', 'url' => 'https://www.tiktok.com/@meashcleaningsolution'],
-            ['text' => 'Instagram', 'url' => 'https://instagram.com/meashcleaningsolution'],
+            ['text' => 'TikTok', 'url' => $tiktokUrl],
+            ['text' => 'Instagram', 'url' => $instagramUrl],
           ],
           [
-            ['text' => 'Facebook', 'url' => 'https://facebook.com/meashcleaningsolution'],
-            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+            ['text' => 'Facebook', 'url' => $facebookUrl],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => $tgChannelUrl],
           ],
           [
-            ['text' => 'ሪሴፕሽን: 0970075509', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => "ሪሴፕሽን: {$phone1}", 'url' => $receptionUrl],
             $bookingButton,
           ],
         ],
@@ -312,13 +422,13 @@ class TelegramController extends Controller
           "4. ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት\n" .
           "5. የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት\n" .
           "6. የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ\n\n" .
-          "ወዲያውኑ ቦታ ለማስያዝ ከታች ያለውን ቁልፍ ይጫኑ ወይም በ 0970075509 / 0998142190 ይደውሉ::",
+          "ወዲያውኑ ቦታ ለማስያዝ ከታች ያለውን ቁልፍ ይጫኑ ወይም በ {$combinedPhones} ይደውሉ::",
         'buttons' => [
           [
             $bookingButton,
           ],
           [
-            ['text' => 'በስልክ ለማዘዝ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => "በስልክ ለማዘዝ ({$phone1})", 'url' => $receptionUrl],
             ['text' => 'አገልግሎቶች', 'switch_inline_query_current_chat' => 'አገልግሎቶች'],
           ],
         ],
@@ -329,7 +439,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_sofa',
         'title' => ' የሶፋ እና ወንበር ጥልቅ እጥበት | Sofa Cleaning',
-        'description' => '350 ብር/ወንበር:: አቧራ፣ እድፍና መጥፎ ጠረን በስቲም ማስወገድ::',
+        'description' => "{$sofaP} ብር/ወንበር:: አቧራ፣ እድፍና መጥፎ ጠረን በስቲም ማስወገድ::",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=240&h=240&fit=crop',
         'message_text' => " <b>የሶፋ እና ወንበር ጥልቅ አረፋ እጥበት (SOFA CLEANING)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -338,14 +448,14 @@ class TelegramController extends Controller
           "2. ለጨርቁና ለቆዳው ተስማሚ ሻምፖ በመርጨት እድፍ ማለስለስ\n" .
           "3. በሮተሪ ብሩሽ በጥንቃቄ ማሸትና እድፍ ማስለቀቅ\n" .
           "4. በባለሁለት ሞተር ማሽን የቆሸሸውን ውሃ ሙሉ በሙሉ መምጠጥ\n\n" .
-          " <b>ዋጋ:</b> 350 ብር / በአንድ መቀመጫ ወንበር\n" .
+          " <b>ዋጋ:</b> {$sofaP} ብር / በአንድ መቀመጫ ወንበር\n" .
           " ለቆዳ (Leather)፣ ለቬልቬት፣ ለጨርቅና ለተለያዩ ሶፋዎች ፍቱን::\n\n" .
-          " <b>ስልክ:</b> 0970075509\n" .
+          " <b>ስልክ:</b> {$phone1}\n" .
           " <b>ቦት:</b> @{$this->botUsername}",
         'buttons' => [
           [
             $bookingButton,
-            ['text' => ' ሪሴፕሽን / ስልክ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => " ሪሴፕሽን / ስልክ ({$phone1})", 'url' => $receptionUrl],
           ],
         ],
         'keywords' => ['sofa', 'couch', 'chair', 'furniture', 'seats', 'ሶፋ', 'ወንበር', 'ሶፋዎች'],
@@ -355,7 +465,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_carpet',
         'title' => ' የምንጣፍ ማጠብና ስቲም እጥበት | Carpet Washing',
-        'description' => '80 ብር/ካሬ ሜትር:: በቦታው ወይም ወስደን በሮተሪ ማሽን ማጠብ::',
+        'description' => "{$carpetP} ብር/ካሬ ሜትር:: በቦታው ወይም ወስደን በሮተሪ ማሽን ማጠብ::",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=240&h=240&fit=crop',
         'message_text' => " <b>የምንጣፍ ማጠብ እና ስቲም እጥበት (CARPET WASHING)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -363,13 +473,13 @@ class TelegramController extends Controller
           "• 99.9% ባክቴሪያ እና አለርጂን በሙቅ ስቲም ያጠፋል\n" .
           "• ደስ የሚል መዓዛ ያላቸው የተፈጥሮ ማጽጃዎች\n" .
           "• በቦታው ላይ የማጠብ ወይም ወስደን አድርቀን የማምጣት አማራጭ\n\n" .
-          " <b>ዋጋ:</b> 80 ብር / በአንድ ካሬ ሜትር\n\n" .
-          " <b>ስልክ:</b> 0970075509\n" .
+          " <b>ዋጋ:</b> {$carpetP} ብር / በአንድ ካሬ ሜትር\n\n" .
+          " <b>ስልክ:</b> {$phone1}\n" .
           " <b>ቦት:</b> @{$this->botUsername}",
         'buttons' => [
           [
             $bookingButton,
-            ['text' => ' ሪሴፕሽን / ስልክ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => " ሪሴፕሽን / ስልክ ({$phone1})", 'url' => $receptionUrl],
           ],
         ],
         'keywords' => ['carpet', 'rug', 'floor', 'ምንጣፍ', 'ምንጣፎች'],
@@ -379,7 +489,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_mattress',
         'title' => ' የፍራሽ ሳኒታይዜሽንና እጥበት | Mattress Sanitization',
-        'description' => '600 ብር/ፍራሽ:: በሙቅ ስቲም ፀረ-ተባይና የአቧራ ትሎች ማጥፋት::',
+        'description' => "{$mattressP} ብር/ፍራሽ:: በሙቅ ስቲም ፀረ-ተባይና የአቧራ ትሎች ማጥፋት::",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=240&h=240&fit=crop',
         'message_text' => " <b>የፍራሽ ሳኒታይዜሽን እና ጥልቅ እጥበት (MATTRESS SANITIZATION)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -387,13 +497,13 @@ class TelegramController extends Controller
           "• በአይን የማይታዩ የአቧራ ትሎችን እና አለርጂን ያጠፋል\n" .
           "• የላብ፣ የውሃ እና የቆሻሻ ምልክቶችን ያስለቅቃል\n" .
           "• የሆስፒታል ደረጃውን የጠበቀ ፀረ-ባክቴሪያ ሳኒታይዜሽን\n\n" .
-          " <b>ዋጋ:</b> 600 ብር / በአንድ ፍራሽ (ኪንግ፤ ኩዊን፤ ነጠላ)\n\n" .
-          " <b>ስልክ:</b> 0970075509\n" .
+          " <b>ዋጋ:</b> {$mattressP} ብር / በአንድ ፍራሽ (ኪንግ፤ ኩዊን፤ ነጠላ)\n\n" .
+          " <b>ስልክ:</b> {$phone1}\n" .
           " <b>ቦት:</b> @{$this->botUsername}",
         'buttons' => [
           [
             $bookingButton,
-            ['text' => ' ሪሴፕሽን / ስልክ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => " ሪሴፕሽን / ስልክ ({$phone1})", 'url' => $receptionUrl],
           ],
         ],
         'keywords' => ['mattress', 'bed', 'sleep', 'allergy', 'ፍራሽ', 'አልጋ'],
@@ -403,7 +513,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_glass',
         'title' => ' የመስታወት እና ፊት ለፊት ግድግዳ ፅዳት | Glass Facade',
-        'description' => '70 ብር/ካሬ ሜትር:: የቪላ፤ አፓርታማና የህንፃ መስታወት ፅዳት::',
+        'description' => "{$glassP} ብር/ካሬ ሜትር:: የቪላ፤ አፓርታማና የህንፃ መስታወት ፅዳት::",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=240&h=240&fit=crop',
         'message_text' => " <b>የመስታወት እና የፊት ለፊት ህንፃ ፅዳት (GLASS & FACADE)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -411,13 +521,13 @@ class TelegramController extends Controller
           "• የውስጥ እና የውጭ መስታወት እጥበት\n" .
           "• የረንዳ መስታወት፣ የሻወር ካቢኔ እና የበር መስታወት\n" .
           "• ለከፍተኛ ህንፃዎች ደህንነታቸው የተጠበቀ ዘመናዊ መወጣጫዎች\n\n" .
-          " <b>ዋጋ:</b> 70 ብር / በአንድ ካሬ ሜትር\n\n" .
-          " <b>ስልክ:</b> 0970075509\n" .
+          " <b>ዋጋ:</b> {$glassP} ብር / በአንድ ካሬ ሜትር\n\n" .
+          " <b>ስልክ:</b> {$phone1}\n" .
           " <b>ቦት:</b> @{$this->botUsername}",
         'buttons' => [
           [
             $bookingButton,
-            ['text' => ' ሪሴፕሽን / ስልክ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => " ሪሴፕሽን / ስልክ ({$phone1})", 'url' => $receptionUrl],
           ],
         ],
         'keywords' => ['glass', 'window', 'facade', 'መስታወት', 'መስኮት'],
@@ -427,7 +537,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_home',
         'title' => ' የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት | Residential Deep Clean',
-        'description' => 'ከ 2,500 ብር:: የግንባታ ማጠናቀቂያ ወይም የመኖሪያ ቤት ፅዳት::',
+        'description' => "ከ {$homeP} ብር:: የግንባታ ማጠናቀቂያ ወይም የመኖሪያ ቤት ፅዳት::",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=240&h=240&fit=crop',
         'message_text' => " <b>የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት (RESIDENTIAL DEEP CLEAN)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -436,13 +546,13 @@ class TelegramController extends Controller
           "• የኩሽና ቅባት ማስለቀቅ እና የወለል ንጣፎች እጥበት\n" .
           "• የመታጠቢያ ቤትና ሽንት ቤት ፀረ-ጀርም ሳኒታይዜሽን\n" .
           "• የወለል ማሽነሪ ፖሊሽ እና አጠቃላይ ንፅህና\n\n" .
-          " <b>ዋጋ:</b> ከ 2,500 ብር ጀምሮ\n\n" .
-          " <b>ስልክ:</b> 0970075509\n" .
+          " <b>ዋጋ:</b> ከ {$homeP} ብር ጀምሮ\n\n" .
+          " <b>ስልክ:</b> {$phone1}\n" .
           " <b>ቦት:</b> @{$this->botUsername}",
         'buttons' => [
           [
             $bookingButton,
-            ['text' => ' ሪሴፕሽን / ስልክ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => " ሪሴፕሽን / ስልክ ({$phone1})", 'url' => $receptionUrl],
           ],
         ],
         'keywords' => ['home', 'house', 'residential', 'apartment', 'villa', 'ቤት', 'ቪላ'],
@@ -460,11 +570,11 @@ class TelegramController extends Controller
           "• ሳምንታዊ እና ወርሃዊ መደበኛ የኮንትራት ስምምነቶች\n" .
           "• የደንብ ልብስ የለበሱ የታመኑና የሰለጠኑ ቋሚ ሰራተኞች\n" .
           "• ህጋዊ ደረሰኝ (VAT/TOT) እና የክፍያ ስምምነት ሰነዶች\n\n" .
-          " <b>ስልክ:</b> 0970075509\n" .
+          " <b>ስልክ:</b> {$phone1}\n" .
           " <b>ቦት:</b> @{$this->botUsername}",
         'buttons' => [
           [
-            ['text' => ' ፕሮፎርማ ይጠይቁ (0970075509)', 'url' => 'https://t.me/Shetesfa'],
+            ['text' => " ፕሮፎርማ ይጠይቁ ({$phone1})", 'url' => $receptionUrl],
           ],
         ],
         'keywords' => ['office', 'commercial', 'corporate', 'hotel', 'bank', 'ቢሮ', 'ተቋም', 'ድርጅት'],
@@ -482,13 +592,13 @@ class TelegramController extends Controller
           "• <code>/services</code> - የ 6ቱ አገልግሎቶችና የዋጋ ዝርዝር\n" .
           "• <code>/book</code> - በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዣ\n" .
           "• <code>/status ORD-...</code> - የትዕዛዝ ሁኔታ መከታተያ\n" .
-          "• <code>/contact</code> - የሪሴፕሽን ስልክ አድራሻ (0970075509)\n" .
+          "• <code>/contact</code> - የሪሴፕሽን ስልክ አድራሻ ({$phone1})\n" .
           "• <code>/help</code> - ይህንን መመሪያ ያሳያል\n\n" .
           "በተጨማሪም በማንኛውም ቻት ውስጥ <code>@{$this->botUsername}</code> ብለው በመጻፍ አገልግሎቶችን ለወዳጅዎ ማጋራት ይችላሉ!",
         'buttons' => [
           [
             ['text' => ' ቦቱን ክፈት | Open Bot', 'url' => "https://t.me/{$this->botUsername}?start=help"],
-            ['text' => ' ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+            ['text' => ' ቴሌግራም ቻናል', 'url' => $tgChannelUrl],
           ],
         ],
         'keywords' => ['help', 'commands', 'guide', 'መመሪያ', 'ትዕዛዝ', 'እርዳታ'],
@@ -753,7 +863,7 @@ class TelegramController extends Controller
       // General guidance
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "ጤና ይስጥልኝ! ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) ነው::\n\n\"Your Environment, Our Responsibility.\"\n\nቀጠሮ ለመያዝ፣ አገልግሎቶችን ለማየት ወይም ሪሴፕሽን ለማነጋገር /start ብለው ይላኩ::\n\nለበለጠ መረጃ: 0970075509 / 0998142190\nቦት: @{$this->botUsername}",
+        'text' => "ጤና ይስጥልኝ! ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) ነው::\n\n\"Your Environment, Our Responsibility.\"\n\nቀጠሮ ለመያዝ፣ አገልግሎቶችን ለማየት ወይም ሪሴፕሽን ለማነጋገር /start ብለው ይላኩ::\n\nለበለጠ መረጃ: " . $this->getPhonesCombined() . "\nቦት: @{$this->botUsername}",
         'parse_mode' => 'HTML',
         'reply_markup' => json_encode([
           'inline_keyboard' => [
@@ -917,7 +1027,7 @@ class TelegramController extends Controller
       " <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$ethAppt['formatted_am']}) ጠዋት 2:00\n" .
       " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
       " <b>የማረጋገጫ ኤስኤምኤስ (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
-      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
+      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (" . $this->getPhone1() . ") ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
 
     $this->telegramApi('sendMessage', [
       'chat_id' => $chatId,
@@ -927,10 +1037,10 @@ class TelegramController extends Controller
         'inline_keyboard' => [
           [
             ['text' => ' የትዕዛዝ ሁኔታ | Status', 'callback_data' => 'menu_status'],
-            ['text' => ' ሪሴፕሽን (0970075509)', 'callback_data' => 'menu_contact'],
+            ['text' => ' ሪሴፕሽን (' . $this->getPhone1() . ')', 'callback_data' => 'menu_contact'],
           ],
           [
-            ['text' => ' ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+            ['text' => ' ቴሌግራም ቻናል', 'url' => $this->getTelegramChannelUrl()],
           ]
         ]
       ]),
@@ -1026,11 +1136,11 @@ class TelegramController extends Controller
       $orderNo = trim(str_replace('resched_', '', $data));
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " <b>ቀጠሮዎን ለማራዘም ወይም አዲስ ቀን ለመቀየር:</b>\n\nየትዕዛዝ ቁጥር: <code>{$orderNo}</code>\n\nእባክዎ የሚፈልጉትን አዲስ ቀን በ 0970075509 ደውለው ወይም በ @meashdeepcleaning መልዕክት ይንገሩን:: ሪሴፕሽናችን ወዲያውኑ ያስተካክላል::",
+        'text' => " <b>ቀጠሮዎን ለማራዘም ወይም አዲስ ቀን ለመቀየር:</b>\n\nየትዕዛዝ ቁጥር: <code>{$orderNo}</code>\n\nእባክዎ የሚፈልጉትን አዲስ ቀን በ " . $this->getPhone1() . " ደውለው ወይም በ @meashdeepcleaning መልዕክት ይንገሩን:: ሪሴፕሽናችን ወዲያውኑ ያስተካክላል::",
         'parse_mode' => 'HTML',
         'reply_markup' => json_encode([
           'inline_keyboard' => [
-            [['text' => ' ሪሴፕሽን ደውል (0970075509)', 'callback_data' => 'menu_contact']],
+            [['text' => ' ሪሴፕሽን ደውል (' . $this->getPhone1() . ')', 'callback_data' => 'menu_contact']],
             [['text' => ' የትዕዛዝ ሁኔታ | Status', 'callback_data' => "track_{$orderNo}"]],
           ]
         ])
@@ -1061,13 +1171,13 @@ class TelegramController extends Controller
     } elseif ($data === 'menu_feedback') {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "<b>የደንበኞች አስተያየት እና ደረጃ:</b>\n\nየተሰጠዎት የፅዳት አገልግሎት እንዴት ነበር? አስተያየትዎን ወይም ደረጃዎን ከ 1 እስከ 5 ኮከብ በ 0970075509 ይንገሩን:: የእርስዎ እርካታ የኩባንያችን ዋና አላማ ነው!",
+        'text' => "<b>የደንበኞች አስተያየት እና ደረጃ:</b>\n\nየተሰጠዎት የፅዳት አገልግሎት እንዴት ነበር? አስተያየትዎን ወይም ደረጃዎን ከ 1 እስከ 5 ኮከብ በ " . $this->getPhone1() . " ይንገሩን:: የእርስዎ እርካታ የኩባንያችን ዋና አላማ ነው!",
         'parse_mode' => 'HTML',
       ]);
     } elseif ($data === 'menu_complaint') {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "<b>ቅሬታ ማሳወቂያ እና አስቸኳይ ክትትል:</b>\n\nበተሰጠው አገልግሎት ላይ ያልተሟላ ነገር ካለ ወይም ቅሬታ ካለዎት ወዲያውኑ በ 0970075509 ይደውሉልን:: የቡድን መሪያችን በ 24 ሰዓት ውስጥ መጥቶ ያለምንም ተጨማሪ ክፍያ ዳግም እንዲፀዳ ይደረጋል!",
+        'text' => "<b>ቅሬታ ማሳወቂያ እና አስቸኳይ ክትትል:</b>\n\nበተሰጠው አገልግሎት ላይ ያልተሟላ ነገር ካለ ወይም ቅሬታ ካለዎት ወዲያውኑ በ " . $this->getPhone1() . " ይደውሉልን:: የቡድን መሪያችን በ 24 ሰዓት ውስጥ መጥቶ ያለምንም ተጨማሪ ክፍያ ዳግም እንዲፀዳ ይደረጋል!",
         'parse_mode' => 'HTML',
       ]);
     } elseif ($data === 'menu_start') {
@@ -1093,7 +1203,7 @@ class TelegramController extends Controller
     }
 
     $buttons[] = [
-      ['text' => ' በስልክ ለማዘዝ (0970075509)', 'callback_data' => 'menu_contact'],
+      ['text' => ' በስልክ ለማዘዝ (' . $this->getPhone1() . ')', 'callback_data' => 'menu_contact'],
       ['text' => ' አገልግሎቶች ዝርዝር', 'callback_data' => 'menu_services'],
     ];
 
@@ -1104,7 +1214,7 @@ class TelegramController extends Controller
       "2. <b>በቴሌግራም ሚኒ አፕ (Telegram Mini App):</b>\n" .
       "  ቀጥታ በስማርት ፎርም እቃዎችን መርጠው ዋጋውን እያዩ ማዘዝ ይችላሉ::\n\n" .
       "3. <b>በስልክ በቀጥታ ለማዘዝ:</b>\n" .
-      "  • 0970075509 ወይም 0970075509\n\n" .
+      "  • " . $this->getPhonesCombined() . "\n\n" .
       "አሁኑኑ ለመጀመር ከታች ያለውን <b>' በቦቱ ቀጠሮ ያስይዙ'</b> የሚለውን ቁልፍ ይጫኑ ";
 
     $this->telegramApi('sendMessage', [
@@ -1214,7 +1324,7 @@ class TelegramController extends Controller
     if (!$order) {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " ይቅርታ፣ በትዕዛዝ ቁጥር <code>{$orderCode}</code> የተመዘገበ መረጃ አልተገኘም:: እባክዎን ቁጥሩን አስተካክለው ይሞክሩ ወይም በ 0970075509 ይደውሉ::",
+        'text' => " ይቅርታ፣ በትዕዛዝ ቁጥር <code>{$orderCode}</code> የተመዘገበ መረጃ አልተገኘም:: እባክዎን ቁጥሩን አስተካክለው ይሞክሩ ወይም በ " . $this->getPhone1() . " ይደውሉ::",
         'parse_mode' => 'HTML',
       ]);
       return;
@@ -1253,12 +1363,12 @@ class TelegramController extends Controller
       " <b>የትዕዛዝ ሁኔታ:</b> <b>{$statusAm}</b>\n" .
       " <b>የተመደበው ቡድን:</b> {$teamName}\n" .
       " <b>ጠቅላላ ክፍያ:</b> " . number_format((float)($order->total ?? $order->total_amount ?? 0), 2) . " ብር\n\n" .
-      "ቀጠሮዎን መቀየር ወይም ማራዘም ከፈለጉ ከስር ያለውን ቁልፍ ይጫኑ ወይም በ 0970075509 ይደውሉ::";
+      "ቀጠሮዎን መቀየር ወይም ማራዘም ከፈለጉ ከስር ያለውን ቁልፍ ይጫኑ ወይም በ " . $this->getPhone1() . " ይደውሉ::";
 
     $buttons = [
       [
         ['text' => ' ቀጠሮ ቀን አስተላልፍ (Change Date)', 'callback_data' => "resched_{$order->order_number}"],
-        ['text' => ' ሪሴፕሽን (0970075509)', 'callback_data' => 'menu_contact'],
+        ['text' => ' ሪሴፕሽን (' . $this->getPhone1() . ')', 'callback_data' => 'menu_contact'],
       ],
       [
         ['text' => ' ዋና ማውጫ | Main Menu', 'callback_data' => 'menu_start'],
@@ -1538,7 +1648,7 @@ class TelegramController extends Controller
           " <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$order->appointment_time_slot}){$planTxt}\n" .
           " <b>አድራሻ:</b> {$order->address}\n" .
           " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
-          "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ",
+          "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (" . $this->getPhone1() . ") ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ",
         'parse_mode' => 'HTML',
       ]);
     }
@@ -2766,7 +2876,7 @@ class TelegramController extends Controller
       " <b>የቀጠሮ ቀን:</b> " . (is_string($order->appointment_date) ? $order->appointment_date : $order->appointment_date->format('Y-m-d')) . " ({$ethAppt['formatted_am']}) {$timeSlot}\n" .
       " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
       " <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
-      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (0970075509) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
+      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (" . $this->getPhone1() . ") ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
 
     $actionButtons = [];
     if ($lat && $lng) {
@@ -2774,7 +2884,7 @@ class TelegramController extends Controller
     }
     $actionButtons[] = [
       ['text' => ' የትዕዛዝ ሁኔታ | Status', 'callback_data' => 'menu_status'],
-      ['text' => ' ሪሴፕሽን (0970075509)', 'callback_data' => 'menu_contact'],
+      ['text' => ' ሪሴፕሽን (' . $this->getPhone1() . ')', 'callback_data' => 'menu_contact'],
     ];
     $actionButtons[] = [
       ['text' => ' ዋና ማውጫ | Main Menu', 'callback_data' => 'menu_start'],
@@ -2840,7 +2950,7 @@ class TelegramController extends Controller
       " <b>ሰዓት:</b> {$timeSlotAm}\n" .
       "━━━━━━━━━━━━━━━━━━━━\n" .
       "ለተፈጠረው መስተጓጎል ከልብ ይቅርታ እንጠይቃለን! የሜሽ የፅዳት ቡድን በተጠቀሰው አዲስ ሰዓት የሚገኝ ይሆናል::\n\n" .
-      " <b>ለማንኛውም ጥያቄ ወይም ሰዓት ለማስተካከል:</b> 0970075509";
+      " <b>ለማንኛውም ጥያቄ ወይም ሰዓት ለማስተካከል:</b> " . $this->getPhone1();
 
     $resp = $this->telegramApi('sendMessage', [
       'chat_id' => $chatId,
@@ -2850,7 +2960,7 @@ class TelegramController extends Controller
         'inline_keyboard' => [
           [
             ['text' => ' የትዕዛዝ ሁኔታ | Status', 'callback_data' => "track_{$orderNo}"],
-            ['text' => ' ሪሴፕሽን (0970075509)', 'callback_data' => 'menu_contact'],
+            ['text' => ' ሪሴፕሽን (' . $this->getPhone1() . ')', 'callback_data' => 'menu_contact'],
           ],
           [
             ['text' => ' ዋና ማውጫ | Main Menu', 'callback_data' => 'menu_start'],

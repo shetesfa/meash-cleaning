@@ -463,4 +463,97 @@ class TeamController extends Controller
             'employee' => $user,
         ], 201);
     }
+
+    /**
+     * Get single employee complete dossier: Monthly paid history & work history
+     */
+    public function getEmployeeHistory(Request $request, $id): JsonResponse
+    {
+        $employee = \App\Models\User::findOrFail($id);
+
+        // 1. Monthly Paid / Payroll History from Expenses
+        $payments = \App\Models\Expense::where('category', 'employee_payments')
+            ->where(function ($q) use ($employee) {
+                $q->where('description', 'like', "%{$employee->name}%")
+                  ->orWhere('description', 'like', "%{$employee->username}%")
+                  ->orWhere('reference_number', 'like', "%PAY-EMP{$employee->id}%");
+            })
+            ->orderByDesc('date')
+            ->get()
+            ->map(function ($p) {
+                // Extract month name if present
+                $monthMatch = '';
+                if (preg_match('/\(([^)]+)\)/', $p->description, $matches)) {
+                    $monthMatch = $matches[1];
+                }
+                $ethMonth = '';
+                try {
+                    if ($p->date) {
+                        $eth = \App\Services\EthiopianCalendarService::toEthiopian($p->date);
+                        $ethMonth = $eth['month_name_am'] ?? '';
+                    }
+                } catch (\Throwable $e) {}
+
+                return [
+                    'id' => $p->id,
+                    'expense_number' => $p->expense_number,
+                    'amount' => (float)$p->amount,
+                    'date' => $p->date ? $p->date->format('Y-m-d') : '',
+                    'month' => $monthMatch ?: $ethMonth,
+                    'description' => $p->description,
+                    'reference_number' => $p->reference_number,
+                ];
+            });
+
+        $totalPaid = $payments->sum('amount');
+
+        // 2. Teams and Work History
+        $memberTeamIds = \App\Models\TeamMember::where('user_id', $employee->id)->pluck('cleaning_team_id')->toArray();
+        $leaderTeamIds = \App\Models\CleaningTeam::where('leader_id', $employee->id)->pluck('id')->toArray();
+        $allTeamIds = array_unique(array_merge($memberTeamIds, $leaderTeamIds));
+
+        $teams = \App\Models\CleaningTeam::whereIn('id', $allTeamIds)->get();
+
+        $orders = \App\Models\Order::whereIn('cleaning_team_id', $allTeamIds)
+            ->with(['customer:id,full_name,phone,subcity', 'items.service:id,name_en,name_am'])
+            ->orderByDesc('appointment_date')
+            ->limit(50)
+            ->get()
+            ->map(function ($o) {
+                return [
+                    'id' => $o->id,
+                    'order_number' => $o->order_number,
+                    'customer_name' => $o->customer?->full_name ?: 'ደንበኛ',
+                    'customer_phone' => $o->customer?->phone ?: '',
+                    'subcity' => $o->customer?->subcity ?: '',
+                    'status' => $o->order_status,
+                    'total' => (float)$o->total,
+                    'appointment_date' => $o->appointment_date ? $o->appointment_date->format('Y-m-d') : '',
+                    'services' => $o->items->map(fn($it) => $it->service?->name_am ?: $it->service?->name_en)->filter()->implode(', '),
+                ];
+            });
+
+        $completedJobsCount = $orders->where('status', 'completed')->count();
+        $activeJobsCount = $orders->whereIn('status', ['confirmed', 'in_progress'])->count();
+
+        return response()->json([
+            'success' => true,
+            'employee' => [
+                'id' => $employee->id,
+                'name' => $employee->name,
+                'username' => $employee->username,
+                'phone' => $employee->phone,
+                'email' => $employee->email,
+                'role' => $employee->role,
+                'is_active' => (bool)$employee->is_active,
+                'created_at' => $employee->created_at ? $employee->created_at->format('Y-m-d') : '',
+            ],
+            'teams' => $teams->map(fn($t) => ['id' => $t->id, 'name' => $t->team_name]),
+            'payments' => $payments,
+            'total_paid' => $totalPaid,
+            'work_history' => $orders,
+            'completed_jobs_count' => $completedJobsCount,
+            'active_jobs_count' => $activeJobsCount,
+        ]);
+    }
 }

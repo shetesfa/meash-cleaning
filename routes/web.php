@@ -23,6 +23,10 @@ Route::get('/app/{any?}', function () {
     return view('app');
 })->where('any', '.*');
 
+Route::get('/admin/{any?}', function () {
+    return redirect('/app');
+})->where('any', '.*');
+
 Route::get('/login', function () {
     return redirect('/app');
 })->name('login');

@@ -101,7 +101,7 @@ class FinanceController extends Controller
             'expense_number' => Expense::generateNextNumber(),
             'category' => 'employee_payments',
             'amount' => $validated['amount'],
-            'reference_number' => $validated['reference_number'] ?? ('PAY-' . date('Ymd')),
+            'reference_number' => $validated['reference_number'] ?? ('PAY-EMP' . $employee->id . '-' . date('Ymd')),
             'description' => $note,
             'date' => $validated['payment_date'],
             'entered_by_user_id' => $request->user()->id,

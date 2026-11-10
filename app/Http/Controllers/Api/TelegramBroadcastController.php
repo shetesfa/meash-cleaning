@@ -28,14 +28,34 @@ class TelegramBroadcastController extends Controller
         $sourceFilter = $request->query('source', '');
         $statusFilter = $request->query('status', ''); // 'all', 'excluded', 'non_excluded'
 
-        // Auto-sync any unsynced Customers into TelegramUser table so contacts are 100% unified
+        // Auto-sync all Customers and System Users into TelegramUser table so contacts are 100% unified
         try {
             $unsyncedCustomers = Customer::whereNotNull('phone')
                 ->where('phone', '!=', '')
-                ->limit(200)
+                ->limit(5000)
                 ->get();
             foreach ($unsyncedCustomers as $c) {
                 Customer::syncToBroadcastList($c);
+            }
+
+            // Also auto-sync internal system users / staff if they have phone
+            $systemUsers = \App\Models\User::whereNotNull('phone')
+                ->where('phone', '!=', '')
+                ->get();
+            foreach ($systemUsers as $u) {
+                $cleanPhone = Customer::normalizePhone($u->phone);
+                if ($cleanPhone) {
+                    TelegramUser::firstOrCreate(
+                        ['phone_number' => $cleanPhone],
+                        [
+                            'first_name' => $u->name,
+                            'is_active' => true,
+                            'is_excluded' => false,
+                            'source' => 'system_user',
+                            'marketing_consent' => true,
+                        ]
+                    );
+                }
             }
         } catch (\Throwable $e) {
             Log::warning('Recipient auto-sync non-critical error: ' . $e->getMessage());
@@ -412,10 +432,29 @@ class TelegramBroadcastController extends Controller
             ], 422);
         }
 
-        // Try JSON parsing first (Telegram Desktop result.json)
+        // Try JSON parsing first (Telegram Desktop result.json or any machine-readable JSON array/object)
         $jsonData = json_decode($raw, true);
-        if ($jsonData && (isset($jsonData['contacts']) || isset($jsonData['frequent_contacts']) || isset($jsonData['chats']))) {
-            return $this->processTelegramDesktopJson($jsonData);
+        if ($jsonData) {
+            if (isset($jsonData['contacts']) || isset($jsonData['frequent_contacts']) || isset($jsonData['chats'])) {
+                return $this->processTelegramDesktopJson($jsonData);
+            }
+            // Check if it's an array of objects or an object containing a list
+            $list = null;
+            if (array_is_list($jsonData)) {
+                $list = $jsonData;
+            } elseif (isset($jsonData['users']) && is_array($jsonData['users'])) {
+                $list = $jsonData['users'];
+            } elseif (isset($jsonData['members']) && is_array($jsonData['members'])) {
+                $list = $jsonData['members'];
+            } elseif (isset($jsonData['contacts']) && is_array($jsonData['contacts'])) {
+                $list = $jsonData['contacts'];
+            } elseif (isset($jsonData['data']) && is_array($jsonData['data'])) {
+                $list = $jsonData['data'];
+            }
+
+            if ($list !== null) {
+                return $this->processGenericJsonArray($list);
+            }
         }
 
         // Otherwise process as plain text / CSV lines
@@ -528,6 +567,100 @@ class TelegramBroadcastController extends Controller
         return response()->json([
             'success' => true,
             'message' => "በአጠቃላይ {$importedTg} የቴሌግራም እውቂያዎች እና {$importedCust} ደንበኞች ከ Telegram Desktop ፋይል በተሳካ ሁኔታ ተመዝግበዋል!",
+            'imported_count' => $importedTg,
+        ]);
+    }
+
+    /**
+     * Process generic machine-readable JSON array of contacts / exported users
+     */
+    protected function processGenericJsonArray(array $items): JsonResponse
+    {
+        $importedTg = 0;
+        $importedCust = 0;
+
+        $chunks = array_chunk($items, 500);
+        foreach ($chunks as $chunk) {
+            DB::beginTransaction();
+            try {
+                foreach ($chunk as $item) {
+                    if (!is_array($item)) continue;
+
+                    $rawPhone = $item['phone'] ?? $item['phone_number'] ?? $item['mobile'] ?? $item['tel'] ?? null;
+                    $cleanPhone = !empty($rawPhone) ? Customer::normalizePhone((string)$rawPhone) : null;
+
+                    $first = trim($item['first_name'] ?? '');
+                    $last = trim($item['last_name'] ?? '');
+                    $fullName = trim($item['name'] ?? $item['full_name'] ?? "{$first} {$last}");
+
+                    $rawTgId = $item['telegram_id'] ?? $item['tg_id'] ?? $item['chat_id'] ?? ($item['id'] ?? null);
+                    $tgId = (is_numeric($rawTgId) && strlen((string)$rawTgId) >= 5) ? (int)$rawTgId : null;
+
+                    $rawUsername = $item['username'] ?? null;
+                    $cleanUsername = !empty($rawUsername) ? ltrim(trim($rawUsername), '@') : null;
+
+                    if (empty($fullName)) {
+                        $fullName = $cleanPhone ? "ደንበኛ ({$cleanPhone})" : ($cleanUsername ? "@{$cleanUsername}" : "እውቂያ");
+                    }
+
+                    if (!empty($cleanPhone)) {
+                        Customer::updateOrCreate(
+                            ['phone' => $cleanPhone],
+                            [
+                                'full_name' => $fullName,
+                                'customer_type' => 'individual',
+                                'telegram_user_id' => $tgId ? (string)$tgId : null,
+                                'marketing_consent' => true,
+                            ]
+                        );
+                        $importedCust++;
+                    }
+
+                    $tgUser = null;
+                    if ($tgId) {
+                        $tgUser = TelegramUser::where('telegram_id', $tgId)->first();
+                    }
+                    if (!$tgUser && !empty($cleanPhone)) {
+                        $suffix = substr($cleanPhone, -9);
+                        $tgUser = TelegramUser::where(function ($q) use ($cleanPhone, $suffix) {
+                            $q->where('phone_number', $cleanPhone)
+                              ->orWhere('phone_number', 'like', "%{$suffix}");
+                        })->first();
+                    }
+
+                    if ($tgUser) {
+                        $tgUser->first_name = $fullName ?: $tgUser->first_name;
+                        if (!empty($cleanPhone)) $tgUser->phone_number = $cleanPhone;
+                        if ($tgId && empty($tgUser->telegram_id)) $tgUser->telegram_id = $tgId;
+                        if ($cleanUsername && empty($tgUser->username)) $tgUser->username = $cleanUsername;
+                        $tgUser->is_active = true;
+                        $tgUser->is_excluded = false;
+                        $tgUser->save();
+                    } else {
+                        TelegramUser::create([
+                            'telegram_id' => $tgId,
+                            'first_name' => $fullName,
+                            'username' => $cleanUsername,
+                            'phone_number' => $cleanPhone,
+                            'is_active' => true,
+                            'is_excluded' => false,
+                            'source' => 'json_import',
+                            'marketing_consent' => true,
+                            'last_interaction_at' => now(),
+                        ]);
+                    }
+                    $importedTg++;
+                }
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                Log::warning('Generic JSON chunk import error: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "በአጠቃላይ {$importedTg} እውቂያዎች (እና {$importedCust} ደንበኞች) ከ JSON ፋይል በተሳካ ሁኔታ ወደ ሲስተሙ ገብተዋል!",
             'imported_count' => $importedTg,
         ]);
     }

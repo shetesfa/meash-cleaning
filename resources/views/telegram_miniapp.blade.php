@@ -56,6 +56,7 @@
   $contactPhone2 = $websiteSettings['contact_phone_2'] ?? '0998142190';
   $companyName = $websiteSettings['company_name_am'] ?? ($websiteSettings['company_name'] ?? 'ሜአሽ የጽዳት አገልግሎት');
   $companySlogan = 'Your Environment, Our Responsibility.';
+  $addressAm = $websiteSettings['company_address_am'] ?? ($websiteSettings['office_address_am'] ?? 'አያት አደባባይ፣ አዲስ አበባ');
 @endphp
 <html lang="am">
 <head>
@@ -335,8 +336,8 @@
     </div>
 
     <p class="text-center text-[11px] text-slate-500 pt-3 border-t border-slate-800/80">
-      ኦፊሴላዊ ቦት: <span class="text-cyan-400 font-bold">{{ $websiteSettings['telegram_bot_username'] ?? '@meash_cleaning_solution_bot' }}</span> | ቻናል: <a href="https://t.me/meashdeepcleaning" target="_blank" class="text-cyan-400 font-bold hover:underline">@meashdeepcleaning</a><br>
-      ስልክ: <a href="tel:0970075509" class="text-slate-300 font-bold hover:underline">0970 07 55 09</a> / <a href="tel:0998142190" class="text-slate-300 font-bold hover:underline">0998 14 21 90</a> | አያት አደባባይ፣ አዲስ አበባ
+      ኦፊሴላዊ ቦት: <span class="text-cyan-400 font-bold">{{ $websiteSettings['telegram_bot_username'] ?? '@meash_cleaning_solution_bot' }}</span> | ቻናል: <a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleaning' }}" target="_blank" class="text-cyan-400 font-bold hover:underline">{{ str_replace('https://t.me/', '@', $websiteSettings['telegram_channel'] ?? '@meashdeepcleaning') }}</a><br>
+      ስልክ: <a href="tel:{{ $contactPhone }}" class="text-slate-300 font-bold hover:underline">{{ $contactPhone }}</a> @if(!empty($contactPhone2)) / <a href="tel:{{ $contactPhone2 }}" class="text-slate-300 font-bold hover:underline">{{ $contactPhone2 }}</a> @endif | {{ $addressAm }}
     </p>
   </div>
 
