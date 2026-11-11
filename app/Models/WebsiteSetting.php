@@ -259,6 +259,7 @@ class WebsiteSetting extends Model
             'working_hours_am',
             'working_hours_en',
             'telegram_channel',
+            'telegram_support',
             'telegram_bot',
             'tiktok',
             'facebook',

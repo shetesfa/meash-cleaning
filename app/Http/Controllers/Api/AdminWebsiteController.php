@@ -45,6 +45,7 @@ class AdminWebsiteController extends Controller
             'working_hours_am' => 'nullable|string|max:255',
             'working_hours_en' => 'nullable|string|max:255',
             'telegram_channel' => 'nullable|string|max:255',
+            'telegram_support' => 'nullable|string|max:255',
             'telegram_bot' => 'nullable|string|max:255',
             'tiktok' => 'nullable|string|max:255',
             'facebook' => 'nullable|string|max:255',

@@ -288,6 +288,10 @@ class TelegramController extends Controller
     $facebookUrl = $this->getFacebookUrl();
     $instagramUrl = $this->getInstagramUrl();
     $tgChannelUrl = $this->getTelegramChannelUrl();
+    $tgSupportHandle = $this->getTelegramSupportHandle();
+    $tgSupportUrl = str_starts_with($tgSupportHandle, 'http') ? $tgSupportHandle : 'https://t.me/' . ltrim($tgSupportHandle, '@');
+    $tgChannelHandle = str_replace('https://t.me/', '@', $tgChannelUrl);
+    $socialHandle = (string)WebsiteSetting::getVal('social_handle', '@meashcleaningsolution');
     $companyEmail = $this->getEmail();
     $officeAddress = $this->getAddress();
 
@@ -309,12 +313,12 @@ class TelegramController extends Controller
           "4. <b>ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት</b> (Post-Construction Handover)\n" .
           "5. <b>የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት</b> (High-Rise Window & Glass)\n" .
           "6. <b>የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ</b> (Upholstery & Carpet Deep Care)\n\n" .
-          "<b>ማህበራዊ ሚዲያ (Social Media):</b>\n" .
-          "• TikTok: @meashcleaningsolution\n" .
-          "• Instagram: @meashcleaningsolution\n" .
-          "• Facebook: @meashcleaningsolution\n" .
-          "• ቴሌግራም ቻናል: @meashdeepcleanning\n" .
-          "• ቴሌግራም ማውሪያ: @meashcleaning\n\n" .
+          "<b>ማህበራዊ ሚዲያ እና ይፋዊ አድራሻዎች (Social Media):</b>\n" .
+          "• TikTok: {$socialHandle}\n" .
+          "• Instagram: {$socialHandle}\n" .
+          "• Facebook: {$socialHandle}\n" .
+          "• ቴሌግራም ቻናል: {$tgChannelHandle}\n" .
+          "• ቀጥታ ለማነጋገር (Direct Contact): {$tgSupportHandle}\n\n" .
           "<b>የሪሴፕሽን ስልክ:</b> {$combinedPhones}\n" .
           "<b>ኢሜይል:</b> {$companyEmail}\n" .
           "<b>አድራሻ:</b> {$officeAddress}\n\n" .
@@ -326,14 +330,14 @@ class TelegramController extends Controller
           ],
           [
             ['text' => 'ቴሌግራም ቻናል', 'url' => $tgChannelUrl],
-            ['text' => 'TikTok', 'url' => $tiktokUrl],
+            ['text' => "ቀጥታ ያናግሩ ({$tgSupportHandle})", 'url' => $tgSupportUrl],
           ],
           [
-            ['text' => 'Facebook', 'url' => $facebookUrl],
+            ['text' => 'TikTok', 'url' => $tiktokUrl],
             ['text' => 'Instagram', 'url' => $instagramUrl],
           ],
           [
-            ['text' => "ሪሴፕሽን ያናግሩ ({$phone1})", 'url' => $receptionUrl],
+            ['text' => "በስልክ ያግኙን ({$phone1})", 'url' => $receptionUrl],
           ],
         ],
         'keywords' => ['all', 'official', 'about', 'meash', 'ሜአሽ', 'ሜሽ', 'ጽዳት', 'አዲስ አበባ', 'ዋጋ', 'ስልክ', 'ሶሻል', 'social', 'booking'],
@@ -837,7 +841,7 @@ class TelegramController extends Controller
           ],
           [
             ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleanning'],
-            ['text' => 'ቴሌግራም ማውሪያ', 'url' => 'https://t.me/meashcleaning'],
+            ['text' => 'ቀጥታ ለማነጋገር (Contact)', 'url' => 'https://t.me/meashcleaning'],
           ],
           [
             ['text' => 'TikTok', 'url' => 'https://www.tiktok.com/@meashcleaningsolution'],
