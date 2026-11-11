@@ -114,9 +114,9 @@ class TelegramController extends Controller
   public function getTelegramChannelUrl(): string
   {
     try {
-      return (string)WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashdeepcleaning');
+      return (string)WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashcleaning');
     } catch (\Throwable $e) {
-      return 'https://t.me/meashdeepcleaning';
+      return 'https://t.me/meashcleaning';
     }
   }
 
@@ -304,7 +304,7 @@ class TelegramController extends Controller
           "• TikTok: @meashcleaningsolution\n" .
           "• Instagram: @meashcleaningsolution\n" .
           "• Facebook: @meashcleaningsolution\n" .
-          "• ቴሌግራም ቻናል: @meashdeepcleaning\n\n" .
+          "• ቴሌግራም ቻናል: @meashcleaning\n\n" .
           "<b>የሪሴፕሽን ስልክ:</b> {$combinedPhones}\n" .
           "<b>ኢሜይል:</b> {$companyEmail}\n" .
           "<b>አድራሻ:</b> {$officeAddress}\n\n" .
@@ -826,7 +826,7 @@ class TelegramController extends Controller
             ['text' => 'አስተያየት ይስጡ | Feedback', 'callback_data' => 'menu_feedback'],
           ],
           [
-            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleaning'],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashcleaning'],
             ['text' => 'TikTok', 'url' => 'https://www.tiktok.com/@meashcleaningsolution'],
           ],
           [
@@ -1140,7 +1140,7 @@ class TelegramController extends Controller
       $orderNo = trim(str_replace('resched_', '', $data));
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " <b>ቀጠሮዎን ለማራዘም ወይም አዲስ ቀን ለመቀየር:</b>\n\nየትዕዛዝ ቁጥር: <code>{$orderNo}</code>\n\nእባክዎ የሚፈልጉትን አዲስ ቀን በ " . $this->getPhone1() . " ደውለው ወይም በ @meashdeepcleaning መልዕክት ይንገሩን:: ሪሴፕሽናችን ወዲያውኑ ያስተካክላል::",
+        'text' => " <b>ቀጠሮዎን ለማራዘም ወይም አዲስ ቀን ለመቀየር:</b>\n\nየትዕዛዝ ቁጥር: <code>{$orderNo}</code>\n\nእባክዎ የሚፈልጉትን አዲስ ቀን በ " . $this->getPhone1() . " ደውለው ወይም በ @meashcleaning መልዕክት ይንገሩን:: ሪሴፕሽናችን ወዲያውኑ ያስተካክላል::",
         'parse_mode' => 'HTML',
         'reply_markup' => json_encode([
           'inline_keyboard' => [
@@ -1279,7 +1279,7 @@ class TelegramController extends Controller
     $phone2 = WebsiteSetting::getVal('contact_phone_2', '0998142190');
     $addressAm = WebsiteSetting::getVal('company_address_am', 'አያት አደባባይ፣ አዲስ አበባ');
     $hoursAm = WebsiteSetting::getVal('working_hours_am', 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)');
-    $channelUrl = WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashdeepcleaning');
+    $channelUrl = WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashcleaning');
     $tiktokUrl = WebsiteSetting::getVal('tiktok', 'https://www.tiktok.com/@meashcleaningsolution');
 
     $msg = "<b>የሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION)</b>\n" .

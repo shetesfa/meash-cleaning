@@ -317,7 +317,7 @@
     </div>
 
     <p class="text-center text-[11px] text-slate-500 pt-3 border-t border-slate-800/80">
-      ኦፊሴላዊ ቦት: <span class="text-cyan-400 font-bold">{{ $websiteSettings['telegram_bot_username'] ?? '@meash_cleaning_solution_bot' }}</span> | ቻናል: <a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleaning' }}" target="_blank" class="text-cyan-400 font-bold hover:underline">{{ str_replace('https://t.me/', '@', $websiteSettings['telegram_channel'] ?? '@meashdeepcleaning') }}</a><br>
+      ኦፊሴላዊ ቦት: <span class="text-cyan-400 font-bold">{{ $websiteSettings['telegram_bot_username'] ?? '@meash_cleaning_solution_bot' }}</span> | ቻናል: <a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="text-cyan-400 font-bold hover:underline">{{ str_replace('https://t.me/', '@', $websiteSettings['telegram_channel'] ?? '@meashcleaning') }}</a><br>
       ስልክ: <a href="tel:{{ $contactPhone }}" class="text-slate-300 font-bold hover:underline">{{ $contactPhone }}</a> @if(!empty($contactPhone2)) / <a href="tel:{{ $contactPhone2 }}" class="text-slate-300 font-bold hover:underline">{{ $contactPhone2 }}</a> @endif | {{ $addressAm }}
     </p>
   </div>
