@@ -107,7 +107,7 @@
     'longitude' => 38.8681
   ],
   'sameAs' => array_values(array_filter([
-    $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleanning',
+    $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaningsolution',
     $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning',
     $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot',
     $tiktokUrl,
@@ -508,7 +508,6 @@
       <div class="leading-tight">
         <div class="flex items-center gap-1.5">
           <span class="font-serif font-black text-lg sm:text-xl tracking-tight text-navy dark:text-white">MEASH</span>
-          <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-teal/15 text-teal dark:text-teal-400 tracking-wider">PRO</span>
         </div>
         <span class="text-[10px] sm:text-[11px] font-bold text-teal-dark dark:text-teal-400 tracking-wide block">CLEANING SOLUTION</span>
       </div>
@@ -551,7 +550,6 @@
       <div class="hidden sm:flex items-center gap-0.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-full p-0.5">
         <button type="button" onclick="setLang('am')" data-lang="am" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition">አማ</button>
         <button type="button" onclick="setLang('en')" data-lang="en" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition">EN</button>
-        <button type="button" onclick="setLang('both')" data-lang="both" class="lang-btn text-[11px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition">አማ/EN</button>
       </div>
 
       <!-- Main CTA: Quote / Book -->
@@ -590,10 +588,9 @@
       <!-- Language Picker in Mobile Drawer -->
       <div class="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
         <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block px-1">ቋንቋ ይምረጡ / Select Language</span>
-        <div class="grid grid-cols-3 gap-1">
+        <div class="grid grid-cols-2 gap-1">
           <button type="button" onclick="setLang('am')" data-lang="am" class="lang-btn py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer">አማርኛ</button>
           <button type="button" onclick="setLang('en')" data-lang="en" class="lang-btn py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer">English</button>
-          <button type="button" onclick="setLang('both')" data-lang="both" class="lang-btn py-1.5 text-xs font-bold rounded-xl transition text-center cursor-pointer">ሁለቱም</button>
         </div>
       </div>
 
@@ -674,8 +671,7 @@
       </div>
 
       <h1 class="font-serif font-bold text-[2.4rem] sm:text-[3.2rem] md:text-[3.6rem] leading-[1.08] tracking-tight text-navy">
-        <div data-lang-block="am">MEASH CLEANING SOLUTION<br><span class="text-teal-dark text-[0.65em] font-bold block mt-1">ሜአሽ የጽዳት አገልግሎት</span></div>
-        <div data-lang-block="en">MEASH CLEANING SOLUTION<br><span class="text-teal-dark text-[0.65em] font-bold block mt-1">Premium Commercial Cleaning Partner</span></div>
+        MEASH CLEANING SOLUTION<br><span class="text-teal-dark text-[0.65em] font-bold block mt-1"><span data-lang-block="am">ሜአሽ የጽዳት አገልግሎት</span><span data-lang-block="en">Premium Commercial Cleaning Partner</span></span>
       </h1>
 
       <p class="mt-4 text-teal-dark font-extrabold text-[15px] sm:text-[17px] leading-snug">
@@ -754,12 +750,17 @@
           </p>
         </div>
 
+        <!-- Photo area: no real photo supplied yet — honest placeholder, not a fake image -->
+        <div class="flex-1 flex items-center justify-center py-6">
+          <span class="text-[11px] font-bold text-white/70 bg-white/10 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> የስራ ፎቶ በቅርቡ • Work photo coming soon</span>
+        </div>
+
         <div class="bg-white/95 text-navy backdrop-blur rounded-xl p-4 shadow-xl border border-white/20">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-bold text-teal-dark flex items-center gap-1.5">
-              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> በቅርቡ የተጠናቀቀ አገልግሎት
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <span class="text-xs font-bold text-teal-dark flex items-center gap-1.5 min-w-0">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 shrink-0"></i> በቅርቡ የተጠናቀቀ አገልግሎት
             </span>
-            <span class="text-[11px] text-navy/50">ቦሌ፣ አዲስ አበባ</span>
+            <span class="text-[11px] text-navy/50 shrink-0 whitespace-nowrap">ቦሌ፣ አዲስ አበባ</span>
           </div>
           <p class="text-xs text-navy/80 font-medium">
             የቢሮ እና የመኖሪያ ቤት ጥልቅ የጽዳት ስራ<br>
@@ -888,7 +889,7 @@
             <a href="{{ $facebookUrl }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
               <i data-lucide="facebook" class="w-3.5 h-3.5"></i> Facebook
             </a>
-            <a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleanning' }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5" title="Telegram Channel">
+            <a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaningsolution' }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5" title="Telegram Channel">
               <i data-lucide="send" class="w-3.5 h-3.5"></i> Channel
             </a>
             <a href="{{ $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5" title="Telegram Contact">
@@ -1199,7 +1200,7 @@
             <span data-lang-block="en">{{ $svc->description_en ?: $svc->description_am }}</span>
           </p>
         </div>
-        <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price">
+        <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price" data-svc-price="{{ $svc->id }}" data-svc-unit="{{ $svc->unit ?: 'service' }}">
           {{ number_format($svc->base_price) }} ETB{{ $unitLabel }}
         </div>
         <a href="#book" onclick="preselectService('{{ $svc->code }}')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
@@ -1222,7 +1223,7 @@
             <span data-lang-block="en">Deep tile &amp; grout restoration, single-disc rotary scrub, and hardwood revitalization.</span>
           </p>
         </div>
-        <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price">500 ETB / sqm</div>
+        <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price" data-svc-price="1" data-svc-unit="sqm">60 ETB / sqm</div>
         <a href="#book" onclick="preselectService('floor_ceramic')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
           <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
         </a>
@@ -1405,6 +1406,9 @@
             <span class="bg-red-500/80 backdrop-blur px-2.5 py-1 rounded">BEFORE: ያረጀ ቆሻሻ</span>
             <span class="bg-emerald-600/90 backdrop-blur px-2.5 py-1 rounded">AFTER: 100% ንጹህ</span>
           </div>
+          <div class="flex-1 flex items-center justify-center">
+            <span class="text-[11px] font-bold bg-black/50 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> ፎቶ በቅርቡ • Photo coming soon</span>
+          </div>
           <div>
             <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">Ayat — Villa</span>
           </div>
@@ -1425,6 +1429,9 @@
             <span class="bg-red-500/80 backdrop-blur px-2.5 py-1 rounded">BEFORE: አቧራና ጠረን</span>
             <span class="bg-emerald-600/90 backdrop-blur px-2.5 py-1 rounded">AFTER: ደማቅ ቀለም</span>
           </div>
+          <div class="flex-1 flex items-center justify-center">
+            <span class="text-[11px] font-bold bg-black/50 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> ፎቶ በቅርቡ • Photo coming soon</span>
+          </div>
           <div>
             <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">Kazanchis — Corporate Office</span>
           </div>
@@ -1444,6 +1451,9 @@
           <div class="flex justify-between items-center text-[11px] font-bold">
             <span class="bg-red-500/80 backdrop-blur px-2.5 py-1 rounded">BEFORE: ጥቁር መገጣጠሚያ</span>
             <span class="bg-emerald-600/90 backdrop-blur px-2.5 py-1 rounded">AFTER: የሚያብረቀርቅ</span>
+          </div>
+          <div class="flex-1 flex items-center justify-center">
+            <span class="text-[11px] font-bold bg-black/50 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> ፎቶ በቅርቡ • Photo coming soon</span>
           </div>
           <div>
             <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">CMC — Commercial Restaurant</span>
@@ -1611,6 +1621,8 @@
           <div class="grid grid-cols-2 gap-2.5 mb-2">
             @php
               $wizardServices = $activeServices->take(8);
+              $firstWizardService = $wizardServices->first();
+              $firstWizardPrice = (float)($firstWizardService?->base_price ?? 350);
               $iconList = [
                 'sofa' => 'sofa',
                 'carpet' => 'layout-grid',
@@ -1637,7 +1649,7 @@
                     <span data-lang-block="am">{{ $wNameAm }}</span>
                     <span data-lang-block="en">{{ $wNameEn }}</span>
                   </span>
-                  <span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="{{ $ws->id }}">
+                  <span class="text-[11px] text-navy/50 wiz-price" data-wiz-price="{{ $ws->id }}" data-wiz-unit="{{ $wUnit }}">
                     {{ number_format($wPrice) }} ETB / {{ $wUnit }}
                   </span>
                 </span>
@@ -1652,8 +1664,9 @@
           </div>
           <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-5 flex items-center justify-between">
             <span class="text-xs sm:text-sm font-semibold text-teal-dark"><span data-lang-block="am">የግምት ድምር (Estimated Price)</span><span data-lang-block="en">Estimated total</span></span>
-            <span id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">{{ number_format((float)($activeServices->firstWhere('id', 1)?->base_price ?? 350)) }} ETB</span>
+            <span id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">{{ number_format($firstWizardPrice) }} ETB</span>
           </div>
+          <button type="button" onclick="resetWizard()" class="w-full mt-1 text-xs font-bold text-navy/50 hover:text-red-600 py-2 cursor-pointer"><span data-lang-block="am">↺ ቀጠሮውን አጽዳ</span><span data-lang-block="en">↺ Clear booking</span></button>
           <button type="button" onclick="showWizardStep(2)" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-2">
             <span data-lang-block="am">ቀጣይ: አድራሻ ያስገቡ</span><span data-lang-block="en">Next: Address &amp; Location</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -1663,7 +1676,7 @@
         <!-- STEP 2 -->
         <div id="step-2" class="wizard-step hidden">
           <p class="font-semibold mb-4 text-sm"><span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Address</span></p>
-          <select id="book-subcity" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 bg-white text-sm" required>
+          <select id="book-subcity" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 bg-white text-sm" required onchange="document.getElementById('step2-error')?.classList.add('hidden')">
             <option value="">-- Subcity / ክፍለ ከተማ --</option>
             @php
               $activeSubcitiesList = !empty($subcities) ? array_filter($subcities, fn($c) => !isset($c['active']) || !empty($c['active'])) : [
@@ -1683,19 +1696,22 @@
               <option value="{{ $sc['name_en'] ?? $sc['name_am'] }}">{{ $sc['name_en'] ?? $sc['name_am'] }} ({{ $sc['name_am'] ?? $sc['name_en'] }})</option>
             @endforeach
           </select>
-          <input id="book-address" type="text" placeholder="Street, house no. / ጎዳና፣ የቤት ቁጥር" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
+          <input id="book-address" type="text" placeholder="Street, house no. / ጎዳና፣ የቤት ቁጥር" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required oninput="document.getElementById('step2-error')?.classList.add('hidden')">
           <input id="book-landmark" type="text" placeholder="Landmark / መለያ ቦታ (ምሳሌ፡ ሆቴል አጠገብ)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm">
+          <p id="step2-error" class="hidden text-xs text-red-600 font-bold mb-3 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> እባክዎ ክፍለ ከተማ ይምረጡ እና ጎዳና / የቤት ቁጥር ያስገቡ! (Please select a subcity and enter the street address!)
+          </p>
           <div class="flex gap-3">
             <button type="button" onclick="showWizardStep(1)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
-            <button type="button" onclick="showWizardStep(3)" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
+            <button type="button" onclick="validateStep2AndContinue()" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
           </div>
         </div>
 
         <!-- STEP 3 -->
         <div id="step-3" class="wizard-step hidden">
-          <div class="flex items-center justify-between mb-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <p class="font-semibold text-sm text-navy"><span data-lang-block="am">ቀንና ሰዓት ይምረጡ</span><span data-lang-block="en">Select Date &amp; Time</span></p>
-            <span class="text-[10px] font-bold text-teal-dark bg-teal-light px-2.5 py-1 rounded-full">ነባሪ፡ የኢትዮጵያ ካላንደር</span>
+            <span class="text-[10px] font-bold text-teal-dark bg-teal-light px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap">ነባሪ፡ የኢትዮጵያ ካላንደር</span>
           </div>
 
           <!-- Calendar Mode Switcher (Ethiopian vs Gregorian) -->
@@ -1963,7 +1979,7 @@
 
           <div class="bg-fog rounded-md px-4 py-3 mb-5 flex items-center justify-between border border-navy/10">
             <span class="text-sm font-semibold text-navy/70"><span data-lang-block="am">ጠቅላላ የሚከፈል</span><span data-lang-block="en">Total to pay</span></span>
-            <span id="wiz-total-2" class="font-serif font-semibold text-xl text-teal-dark">350 ETB</span>
+            <span id="wiz-total-2" class="font-serif font-semibold text-xl text-teal-dark">{{ number_format($firstWizardPrice) }} ETB</span>
           </div>
           <div class="flex gap-3">
             <button type="button" onclick="showWizardStep(3)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
@@ -1988,7 +2004,7 @@
               @if(!empty($boaNo))
               <p><strong class="text-navy">አቢሲኒያ ባንክ (BOA):</strong> <span class="font-mono font-bold">{{ $boaNo }}</span> ({{ $websiteSettings['boa_account_name'] ?? 'ሜሽ የፅዳት' }})</p>
               @endif
-              <p class="text-[10px] text-navy/50 pt-1 border-t border-navy/10">ማስታወሻ፦ ገንዘቡን ሲያስተላልፉ በትራንስፈር ማስታወሻ ላይ የቀጠሮ ቁጥርዎን ያስገቡ::</p>
+              <p class="text-[10px] text-navy/50 pt-1 border-t border-navy/10">ማስታወሻ፦ ገንዘቡን ሲያስተላልፉ በትራንስፈር ማስታወሻ ላይ የቀጠሮ ቁጥርዎን ያስገቡ።</p>
             </div>
           </div>
 
@@ -2105,6 +2121,7 @@
             <button type="submit" id="quickMsgBtn" class="bg-navy hover:bg-teal-dark text-white font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 w-full cursor-pointer">
               <i data-lucide="send" class="w-3.5 h-3.5"></i>
               <span id="quickMsgBtnText" data-lang-block="am">መልእክት ላክ</span>
+              <span data-lang-block="en">Send Message</span>
             </button>
           </form>
           <script>
@@ -2134,11 +2151,11 @@
                   document.getElementById('quickMessageForm').reset();
                 } else {
                   alertBox.className = 'p-3 rounded-lg text-xs font-bold bg-red-50 text-red-800 border border-red-200 block';
-                  alertBox.textContent = data.message || 'ስህተት ተፈጥሯል:: እባክዎ እንደገና ይሞክሩ::';
+                  alertBox.textContent = data.message || 'ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።';
                 }
               } catch (err) {
                 alertBox.className = 'p-3 rounded-lg text-xs font-bold bg-green-50 text-green-800 border border-green-200 block';
-                alertBox.textContent = 'መልእክትዎ ደርሶናል! የሪሴፕሽን ሰራተኞቻችን በቅርቡ ይደውሉልዎታል::';
+                alertBox.textContent = 'መልእክትዎ ደርሶናል! የሪሴፕሽን ሰራተኞቻችን በቅርቡ ይደውሉልዎታል።';
                 document.getElementById('quickMessageForm').reset();
               } finally {
                 btn.disabled = false;
@@ -2230,7 +2247,7 @@
     <div>
       <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ማህበራዊ ትስስር ({{ $socialHandle }})</p>
       <ul class="space-y-2 text-xs">
-        <li><a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleanning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashdeepcleanning)</a></li>
+        <li><a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaningsolution' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashcleaningsolution)</a></li>
         <li><a href="{{ $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="message-circle" class="w-3.5 h-3.5 text-teal"></i> Direct Telegram (@meashcleaning)</a></li>
         <li><a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="bot" class="w-3.5 h-3.5 text-teal"></i> Telegram Bot</a></li>
         <li><a href="{{ $tiktokUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="video" class="w-3.5 h-3.5 text-teal"></i> TikTok</a></li>
@@ -2266,7 +2283,7 @@
         </div>
         <div>
           <h3 class="font-serif font-bold text-sm text-navy">የሰራተኞች እና አስተዳዳሪ መግቢያ</h3>
-          <p class="text-[11px] text-navy/50">Staff & Admin Access — Meash OS</p>
+          <p class="text-[11px] text-navy/50">Staff & Admin Access — MEASH CLEANING SOLUTION</p>
         </div>
       </div>
       <button type="button" onclick="closeStaffModal()" class="w-7 h-7 rounded-lg text-navy/40 hover:text-navy hover:bg-fog flex items-center justify-center transition cursor-pointer">
@@ -2284,7 +2301,7 @@
     <div class="mt-4">
       <div class="mb-3 p-2.5 rounded-xl bg-slate-50 border border-navy/10 flex items-center gap-2">
         <i data-lucide="lock" class="w-4 h-4 text-teal shrink-0"></i>
-        <p class="text-[11px] text-navy/70 leading-tight">ደህንነቱ የተጠበቀ የአስተዳዳሪ እና ሰራተኞች መግቢያ። እባክዎ ኢሜይል/ስልክ ቁጥርዎን እና የይለፍ ቃልዎን ያስገቡ።</p>
+        <p class="text-[11px] text-navy/70 leading-tight min-w-0 flex-1 break-words">ደህንነቱ የተጠበቀ የአስተዳዳሪ እና ሰራተኞች መግቢያ። እባክዎ ኢሜይል/ስልክ ቁጥርዎን እና የይለፍ ቃልዎን ያስገቡ።</p>
       </div>
 
       <form onsubmit="handleStaffLogin(event)" class="space-y-3.5">
@@ -2438,7 +2455,9 @@
 
   function updateEthDays() {
     const m = parseInt(document.getElementById('eth-month')?.value || 1);
-    const maxDay = (m === 13) ? 6 : 30;
+    const y = parseInt(document.getElementById('eth-year')?.value || 0);
+    // Pagume has 6 days in an Ethiopian leap year (year % 4 === 3), else 5.
+    const maxDay = (m === 13) ? ((y % 4 === 3) ? 6 : 5) : 30;
     const daySel = document.getElementById('eth-day');
     if (!daySel) return;
     const cur = parseInt(daySel.value) || 1;
@@ -2531,6 +2550,20 @@
     if (err) err.classList.add('hidden');
   }
 
+  function validateStep2AndContinue() {
+    const subcity = (document.getElementById('book-subcity')?.value || '').trim();
+    const address = (document.getElementById('book-address')?.value || '').trim();
+    const err = document.getElementById('step2-error');
+    if (!subcity || !address) {
+      if (err) err.classList.remove('hidden');
+      if (!subcity) document.getElementById('book-subcity')?.focus();
+      else document.getElementById('book-address')?.focus();
+      return;
+    }
+    if (err) err.classList.add('hidden');
+    showWizardStep(3);
+  }
+
   function validateStep3AndContinue() {
     const date = document.getElementById('book-date')?.value;
     const slot = document.getElementById('book-time-slot')?.value;
@@ -2594,6 +2627,9 @@
 
   // ---- Language toggle ----
   function setLang(l){
+    // 'both' mode is retired: it showed Amharic and English side by side with
+    // no space between them. Old saved preferences are migrated to Amharic.
+    if (l === 'both') l = 'am';
     document.documentElement.setAttribute('data-lang', l);
     localStorage.setItem('meash_lang', l);
     document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -2618,8 +2654,7 @@
     const saved = localStorage.getItem('meash_lang');
     if (saved) { setLang(saved); }
     else {
-      const browserLang = (navigator.language || '').toLowerCase();
-      setLang(browserLang.startsWith('am') ? 'am' : 'both');
+      setLang('am');
     }
   })();
 
@@ -2632,7 +2667,9 @@
     }
   });
   if (Object.keys(servicePrices).length === 0) {
-    servicePrices = { 1: 350, 2: 80, 3: 600, 4: 70, 8: 50, 6: 3500 };
+    // Fallback only when the database has no services yet. Prices mirror
+    // DatabaseSeeder insertion order (id 1 = floor, 2 = facilities, ...).
+    servicePrices = { 1: 60, 2: 3500, 3: 3000, 4: 4500, 5: 70, 6: 350, 7: 350, 8: 80, 9: 600, 10: 2500, 11: 3500, 12: 120 };
   }
   let currency = 'ETB';
 
@@ -2693,35 +2730,29 @@
   function renderPrices(){
     document.querySelectorAll('.svc-price').forEach(el => {
       const id = el.getAttribute('data-svc-price');
-      if (servicePrices[id] != null) el.textContent = formatPrice(servicePrices[id]);
+      if (servicePrices[id] != null) {
+        const unit = el.getAttribute('data-svc-unit');
+        el.textContent = formatPrice(servicePrices[id]) + (unit && unit !== 'service' ? ' / ' + unit : '');
+      }
     });
     document.querySelectorAll('.wiz-price').forEach(el => {
       const id = el.getAttribute('data-wiz-price');
-      if (servicePrices[id] != null) el.textContent = servicePrices[id].toLocaleString() + ' ' + currency + ' / unit';
+      const unit = el.getAttribute('data-wiz-unit');
+      if (servicePrices[id] != null) el.textContent = servicePrices[id].toLocaleString() + ' ' + currency + (unit ? ' / ' + unit : '');
     });
   }
-  renderPrices();
-  updateWizardTotal();
+  // NOTE: renderPrices()/updateWizardTotal() are called after the wizard state
+  // (selectedSvcId/wizardQty) is initialised below. Calling them here used to
+  // throw "Cannot access 'selectedSvcId' before initialization" (TDZ), which
+  // aborted the rest of this script: the Ethiopian date picker never
+  // initialised and the quantity +/- buttons never worked.
 
   // ---- Booking wizard state ----
-  const svcMap = { 
-    floor_ceramic: 8,
-    facilities_general: 6,
-    kitchen_dining: 10,
-    post_construction: 5,
-    glass: 4,
-    upholstery_carpet: 1,
-    sofa: 1, 
-    carpet: 2, 
-    mattress: 3, 
-    home: 5, 
-    office: 6, 
-    curtain: 7, 
-    hotel_clean: 9,
-    restaurant_clean: 10,
-    hall_chair_clean: 11,
-    contract_cleaning: 12
-  };
+  // Service code -> live DB id, built from the services actually loaded above.
+  // (The old hard-coded id map was stale: ids duplicated and did not match the
+  // database, so "Book Now" from a service card priced the wrong service.)
+  const svcMap = {};
+  initialLiveServices.forEach(s => { if (s.code != null && s.id != null) svcMap[s.code] = s.id; });
   const svcNames = {
     floor_ceramic: 'Ceramic & Hardwood Floor / የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት',
     facilities_general: 'Deep & General Facilities Cleaning / የተቋማት አጠቃላይ እና ጥልቅ ጽዳት',
@@ -2741,9 +2772,12 @@
     contract_cleaning: 'Regular Contract Cleaning / ቋሚ የኮንትራት ውል'
   };
 
-  let selectedSvc = 'sofa';
-  let selectedSvcId = 1;
+  // Default to the first service shown in the wizard so the highlighted button
+  // and the priced service always agree.
+  let selectedSvc = @json($activeServices->take(8)->first()?->code ?? 'sofa');
+  let selectedSvcId = {{ (int) ($activeServices->take(8)->first()?->id ?? 1) }};
   let wizardQty = 1;
+  const FIRST_WIZARD_SVC = @json($activeServices->take(8)->first()?->code ?? 'sofa');
 
   function preselectService(svc){
     selectedSvc = svc;
@@ -2833,6 +2867,24 @@
     updateSubscriptionDiscount();
   }
 
+  // Initial price render — placed here, after the wizard state above exists.
+  renderPrices();
+  updateWizardTotal();
+
+  // Clear the whole booking wizard back to its initial state.
+  function resetWizard(){
+    const form = document.getElementById('booking-form');
+    if (form) form.reset();
+    wizardQty = 1;
+    const qtyEl = document.getElementById('qty-display');
+    if (qtyEl) qtyEl.innerText = wizardQty;
+    const step2Err = document.getElementById('step2-error');
+    if (step2Err) step2Err.classList.add('hidden');
+    document.getElementById('step-success')?.classList.add('hidden');
+    preselectService(FIRST_WIZARD_SVC);
+    showWizardStep(1);
+  }
+
   function showWizardStep(n){
     document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById('step-' + n);
@@ -2896,7 +2948,7 @@
       }
     } catch (err) {
       const errMsg = document.getElementById('booking-error-msg');
-      const text = 'የኔትወርክ ግንኙነት ስህተት አጋጥሟል:: እባክዎ በ {{ $phone1 }} በቀጥታ ይደውሉ::';
+      const text = 'የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ በ {{ $phone1 }} በቀጥታ ይደውሉ።';
       if (errMsg) {
         errMsg.innerText = text;
         errMsg.classList.remove('hidden');
@@ -2904,13 +2956,6 @@
     } finally {
       btn.disabled = false;
     }
-  }
-
-  function resetWizard(){
-    document.getElementById('booking-form').reset();
-    document.getElementById('book-phone').value = '';
-    document.getElementById('step-success').classList.add('hidden');
-    showWizardStep(1);
   }
 
   function openWebRescheduleModal(orderNumber) {
@@ -3009,7 +3054,7 @@
       } else {
         if (msgEl) {
           msgEl.className = 'p-3 rounded-xl bg-red-50 border border-red-300 text-red-700 text-xs font-bold text-center';
-          msgEl.innerText = 'ስህተት: ' + (data.message || 'ቀጠሮውን ማስተላለፍ አልተቻለም::');
+          msgEl.innerText = 'ስህተት: ' + (data.message || 'ቀጠሮውን ማስተላለፍ አልተቻለም።');
           msgEl.classList.remove('hidden');
         }
       }
@@ -3469,7 +3514,7 @@
 
       } else {
         const notFoundMsg = res.status === 429
-          ? 'እባክዎ ጥቂት ሰከንዶች ቆይተው እንደገና ይሞክሩ (Too many requests)::'
+          ? 'እባክዎ ጥቂት ሰከንዶች ቆይተው እንደገና ይሞክሩ (Too many requests)።'
           : (data.message || 'ይቅርታ፣ በዚህ ቁጥር የተያዘ ትዕዛዝ አልተገኘም። እባክዎ በትክክል መጻፉን ያረጋግጡ።');
         box.innerHTML = `<div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
           ${escapeHtml(notFoundMsg)}

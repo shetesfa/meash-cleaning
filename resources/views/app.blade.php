@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ሜሽ የፅዳት አገልግሎት | የንግድ ስራ መምሪያ ሲስተም (Mesh OS)</title>
+    <title>MEASH CLEANING SOLUTION | Staff & Admin Login</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0F172A">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -121,8 +121,8 @@
         <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
             <div class="text-center mb-6">
                 <img src="/logo.jpg" alt="Meash Logo" class="w-16 h-16 rounded-2xl mx-auto mb-3 object-cover border border-cyan-500/40 shadow-lg shadow-cyan-500/20">
-                <h2 class="text-xl font-extrabold text-white tracking-tight">ሜሽ የፅዳት አገልግሎት</h2>
-                <p class="text-xs text-cyan-400 font-bold uppercase tracking-wider mt-1">የንግድ ስራ መምሪያ ሲስተም (Mesh OS)</p>
+                <h2 class="text-xl font-extrabold text-white tracking-tight">MEASH CLEANING SOLUTION</h2>
+                <p class="text-xs text-cyan-400 font-bold uppercase tracking-wider mt-1">የሰራተኞች እና አስተዳዳሪ መግቢያ • Staff & Admin Login</p>
                 <p class="text-xs text-slate-400 mt-2">የሰራተኞች እና የአስተዳዳሪ ደህንነቱ የተጠበቀ መግቢያ</p>
             </div>
 
@@ -154,7 +154,7 @@
 
                 <button type="submit" id="btn-app-login" class="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold text-xs shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer">
                     <i data-lucide="log-in" class="w-4 h-4"></i>
-                    <span id="btn-app-login-text">ወደ ሲስተም ግባ (Login to Mesh OS)</span>
+                    <span id="btn-app-login-text">ወደ ሲስተም ግባ (Login)</span>
                 </button>
             </form>
 
@@ -604,7 +604,7 @@
                 if (errBanner) errBanner.classList.remove('hidden');
             } finally {
                 if (btn) btn.disabled = false;
-                if (btnText) btnText.innerText = 'ወደ ሲስተም ግባ (Login to Mesh OS)';
+                if (btnText) btnText.innerText = 'ወደ ሲስተም ግባ (Login)';
             }
         }
 
@@ -2626,7 +2626,7 @@
                                 <div style="font-size:22pt; font-weight:900; letter-spacing:1.5px; color:#ffffff;">MEASH CLEANING SOLUTION</div>
                                 <div style="font-size:13pt; font-weight:bold; color:#38bdf8; margin-top:3px;">ሜሽ የፅዳት እና የህንፃ አያያዝ አገልግሎት</div>
                                 <div style="font-size:10pt; font-style:italic; color:#cbd5e1; margin-top:4px;">«የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት! | Your Environment, Our Responsibility»</div>
-                                <div style="font-size:9.5pt; color:#93c5fd; margin-top:6px;">ስልክ፡ 0970075509 / 0998142190 | ቴሌግራም ቻናል፡ @meashdeepcleanning | ቀጥታ ለማነጋገር (Direct Contact)፡ @meashcleaning | አዲስ አበባ፣ ኢትዮጵያ</div>
+                                <div style="font-size:9.5pt; color:#93c5fd; margin-top:6px;">ስልክ፡ 0970075509 / 0998142190 | ቴሌግራም ቻናል፡ @meashcleaningsolution | ቀጥታ ለማነጋገር (Direct Contact)፡ @meashcleaning | አዲስ አበባ፣ ኢትዮጵያ</div>
                             </td>
                         </tr>
                         <tr style="border:none;">
@@ -7601,7 +7601,7 @@
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቻናል (Channel Link)</label>
-                                    <input type="text" id="set-tg-chan" value="${escapeHtml(s.telegram_channel || 'https://t.me/meashdeepcleanning')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" placeholder="https://t.me/meashdeepcleanning">
+                                    <input type="text" id="set-tg-chan" value="${escapeHtml(s.telegram_channel || 'https://t.me/meashcleaningsolution')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" placeholder="https://t.me/meashcleaningsolution">
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቀጥታ ለማነጋገር (Direct Contact)</label>
@@ -9383,7 +9383,7 @@
                                     <div class="text-[11px] text-slate-600 mt-2 space-y-0.5">
                                         <p>አድራሻ፡ <strong>አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ</strong></p>
                                         <p>ስልክ፡ <strong>0970075509 / 0998142190</strong></p>
-                                        <p>ቴሌግራም ቻናል፡ <a href="https://t.me/meashdeepcleanning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashdeepcleanning</a> | ቀጥታ ለማነጋገር (Direct Contact)፡ <a href="https://t.me/meashcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashcleaning</a></p>
+                                        <p>ቴሌግራም ቻናል፡ <a href="https://t.me/meashcleaningsolution" target="_blank" class="text-blue-700 font-bold hover:underline">@meashcleaningsolution</a> | ቀጥታ ለማነጋገር (Direct Contact)፡ <a href="https://t.me/meashcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashcleaning</a></p>
                                     </div>
                                 </div>
                                 <div class="text-right">

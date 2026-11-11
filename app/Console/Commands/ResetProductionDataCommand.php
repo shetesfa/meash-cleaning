@@ -141,7 +141,7 @@ class ResetProductionDataCommand extends Command
             // Ensure website settings exist and have the official real data
             if (Schema::hasTable('website_settings')) {
                 $this->verifyOfficialWebsiteSettings();
-                $this->info(" - Verified and preserved official business settings (Phone: 0970075509, Telegram: @meashcleaning, Channel: @meashdeepcleanning, TikTok: meashcleaningsolution)");
+                $this->info(" - Verified and preserved official business settings (Phone: 0970075509, Telegram: @meashcleaning, Channel: @meashcleaningsolution, TikTok: meashcleaningsolution)");
             }
 
         } finally {
@@ -234,7 +234,7 @@ class ResetProductionDataCommand extends Command
             'phone' => '0970075509',
             'phone_secondary' => '0970075509',
             'telegram_username' => 'meashcleaning',
-            'telegram_channel' => 'meashdeepcleanning',
+            'telegram_channel' => 'meashcleaningsolution',
             'tiktok' => 'meashcleaningsolution',
             'contact_person_name' => 'አቶ አምሃ (Amha)',
             'address' => 'አዲስ አበባ፣ ኢትዮጵያ (Addis Ababa, Ethiopia)',

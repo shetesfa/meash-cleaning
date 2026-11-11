@@ -119,9 +119,9 @@ class TelegramController extends Controller
   public function getTelegramChannelUrl(): string
   {
     try {
-      return (string)WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashdeepcleanning');
+      return (string)WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashcleaningsolution');
     } catch (\Throwable $e) {
-      return 'https://t.me/meashdeepcleanning';
+      return 'https://t.me/meashcleaningsolution';
     }
   }
 
@@ -845,7 +845,7 @@ class TelegramController extends Controller
             ['text' => 'አስተያየት ይስጡ | Feedback', 'callback_data' => 'menu_feedback'],
           ],
           [
-            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashdeepcleanning'],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashcleaningsolution'],
             ['text' => 'ቀጥታ ለማነጋገር (Contact)', 'url' => 'https://t.me/meashcleaning'],
           ],
           [
