@@ -1952,6 +1952,48 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Section: Website Quick Inquiries & Messages -->
+                        <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                                        <i data-lucide="message-square" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-sm text-white">ከድረ-ገጽ የተላኩ ፈጣን ጥያቄዎች እና መልእክቶች (${(data.website_messages || []).length})</h3>
+                                        <p class="text-[11px] text-slate-400">ደንበኞች በድረ-ገጹ ላይ የሞሏቸው ፈጣን ጥያቄዎች እዚህ በቅጽበት ይገባሉ::</p>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-500/30 px-3 py-1 rounded-full font-bold">የቀጥታ ጥያቄዎች</span>
+                            </div>
+                            <div class="space-y-3">
+                                ${(data.website_messages || []).length === 0 ? '<p class="text-xs text-slate-500 py-6 text-center">እስካሁን ምንም አዲስ የድረ-ገጽ መልእክት አልተላከም::</p>' : ''}
+                                ${(data.website_messages || []).map(m => {
+                                    const mData = m.data || {};
+                                    const cName = mData.name || m.title || 'ውድ ደንበኛ';
+                                    const cPhone = mData.phone || '';
+                                    const cMsg = mData.message || m.body || '';
+                                    const timeStr = m.created_at ? new Date(m.created_at).toLocaleString() : '';
+                                    return `
+                                        <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700 hover:border-slate-600 transition space-y-2.5">
+                                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-xs font-extrabold text-white">${escapeHtml(cName)}</span>
+                                                    ${cPhone ? `<a href="tel:${escapeHtml(cPhone)}" class="text-xs font-bold text-cyan-400 font-mono hover:underline flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3"></i> ${escapeHtml(cPhone)}</a>` : ''}
+                                                </div>
+                                                <span class="text-[10px] text-slate-400 font-mono">${timeStr}</span>
+                                            </div>
+                                            <p class="text-xs text-slate-200 bg-slate-900/80 p-3 rounded-xl border border-slate-800 leading-relaxed">${escapeHtml(cMsg)}</p>
+                                            <div class="flex items-center gap-2 pt-1">
+                                                ${cPhone ? `<a href="tel:${escapeHtml(cPhone)}" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition"><i data-lucide="phone-call" class="w-3.5 h-3.5"></i> ደውል</a>` : ''}
+                                                <button onclick="openCreateOrderModal()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition"><i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> ወደ ትዕዛዝ ቀይር</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
                     </div>
                 `;
                 lucide.createIcons();

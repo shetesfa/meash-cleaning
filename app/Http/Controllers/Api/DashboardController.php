@@ -270,6 +270,11 @@ class DashboardController extends Controller
 
         $ethDate = EthiopianCalendarService::toEthiopian($today);
 
+        $websiteMessages = Notification::where('type', 'customer_inquiry')
+            ->latest()
+            ->limit(15)
+            ->get();
+
         return response()->json([
             'eth_date' => $ethDate['formatted_am'],
             'eth_date_en' => $ethDate['formatted_en'],
@@ -279,11 +284,13 @@ class DashboardController extends Controller
             'urgent_complaints' => $urgentComplaints,
             'active_teams' => $activeTeams,
             'channel_counts' => $newBookingsBySource,
+            'website_messages' => $websiteMessages,
             'counts' => [
                 'new_bookings' => Order::whereIn('order_status', ['new', 'pending_confirmation'])->count(),
                 'today_jobs' => $todaySchedule->count(),
                 'followups_due' => $dueFollowups->count(),
                 'open_complaints' => $urgentComplaints->count(),
+                'website_messages' => Notification::where('type', 'customer_inquiry')->where('is_read', false)->count(),
             ],
         ]);
     }

@@ -658,58 +658,91 @@ class PublicWebsiteController extends Controller
 
     public function quickMessage(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:32',
-            'message' => 'required|string|max:1000',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'phone' => 'required|string|max:32',
+                'message' => 'required|string|max:1000',
+            ]);
 
-        $customer = Customer::firstOrCreate(
-            ['phone' => $validated['phone']],
-            [
-                'customer_code' => Customer::generateNextCode(),
-                'full_name' => $validated['name'],
-                'customer_type' => 'individual',
-                'marketing_consent' => true,
-                'consent_timestamp' => now(),
-            ]
-        );
+            $phoneInput = trim($validated['phone']);
+            $cleanPhone = preg_replace('/[^\d+]/', '', $phoneInput);
 
-        Notification::create([
-            'title' => 'አዲስ ፈጣን መልእክት ከድረ-ገጽ',
-            'body' => "ደንበኛ፡ {$validated['name']} ({$validated['phone']})\nመልእክት፡ {$validated['message']}",
-            'type' => 'customer_inquiry',
-            'data' => [
-                'customer_id' => $customer->id,
-                'name' => $validated['name'],
-                'phone' => $validated['phone'],
-                'message' => $validated['message'],
-            ],
-        ]);
+            // Find or create customer safely without violating unique constraints
+            $customer = Customer::where('phone', $phoneInput)
+                ->orWhere('phone', $cleanPhone)
+                ->first();
 
-        $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
-        $adminChatId = config('services.telegram.admin_chat_id') ?: env('TELEGRAM_ADMIN_CHAT_ID');
-        if (!empty($botToken) && !empty($adminChatId)) {
-            try {
-                $text = "<b>አዲስ ፈጣን መልእክት ከድረ-ገጽ ደርሷል!</b>\n\n" .
-                    "<b>ስም:</b> " . htmlspecialchars($validated['name']) . "\n" .
-                    "<b>ስልክ:</b> <code>" . htmlspecialchars($validated['phone']) . "</code>\n" .
-                    "<b>የደንበኛው ጥያቄ:</b>\n" . htmlspecialchars($validated['message']) . "\n\n" .
-                    "እባክዎ ደውለው ያነጋግሯቸው!";
-                \Illuminate\Support\Facades\Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                    'chat_id' => $adminChatId,
-                    'text' => $text,
-                    'parse_mode' => 'HTML',
+            if (!$customer) {
+                $code = Customer::generateNextCode();
+                $counter = 1;
+                while (Customer::where('customer_code', $code)->exists()) {
+                    $maxId = (int)(Customer::max('id') ?? 0);
+                    $code = 'MEASH-C' . str_pad((string)($maxId + $counter), 4, '0', STR_PAD_LEFT);
+                    $counter++;
+                }
+
+                $customer = Customer::create([
+                    'customer_code' => $code,
+                    'full_name' => $validated['name'],
+                    'phone' => $phoneInput,
+                    'customer_type' => 'individual',
+                    'marketing_consent' => true,
+                    'consent_timestamp' => now(),
                 ]);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Quick message telegram alert failed: ' . $e->getMessage());
             }
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'መልእክትዎ በተሳካ ሁኔታ ደርሶናል! የሪሴፕሽን ሰራተኞቻችን በጥቂት ደቂቃዎች ውስጥ በስልክ ይደውሉልዎታል::',
-        ]);
+            // Create notification record
+            Notification::create([
+                'title' => 'አዲስ ፈጣን መልእክት ከድረ-ገጽ',
+                'body' => "ደንበኛ፡ {$validated['name']} ({$validated['phone']})\nመልእክት፡ {$validated['message']}",
+                'type' => 'customer_inquiry',
+                'data' => [
+                    'customer_id' => $customer->id,
+                    'name' => $validated['name'],
+                    'phone' => $validated['phone'],
+                    'message' => $validated['message'],
+                ],
+            ]);
+
+            // Dispatch Telegram alert if configured
+            $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
+            $adminChatId = config('services.telegram.admin_chat_id') ?: env('TELEGRAM_ADMIN_CHAT_ID');
+            if (!empty($botToken) && !empty($adminChatId)) {
+                try {
+                    $text = "<b>🔔 አዲስ ፈጣን መልእክት ከድረ-ገጽ ደርሷል!</b>\n\n" .
+                        "<b>ስም:</b> " . htmlspecialchars($validated['name']) . "\n" .
+                        "<b>ስልክ:</b> <code>" . htmlspecialchars($validated['phone']) . "</code>\n" .
+                        "<b>የደንበኛው ጥያቄ:</b>\n" . htmlspecialchars($validated['message']) . "\n\n" .
+                        "እባክዎ ደውለው ያነጋግሯቸው!";
+                    \Illuminate\Support\Facades\Http::timeout(5)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                        'chat_id' => $adminChatId,
+                        'text' => $text,
+                        'parse_mode' => 'HTML',
+                    ]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Quick message telegram alert failed: ' . $e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'መልእክትዎ በተሳካ ሁኔታ ደርሶናል! የሪሴፕሽን ሰራተኞቻችን በጥቂት ደቂቃዎች ውስጥ በስልክ ይደውሉልዎታል::',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json([
+                'success' => false,
+                'message' => 'እባክዎን ስምዎን፣ ትክክለኛ ስልክ ቁጥርዎን እና መልእክትዎን በትክክል ያስገቡ::',
+                'errors' => $ve->errors(),
+            ], 422);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Quick message exception: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+            $hotline = WebsiteSetting::getVal('contact_phone_1', '0970075509');
+            return response()->json([
+                'success' => false,
+                'message' => "መልእክትዎን በመላክ ላይ ጊዜያዊ ችግር አጋጥሟል:: እባክዎ በ {$hotline} በቀጥታ ይደውሉልን::",
+            ], 500);
+        }
     }
 
     /**
