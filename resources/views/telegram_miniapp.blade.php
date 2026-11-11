@@ -515,25 +515,25 @@
         if (list.length > 0) {
           const grid = document.getElementById('tma-services-grid');
           if (grid) {
-            const iconEmojiMap = {
-              floor_ceramic: '✨',
-              facilities_general: '🏢',
-              kitchen_dining: '🍽️',
-              post_construction: '🏗️',
-              glass: '🪟',
-              upholstery_carpet: '🛋️',
-              sofa: '🛋️',
-              carpet: '🧼',
-              mattress: '🛏️',
-              residential_deep: '🏠',
-              commercial: '🏢'
+            const lucideIconMap = {
+              floor_ceramic: 'sparkles',
+              facilities_general: 'building-2',
+              kitchen_dining: 'utensils',
+              post_construction: 'home',
+              glass: 'sun',
+              upholstery_carpet: 'sofa',
+              sofa: 'sofa',
+              carpet: 'layers',
+              mattress: 'bed',
+              residential_deep: 'home',
+              commercial: 'building-2'
             };
             grid.innerHTML = list.map((svc, i) => {
               const price = parseFloat(svc.base_price || 0);
               const unit = svc.pricing_unit_am || svc.pricing_unit || 'አገልግሎት';
               const nameAm = svc.name_am || svc.name_en;
               const nameEn = svc.name_en || svc.name_am;
-              const iconEmoji = svc.icon && svc.icon.length <= 4 ? svc.icon : (iconEmojiMap[svc.code] || '✨');
+              const iconName = lucideIconMap[svc.code] || 'sparkles';
               const isSelected = String(currentSvc.id) === String(svc.id) || (!currentSvc.id && i === 0);
               if (isSelected) {
                 currentSvc = { id: Number(svc.id), code: svc.code, price, unit, nameAm, nameEn };
@@ -550,7 +550,7 @@
                   data-service-id="${svc.id}"
                   data-service-code="${svc.code || ''}">
                   <div class="flex items-center justify-between mb-1">
-                    <span class="text-xl block">${iconEmoji}</span>
+                    <i data-lucide="${iconName}" class="w-5 h-5 text-cyan-400"></i>
                     <span class="tma-svc-check w-4 h-4 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-black flex items-center justify-center ${isSelected ? '' : 'hidden'}">✓</span>
                   </div>
                   <span class="text-xs font-bold text-white block svc-title">${nameAm}</span>
@@ -877,7 +877,7 @@
             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
               <div>
                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-                  ⭐ ${loyalty.label}
+                  ${loyalty.label}
                 </span>
                 <h4 class="text-sm font-black text-white mt-1">እንኳን ደህና መጡ፣ ${custName}!</h4>
                 <p class="text-[10px] text-slate-400">የሜሽ የደንበኛ ፖርታል (Customer Portal)</p>
@@ -979,43 +979,6 @@
 
       tmaShowBookingForm();
     }
-
-    // Auto-detect order parameter in TMA
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const orderParam = urlParams.get('order') || urlParams.get('track') || urlParams.get('review_order');
-        if (orderParam && typeof orderParam === 'string' && orderParam.trim().length >= 4 && !orderParam.includes('{') && !orderParam.includes('tgWebAppData')) {
-          const res = await fetch(`/api/public/track-order?tracking_id=${encodeURIComponent(orderParam.trim())}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data && (data.found || data.success)) {
-              const formEl = document.getElementById('tma-form');
-              const succEl = document.getElementById('tma-success');
-              const resIdEl = document.getElementById('tma-result-id');
-              const payNoticeEl = document.getElementById('tma-payment-notice');
-              const revBox = document.getElementById('tma-review-box');
-
-              if (formEl) formEl.classList.add('hidden');
-              if (succEl) succEl.classList.remove('hidden');
-              if (resIdEl) resIdEl.innerText = orderParam.trim();
-
-              const stage = data.customer_stage || (data.order?.customer_stage);
-              if (stage === 'comment_waiting') {
-                if (payNoticeEl) payNoticeEl.classList.add('hidden');
-                if (revBox) revBox.classList.remove('hidden');
-              } else if (stage === 'normal_customer') {
-                if (payNoticeEl) payNoticeEl.classList.add('hidden');
-                if (revBox) revBox.classList.add('hidden');
-                showTmaCustomerPortal(orderParam.trim());
-              }
-            }
-          }
-        }
-      } catch (err) {
-        // Safe fallback - preserve default booking form
-      }
-    });
   </script>
 
 <script>
