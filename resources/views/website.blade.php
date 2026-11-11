@@ -107,7 +107,8 @@
     'longitude' => 38.8681
   ],
   'sameAs' => array_values(array_filter([
-    $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaning',
+    $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleanning',
+    $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning',
     $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot',
     $tiktokUrl,
     $facebookUrl,
@@ -887,8 +888,11 @@
             <a href="{{ $facebookUrl }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
               <i data-lucide="facebook" class="w-3.5 h-3.5"></i> Facebook
             </a>
-            <a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
-              <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram
+            <a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleanning' }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5" title="Telegram Channel">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i> Channel
+            </a>
+            <a href="{{ $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5" title="Telegram Contact">
+              <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> @meashcleaning
             </a>
           </div>
         </div>
@@ -2222,7 +2226,8 @@
     <div>
       <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ማህበራዊ ትስስር ({{ $socialHandle }})</p>
       <ul class="space-y-2 text-xs">
-        <li><a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel</a></li>
+        <li><a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleanning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashdeepcleanning)</a></li>
+        <li><a href="{{ $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="message-circle" class="w-3.5 h-3.5 text-teal"></i> Direct Telegram (@meashcleaning)</a></li>
         <li><a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="bot" class="w-3.5 h-3.5 text-teal"></i> Telegram Bot</a></li>
         <li><a href="{{ $tiktokUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="video" class="w-3.5 h-3.5 text-teal"></i> TikTok</a></li>
         <li><a href="{{ $instagramUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="camera" class="w-3.5 h-3.5 text-teal"></i> Instagram</a></li>

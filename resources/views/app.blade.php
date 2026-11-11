@@ -2584,7 +2584,7 @@
                                 <div style="font-size:22pt; font-weight:900; letter-spacing:1.5px; color:#ffffff;">MEASH CLEANING SOLUTION</div>
                                 <div style="font-size:13pt; font-weight:bold; color:#38bdf8; margin-top:3px;">ሜሽ የፅዳት እና የህንፃ አያያዝ አገልግሎት</div>
                                 <div style="font-size:10pt; font-style:italic; color:#cbd5e1; margin-top:4px;">«የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት! | Your Environment, Our Responsibility»</div>
-                                <div style="font-size:9.5pt; color:#93c5fd; margin-top:6px;">ስልክ፡ 0970075509 / 0998142190 | ቴሌግራም፡ @meashcleaning | አዲስ አበባ፣ ኢትዮጵያ</div>
+                                <div style="font-size:9.5pt; color:#93c5fd; margin-top:6px;">ስልክ፡ 0970075509 / 0998142190 | ቻናል፡ @meashdeepcleanning | ማውሪያ፡ @meashcleaning | አዲስ አበባ፣ ኢትዮጵያ</div>
                             </td>
                         </tr>
                         <tr style="border:none;">
@@ -7540,18 +7540,22 @@
                                 </div>
                             </div>
 
-                            <div class="grid sm:grid-cols-3 gap-4 pt-2">
+                            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቦት (Bot Link)</label>
                                     <input type="text" id="set-tg-bot" value="${escapeHtml(s.telegram_bot || 'https://t.me/meash_cleaning_solution_bot')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቻናል (Channel Link)</label>
-                                    <input type="text" id="set-tg-chan" value="${escapeHtml(s.telegram_channel || 'https://t.me/meashcleaning')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                                    <input type="text" id="set-tg-chan" value="${escapeHtml(s.telegram_channel || 'https://t.me/meashdeepcleanning')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" placeholder="https://t.me/meashdeepcleanning">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቀጥታ ማውሪያ (Personal/Talk)</label>
+                                    <input type="text" id="set-tg-support" value="${escapeHtml(s.telegram_support || '@meashcleaning')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" placeholder="@meashcleaning">
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">TikTok ሊንክ</label>
-                                    <input type="text" id="set-tiktok" value="${escapeHtml(s.tiktok || 'https://www.tiktok.com/@meashcleaningsolition')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                                    <input type="text" id="set-tiktok" value="${escapeHtml(s.tiktok || 'https://www.tiktok.com/@meashcleaningsolution')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" placeholder="https://www.tiktok.com/@meashcleaningsolution">
                                 </div>
                             </div>
                         </div>
@@ -7752,6 +7756,7 @@
                 working_hours_en: document.getElementById('set-hours-en').value.trim(),
                 telegram_bot: document.getElementById('set-tg-bot').value.trim(),
                 telegram_channel: document.getElementById('set-tg-chan').value.trim(),
+                telegram_support: document.getElementById('set-tg-support') ? document.getElementById('set-tg-support').value.trim() : '@meashcleaning',
                 tiktok: document.getElementById('set-tiktok').value.trim(),
 
                 // Bank & Payment Accounts
@@ -9324,7 +9329,7 @@
                                     <div class="text-[11px] text-slate-600 mt-2 space-y-0.5">
                                         <p>አድራሻ፡ <strong>አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ</strong></p>
                                         <p>ስልክ፡ <strong>0970075509 / 0998142190</strong></p>
-                                        <p>ቴሌግራም ቻናል፡ <a href="https://t.me/meashcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashcleaning</a></p>
+                                        <p>ቴሌግራም ቻናል፡ <a href="https://t.me/meashdeepcleanning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashdeepcleanning</a> | ማውሪያ፡ <a href="https://t.me/meashcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashcleaning</a></p>
                                     </div>
                                 </div>
                                 <div class="text-right">
