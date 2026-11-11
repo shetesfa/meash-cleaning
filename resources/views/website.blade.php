@@ -131,20 +131,92 @@
         }
     </script>
     <style>
+  /* =====================================================================
+     MEASH — MODERN CSS (drop-in replacement for the old <style> block)
+     Markup, JS and PHP are untouched. Same selectors, same behavior.
+     ===================================================================== */
+
+  /* ---------- Design tokens ---------- */
   :root {
     color-scheme: dark;
+
+    --bg: #0B1220;
+    --bg-soft: #0F172A;
+    --surface: #162032;
+    --surface-2: #1E293B;
+    --line: #23354E;
+    --line-soft: #1E293B;
+
+    --text: #F1F5F9;
+    --text-strong: #F8FAFC;
+    --text-body: #CBD5E1;
+    --text-muted: #94A3B8;
+    --text-faint: #64748B;
+
+    --brand: #0E7C7B;
+    --brand-bright: #2DD4BF;
+
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+
+    --ease: cubic-bezier(.22, .61, .36, 1);
+    --shadow-card: 0 1px 2px rgba(0,0,0,.35), 0 12px 32px -12px rgba(0,0,0,.55);
+    --shadow-lift: 0 2px 4px rgba(0,0,0,.4), 0 24px 48px -16px rgba(0,0,0,.65);
+    --ring: 0 0 0 3px rgba(45, 212, 191, .35);
   }
+
+  /* ---------- Base ---------- */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
-    font-family: 'Inter', 'Noto Sans Ethiopic', sans-serif;
-    background: #0B1220;
-    color: #F1F5F9;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    font-family: 'Inter', 'Noto Sans Ethiopic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    transition: background-color .35s var(--ease), color .35s var(--ease);
   }
-  .font-serif { font-family: 'Fraunces', 'Noto Sans Ethiopic', serif; }
-  ::-webkit-scrollbar { width: 10px; }
-  ::-webkit-scrollbar-track { background: #0B1220; }
-  ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 8px; border: 2px solid #0B1220; }
+
+  .font-serif { font-family: 'Fraunces', 'Noto Sans Ethiopic', Georgia, serif; }
+
+  h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; }
+  p { text-wrap: pretty; }
+
+  ::selection { background: rgba(45, 212, 191, .35); color: #fff; }
+
+  img { max-width: 100%; height: auto; }
+
+  /* Accessible, modern focus ring */
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+    border-radius: var(--radius-sm);
+  }
+  button:focus-visible, a:focus-visible { box-shadow: var(--ring); }
+
+  /* ---------- Scrollbar ---------- */
+  html { scrollbar-width: thin; scrollbar-color: #334155 var(--bg); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--surface-2);
+    border-radius: 999px;
+    border: 2px solid var(--bg);
+  }
   ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+  /* ---------- Language blocks (unchanged logic) ---------- */
   [data-lang-block] { display: none; }
   html:not([data-lang]) [data-lang-block="am"],
   html[data-lang="am"] [data-lang-block="am"] { display: block; }
@@ -154,162 +226,205 @@
   html[data-lang="en"] span[data-lang-block="en"] { display: inline; }
   html[data-lang="both"] [data-lang-block] { display: block; }
   html[data-lang="both"] span[data-lang-block] { display: inline; }
-  .lang-both-stack > [data-lang-block="en"] { opacity:.62; font-size:.82em; margin-top:.2em; font-weight:500; }
-  .duo { background: linear-gradient(160deg, #0A5F5E 0%, #070D18 100%); }
-  .grain { background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px); background-size: 14px 14px; }
+  .lang-both-stack > [data-lang-block="en"] { opacity: .62; font-size: .82em; margin-top: .2em; font-weight: 500; }
 
-  /* ================= EXCLUSIVE DARK MODE SYSTEM (WHITE REMOVED BY DEFAULT) ================= */
+  /* ---------- Decorative surfaces ---------- */
+  .duo {
+    background:
+      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .22) 0%, transparent 55%),
+      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%);
+  }
+  .grain {
+    background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px);
+    background-size: 14px 14px;
+  }
+
+  /* ---------- Smooth interactions (all pages elements) ---------- */
+  a, button, input, select, textarea, .rounded-xl, .rounded-2xl, .rounded-3xl {
+    transition:
+      background-color .25s var(--ease),
+      border-color .25s var(--ease),
+      color .25s var(--ease),
+      box-shadow .25s var(--ease),
+      transform .25s var(--ease),
+      opacity .25s var(--ease);
+  }
+  button, [role="button"], .cursor-pointer { -webkit-tap-highlight-color: transparent; }
+  button:active:not(:disabled) { transform: scale(.97); }
+  button:disabled { opacity: .6; cursor: not-allowed; }
+
+  /* Gentle card lift on hover (cards that already have a border) */
+  .rounded-2xl.border:hover,
+  .rounded-3xl.border:hover { box-shadow: var(--shadow-lift); }
+
+  /* ================= DARK MODE SYSTEM (default) ================= */
   html.dark, html:not(.light) {
     color-scheme: dark;
-    background-color: #0B1220;
+    background-color: var(--bg);
   }
   html.dark body, html:not(.light) body {
-    background-color: #0B1220 !important;
-    color: #F1F5F9 !important;
-  }
-  html.dark header, html:not(.light) header {
-    background-color: rgba(11, 18, 32, 0.95) !important;
-    border-color: #1E293B !important;
-  }
-  html.dark nav, html:not(.light) nav {
-    color: #E2E8F0 !important;
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
   }
 
-  /* All white surfaces converted to elegant Dark Slate/Navy */
+  /* Header: frosted glass */
+  html.dark header, html:not(.light) header {
+    background-color: rgba(11, 18, 32, .72) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    backdrop-filter: saturate(180%) blur(16px);
+    border-color: rgba(148, 163, 184, .14) !important;
+  }
+  html.dark nav, html:not(.light) nav { color: #E2E8F0 !important; }
+
+  /* White surfaces → deep slate */
   html.dark .bg-white, html:not(.light) .bg-white {
-    background-color: #162032 !important;
-    color: #F1F5F9 !important;
-    border-color: #23354E !important;
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--line) !important;
   }
   html.dark .bg-white\/95, html:not(.light) .bg-white\/95,
   html.dark .bg-white\/90, html:not(.light) .bg-white\/90 {
-    background-color: rgba(22, 32, 50, 0.95) !important;
-    color: #F1F5F9 !important;
+    background-color: rgba(22, 32, 50, .85) !important;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    color: var(--text) !important;
   }
-  html.dark .bg-fog, html:not(.light) .bg-fog {
-    background-color: #0F172A !important;
-  }
+  html.dark .bg-fog, html:not(.light) .bg-fog { background-color: var(--bg-soft) !important; }
   html.dark .bg-slate-50, html.dark .bg-gray-50,
-  html:not(.light) .bg-slate-50, html:not(.light) .bg-gray-50 {
-    background-color: #162032 !important;
-  }
+  html:not(.light) .bg-slate-50, html:not(.light) .bg-gray-50 { background-color: var(--surface) !important; }
   html.dark .bg-slate-100, html.dark .bg-gray-100,
   html:not(.light) .bg-slate-100, html:not(.light) .bg-gray-100 {
-    background-color: #1E293B !important;
+    background-color: var(--surface-2) !important;
     color: #E2E8F0 !important;
   }
   html.dark .bg-teal-light\/20, html.dark .bg-teal-light\/30, html.dark .bg-teal-light\/40,
   html:not(.light) .bg-teal-light\/20, html:not(.light) .bg-teal-light\/30, html:not(.light) .bg-teal-light\/40 {
-    background-color: rgba(14, 124, 123, 0.18) !important;
+    background-color: rgba(14, 124, 123, .18) !important;
   }
 
-  /* Typography & High-Contrast Text in Dark Mode */
-  html.dark .text-navy, html:not(.light) .text-navy {
-    color: #F8FAFC !important;
-  }
+  /* Typography contrast */
+  html.dark .text-navy, html:not(.light) .text-navy { color: var(--text-strong) !important; }
   html.dark .text-navy\/90, html:not(.light) .text-navy\/90,
   html.dark .text-navy\/85, html:not(.light) .text-navy\/85,
   html.dark .text-navy\/80, html:not(.light) .text-navy\/80,
-  html.dark .text-navy\/75, html:not(.light) .text-navy\/75 {
-    color: #CBD5E1 !important;
-  }
+  html.dark .text-navy\/75, html:not(.light) .text-navy\/75 { color: var(--text-body) !important; }
   html.dark .text-navy\/70, html:not(.light) .text-navy\/70,
   html.dark .text-navy\/65, html:not(.light) .text-navy\/65,
   html.dark .text-navy\/60, html:not(.light) .text-navy\/60,
-  html.dark .text-navy\/55, html:not(.light) .text-navy\/55 {
-    color: #94A3B8 !important;
-  }
+  html.dark .text-navy\/55, html:not(.light) .text-navy\/55 { color: var(--text-muted) !important; }
   html.dark .text-navy\/50, html:not(.light) .text-navy\/50,
   html.dark .text-navy\/40, html:not(.light) .text-navy\/40,
   html.dark .text-navy\/30, html:not(.light) .text-navy\/30,
-  html.dark .text-navy\/20, html:not(.light) .text-navy\/20 {
-    color: #64748B !important;
-  }
+  html.dark .text-navy\/20, html:not(.light) .text-navy\/20 { color: var(--text-faint) !important; }
   html.dark .text-slate-900, html.dark .text-slate-800, html.dark .text-slate-700,
-  html:not(.light) .text-slate-900, html:not(.light) .text-slate-800, html:not(.light) .text-slate-700 {
-    color: #E2E8F0 !important;
-  }
+  html:not(.light) .text-slate-900, html:not(.light) .text-slate-800, html:not(.light) .text-slate-700 { color: #E2E8F0 !important; }
   html.dark .text-slate-600, html.dark .text-slate-500,
-  html:not(.light) .text-slate-600, html:not(.light) .text-slate-500 {
-    color: #94A3B8 !important;
-  }
-  html.dark .text-teal-dark, html:not(.light) .text-teal-dark {
-    color: #2DD4BF !important;
-  }
+  html:not(.light) .text-slate-600, html:not(.light) .text-slate-500 { color: var(--text-muted) !important; }
+  html.dark .text-teal-dark, html:not(.light) .text-teal-dark { color: var(--brand-bright) !important; }
 
-  /* Borders & Dividers */
+  /* Borders */
   html.dark .border-navy\/10, html.dark .border-navy\/15, html.dark .border-navy\/20,
-  html:not(.light) .border-navy\/10, html:not(.light) .border-navy\/15, html:not(.light) .border-navy\/20 {
-    border-color: #23354E !important;
-  }
+  html:not(.light) .border-navy\/10, html:not(.light) .border-navy\/15, html:not(.light) .border-navy\/20 { border-color: var(--line) !important; }
   html.dark .border-slate-200, html.dark .border-gray-200,
-  html:not(.light) .border-slate-200, html:not(.light) .border-gray-200 {
-    border-color: #23354E !important;
-  }
-  html.dark .border-slate-100, html:not(.light) .border-slate-100 {
-    border-color: #1E293B !important;
-  }
+  html:not(.light) .border-slate-200, html:not(.light) .border-gray-200 { border-color: var(--line) !important; }
+  html.dark .border-slate-100, html:not(.light) .border-slate-100 { border-color: var(--line-soft) !important; }
 
-  /* Form Elements & Inputs */
+  /* Form controls */
+  input, select, textarea { font: inherit; }
   html.dark input, html.dark select, html.dark textarea,
   html:not(.light) input, html:not(.light) select, html:not(.light) textarea {
-    background-color: #0F172A !important;
+    background-color: var(--bg-soft) !important;
     color: #FFFFFF !important;
     border-color: #334155 !important;
+    border-radius: var(--radius-sm);
+  }
+  html.dark input:hover, html.dark select:hover, html.dark textarea:hover,
+  html:not(.light) input:hover, html:not(.light) select:hover, html:not(.light) textarea:hover {
+    border-color: #475569 !important;
+  }
+  html.dark input:focus, html.dark select:focus, html.dark textarea:focus,
+  html:not(.light) input:focus, html:not(.light) select:focus, html:not(.light) textarea:focus {
+    border-color: var(--brand-bright) !important;
+    box-shadow: var(--ring);
+    outline: none;
   }
   html.dark select option, html:not(.light) select option {
-    background-color: #0F172A !important;
+    background-color: var(--bg-soft) !important;
     color: #FFFFFF !important;
   }
   html.dark input::placeholder, html.dark textarea::placeholder,
-  html:not(.light) input::placeholder, html:not(.light) textarea::placeholder {
-    color: #64748B !important;
-  }
+  html:not(.light) input::placeholder, html:not(.light) textarea::placeholder { color: var(--text-faint) !important; }
 
-  /* Cards & Shadows */
+  /* Shadows */
   html.dark .shadow-xl, html.dark .shadow-lg, html.dark .shadow-md, html.dark .shadow-sm,
   html:not(.light) .shadow-xl, html:not(.light) .shadow-lg, html:not(.light) .shadow-md, html:not(.light) .shadow-sm {
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: var(--shadow-card) !important;
   }
 
-  /* Active Language Button Styles */
-  .lang-btn.active-lang, .lang-btn.bg-teal, .lang-btn.bg-navy { background-color: #0E7C7B !important; color: #FFFFFF !important; }
+  /* Active language button */
+  .lang-btn.active-lang, .lang-btn.bg-teal, .lang-btn.bg-navy {
+    background-color: var(--brand) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 12px -2px rgba(14, 124, 123, .55);
+  }
   html.dark .lang-btn.active-lang, html.dark .lang-btn.bg-teal, html.dark .lang-btn.bg-navy,
-  html:not(.light) .lang-btn.active-lang, html:not(.light) .lang-btn.bg-teal, html:not(.light) .lang-btn.bg-navy { background-color: #0E7C7B !important; color: #FFFFFF !important; }
+  html:not(.light) .lang-btn.active-lang, html:not(.light) .lang-btn.bg-teal, html:not(.light) .lang-btn.bg-navy {
+    background-color: var(--brand) !important;
+    color: #FFFFFF !important;
+  }
 
-  /* ================= OPTIONAL LIGHT MODE OVERRIDES (IF EXPLICITLY TOGGLED) ================= */
+  /* ================= LIGHT MODE (when toggled) ================= */
   html.light {
     color-scheme: light;
     background-color: #FFFFFF;
   }
   html.light body { background: #FFFFFF !important; color: #0B1220 !important; }
-  html.light header { background: rgba(255, 255, 255, 0.95) !important; border-color: #E2E8F0 !important; }
+  html.light header {
+    background: rgba(255, 255, 255, .78) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    backdrop-filter: saturate(180%) blur(16px);
+    border-color: #E2E8F0 !important;
+  }
   html.light .text-navy { color: #0B1220 !important; }
-  html.light .text-navy\/70 { color: rgba(11, 18, 32, 0.7) !important; }
+  html.light .text-navy\/70 { color: rgba(11, 18, 32, .7) !important; }
   html.light .bg-fog { background: #F6F7F9 !important; }
-  html.light .bg-white { background: #FFFFFF !important; color: #0B1220 !important; border-color: rgba(11, 18, 32, 0.1) !important; }
+  html.light .bg-white {
+    background: #FFFFFF !important;
+    color: #0B1220 !important;
+    border-color: rgba(11, 18, 32, .1) !important;
+  }
   html.light .bg-slate-50, html.light .bg-gray-50 { background: #F8FAFC !important; }
-  html.light input, html.light select, html.light textarea { background: #FFFFFF !important; color: #0B1220 !important; border-color: #CBD5E1 !important; }
+  html.light input, html.light select, html.light textarea {
+    background: #FFFFFF !important;
+    color: #0B1220 !important;
+    border-color: #CBD5E1 !important;
+    border-radius: var(--radius-sm);
+  }
+  html.light input:focus, html.light select:focus, html.light textarea:focus {
+    border-color: var(--brand) !important;
+    box-shadow: 0 0 0 3px rgba(14, 124, 123, .22);
+    outline: none;
+  }
+  html.light ::selection { background: rgba(14, 124, 123, .25); color: #0B1220; }
+  html.light { scrollbar-color: #CBD5E1 #fff; }
+  html.light ::-webkit-scrollbar-track { background: #fff; }
+  html.light ::-webkit-scrollbar-thumb { background: #CBD5E1; border-color: #fff; }
 
-  /* Mobile Responsiveness & Zero Horizontal Overflow */
-  *, *::before, *::after { box-sizing: border-box; }
+  /* ================= Mobile responsiveness / no horizontal overflow ================= */
   html, body {
     overflow-x: hidden !important;
     width: 100% !important;
     max-width: 100vw !important;
     margin: 0;
     padding: 0;
-    -webkit-text-size-adjust: 100%;
   }
-  section, main, header, footer, .max-w-7xl, .max-w-2xl {
-    max-width: 100%;
-  }
+  section, main, header, footer, .max-w-7xl, .max-w-2xl { max-width: 100%; }
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
   }
 
-  /* Keep the public website perfectly usable on narrow phone screens (320px to 768px). */
+  /* Phones: 320px – 640px */
   @media (max-width: 640px) {
     header > div { padding-left: .75rem !important; padding-right: .75rem !important; gap: .375rem !important; }
     header a[href="#top"] { gap: .375rem !important; }
@@ -318,6 +433,23 @@
     header a[href="#top"] .font-serif { font-size: 1rem !important; }
     header a[href="#book"] { padding: .5rem .75rem !important; }
     #mobile-menu-btn { padding: .5rem !important; }
+    html { scroll-padding-top: 4.5rem; }
+  }
+
+  /* Touch devices: no sticky hover lift */
+  @media (hover: none) {
+    .rounded-2xl.border:hover,
+    .rounded-3xl.border:hover { box-shadow: inherit; }
+  }
+
+  /* Respect users who prefer less motion */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
   }
 </style>
 </head>
