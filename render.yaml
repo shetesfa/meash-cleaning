@@ -34,8 +34,8 @@ services:
       - key: MEASH_OWNER_EMAIL
         value: "owner@meash.com"
       - key: MEASH_OWNER_PHONE
-        value: "0911000001"
+        value: "0970075509"
       - key: MEASH_OWNER_PASSWORD
-        value: "password"
+        value: "Meash@Cleaning2026!"
       - key: MEASH_SEED_DEMO_DATA
-        value: "true"
+        value: "false"
