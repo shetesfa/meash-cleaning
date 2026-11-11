@@ -3106,7 +3106,7 @@
             <div>
               <h4 class="font-black text-navy text-sm sm:text-base">የደንበኝነት የታማኝነት ማዕረግ፡ ${loyalty.label}</h4>
               <p class="text-xs text-teal-dark font-bold mt-0.5">${loyalty.perks || 'የታማኝነት ቅናሽ በሁሉም የጽዳት አገልግሎቶች ላይ'}</p>
-              <p class="text-[11px] text-navy/60 mt-1">አጠቃላይ የተጠናቀቁ ትዕዛዞች፡ <strong>${summary.total_orders || 1}</strong> | የወጣ ወጪ፡ <strong>${Number(summary.total_spent || ord.total).toLocaleString()} ETB</strong></p>
+              <p class="text-[11px] text-navy/60 mt-1">አጠቃላይ የተጠናቀቁ ትዕዛዞች፡ <strong>${summary.total_orders || 1}</strong> | የወጣ ወጪ፡ <strong>${Number(summary.total_spent || ord.total || 0).toLocaleString()} ETB</strong></p>
             </div>
           </div>
           <button type="button" onclick="bookNextCleaningWithCustomerData(${custDataJson})" class="px-5 py-3 bg-teal hover:bg-teal-dark text-white rounded-xl font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:shadow-lg">
@@ -3130,23 +3130,23 @@
               <div class="space-y-2 text-xs">
                 <div class="flex justify-between py-1 border-b border-navy/5">
                   <span class="text-navy/60">የደረሰኝ ቁጥር:</span>
-                  <span class="font-mono font-bold text-navy">${escapeHtml(receipt.payment_number)}</span>
+                  <span class="font-mono font-bold text-navy">${escapeHtml(receipt.payment_number || '')}</span>
                 </div>
                 <div class="flex justify-between py-1 border-b border-navy/5">
                   <span class="text-navy/60">የተከፈለበት መንገድ:</span>
-                  <span class="font-bold text-navy">${escapeHtml(receipt.payment_method)}</span>
+                  <span class="font-bold text-navy">${escapeHtml(receipt.payment_method || 'CASH')}</span>
                 </div>
                 <div class="flex justify-between py-1 border-b border-navy/5">
                   <span class="text-navy/60">የግብይት መለያ (Ref #):</span>
-                  <span class="font-mono font-bold text-teal-dark">${escapeHtml(receipt.reference_number)}</span>
+                  <span class="font-mono font-bold text-teal-dark">${escapeHtml(receipt.reference_number || 'VERIFIED-OK')}</span>
                 </div>
                 <div class="flex justify-between py-1 border-b border-navy/5">
                   <span class="text-navy/60">የክፍያ ቀን:</span>
-                  <span class="font-bold text-navy">${escapeHtml(receipt.payment_date || ord.appointment_date)}</span>
+                  <span class="font-bold text-navy">${escapeHtml(receipt.payment_date || ord.appointment_date || '')}</span>
                 </div>
                 <div class="flex justify-between pt-2">
                   <span class="font-bold text-navy text-sm">ጠቅላላ የተከፈለ:</span>
-                  <span class="font-black text-emerald-700 text-base font-serif">${Number(receipt.amount || ord.total).toLocaleString()} ETB</span>
+                  <span class="font-black text-emerald-700 text-base font-serif">${Number(receipt.amount || ord.total || 0).toLocaleString()} ETB</span>
                 </div>
               </div>
             </div>
@@ -3218,11 +3218,24 @@
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
     const q = document.getElementById('track-input').value.trim();
     const box = document.getElementById('track-result');
+    if (!q) {
+      box.classList.remove('hidden');
+      box.innerHTML = '<div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">እባክዎ ትክክለኛ የትዕዛዝ መለያ ቁጥር (ምሳሌ፡ MEASH-000001) ያስገቡ።</div>';
+      return;
+    }
     box.classList.remove('hidden');
     box.innerHTML = '<div class="p-6 text-center text-navy/60"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-teal mr-2"></div> በመፈለግ ላይ...</div>';
     try {
-      const res = await fetch(`/api/public/track-order?tracking_id=${encodeURIComponent(q)}`);
-      const data = await res.json();
+      const res = await fetch(`/api/public/track-order?tracking_id=${encodeURIComponent(q)}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        data = {};
+      }
+
       if (res.ok && (data.found || data.success) && (data.order || data)) {
         window.currentTrackedOrderData = data;
         const ord = data.order || data;
@@ -3264,7 +3277,7 @@
               </div>
               <div class="flex-1">
                 <p class="font-bold text-navy text-xs">የአገልግሎት አድራሻ (Service Address):</p>
-                <p class="text-[11px] text-slate-600 font-semibold mt-0.5">${ord.address || 'አዲስ አበባ'} ${ord.subcity ? '(' + ord.subcity + ')' : ''}</p>
+                <p class="text-[11px] text-slate-600 font-semibold mt-0.5">${escapeHtml(ord.address || 'አዲስ አበባ')} ${ord.subcity ? '(' + escapeHtml(ord.subcity) + ')' : ''}</p>
               </div>
             </div>
             ${isCompleted ? `
@@ -3319,11 +3332,11 @@
                   <i data-lucide="truck" class="w-5 h-5"></i>
                 </div>
                 <div>
-                  <p class="font-extrabold text-white">${ord.team_location.team_name}</p>
-                  <p class="text-[11px] text-teal-light font-semibold">${ord.team_location.vehicle_plate ? 'ታርጋ: ' + ord.team_location.vehicle_plate : 'የሜሽ ጽዳት መኪና'}</p>
+                  <p class="font-extrabold text-white">${escapeHtml(ord.team_location.team_name || 'የሜሽ ቡድን')}</p>
+                  <p class="text-[11px] text-teal-light font-semibold">${ord.team_location.vehicle_plate ? 'ታርጋ: ' + escapeHtml(ord.team_location.vehicle_plate) : 'የሜሽ ጽዳት መኪና'}</p>
                 </div>
               </div>
-              ${ord.team_location.phone ? `<a href="tel:${ord.team_location.phone}" class="px-3 py-1.5 rounded-lg bg-teal hover:bg-teal-dark text-white font-bold text-xs flex items-center gap-1.5"><i data-lucide="phone" class="w-3.5 h-3.5"></i> ደውል</a>` : ''}
+              ${ord.team_location.phone ? `<a href="tel:${escapeHtml(ord.team_location.phone)}" class="px-3 py-1.5 rounded-lg bg-teal hover:bg-teal-dark text-white font-bold text-xs flex items-center gap-1.5"><i data-lucide="phone" class="w-3.5 h-3.5"></i> ደውል</a>` : ''}
             </div>`;
         }
 
@@ -3336,22 +3349,25 @@
               </div>
               <div>
                 <p class="font-black text-amber-950 text-xs">ማሳሰቢያ፡ የዚህ ትዕዛዝ ቀጠሮ ተላልፏል (Rescheduled)</p>
-                <p class="text-[11px] text-amber-800 mt-0.5">አዲሱ የቀጠሮ ቀን፡ <strong>${ord.eth_appointment_date || ord.appointment_date}</strong> (${ord.appointment_time_slot === 'morning' ? 'ጠዋት' : 'ከሰዓት'})</p>
+                <p class="text-[11px] text-amber-800 mt-0.5">አዲሱ የቀጠሮ ቀን፡ <strong>${escapeHtml(ord.eth_appointment_date || ord.appointment_date || '—')}</strong> (${ord.appointment_time_slot === 'morning' ? 'ጠዋት' : 'ከሰዓት'})</p>
               </div>
             </div>`;
         }
 
         let rescheduleBtnHtml = '';
-        if (!isCompleted) {
+        if (!isCompleted && ord.has_secure_token) {
           rescheduleBtnHtml = `
             <div class="mt-4 pt-3 border-t border-navy/10 flex flex-wrap items-center justify-between gap-2">
               <span class="text-[11px] text-navy/60 font-semibold">ቀጠሮዎን መቀየር ወይም ማራዘም ይፈልጋሉ?</span>
-              <button type="button" onclick="openWebRescheduleModal('${ord.order_number}')" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+              <button type="button" onclick="openWebRescheduleModal('${escapeHtml(ord.order_number)}')" class="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
                 <i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>
                 <span>ቀጠሮ ቀን አስተላልፍ</span>
               </button>
             </div>`;
         }
+
+        const totalFormatted = ord.total != null ? Number(ord.total).toLocaleString() + ' ETB' : 'በቀጠሮው ወቅት የሚከፈል';
+        const paymentLabel = ord.payment_status === 'paid' ? 'ተከፍሏል' : (ord.payment_status === 'unpaid' ? 'ያልተከፈለ' : 'ቅድመ ክፍያ አይጠየቅም');
 
         box.innerHTML = `
           <div class="bg-white rounded-2xl p-6 border border-navy/10 shadow-lg">
@@ -3359,35 +3375,35 @@
             <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
               <div>
                 <span class="text-xs text-navy/40 font-bold uppercase block">የትዕዛዝ ቁጥር</span>
-                <span class="font-serif text-lg font-bold text-navy">${escapeHtml(ord.order_number)}</span>
+                <span class="font-serif text-lg font-bold text-navy">${escapeHtml(ord.order_number || '')}</span>
               </div>
               <span class="text-xs font-extrabold px-3 py-1.5 rounded-full ${isCompleted ? 'bg-emerald-100 text-emerald-800' : (isEnRoute ? 'bg-amber-100 text-amber-800 animate-pulse' : 'bg-teal-light text-teal-dark')}">
-                ${isEnRoute ? 'ቡድኑ በመጓዝ ላይ ይገኛል (On The Way)' : (isCleaning ? 'ፅዳት በመከናወን ላይ' : (isCompleted ? 'ተጠናቋል' : 'የተመዘገበ (' + ord.status + ')'))}
+                ${isEnRoute ? 'ቡድኑ በመጓዝ ላይ ይገኛል (On The Way)' : (isCleaning ? 'ፅዳት በመከናወን ላይ' : (isCompleted ? 'ተጠናቋል' : 'የተመዘገበ (' + (ord.status || 'Active') + ')'))}
               </span>
             </div>
 
             <div class="grid grid-cols-2 gap-3 text-xs py-3 border-y border-navy/10">
               <div>
                 <span class="text-navy/50 block">ደንበኛ:</span>
-                <span class="font-bold text-navy">${escapeHtml(ord.customer_name)} (${escapeHtml(ord.subcity || '')})</span>
+                <span class="font-bold text-navy">${escapeHtml(ord.customer_name || 'ውድ ደንበኛችን')} (${escapeHtml(ord.subcity || '')})</span>
               </div>
               <div>
                 <span class="text-navy/50 block mb-0.5">የቀጠሮ ቀንና ሰዓት:</span>
                 <div class="space-y-0.5">
-                  <p class="font-extrabold text-teal-dark text-xs">${ord.eth_appointment_date || (ord.appointment_date ? EC.formatEth(EC.toEth(ord.appointment_date).year, EC.toEth(ord.appointment_date).month, EC.toEth(ord.appointment_date).day) : '—')}</p>
-                  <p class="text-[10px] text-navy/55 font-semibold">GC: ${ord.appointment_date || '—'}</p>
+                  <p class="font-extrabold text-teal-dark text-xs">${escapeHtml(ord.eth_appointment_date || (ord.appointment_date && window.EC ? EC.formatEth(EC.toEth(ord.appointment_date).year, EC.toEth(ord.appointment_date).month, EC.toEth(ord.appointment_date).day) : (ord.appointment_date || '—')))}</p>
+                  <p class="text-[10px] text-navy/55 font-semibold">GC: ${escapeHtml(ord.appointment_date || '—')}</p>
                   <p class="text-[11px] font-bold text-navy">
-                    ${ord.appointment_time_slot === 'morning' ? 'ጥዋት (2:00–6:00 ጠዋቱ ETH • 8am–12pm GC)' : (ord.appointment_time_slot === 'afternoon' ? 'ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm GC)' : (ord.appointment_time_slot || ''))}
+                    ${ord.appointment_time_slot === 'morning' ? 'ጥዋት (2:00–6:00 ጠዋቱ ETH • 8am–12pm GC)' : (ord.appointment_time_slot === 'afternoon' ? 'ከሰዓት (7:00–11:00 ከሰዓቱ ETH • 1pm–5pm GC)' : escapeHtml(ord.appointment_time_slot || ''))}
                   </p>
                 </div>
               </div>
               <div>
                 <span class="text-navy/50 block">ጠቅላላ ክፍያ:</span>
-                <span class="font-bold text-teal-dark text-sm">${ord.total.toLocaleString()} ETB</span>
+                <span class="font-bold text-teal-dark text-sm">${totalFormatted}</span>
               </div>
               <div>
                 <span class="text-navy/50 block">የክፍያ ሁኔታ:</span>
-                <span class="font-bold ${ord.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}">${ord.payment_status === 'paid' ? 'ተከፍሏል' : 'ያልተከፈለ'}</span>
+                <span class="font-bold ${ord.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}">${paymentLabel}</span>
               </div>
             </div>
 
@@ -3400,11 +3416,15 @@
         if (window.lucide) lucide.createIcons();
 
       } else {
+        const notFoundMsg = res.status === 429
+          ? 'እባክዎ ጥቂት ሰከንዶች ቆይተው እንደገና ይሞክሩ (Too many requests)::'
+          : (data.message || 'ይቅርታ፣ በዚህ ቁጥር የተያዘ ትዕዛዝ አልተገኘም። እባክዎ በትክክል መጻፉን ያረጋግጡ።');
         box.innerHTML = `<div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
-          ${data.message || 'ይቅርታ፣ በዚህ ቁጥር ወይም ስልክ የተያዘ ትዕዛዝ አልተገኘም። እባክዎ በትክክል መጻፉን ያረጋግጡ።'}
+          ${escapeHtml(notFoundMsg)}
         </div>`;
       }
     } catch (err) {
+      console.error('Track order error:', err);
       box.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-xs">የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ በ {{ $phone1 }} በቀጥታ ይደውሉ።</div>';
     }
   }
