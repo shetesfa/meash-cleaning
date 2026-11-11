@@ -3386,6 +3386,18 @@
 
                                             <p class="text-xs text-slate-300 font-semibold">${escapeHtml(c.phone)} ${c.subcity ? '| ' + escapeHtml(c.subcity) : ''}</p>
 
+                                            <!-- Communication Channels Status Badges -->
+                                            <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                                ${c.telegram_user_id ? `
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30" title="ይህ ደንበኛ ቴሌግራም ቦት ተገናኝቷል፤ የቴሌግራም መልእክት ይደርሰዋል">
+                                                        <i data-lucide="send" class="w-3 h-3 text-sky-400"></i> Telegram Ready
+                                                    </span>
+                                                ` : ''}
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" title="ይህ ደንበኛ የስልክ መስመር አለው፤ ቀጥታ SMS ይደርሰዋል">
+                                                    <i data-lucide="smartphone" class="w-3 h-3 text-emerald-400"></i> SMS Ready
+                                                </span>
+                                            </div>
+
                                             <!-- Rating & Comment Section -->
                                             <div class="p-2.5 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-1.5">
                                                 <div class="flex items-center justify-between">
