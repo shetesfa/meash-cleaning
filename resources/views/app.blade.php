@@ -3182,6 +3182,10 @@
                                         <span>በስልክ SIM ላክ (Go to Messages App)</span>
                                     </a>
                                 ` : ''}
+                                <button type="button" id="btn-send-sms" onclick="submitDirectSms(event)" class="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
+                                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                    <span>በሰርቨር ላክ (Send via Server)</span>
+                                </button>
                                 <div class="flex items-center gap-2 ml-auto">
                                     <button type="button" onclick="closeModal()" class="px-5 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 cursor-pointer">ዝጋ</button>
                                 </div>
@@ -3271,13 +3275,18 @@
         }
 
         async function submitDirectSms(e) {
-            e.preventDefault();
+            if (e) e.preventDefault();
             const btn = document.getElementById('btn-send-sms');
-            btn.disabled = true;
-            btn.innerText = 'በመላክ ላይ...';
+            const originalText = btn ? btn.innerText : '';
+            if (btn) { btn.disabled = true; btn.innerText = 'በመላክ ላይ...'; }
 
-            const phone = document.getElementById('direct-sms-phone').value;
-            const message = document.getElementById('direct-sms-message').value;
+            const phone = document.getElementById('direct-sms-phone')?.value || '';
+            const message = document.getElementById('direct-sms-message')?.value || '';
+            if (!phone.trim() || !message.trim()) {
+                alert('እባክዎ የተቀባይ ስልክ እና የመልእክት ይዘት ያስገቡ።');
+                if (btn) { btn.disabled = false; btn.innerText = originalText; }
+                return;
+            }
 
             try {
                 const res = await apiFetch('/api/notifications/send-direct-sms', {
@@ -3294,7 +3303,126 @@
             } catch (err) {
                 alert('የግንኙነት ስህተት: ' + err.message);
             } finally {
-                btn.disabled = false;
+                if (btn) { btn.disabled = false; btn.innerText = originalText; }
+            }
+        }
+
+        // ==========================================
+        // 5d. REGISTER NEW CUSTOMER MODAL (Customers Module)
+        // ==========================================
+        function openRegisterCustomerModal() {
+            const container = document.getElementById('generic-modal-container');
+            if (!container) return;
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                    <div class="bg-slate-900 border border-cyan-500/50 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-auto">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center">
+                                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-white">አዲስ ደንበኛ መዝግብ</h3>
+                                    <p class="text-[11px] text-slate-400">የደንበኛውን መረጃ ያስገቡ እና ይመዝግቡ</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+
+                        <form onsubmit="submitRegisterCustomer(event)" class="space-y-3.5 text-xs">
+                            <div id="register-customer-error" class="hidden p-3 rounded-xl bg-red-500/10 border border-red-500/40 text-red-300 font-bold"></div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ሙሉ ስም *</label>
+                                <input type="text" id="reg-cust-name" required maxlength="255" placeholder="ለምሳሌ፡ አበበ ተስፋ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-cyan-500">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">ስልክ ቁጥር *</label>
+                                    <input type="tel" id="reg-cust-phone" required maxlength="32" placeholder="09..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white font-mono focus:outline-none focus:border-cyan-500">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">ተጨማሪ ስልክ</label>
+                                    <input type="tel" id="reg-cust-alt-phone" maxlength="32" placeholder="09..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white font-mono focus:outline-none focus:border-cyan-500">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">ክፍለ ከተማ</label>
+                                    <input type="text" id="reg-cust-subcity" maxlength="64" placeholder="ለምሳሌ፡ ቦሌ" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-cyan-500">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-300 font-bold mb-1">የደንበኛ ዓይነት</label>
+                                    <select id="reg-cust-type" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-slate-300 focus:outline-none focus:border-cyan-500">
+                                        <option value="individual">ግለሰብ (Individual)</option>
+                                        <option value="corporate">ድርጅት (Corporate)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">አድራሻ</label>
+                                <textarea id="reg-cust-address" rows="2" placeholder="ጎዳና / የቤት ቁጥር / ምልክት..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white leading-relaxed focus:outline-none focus:border-cyan-500"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">ማስታወሻ</label>
+                                <textarea id="reg-cust-notes" rows="2" placeholder="ተጨማሪ ማስታወሻ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white leading-relaxed focus:outline-none focus:border-cyan-500"></textarea>
+                            </div>
+                            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                                <button type="button" onclick="closeModal()" class="px-5 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 cursor-pointer">ሰርዝ</button>
+                                <button type="submit" id="btn-register-customer" class="px-5 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white font-bold rounded-xl shadow-lg cursor-pointer">መዝግብ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            if (window.lucide) lucide.createIcons();
+            const nameInput = document.getElementById('reg-cust-name');
+            if (nameInput) nameInput.focus();
+        }
+
+        async function submitRegisterCustomer(e) {
+            if (e) e.preventDefault();
+            const errBox = document.getElementById('register-customer-error');
+            const btn = document.getElementById('btn-register-customer');
+            const originalText = btn ? btn.innerText : '';
+            if (errBox) errBox.classList.add('hidden');
+            if (btn) { btn.disabled = true; btn.innerText = 'በመመዝገብ ላይ...'; }
+            try {
+                const payload = {
+                    full_name: (document.getElementById('reg-cust-name')?.value || '').trim(),
+                    phone: (document.getElementById('reg-cust-phone')?.value || '').trim(),
+                    alt_phone: (document.getElementById('reg-cust-alt-phone')?.value || '').trim() || undefined,
+                    subcity: (document.getElementById('reg-cust-subcity')?.value || '').trim() || undefined,
+                    address: (document.getElementById('reg-cust-address')?.value || '').trim() || undefined,
+                    notes: (document.getElementById('reg-cust-notes')?.value || '').trim() || undefined,
+                    customer_type: document.getElementById('reg-cust-type')?.value || 'individual'
+                };
+                if (!payload.full_name || !payload.phone) {
+                    throw new Error('ሙሉ ስም እና ስልክ ቁጥር ያስፈልጋሉ።');
+                }
+                const res = await apiFetch('/api/customers', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                let data = null;
+                try { data = await res.json(); } catch (_) {}
+                if (res.ok && data && data.customer) {
+                    window._cachedCustomersList = null;
+                    closeModal();
+                    alert('ደንበኛው በተሳካ ሁኔታ ተመዝግቧል!');
+                    const container = document.getElementById('app-viewport');
+                    if (container) renderCustomersModule(container);
+                } else {
+                    let msg = (data && data.message) || 'ደንበኛ መመዝገብ አልተቻለም።';
+                    if (data && data.errors && typeof data.errors === 'object') {
+                        msg = Object.values(data.errors).flat().join(' ');
+                    }
+                    throw new Error(msg);
+                }
+            } catch (err) {
+                if (errBox) { errBox.textContent = err.message || 'ደንበኛ መመዝገብ አልተቻለም።'; errBox.classList.remove('hidden'); }
+                else { alert(err.message || 'ደንበኛ መመዝገብ አልተቻለም።'); }
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = originalText || 'መዝግብ'; }
             }
         }
 
@@ -3305,7 +3433,7 @@
 
         async function switchCustomerStageTab(stage) {
             window._currentCustomerStage = stage;
-            const container = document.getElementById('module-viewport');
+            const container = document.getElementById('app-viewport');
             if (container) {
                 renderCustomersModule(container);
             }

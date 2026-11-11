@@ -19,14 +19,16 @@ services:
         sync: false
       - key: DB_CONNECTION
         value: sqlite
+        sync: false
       - key: DB_DATABASE
         value: /var/www/html/database/database.sqlite
+        sync: false
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: TELEGRAM_BOT_USERNAME
         value: "meash_cleaning_solution_bot"
       - key: TELEGRAM_WEBHOOK_URL
-        value: "https://meash-cleaning-gy5x.onrender.com/api/telegram/webhook"
+        value: "https://meash-cleaning.onrender.com/api/telegram/webhook"
       - key: TELEGRAM_WEBHOOK_SECRET
         generateValue: true
       - key: TELEGRAM_MINIAPP_URL

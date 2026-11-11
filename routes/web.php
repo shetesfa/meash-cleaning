@@ -70,4 +70,16 @@ Route::get('/health', function () {
     ]);
 });
 
+// 5. SPA fallback — direct visits, refreshes and bookmarks of website
+//    sections (e.g. /services, /booking) serve the single-page site
+//    instead of HTTP 404. Registered last so it never shadows /app/*,
+//    /guide, /ping, /health, /telegram-miniapp or any defined route.
+//    API paths keep their JSON 404 behaviour.
+Route::fallback(function () {
+    if (request()->is('api/*')) {
+        abort(404);
+    }
+    return view('website');
+});
+
 
