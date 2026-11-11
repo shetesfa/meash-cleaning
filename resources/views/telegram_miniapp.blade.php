@@ -278,6 +278,7 @@
         <i data-lucide="check" class="w-4 h-4"></i>
         <span id="txt-submit-btn">ቀጠሮውን አረጋግጥ (Submit Booking)</span>
       </button>
+      <div id="tma-form-error" class="hidden p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-200 text-xs text-center font-bold"></div>
     </form>
 
     <!-- Confirmation State -->
@@ -656,6 +657,24 @@
       }
     }
 
+    function showTmaAlert(message) {
+      if (window.Telegram?.WebApp?.showAlert) {
+        window.Telegram.WebApp.showAlert(message);
+        return;
+      }
+      const errBox = document.getElementById('tma-form-error');
+      if (errBox) {
+        errBox.innerText = message;
+        errBox.classList.remove('hidden');
+        errBox.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+          errBox.classList.add('hidden');
+        }, 6000);
+      } else {
+        alert(message);
+      }
+    }
+
     function updateTmaPlan() {
       updateTotal();
     }
@@ -663,7 +682,7 @@
     function detectTmaLocation() {
       const btn = document.getElementById('btn-tma-gps-txt');
       if (!navigator.geolocation) {
-        alert('Geolocation is not supported on this device.');
+        showTmaAlert('Geolocation is not supported on this device.');
         return;
       }
       btn.innerText = 'በመፈለግ ላይ...';
@@ -692,7 +711,7 @@
         },
         (err) => {
           btn.innerText = 'አድራሻ ይጻፉ';
-          alert('አድራሻዎን ከታች ባለው ሳጥን ውስጥ ይጻፉ:: (Please type your address).');
+          showTmaAlert('አድራሻዎን ከታች ባለው ሳጥን ውስጥ ይጻፉ:: (Please type your address).');
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
@@ -746,10 +765,10 @@
           document.getElementById('tma-result-id').innerText = data.booking_id;
           lucide.createIcons();
         } else {
-          alert(data.message || (currentLang === 'am' ? 'ስህተት ተፈጥሯል' : 'Error creating booking'));
+          showTmaAlert(data.message || (currentLang === 'am' ? 'ስህተት ተፈጥሯል' : 'Error creating booking'));
         }
       } catch (err) {
-        alert(currentLang === 'am' ? 'የግንኙነት ችግር ተፈጥሯል' : 'Connection error');
+        showTmaAlert(currentLang === 'am' ? 'የግንኙነት ችግር ተፈጥሯል' : 'Connection error');
       } finally {
         btn.disabled = false;
         btn.innerText = currentLang === 'am' ? 'ቀጠሮውን አረጋግጥ (Submit Booking)' : 'Confirm & Book Now';

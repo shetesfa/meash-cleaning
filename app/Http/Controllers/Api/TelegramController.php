@@ -73,14 +73,19 @@ class TelegramController extends Controller
     try {
       $val = WebsiteSetting::getVal('telegram_reception_url');
       if ($val) return $val;
+      $support = WebsiteSetting::getVal('telegram_support');
+      if ($support) {
+        $username = ltrim(str_replace('https://t.me/', '', $support), '@');
+        return "https://t.me/{$username}";
+      }
       $bot = WebsiteSetting::getVal('telegram_bot');
       if ($bot) {
         $username = ltrim(str_replace('https://t.me/', '', $bot), '@');
         return "https://t.me/{$username}";
       }
-      return 'https://t.me/Shetesfa';
+      return 'https://t.me/meashcleaning';
     } catch (\Throwable $e) {
-      return 'https://t.me/Shetesfa';
+      return 'https://t.me/meashcleaning';
     }
   }
 

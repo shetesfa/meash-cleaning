@@ -1786,6 +1786,9 @@
 
           <!-- Hidden master value for submission -->
           <input type="hidden" id="book-date" required>
+          <p id="date-slot-error" class="hidden text-xs text-red-600 font-bold mb-3 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> እባክዎ የቀጠሮ ቀን ይምረጡ!
+          </p>
 
           <!-- Time Slot — Morning / Afternoon / Night Shift / Weekend -->
           <div class="mb-4">
@@ -1966,6 +1969,7 @@
             <button type="button" onclick="showWizardStep(3)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
             <button type="submit" id="btn-submit-booking" class="flex-1 bg-teal-dark hover:bg-teal text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጠሮ አረጋግጥ</span><span data-lang-block="en">Confirm Booking</span></button>
           </div>
+          <div id="booking-error-msg" class="hidden mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs text-center font-bold"></div>
         </div>
 
         <!-- SUCCESS -->
@@ -2530,10 +2534,17 @@
   function validateStep3AndContinue() {
     const date = document.getElementById('book-date')?.value;
     const slot = document.getElementById('book-time-slot')?.value;
-    if (!date) { alert('እባክዎ ቀን ይምረጡ!'); return; }
+    const dateErr = document.getElementById('date-slot-error');
+    const slotErr = document.getElementById('time-slot-error');
+    if (dateErr) dateErr.classList.add('hidden');
+    if (slotErr) slotErr.classList.add('hidden');
+
+    if (!date) {
+      if (dateErr) dateErr.classList.remove('hidden');
+      return;
+    }
     if (!slot) {
-      const err = document.getElementById('time-slot-error');
-      if (err) err.classList.remove('hidden');
+      if (slotErr) slotErr.classList.remove('hidden');
       return;
     }
     showWizardStep(4);
@@ -2869,15 +2880,27 @@
       });
       const data = await res.json();
       if (res.ok && (data.success || data.booking_id)) {
+        const errMsg = document.getElementById('booking-error-msg');
+        if (errMsg) errMsg.classList.add('hidden');
         document.getElementById('step-4').classList.add('hidden');
         document.getElementById('step-success').classList.remove('hidden');
         document.getElementById('success-booking-id').innerText = data.order_number || data.booking_id;
         if (window.lucide) lucide.createIcons();
       } else {
-        alert('Error: ' + (data.message || 'Could not create booking. Please call {{ $phone1 }}.'));
+        const errMsg = document.getElementById('booking-error-msg');
+        const text = data.message || 'ይቅርታ፣ ቀጠሮውን መመዝገብ አልተቻለም። እባክዎ በ {{ $phone1 }} ይደውሉ።';
+        if (errMsg) {
+          errMsg.innerText = text;
+          errMsg.classList.remove('hidden');
+        }
       }
     } catch (err) {
-      alert('Connection error: ' + err.message + ' — please call {{ $phone1 }} directly.');
+      const errMsg = document.getElementById('booking-error-msg');
+      const text = 'የኔትወርክ ግንኙነት ስህተት አጋጥሟል:: እባክዎ በ {{ $phone1 }} በቀጥታ ይደውሉ::';
+      if (errMsg) {
+        errMsg.innerText = text;
+        errMsg.classList.remove('hidden');
+      }
     } finally {
       btn.disabled = false;
     }
@@ -2931,6 +2954,7 @@
               <label class="block font-bold text-navy dark:text-white mb-1">ምክንያት (Reason):</label>
               <input type="text" id="resched-reason" placeholder="ምክንያቱን በአጭሩ ይጻፉ..." value="በደንበኛው ጥያቄ" class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy dark:text-white dark:bg-slate-800 focus:border-teal-dark focus:outline-none">
             </div>
+            <div id="resched-status-msg" class="hidden my-2"></div>
             <div class="flex justify-end gap-2 pt-2 border-t border-navy/10 sticky bottom-0 bg-white dark:bg-slate-900 pb-1">
               <button type="button" onclick="document.getElementById('web-reschedule-backdrop').remove()" class="px-4 py-2 border border-navy/20 rounded-lg text-navy dark:text-white font-bold cursor-pointer">ሰርዝ</button>
               <button type="submit" id="btn-submit-resched" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold rounded-lg shadow cursor-pointer">ቀጠሮ አስተላልፍ</button>
@@ -2964,17 +2988,38 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
+      const msgEl = document.getElementById('resched-status-msg');
       if (res.ok && data.success) {
-        alert(data.message);
-        document.getElementById('web-reschedule-backdrop')?.remove();
-        // re-run track
-        document.getElementById('track-input').value = orderNumber;
-        document.getElementById('track-form').dispatchEvent(new Event('submit'));
+        if (msgEl) {
+          msgEl.className = 'p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold text-center';
+          msgEl.innerText = data.message || 'ቀጠሮው በተሳካ ሁኔታ ተላልፏል!';
+          msgEl.classList.remove('hidden');
+        }
+        setTimeout(() => {
+          document.getElementById('web-reschedule-backdrop')?.remove();
+          // re-run track
+          const trackIn = document.getElementById('track-input');
+          if (trackIn) {
+            trackIn.value = orderNumber;
+            const trForm = document.getElementById('track-form') || trackIn.form;
+            if (trForm) trForm.dispatchEvent(new Event('submit'));
+            else trackOrder();
+          }
+        }, 1200);
       } else {
-        alert('ስህተት: ' + (data.message || 'ቀጠሮውን ማስተላለፍ አልተቻለም::'));
+        if (msgEl) {
+          msgEl.className = 'p-3 rounded-xl bg-red-50 border border-red-300 text-red-700 text-xs font-bold text-center';
+          msgEl.innerText = 'ስህተት: ' + (data.message || 'ቀጠሮውን ማስተላለፍ አልተቻለም::');
+          msgEl.classList.remove('hidden');
+        }
       }
     } catch (err) {
-      alert('የኔትወርክ ስህተት: ' + err.message);
+      const msgEl = document.getElementById('resched-status-msg');
+      if (msgEl) {
+        msgEl.className = 'p-3 rounded-xl bg-red-50 border border-red-300 text-red-700 text-xs font-bold text-center';
+        msgEl.innerText = 'የኔትወርክ ስህተት: ' + err.message;
+        msgEl.classList.remove('hidden');
+      }
     } finally {
       btn.disabled = false;
       btn.innerText = 'ቀጠሮ አስተላልፍ';
@@ -2983,9 +3028,11 @@
 
   // Tracked order global state
   window.currentTrackedOrderData = null;
+  window.currentCustomerPortalData = null;
 
   // Helper: 1-Click Pre-fill for Booking
   window.bookNextCleaningWithCustomerData = function(cust) {
+    cust = cust || window.currentCustomerPortalData;
     if (!cust) return;
     const nameEl = document.getElementById('book-name');
     const phoneEl = document.getElementById('book-phone');
@@ -3076,7 +3123,7 @@
     const custPhone = summary.phone || ord.customer_phone || '';
     const custAddress = summary.address || ord.address || '';
     const custSubcity = summary.subcity || ord.subcity || '';
-    const custDataJson = JSON.stringify({ full_name: custName, phone: custPhone, subcity: custSubcity, address: custAddress }).replace(/"/g, '&quot;');
+    window.currentCustomerPortalData = { full_name: custName, phone: custPhone, subcity: custSubcity, address: custAddress };
 
     return `
       <div class="bg-white rounded-3xl p-6 sm:p-8 border border-navy/10 shadow-xl space-y-6">
@@ -3114,7 +3161,7 @@
               <p class="text-[11px] text-navy/60 mt-1">አጠቃላይ የተጠናቀቁ ትዕዛዞች፡ <strong>${summary.total_orders || 1}</strong> | የወጣ ወጪ፡ <strong>${Number(summary.total_spent || ord.total || 0).toLocaleString()} ETB</strong></p>
             </div>
           </div>
-          <button type="button" onclick="bookNextCleaningWithCustomerData(${custDataJson})" class="px-5 py-3 bg-teal hover:bg-teal-dark text-white rounded-xl font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:shadow-lg">
+          <button type="button" onclick="bookNextCleaningWithCustomerData()" class="px-5 py-3 bg-teal hover:bg-teal-dark text-white rounded-xl font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:shadow-lg">
             <i data-lucide="plus-circle" class="w-4 h-4"></i>
             <span>ቀጣይ ጽዳት በ 1-ጠቅታ ያዙ</span>
           </button>
@@ -3211,7 +3258,7 @@
               ስምዎ፣ ስልክዎ እና አድራሻዎ እንዲሁም የ ${loyalty.discount_percent}% የታማኝነት ቅናሽዎ በቅጹ ውስጥ Sync ሆነው ይጠብቁዎታል::
             </p>
           </div>
-          <button type="button" onclick="bookNextCleaningWithCustomerData(${custDataJson})" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-teal to-emerald-500 hover:from-teal-dark hover:to-emerald-600 text-white rounded-xl font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:scale-105">
+          <button type="button" onclick="bookNextCleaningWithCustomerData()" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-teal to-emerald-500 hover:from-teal-dark hover:to-emerald-600 text-white rounded-xl font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:scale-105">
             <i data-lucide="calendar-plus" class="w-4 h-4"></i>
             <span>ቀጣይ ጽዳት ያዙ (Book Next Cleaning)</span>
           </button>

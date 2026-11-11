@@ -7550,7 +7550,7 @@
                                     <input type="text" id="set-tg-chan" value="${escapeHtml(s.telegram_channel || 'https://t.me/meashdeepcleanning')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" placeholder="https://t.me/meashdeepcleanning">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቀጥታ ማውሪያ (Personal/Talk)</label>
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቀጥታ ለማነጋገር (Direct Contact)</label>
                                     <input type="text" id="set-tg-support" value="${escapeHtml(s.telegram_support || '@meashcleaning')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" placeholder="@meashcleaning">
                                 </div>
                                 <div>
