@@ -3139,9 +3139,7 @@
                                         <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
                                         <span>በስልክ SIM ላክ (Go to Messages App)</span>
                                     </a>
-                                ` : `
-                                    <span class="text-[11px] text-slate-400 font-medium">በኮምፒውተር (PC) ላይ የ QR ኮዱን ለባለቤቱ ስካን እንዲያደርጉት ክፍት ያድርጉት።</span>
-                                `}
+                                ` : ''}
                                 <div class="flex items-center gap-2 ml-auto">
                                     <button type="button" onclick="closeModal()" class="px-5 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 cursor-pointer">ዝጋ</button>
                                 </div>
