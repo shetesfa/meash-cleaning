@@ -3748,47 +3748,6 @@
     }
   }
 
-  async function quickStaffLogin(email) {
-    const errBox = document.getElementById('staff-login-error');
-    const errText = document.getElementById('staff-login-error-text');
-    if (errBox) errBox.classList.add('hidden');
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ login: email, password: 'password' })
-      });
-      let data = null;
-      try { data = await res.json(); } catch(e) {}
-
-      if (res.ok && data && data.token) {
-        localStorage.setItem('meash_token', data.token);
-        localStorage.setItem('meash_user', JSON.stringify(data.user));
-        closeStaffModal();
-        // Brief loading flash then redirect
-        document.body.insertAdjacentHTML('afterbegin', `
-          <div id="quick-login-flash" class="fixed inset-0 z-[999] flex items-center justify-center bg-navy/90 backdrop-blur-sm">
-            <div class="flex flex-col items-center gap-3 text-white">
-              <div class="w-12 h-12 rounded-2xl bg-teal/20 flex items-center justify-center text-teal">
-                <i data-lucide="${email.startsWith('owner') ? 'shield-check' : (email.startsWith('reception') ? 'headphones' : 'sparkles')}" class="w-6 h-6"></i>
-              </div>
-              <p class="text-sm font-bold">ወደ ሲስተሙ እየገቡ ነው...</p>
-              <div class="w-32 h-1 bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-teal animate-pulse" style="width:70%"></div></div>
-            </div>
-          </div>`);
-        if (window.lucide) lucide.createIcons();
-        setTimeout(() => { window.location.href = '/app'; }, 600);
-      } else {
-        let msg = 'መግባት አልተቻለም!';
-        if (res.status >= 500) msg = 'ሰርቨሩ በመነሳት ላይ ነው፤ እባክዎ ጥቂት ሰከንድ ጠብቀው እንደገና ይሞክሩ።';
-        else if (data && data.message) msg = data.message;
-        if (errBox) { errBox.classList.remove('hidden'); errText.innerText = msg; }
-      }
-    } catch (err) {
-      if (errBox) { errBox.classList.remove('hidden'); errText.innerText = 'የሰርቨር ግንኙነት ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ።'; }
-    }
-  }
   // Close on Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
