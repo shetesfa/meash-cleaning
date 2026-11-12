@@ -647,9 +647,17 @@
   html.light ::-webkit-scrollbar-track { background: #fff; }
   html.light ::-webkit-scrollbar-thumb { background: #CBD5E1; border-color: #fff; }
 
+  /* Sticky Header — permanently stuck at the top across all viewports */
+  header {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+  }
+
   /* ================= Mobile responsiveness / no horizontal overflow ================= */
   html, body {
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
     width: 100% !important;
     max-width: 100vw !important;
     margin: 0;
@@ -732,7 +740,7 @@
 </div>
 
 <!-- ================= MAIN NAVIGATION ================= -->
-<header class="relative z-40 bg-white/95 dark:bg-[#0B1220]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
+<header class="sticky top-0 z-50 bg-white/95 dark:bg-[#0B1220]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
     
     <!-- Brand Logo & Name -->
@@ -803,7 +811,7 @@
 </header>
 
 <!-- ================= NAVIGATION DRAWER (Mobile, Tablet & Desktop) ================= -->
-<div id="mobile-nav-drawer" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden transition-all duration-300" onclick="if(event.target === this) closeMobileNav()">
+<div id="mobile-nav-drawer" class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm hidden transition-all duration-300" onclick="if(event.target === this) closeMobileNav()">
   <div class="fixed inset-y-0 right-0 max-w-xs w-full bg-white dark:bg-[#0B1220] shadow-2xl flex flex-col justify-between border-l border-slate-200 dark:border-slate-800">
     <!-- Drawer Top Header -->
     <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -2506,7 +2514,7 @@
 </main>
 
 <!-- ================= STAFF & ADMIN SECURE AUTH MODAL ================= -->
-<div id="staff-auth-modal" class="fixed inset-0 z-50 hidden bg-navy/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto transition-all duration-300" onclick="if(event.target === this) closeStaffModal()">
+<div id="staff-auth-modal" class="fixed inset-0 z-[70] hidden bg-navy/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto transition-all duration-300" onclick="if(event.target === this) closeStaffModal()">
   <div class="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-6 border border-navy/10 text-navy my-auto">
     <!-- Header -->
     <div class="flex items-center justify-between pb-3 border-b border-navy/10">
@@ -2829,8 +2837,10 @@
     }
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
   }
 
@@ -2840,6 +2850,7 @@
     if (drawer && !drawer.classList.contains('hidden')) {
       drawer.classList.add('hidden');
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
       if (icon) {
         icon.setAttribute('data-lucide', 'menu');
         if (window.lucide) lucide.createIcons();
