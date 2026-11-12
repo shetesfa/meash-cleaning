@@ -495,8 +495,8 @@
   </div>
 </div>
 
-<!-- ================= MAIN STICKY NAVIGATION ================= -->
-<header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0B1220]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
+<!-- ================= MAIN NAVIGATION ================= -->
+<header class="relative z-40 bg-white/95 dark:bg-[#0B1220]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
     
     <!-- Brand Logo & Name -->
