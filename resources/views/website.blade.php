@@ -247,13 +247,34 @@
 
   /* ---------- Decorative surfaces ---------- */
   .duo {
-    background:
-      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .22) 0%, transparent 55%),
-      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%);
+    background-color: #08111F !important;
+    background-image:
+      radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
+      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
+    background-size: 14px 14px, auto, auto !important;
+    color: #FFFFFF !important;
   }
   .grain {
     background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px);
     background-size: 14px 14px;
+  }
+  .duo.grain {
+    background-color: #08111F !important;
+    background-image:
+      radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
+      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
+    background-size: 14px 14px, auto, auto !important;
+    color: #FFFFFF !important;
+  }
+  .duo h3,
+  .duo p:not(.text-navy *):not(.bg-white *),
+  .duo span:not(.text-navy *):not(.bg-white *) {
+    color: #FFFFFF !important;
+  }
+  .duo .text-white\/80 {
+    color: rgba(255, 255, 255, .90) !important;
   }
 
   /* ---------- Smooth interactions (all pages elements) ---------- */
@@ -616,30 +637,134 @@
     box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
   }
 
-  /* Preserve intentionally dark cards and sections in light mode */
-  html.light .bg-navy .text-white,
-  html.light .duo .text-white,
-  html.light footer .text-white,
-  html.light #process .text-white,
-  html.light .from-slate-900 .text-white,
-  html.light .to-navy .text-white {
+  /* ================= PRESERVE INTENTIONALLY DARK CARDS & SECTIONS IN LIGHT MODE ================= */
+  /* 1. Hero Feature Card (.duo) */
+  html.light .duo,
+  html.light .duo.grain {
+    background-color: #08111F !important;
+    background-image:
+      radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
+      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
+    background-size: 14px 14px, auto, auto !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 10px 30px -10px rgba(10, 107, 106, .45), 0 20px 40px -15px rgba(8, 17, 31, .6) !important;
+  }
+  html.light .duo h3,
+  html.light .duo h2,
+  html.light .duo p:not(.text-navy *):not(.bg-white *),
+  html.light .duo span:not(.text-navy *):not(.bg-white *),
+  html.light .duo div:not(.bg-white):not(.bg-white *) {
     color: #FFFFFF !important;
   }
-  html.light .bg-navy [class*="text-white/"],
-  html.light .duo [class*="text-white/"],
-  html.light footer [class*="text-white/"],
-  html.light #process [class*="text-white/"],
-  html.light .from-slate-900 [class*="text-white/"] {
-    color: rgba(255, 255, 255, .82) !important;
+  html.light .duo .text-white\/80 {
+    color: rgba(255, 255, 255, .90) !important;
   }
-  html.light .bg-navy .text-teal,
-  html.light footer .text-teal,
-  html.light #process .text-teal {
+
+  /* 2. Process Section (#process) */
+  html.light #process {
+    background-color: #0B1220 !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, .10) !important;
+  }
+  html.light #process h2,
+  html.light #process h3,
+  html.light #process p,
+  html.light #process span,
+  html.light #process .text-white {
+    color: #FFFFFF !important;
+  }
+  html.light #process [class*="text-white/"] {
+    color: rgba(255, 255, 255, .80) !important;
+  }
+  html.light #process .text-teal,
+  html.light #process .text-teal-dark {
     color: #2DD4BF !important;
   }
-  html.light .bg-navy .text-teal-light,
-  html.light footer .text-teal-light {
-    color: #A7F3D0 !important;
+
+  /* 3. About Section Company Badge Box */
+  html.light .from-slate-900.to-navy,
+  html.light .from-navy.to-slate-900 {
+    background: linear-gradient(135deg, #0B1220 0%, #0F172A 100%) !important;
+    background-color: #0B1220 !important;
+    color: #FFFFFF !important;
+    border-color: rgba(45, 212, 191, .3) !important;
+    box-shadow: 0 15px 35px -10px rgba(11, 18, 32, .5) !important;
+  }
+  html.light .from-slate-900.to-navy h3,
+  html.light .from-slate-900.to-navy p,
+  html.light .from-slate-900.to-navy span,
+  html.light .from-slate-900.to-navy div,
+  html.light .from-navy.to-slate-900 h3,
+  html.light .from-navy.to-slate-900 p,
+  html.light .from-navy.to-slate-900 span {
+    color: inherit;
+  }
+  html.light .from-slate-900.to-navy [class*="text-white/"],
+  html.light .from-navy.to-slate-900 [class*="text-white/"] {
+    color: rgba(255, 255, 255, .78) !important;
+  }
+  html.light .from-slate-900.to-navy .text-teal-light,
+  html.light .from-navy.to-slate-900 .text-teal-light {
+    color: #5EEAD4 !important;
+  }
+
+  /* 4. Full-Width CTA Section */
+  html.light .from-slate-900.via-navy.to-slate-900 {
+    background: linear-gradient(90deg, #0F172A 0%, #0B1220 50%, #0F172A 100%) !important;
+    background-color: #0B1220 !important;
+    color: #FFFFFF !important;
+  }
+  html.light .from-slate-900.via-navy.to-slate-900 h2,
+  html.light .from-slate-900.via-navy.to-slate-900 p,
+  html.light .from-slate-900.via-navy.to-slate-900 span,
+  html.light .from-slate-900.via-navy.to-slate-900 .text-white {
+    color: #FFFFFF !important;
+  }
+  html.light .from-slate-900.via-navy.to-slate-900 [class*="text-white/"] {
+    color: rgba(255, 255, 255, .85) !important;
+  }
+
+  /* 5. Footer */
+  html.light footer {
+    background-color: #070D18 !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, .10) !important;
+  }
+  html.light footer h4,
+  html.light footer p,
+  html.light footer a,
+  html.light footer span,
+  html.light footer .text-white {
+    color: #FFFFFF !important;
+  }
+  html.light footer [class*="text-white/"] {
+    color: rgba(255, 255, 255, .72) !important;
+  }
+  html.light footer a:hover {
+    color: #2DD4BF !important;
+  }
+  html.light footer .text-teal,
+  html.light footer .text-teal-dark {
+    color: #2DD4BF !important;
+  }
+
+  /* 6. Solid Navy Buttons & Badges */
+  html.light .bg-navy,
+  html.light a.bg-navy,
+  html.light button.bg-navy {
+    background-color: #0B1220 !important;
+    color: #FFFFFF !important;
+  }
+  html.light .bg-navy *,
+  html.light a.bg-navy *,
+  html.light button.bg-navy * {
+    color: #FFFFFF !important;
+  }
+  html.light a.bg-navy:hover,
+  html.light button.bg-navy:hover {
+    background-color: #0E7C7B !important;
+    color: #FFFFFF !important;
   }
 
   html.light ::selection { background: rgba(14, 124, 123, .25); color: #0B1220; }
