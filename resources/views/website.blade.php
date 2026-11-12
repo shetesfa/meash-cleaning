@@ -750,10 +750,7 @@
           </p>
         </div>
 
-        <!-- Photo area: no real photo supplied yet — honest placeholder, not a fake image -->
-        <div class="flex-1 flex items-center justify-center py-6">
-          <span class="text-[11px] font-bold text-white/70 bg-white/10 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> የስራ ፎቶ በቅርቡ • Work photo coming soon</span>
-        </div>
+
 
         <div class="bg-white/95 text-navy backdrop-blur rounded-xl p-4 shadow-xl border border-white/20">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
