@@ -140,7 +140,7 @@ class FinanceController extends Controller
             }
         }
 
-        $payments = $query->latest('payment_date')->paginate(20);
+        $payments = $query->latest('payment_date')->latest('id')->paginate(20);
 
         $payments->getCollection()->transform(function ($pay) {
             $eth = EthiopianCalendarService::toEthiopian($pay->payment_date);

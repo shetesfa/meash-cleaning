@@ -28,7 +28,7 @@ class OrderLifecycleService
             $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
             $lockedOrder->loadMissing('customer');
 
-            $orderTotal = round((float)$lockedOrder->total, 2);
+            $orderTotal = round((float)($lockedOrder->total ?: $lockedOrder->total_amount ?: 0), 2);
 
             $alreadyPaid = round((float)$lockedOrder->payments()
                 ->when($payment, fn($q) => $q->where('id', '!=', $payment->id))
@@ -115,6 +115,8 @@ class OrderLifecycleService
             $newTotalPaid = round((float)$lockedOrder->payments()->sum('amount'), 2);
 
             if ($orderTotal > 0 && $newTotalPaid >= ($orderTotal - 0.01)) {
+                $newStatus = 'paid';
+            } elseif ($orderTotal <= 0 && $newTotalPaid > 0) {
                 $newStatus = 'paid';
             } elseif ($newTotalPaid > 0) {
                 $newStatus = 'partially_paid';

@@ -159,6 +159,11 @@ class Order extends Model
         return $this->total;
     }
 
+    public function setTotalAmountAttribute($value): void
+    {
+        $this->attributes['total'] = $value;
+    }
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);

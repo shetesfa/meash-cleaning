@@ -330,6 +330,7 @@ class PaymentApprovalWorkflowTest extends TestCase
             'source' => 'phone',
             'order_status' => 'completed',
             'payment_status' => 'unpaid',
+            'assigned_team_id' => $this->team->id,
             'subtotal' => 4000.00,
             'total' => 4000.00,
             'address' => 'ቦሌ',
@@ -367,6 +368,7 @@ class PaymentApprovalWorkflowTest extends TestCase
             'source' => 'phone',
             'order_status' => 'completed',
             'payment_status' => 'unpaid',
+            'assigned_team_id' => $this->team->id,
             'subtotal' => 3000.00,
             'total' => 3000.00,
             'address' => 'ቦሌ',
@@ -540,5 +542,37 @@ class PaymentApprovalWorkflowTest extends TestCase
             'category' => 'refund',
             'amount' => 4000.00,
         ]);
+    }
+
+    /**
+     * Cleaners can only submit payments for orders assigned to their team.
+     * Attempting to submit for another team's order returns 403.
+     */
+    public function test_cleaner_cannot_submit_payment_for_order_assigned_to_another_team(): void
+    {
+        $otherTeam = CleaningTeam::create([
+            'team_name' => 'Beta Team',
+            'phone' => '0911000005',
+            'status' => 'active',
+        ]);
+
+        $order = Order::create([
+            'order_number' => 'ORD-OTHER-TEAM',
+            'customer_id' => $this->customer->id,
+            'source' => 'phone',
+            'order_status' => 'completed',
+            'payment_status' => 'unpaid',
+            'assigned_team_id' => $otherTeam->id,
+            'subtotal' => 3000.00,
+            'total' => 3000.00,
+            'address' => 'ቦሌ',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+
+        $this->actingAs($this->cleanerUser)->postJson("/api/orders/{$order->id}/submit-payment", [
+            'amount' => 3000.00,
+            'payment_method' => 'cash',
+        ])->assertStatus(403);
     }
 }
