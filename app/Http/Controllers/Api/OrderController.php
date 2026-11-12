@@ -908,32 +908,49 @@ class OrderController extends Controller
             'reason' => 'nullable|string|max:500',
         ]);
 
-        $old = $order->toArray();
-        $reason = $validated['reason'] ?? 'ክፍያው እንደገና እንዲጣራ ተመልሷል (Recheck requested)';
+        return DB::transaction(function () use ($request, $order, $validated, $user) {
+            $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
+            $old = $lockedOrder->toArray();
+            $reason = $validated['reason'] ?? 'ክፍያው እንደገና እንዲጣራ ተመልሷል (Recheck requested)';
 
-        $order->payment_status = 'unpaid';
-        $order->notes = ($order->notes ? $order->notes . "\n" : '') . "[ክፍያ ውድቅ የተደረገበት ምክንያት: {$reason} - በ{$user?->name}]";
-        $order->version += 1;
-        $order->save();
+            // Determine authoritative payment status based on remaining verified approved payments
+            $totalApprovedPaid = round((float)$lockedOrder->payments()->sum('amount'), 2);
+            $orderTotal = round((float)$lockedOrder->total, 2);
 
-        AuditLog::logAction(
-            $user?->id,
-            'payment_rejected',
-            Order::class,
-            $order->id,
-            $old,
-            [
-                'payment_status' => 'unpaid',
-                'reason' => $reason,
-                'rejected_by' => $user?->name,
-            ]
-        );
+            if ($orderTotal > 0 && $totalApprovedPaid >= ($orderTotal - 0.01)) {
+                $status = 'paid';
+            } elseif ($totalApprovedPaid > 0) {
+                $status = 'partially_paid';
+            } else {
+                $status = 'unpaid';
+            }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'ክፍያው ውድቅ ተደርጓል፤ እንደገና እንዲጣራ ተመልሷል::',
-            'order' => $order->fresh(['customer', 'assignedTeam', 'items']),
-        ]);
+            $lockedOrder->payment_status = $status;
+            $lockedOrder->notes = ($lockedOrder->notes ? $lockedOrder->notes . "\n" : '') . "[ክፍያ ውድቅ የተደረገበት ምክንያት: {$reason} - በ{$user?->name}]";
+            $lockedOrder->version += 1;
+            $lockedOrder->save();
+
+            AuditLog::logAction(
+                $user?->id,
+                'payment_rejected',
+                Order::class,
+                $lockedOrder->id,
+                $old,
+                [
+                    'payment_status' => $status,
+                    'reason' => $reason,
+                    'rejected_by' => $user?->name,
+                    'total_approved_paid' => $totalApprovedPaid,
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'ክፍያው ውድቅ ተደርጓል፤ እንደገና እንዲጣራ ተመልሷል::',
+                'order' => $lockedOrder->fresh(['customer', 'assignedTeam', 'items', 'payments']),
+                'payment_status' => $status,
+            ]);
+        });
     }
 
     /**

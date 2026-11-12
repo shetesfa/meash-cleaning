@@ -97,6 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/{order}/reject-payment', [OrderController::class, 'rejectPayment'])->middleware('role:owner,reception,finance');
     Route::post('/orders/{order}/payment', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception,finance');
     Route::post('/orders/{order}/payments', [OrderController::class, 'recordPayment'])->middleware('role:owner,reception,finance');
+    Route::post('/orders/{order}/refund', [FinanceController::class, 'recordRefund'])->middleware('role:owner,finance');
     Route::post('/orders/{order}/postpone', [OrderController::class, 'postpone'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/send-review-request', [OrderController::class, 'sendReviewRequest'])->middleware('role:owner,reception');
 
@@ -144,6 +145,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/payments', [FinanceController::class, 'payments'])->middleware('role:owner,reception,finance');
         Route::post('/payments/{payment}/verify', [FinanceController::class, 'verifyPayment'])->middleware('role:owner,reception,finance');
         Route::get('/profit-report', [FinanceController::class, 'profitReport'])->middleware('role:owner,finance');
+        Route::post('/refund/{order}', [FinanceController::class, 'recordRefund'])->middleware('role:owner,finance');
     });
 
     // I. Customer Care (Follow-ups, Feedback, Complaints, 1-to-1 Messaging)

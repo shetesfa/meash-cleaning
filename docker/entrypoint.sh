@@ -3,13 +3,17 @@ set -e
 
 echo "=== Initializing Meash Production Container ==="
 
-# 1. Ensure SQLite database file exists and is writable if used
-if [ "$DB_CONNECTION" = "sqlite" ] || [ -f "/var/www/html/database/database.sqlite" ]; then
+# 1. Ensure SQLite database file exists and is writable ONLY if explicitly configured for sqlite
+if [ "$DB_CONNECTION" = "sqlite" ]; then
     touch /var/www/html/database/database.sqlite
     chown -R www-data:www-data /var/www/html/database
     chmod -R 775 /var/www/html/database
     chmod 664 /var/www/html/database/database.sqlite
 fi
+
+# Test database connectivity
+echo "Checking database connection ($DB_CONNECTION)..."
+php artisan db:monitor || true
 
 # 2. Storage & bootstrap cache permissions
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache

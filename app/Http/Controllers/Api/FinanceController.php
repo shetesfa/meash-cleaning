@@ -51,7 +51,7 @@ class FinanceController extends Controller
     public function storeExpense(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'category' => 'required|string|in:transport,chemicals,materials,employee_payments,equipment_repair,fuel,marketing,rent,utilities,other',
+            'category' => 'required|string|in:transport,chemicals,materials,employee_payments,equipment_repair,fuel,marketing,rent,utilities,refund,other',
             'amount' => 'required|numeric|min:1',
             'reference_number' => 'nullable|string|max:64',
             'description' => 'required|string',
@@ -325,5 +325,103 @@ class FinanceController extends Controller
                 'monthly' => $monthlySeries,
             ],
         ]);
+    }
+
+    /**
+     * Record a formal refund for an order.
+     * Accessible only to Owner and Finance roles.
+     * Verifies that refund does not exceed total paid amount,
+     * logs expense as refund, adjusts order payment status, and logs audit.
+     */
+    public function recordRefund(Request $request, Order $order): JsonResponse
+    {
+        $user = $request->user();
+        if ($user && !$user->isOwner() && !$user->isFinance()) {
+            return response()->json([
+                'message' => 'Unauthorized. Only owner or finance may process refunds.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'reason' => 'required|string|max:500',
+            'payment_method' => 'nullable|string|in:cash,telebirr,cbe,cbe_birr,bank_transfer,check',
+            'reference_number' => 'nullable|string|max:64',
+            'refund_date' => 'nullable|date',
+        ]);
+
+        return DB::transaction(function () use ($order, $validated, $user) {
+            $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
+            $totalPaid = round((float)$lockedOrder->payments()->sum('amount'), 2);
+            $refundAmount = round((float)$validated['amount'], 2);
+
+            // Compute prior refunds already issued for this order
+            $priorRefunds = (float)Expense::where('category', 'refund')
+                ->where('description', 'like', "%#{$lockedOrder->order_number}%")
+                ->sum('amount');
+
+            $refundableBalance = max(0, round($totalPaid - $priorRefunds, 2));
+
+            if ($refundAmount > ($refundableBalance + 0.01)) {
+                return response()->json([
+                    'message' => 'የተጠየቀው የተመላሽ ገንዘብ መጠን ከተከፈለው ቀሪ ሂሳብ ይበልጣል (Refund amount exceeds remaining refundable balance).',
+                    'refundable_balance' => $refundableBalance,
+                ], 422);
+            }
+
+            $date = $validated['refund_date'] ?? Carbon::today();
+            $method = $validated['payment_method'] ?? 'cash';
+            $ref = $validated['reference_number'] ?? null;
+            $reason = $validated['reason'];
+
+            $expense = Expense::create([
+                'expense_number' => Expense::generateNextNumber(),
+                'category' => 'refund',
+                'amount' => $refundAmount,
+                'reference_number' => $ref,
+                'description' => "ተመላሽ ክፍያ (Refund) ለትዕዛዝ #{$lockedOrder->order_number}: {$reason} [Method: {$method}]",
+                'date' => $date,
+                'entered_by_user_id' => $user?->id,
+            ]);
+
+            $newNetPaid = max(0, round($totalPaid - ($priorRefunds + $refundAmount), 2));
+            $orderTotal = round((float)$lockedOrder->total, 2);
+
+            if ($newNetPaid >= ($orderTotal - 0.01) && $orderTotal > 0) {
+                $lockedOrder->payment_status = 'paid';
+            } elseif ($newNetPaid > 0) {
+                $lockedOrder->payment_status = 'partially_paid';
+            } else {
+                $lockedOrder->payment_status = 'unpaid';
+            }
+
+            $lockedOrder->notes = ($lockedOrder->notes ? $lockedOrder->notes . "\n" : '') .
+                "[ተመላሽ ክፍያ (Refund): " . number_format($refundAmount, 2) . " ETB በ{$user?->name} ተመዝግቧል :: ምክንያት: {$reason}]";
+            $lockedOrder->version += 1;
+            $lockedOrder->save();
+
+            AuditLog::logAction(
+                $user?->id,
+                'order_refund_recorded',
+                Order::class,
+                $lockedOrder->id,
+                null,
+                [
+                    'expense_id' => $expense->id,
+                    'refund_amount' => $refundAmount,
+                    'reason' => $reason,
+                    'net_paid_remaining' => $newNetPaid,
+                    'order_status' => $lockedOrder->order_status,
+                    'payment_status' => $lockedOrder->payment_status,
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'የተመላሽ ክፍያው በተሳካ ሁኔታ በወጪ መዝገብ ላይ ተመዝግቧል::',
+                'expense' => $expense,
+                'order' => $lockedOrder->fresh(['customer', 'payments']),
+            ], 201);
+        });
     }
 }

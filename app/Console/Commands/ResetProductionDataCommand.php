@@ -108,17 +108,28 @@ class ResetProductionDataCommand extends Command
                 // Ensure 'amha' exists and has proper owner credentials
                 $amha = User::where('username', 'amha')->first();
                 if (!$amha) {
-                    $ownerPass = env('MEASH_OWNER_PASSWORD', 'Meash@Cleaning2026!');
-                    $amha = User::create([
-                        'name' => 'Amha',
-                        'username' => 'amha',
-                        'email' => env('MEASH_OWNER_EMAIL', 'owner@meash.com'),
-                        'phone' => env('MEASH_OWNER_PHONE', '0970075509'),
-                        'role' => 'owner',
-                        'password' => Hash::make($ownerPass),
-                        'is_active' => true,
-                    ]);
-                    $this->info(" - Created Owner user 'amha' (Phone: 0970075509)");
+                    $ownerPass = env('MEASH_OWNER_PASSWORD');
+                    if (empty($ownerPass)) {
+                        if ($this->input->isInteractive()) {
+                            $ownerPass = $this->secret('Enter strong Owner password for amha (minimum 12 characters)');
+                        }
+                    }
+
+                    if (empty($ownerPass) || strlen($ownerPass) < 12) {
+                        $this->warn(" - Owner 'amha' could not be auto-created without a secure >= 12 character password.");
+                        $this->warn(" - Run 'php artisan meash:provision-owner --username=amha' to complete owner provisioning.");
+                    } else {
+                        $amha = User::create([
+                            'name' => 'Amha',
+                            'username' => 'amha',
+                            'email' => env('MEASH_OWNER_EMAIL', 'owner@meash.com'),
+                            'phone' => env('MEASH_OWNER_PHONE', '0970075509'),
+                            'role' => 'owner',
+                            'password' => Hash::make($ownerPass),
+                            'is_active' => true,
+                        ]);
+                        $this->info(" - Created Owner user 'amha' (Phone: 0970075509)");
+                    }
                 } else {
                     $amha->role = 'owner';
                     $amha->phone = '0970075509';

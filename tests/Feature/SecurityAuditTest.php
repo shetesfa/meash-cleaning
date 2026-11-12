@@ -24,6 +24,28 @@ class SecurityAuditTest extends TestCase
     }
 
     /**
+     * Test: Suspended/deactivated users cannot continue using existing tokens.
+     */
+    public function test_suspended_user_cannot_access_api_with_existing_token(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'reception',
+            'is_active' => false, // Suspended / deactivated
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/orders')
+            ->assertStatus(403)
+            ->assertJson([
+                'message' => 'Your account has been deactivated. Please contact the administrator.',
+            ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/auth/me')
+            ->assertStatus(403);
+    }
+
+    /**
      * Test 1: Unauthenticated requests to protected endpoints are rejected (401).
      */
     public function test_unauthenticated_requests_are_rejected(): void

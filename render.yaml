@@ -18,11 +18,22 @@ services:
       - key: APP_URL
         sync: false
       - key: DB_CONNECTION
-        value: sqlite
+        value: mysql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "4000"
         sync: false
       - key: DB_DATABASE
-        value: /var/www/html/database/database.sqlite
         sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: MYSQL_ATTR_SSL_CA
+        value: "/etc/ssl/certs/ca-certificates.crt"
+      - key: MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
+        value: "true"
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: TELEGRAM_BOT_USERNAME
@@ -33,11 +44,15 @@ services:
         generateValue: true
       - key: TELEGRAM_MINIAPP_URL
         value: "https://shetesfa.github.io/meash-mini-app/"
+      - key: MEASH_OWNER_NAME
+        value: "Amha"
+      - key: MEASH_OWNER_USERNAME
+        value: "amha"
       - key: MEASH_OWNER_EMAIL
         value: "owner@meash.com"
       - key: MEASH_OWNER_PHONE
         value: "0970075509"
       - key: MEASH_OWNER_PASSWORD
-        value: "Meash@Cleaning2026!"
+        sync: false
       - key: MEASH_SEED_DEMO_DATA
         value: "false"

@@ -21,6 +21,14 @@ class RoleMiddleware
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
+        // Suspended or deactivated user cannot continue using existing tokens
+        if (!$user->is_active) {
+            $user->tokens()->delete();
+            return response()->json([
+                'message' => 'Your account has been deactivated. Please contact the administrator.',
+            ], 403);
+        }
+
         // Owner/Admin always has access to everything
         if ($user->isOwner()) {
             return $next($request);

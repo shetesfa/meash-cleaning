@@ -247,4 +247,298 @@ class PaymentApprovalWorkflowTest extends TestCase
         ]);
         $resDirect->assertStatus(403);
     }
+
+    /**
+     * Scenario A: 5,000 ETB order, 2,000 ETB approved payment = partially_paid.
+     */
+    public function test_scenario_a_partial_payment_marks_order_as_partially_paid(): void
+    {
+        $order = Order::create([
+            'order_number' => 'ORD-SCENARIO-A',
+            'customer_id' => $this->customer->id,
+            'source' => 'phone',
+            'order_status' => 'cleaning',
+            'payment_status' => 'unpaid',
+            'subtotal' => 5000.00,
+            'total' => 5000.00,
+            'address' => 'ቦሌ',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+
+        $res = $this->actingAs($this->owner)->postJson("/api/orders/{$order->id}/approve-payment", [
+            'amount' => 2000.00,
+            'payment_method' => 'telebirr',
+            'reference_number' => 'TB-PARTIAL-2000',
+        ]);
+
+        $res->assertStatus(200);
+        $order->refresh();
+
+        $this->assertEquals('partially_paid', $order->payment_status);
+        $this->assertEquals(2000.00, (float)Payment::where('order_id', $order->id)->sum('amount'));
+    }
+
+    /**
+     * Scenario B: 5,000 ETB order, 2,000 ETB + 3,000 ETB approved payments = paid.
+     */
+    public function test_scenario_b_multiple_payments_reaching_total_marks_order_as_paid(): void
+    {
+        $order = Order::create([
+            'order_number' => 'ORD-SCENARIO-B',
+            'customer_id' => $this->customer->id,
+            'source' => 'phone',
+            'order_status' => 'cleaning',
+            'payment_status' => 'unpaid',
+            'subtotal' => 5000.00,
+            'total' => 5000.00,
+            'address' => 'ቦሌ',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+
+        // Payment 1: 2,000 ETB
+        $this->actingAs($this->owner)->postJson("/api/orders/{$order->id}/approve-payment", [
+            'amount' => 2000.00,
+            'payment_method' => 'telebirr',
+            'reference_number' => 'TB-PAY-1',
+        ])->assertStatus(200);
+
+        $order->refresh();
+        $this->assertEquals('partially_paid', $order->payment_status);
+
+        // Payment 2: 3,000 ETB
+        $this->actingAs($this->owner)->postJson("/api/orders/{$order->id}/approve-payment", [
+            'amount' => 3000.00,
+            'payment_method' => 'cbe',
+            'reference_number' => 'CBE-PAY-2',
+        ])->assertStatus(200);
+
+        $order->refresh();
+        $this->assertEquals('paid', $order->payment_status);
+        $this->assertEquals(5000.00, (float)Payment::where('order_id', $order->id)->sum('amount'));
+    }
+
+    /**
+     * Scenario C: Rejected payment = no revenue and does not erase prior approved payment.
+     */
+    public function test_scenario_c_rejected_payment_does_not_create_revenue(): void
+    {
+        $order = Order::create([
+            'order_number' => 'ORD-SCENARIO-C',
+            'customer_id' => $this->customer->id,
+            'source' => 'phone',
+            'order_status' => 'completed',
+            'payment_status' => 'unpaid',
+            'subtotal' => 4000.00,
+            'total' => 4000.00,
+            'address' => 'ቦሌ',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+
+        // Cleaner submits payment
+        $this->actingAs($this->cleanerUser)->postJson("/api/orders/{$order->id}/submit-payment", [
+            'amount' => 4000.00,
+            'payment_method' => 'cash',
+        ])->assertStatus(200);
+
+        // Owner rejects payment
+        $this->actingAs($this->owner)->postJson("/api/orders/{$order->id}/reject-payment", [
+            'reason' => 'ጥሬ ገንዘብ አልተረከብኩም',
+        ])->assertStatus(200);
+
+        $order->refresh();
+        $this->assertEquals('unpaid', $order->payment_status);
+        $this->assertEquals(0, Payment::where('order_id', $order->id)->count());
+
+        $report = $this->actingAs($this->owner)->getJson('/api/finance/profit-report?period=all_time');
+        $this->assertEquals(0.0, (float)$report->json('revenue'));
+    }
+
+    /**
+     * Scenario D: Pending payment = no revenue.
+     */
+    public function test_scenario_d_pending_payment_does_not_count_as_revenue(): void
+    {
+        $order = Order::create([
+            'order_number' => 'ORD-SCENARIO-D',
+            'customer_id' => $this->customer->id,
+            'source' => 'phone',
+            'order_status' => 'completed',
+            'payment_status' => 'unpaid',
+            'subtotal' => 3000.00,
+            'total' => 3000.00,
+            'address' => 'ቦሌ',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+
+        $this->actingAs($this->cleanerUser)->postJson("/api/orders/{$order->id}/submit-payment", [
+            'amount' => 3000.00,
+            'payment_method' => 'telebirr',
+            'payment_reference' => 'TB-PENDING-REF',
+        ])->assertStatus(200);
+
+        $order->refresh();
+        $this->assertEquals('pending_approval', $order->payment_status);
+
+        $report = $this->actingAs($this->owner)->getJson('/api/finance/profit-report?period=all_time');
+        $this->assertEquals(0.0, (float)$report->json('revenue'));
+    }
+
+    /**
+     * Scenario E: Duplicate approval = no duplicate financial record.
+     */
+    public function test_scenario_e_duplicate_approval_does_not_create_duplicate_payment(): void
+    {
+        $order = Order::create([
+            'order_number' => 'ORD-SCENARIO-E',
+            'customer_id' => $this->customer->id,
+            'source' => 'phone',
+            'order_status' => 'completed',
+            'payment_status' => 'pending_approval',
+            'subtotal' => 2500.00,
+            'total' => 2500.00,
+            'address' => 'ቦሌ',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+
+        // First approval
+        $res1 = $this->actingAs($this->owner)->postJson("/api/orders/{$order->id}/approve-payment", [
+            'amount' => 2500.00,
+            'payment_method' => 'telebirr',
+            'reference_number' => 'TB-UNIQUE-001',
+        ]);
+        $res1->assertStatus(200);
+
+        $this->assertEquals(1, Payment::where('order_id', $order->id)->count());
+
+        // Repeated duplicate approval call with same reference
+        $res2 = $this->actingAs($this->owner)->postJson("/api/orders/{$order->id}/approve-payment", [
+            'amount' => 2500.00,
+            'payment_method' => 'telebirr',
+            'reference_number' => 'TB-UNIQUE-001',
+        ]);
+        $res2->assertStatus(200);
+
+        // Strictly 1 payment record exists, not 2
+        $this->assertEquals(1, Payment::where('order_id', $order->id)->count());
+        $this->assertEquals(2500.00, (float)Payment::where('order_id', $order->id)->sum('amount'));
+    }
+
+    /**
+     * Scenario F: Consecutive approvals = correct final balance.
+     */
+    public function test_scenario_f_consecutive_approvals_calculate_correct_final_balance(): void
+    {
+        $order = Order::create([
+            'order_number' => 'ORD-SCENARIO-F',
+            'customer_id' => $this->customer->id,
+            'source' => 'phone',
+            'order_status' => 'cleaning',
+            'payment_status' => 'unpaid',
+            'subtotal' => 6000.00,
+            'total' => 6000.00,
+            'address' => 'ቦሌ',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+
+        $this->actingAs($this->owner)->postJson("/api/orders/{$order->id}/approve-payment", [
+            'amount' => 2000.00,
+            'payment_method' => 'telebirr',
+        ])->assertStatus(200);
+
+        $this->actingAs($this->owner)->postJson("/api/orders/{$order->id}/approve-payment", [
+            'amount' => 2000.00,
+            'payment_method' => 'cbe',
+        ])->assertStatus(200);
+
+        $this->actingAs($this->owner)->postJson("/api/orders/{$order->id}/approve-payment", [
+            'amount' => 2000.00,
+            'payment_method' => 'cash',
+        ])->assertStatus(200);
+
+        $order->refresh();
+        $this->assertEquals('paid', $order->payment_status);
+        $this->assertEquals(6000.00, (float)Payment::where('order_id', $order->id)->sum('amount'));
+        $this->assertEquals(3, Payment::where('order_id', $order->id)->count());
+    }
+
+    /**
+     * Scenario G: Unauthorized user cannot approve payments (403).
+     */
+    public function test_scenario_g_sales_and_cleaners_cannot_approve_payments(): void
+    {
+        $salesUser = User::factory()->create(['role' => 'sales']);
+        $order = Order::create([
+            'order_number' => 'ORD-SCENARIO-G',
+            'customer_id' => $this->customer->id,
+            'source' => 'phone',
+            'order_status' => 'completed',
+            'payment_status' => 'pending_approval',
+            'subtotal' => 1000.00,
+            'total' => 1000.00,
+            'address' => 'ቦሌ',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+
+        // Sales receives 403
+        $this->actingAs($salesUser)->postJson("/api/orders/{$order->id}/approve-payment", [
+            'amount' => 1000.00,
+        ])->assertStatus(403);
+
+        // Cleaner receives 403
+        $this->actingAs($this->cleanerUser)->postJson("/api/orders/{$order->id}/approve-payment", [
+            'amount' => 1000.00,
+        ])->assertStatus(403);
+    }
+
+    /**
+     * Refund Scenario: Order refund records expense, adjusts net paid, and adjusts payment status.
+     */
+    public function test_order_refund_records_expense_and_adjusts_status(): void
+    {
+        $order = Order::create([
+            'order_number' => 'ORD-REFUND-001',
+            'customer_id' => $this->customer->id,
+            'source' => 'phone',
+            'order_status' => 'completed',
+            'payment_status' => 'paid',
+            'subtotal' => 4000.00,
+            'total' => 4000.00,
+            'address' => 'ቦሌ',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+
+        Payment::create([
+            'payment_number' => 'PAY-REFUND-001',
+            'order_id' => $order->id,
+            'customer_id' => $this->customer->id,
+            'amount' => 4000.00,
+            'payment_method' => 'telebirr',
+            'payment_date' => now(),
+            'recorded_by_user_id' => $this->owner->id,
+        ]);
+
+        // Process full refund
+        $response = $this->actingAs($this->owner)->postJson("/api/orders/{$order->id}/refund", [
+            'amount' => 4000.00,
+            'reason' => 'ደንበኛው አገልግሎቱ ስላልተመቸው ተመላሽ ተደርጓል',
+            'payment_method' => 'telebirr',
+        ]);
+
+        $response->assertStatus(201);
+        $order->refresh();
+
+        $this->assertEquals('unpaid', $order->payment_status);
+        $this->assertDatabaseHas('expenses', [
+            'category' => 'refund',
+            'amount' => 4000.00,
+        ]);
+    }
 }

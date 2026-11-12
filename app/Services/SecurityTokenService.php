@@ -4,16 +4,46 @@ namespace App\Services;
 
 use App\Models\Order;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class SecurityTokenService
 {
     /**
-     * Generate an expiring signed tracking token for an order.
+     * Get the authoritative application signing key.
+     * Fails securely in production if APP_KEY is absent.
+     */
+    private static function getSigningKey(): string
+    {
+        $key = config('app.key');
+
+        if (empty($key)) {
+            if (app()->environment('production')) {
+                throw new \RuntimeException('SecurityTokenService: APP_KEY is missing. Application cannot sign or verify tokens securely in production.');
+            }
+            // Non-production test fallback if key has not been generated
+            return 'meash-local-development-fallback-key-32-chars!!';
+        }
+
+        // Support Laravel's base64-encoded application keys
+        if (str_starts_with($key, 'base64:')) {
+            $decoded = base64_decode(substr($key, 7), true);
+            if ($decoded !== false) {
+                return $decoded;
+            }
+        }
+
+        return (string)$key;
+    }
+
+    /**
+     * Generate an expiring signed tracking token for an order with replay-safe jti.
      */
     public static function generateTrackingToken(Order $order, int $validDays = 14): string
     {
         $payload = [
             'type' => 'tracking',
+            'jti' => Str::random(24),
             'order_id' => $order->id,
             'order_number' => $order->order_number,
             'exp' => Carbon::now()->addDays($validDays)->timestamp,
@@ -23,7 +53,7 @@ class SecurityTokenService
     }
 
     /**
-     * Verify a tracking token. Returns payload array if valid and not expired, null otherwise.
+     * Verify a tracking token. Returns payload array if valid, unrevoked, and not expired; null otherwise.
      */
     public static function verifyTrackingToken(?string $token): ?array
     {
@@ -36,21 +66,28 @@ class SecurityTokenService
             return null;
         }
 
+        // Check expiration
         if (($payload['exp'] ?? 0) < Carbon::now()->timestamp) {
             return null; // Expired
+        }
+
+        // Check revocation
+        if (!empty($payload['jti']) && Cache::has("revoked_token_{$payload['jti']}")) {
+            return null; // Revoked
         }
 
         return $payload;
     }
 
     /**
-     * Generate an expiring signed action token (e.g., reschedule) for an order.
+     * Generate an expiring signed action token (e.g., reschedule) for an order with replay-safe jti.
      */
     public static function generateActionToken(Order $order, string $action = 'reschedule', int $validDays = 7): string
     {
         $payload = [
             'type' => 'action',
             'action' => $action,
+            'jti' => Str::random(24),
             'order_id' => $order->id,
             'order_number' => $order->order_number,
             'exp' => Carbon::now()->addDays($validDays)->timestamp,
@@ -60,7 +97,7 @@ class SecurityTokenService
     }
 
     /**
-     * Verify an action token for an expected action. Returns order_id if valid, null otherwise.
+     * Verify an action token for an expected action. Returns order_id if valid and unrevoked, null otherwise.
      */
     public static function verifyActionToken(?string $token, string $expectedAction = 'reschedule'): ?int
     {
@@ -81,7 +118,32 @@ class SecurityTokenService
             return null; // Expired
         }
 
+        if (!empty($payload['jti']) && Cache::has("revoked_token_{$payload['jti']}")) {
+            return null; // Revoked
+        }
+
         return (int)($payload['order_id'] ?? 0);
+    }
+
+    /**
+     * Revoke a token immediately so it cannot be replayed.
+     */
+    public static function revokeToken(?string $token): bool
+    {
+        if (empty($token)) {
+            return false;
+        }
+
+        $payload = self::verifyPayload($token);
+        if (!$payload || empty($payload['jti'])) {
+            return false;
+        }
+
+        $exp = (int)($payload['exp'] ?? Carbon::now()->addDays(7)->timestamp);
+        $ttl = max(60, $exp - Carbon::now()->timestamp);
+
+        Cache::put("revoked_token_{$payload['jti']}", true, $ttl);
+        return true;
     }
 
     /**
@@ -102,20 +164,21 @@ class SecurityTokenService
     }
 
     /**
-     * Sign an arbitrary payload with HMAC-SHA256 using APP_KEY.
+     * Sign an arbitrary payload with HMAC-SHA256 using the application signing key.
      */
     private static function signPayload(array $payload): string
     {
         $json = json_encode($payload);
         $encodedPayload = rtrim(strtr(base64_encode($json), '+/', '-_'), '=');
-        $signature = hash_hmac('sha256', $encodedPayload, config('app.key') ?: 'meash-default-secure-salt');
+        $key = self::getSigningKey();
+        $signature = hash_hmac('sha256', $encodedPayload, $key);
         $encodedSignature = rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');
 
         return $encodedPayload . '.' . $encodedSignature;
     }
 
     /**
-     * Verify and decode a signed payload.
+     * Verify and decode a signed payload using constant-time signature comparison.
      */
     private static function verifyPayload(string $token): ?array
     {
@@ -126,7 +189,8 @@ class SecurityTokenService
 
         [$encodedPayload, $encodedSignature] = $parts;
 
-        $expectedSig = hash_hmac('sha256', $encodedPayload, config('app.key') ?: 'meash-default-secure-salt');
+        $key = self::getSigningKey();
+        $expectedSig = hash_hmac('sha256', $encodedPayload, $key);
         $expectedEncodedSig = rtrim(strtr(base64_encode($expectedSig), '+/', '-_'), '=');
 
         if (!hash_equals($expectedEncodedSig, $encodedSignature)) {
@@ -142,3 +206,4 @@ class SecurityTokenService
         return is_array($payload) ? $payload : null;
     }
 }
+

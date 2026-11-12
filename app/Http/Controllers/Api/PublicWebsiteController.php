@@ -635,6 +635,11 @@ class PublicWebsiteController extends Controller
             ]
         );
 
+        // Replay protection: Revoke the action token once the reschedule has completed
+        if (!empty($token)) {
+            SecurityTokenService::revokeToken($token);
+        }
+
         \App\Models\Notification::create([
             'title' => "ደንበኛ ቀጠሮ አስተላልፏል (#{$order->order_number})",
             'body' => "ደንበኛ {$order->customer?->full_name} ቀጠሮውን ወደ {$newDate} አስተላልፏል::",

@@ -80,6 +80,14 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $user = $request->user();
+
+        if (!$user->is_active) {
+            $user->tokens()->delete();
+            return response()->json([
+                'message' => 'Your account has been deactivated. Please contact the administrator.',
+            ], 403);
+        }
+
         return response()->json([
             'user' => [
                 'id' => $user->id,

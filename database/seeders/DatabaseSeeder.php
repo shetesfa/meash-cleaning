@@ -47,17 +47,23 @@ class DatabaseSeeder extends Seeder
 
             // Ensure the initial production Owner account exists
             if (User::where('role', 'owner')->count() === 0) {
-                $ownerPass = env('MEASH_OWNER_PASSWORD', 'Meash@Cleaning2026!');
-                User::create([
-                    'name' => 'Amha',
-                    'username' => 'amha',
-                    'email' => env('MEASH_OWNER_EMAIL', 'owner@meash.com'),
-                    'phone' => env('MEASH_OWNER_PHONE', '0970075509'),
-                    'role' => 'owner',
-                    'password' => Hash::make($ownerPass),
-                    'is_active' => true,
-                ]);
-                $this->command->info("Initial Owner account provisioned for 'amha'.");
+                $ownerPass = env('MEASH_OWNER_PASSWORD');
+                if (empty($ownerPass)) {
+                    $this->command->warn("MEASH_OWNER_PASSWORD environment variable is not set. Default password usage is strictly prohibited in production. Use 'php artisan meash:provision-owner' to provision securely.");
+                } elseif (strlen($ownerPass) < 12) {
+                    $this->command->error("MEASH_OWNER_PASSWORD must be at least 12 characters. Skipping automated Owner provisioning.");
+                } else {
+                    User::create([
+                        'name' => 'Amha',
+                        'username' => 'amha',
+                        'email' => env('MEASH_OWNER_EMAIL', 'owner@meash.com'),
+                        'phone' => env('MEASH_OWNER_PHONE', '0970075509'),
+                        'role' => 'owner',
+                        'password' => Hash::make($ownerPass),
+                        'is_active' => true,
+                    ]);
+                    $this->command->info("Initial Owner account provisioned for 'amha'.");
+                }
             }
 
             $this->command->info('Production DatabaseSeeder completed.');

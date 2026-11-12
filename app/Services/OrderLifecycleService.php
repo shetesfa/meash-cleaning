@@ -20,6 +20,7 @@ class OrderLifecycleService
     /**
      * Single shared transition method for approving and verifying payments.
      * Unified across OrderController@approvePayment, OrderController@verifyPayment, and FinanceController@verifyPayment.
+     * Properly accounts for partial payments, multiple payments, duplicate approval prevention, and accurate revenue tracking.
      */
     public static function approveAndVerifyPayment(Order $order, array $data, ?User $user = null, ?Payment $payment = null): array
     {
@@ -27,17 +28,64 @@ class OrderLifecycleService
             $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
             $lockedOrder->loadMissing('customer');
 
-            $alreadyPaid = (float)$lockedOrder->payments()
-                ->when($payment, fn($q) => $q->where('id', '!=', $payment->id))
-                ->sum('amount');
-            $remaining = max(0, (float)$lockedOrder->total - $alreadyPaid);
+            $orderTotal = round((float)$lockedOrder->total, 2);
 
-            $amount = !empty($data['amount']) ? (float)$data['amount'] : ($remaining > 0 ? $remaining : (float)$lockedOrder->total);
+            $alreadyPaid = round((float)$lockedOrder->payments()
+                ->when($payment, fn($q) => $q->where('id', '!=', $payment->id))
+                ->sum('amount'), 2);
+
+            $remaining = max(0, round($orderTotal - $alreadyPaid, 2));
+
+            // DUPLICATE APPROVAL PROTECTION:
+            // If no specific payment record is being edited, and the order is already fully paid with 0 remaining balance:
+            // Prevent accidental duplicate payment creation on repeated clicks or concurrent requests.
+            if (!$payment && $lockedOrder->payment_status === 'paid' && $remaining <= 0.001 && $orderTotal > 0) {
+                $lastPayment = $lockedOrder->payments()->latest('id')->first();
+                return [
+                    'success' => true,
+                    'message' => 'ይህ ትዕዛዝ ቀደም ሲል ሙሉ በሙሉ ተከፍሎ ጸድቋል (Order already fully paid and approved).',
+                    'order' => $lockedOrder->fresh(['customer', 'assignedTeam', 'items', 'payments']),
+                    'payment' => $lastPayment,
+                ];
+            }
+
+            $ref = $data['reference_number'] ?? $data['payment_reference'] ?? $lockedOrder->payment_reference ?? null;
+
+            // IDEMPOTENCY BY PAYMENT REFERENCE:
+            // If reference number matches an existing payment record for this order, reuse and verify it
+            if (!$payment && !empty($ref)) {
+                $existingPaymentWithRef = $lockedOrder->payments()->where('reference_number', $ref)->first();
+                if ($existingPaymentWithRef) {
+                    $payment = $existingPaymentWithRef;
+                    // Recalculate alreadyPaid excluding this matching payment
+                    $alreadyPaid = round((float)$lockedOrder->payments()
+                        ->where('id', '!=', $payment->id)
+                        ->sum('amount'), 2);
+                    $remaining = max(0, round($orderTotal - $alreadyPaid, 2));
+                }
+            }
+
+            // Determine amount being approved/recorded
+            if (!empty($data['amount'])) {
+                $amount = round((float)$data['amount'], 2);
+            } elseif ($payment) {
+                $amount = round((float)$payment->amount, 2);
+            } elseif ($remaining > 0) {
+                $amount = $remaining;
+            } else {
+                $amount = $orderTotal;
+            }
+
+            // Documented business rule for overpayments:
+            // If amount exceeds outstanding balance and order has an established total, accept payment but record notes
+            $isOverpayment = ($orderTotal > 0 && ($alreadyPaid + $amount) > ($orderTotal + 0.01));
+
             $method = $data['payment_method'] ?? $lockedOrder->payment_method ?? 'cash';
             if ($method === 'cbe_birr') {
                 $method = 'cbe';
             }
-            $ref = $data['reference_number'] ?? $data['payment_reference'] ?? $lockedOrder->payment_reference ?? null;
+
+            $notePrefix = $isOverpayment ? '[ከቀሪ ሂሳብ በላይ የተከፈለ / Overpayment] ' : '';
 
             if ($payment) {
                 $payment->update([
@@ -45,7 +93,7 @@ class OrderLifecycleService
                     'payment_method' => $method,
                     'reference_number' => $ref,
                     'payment_date' => $data['payment_date'] ?? $payment->payment_date ?? Carbon::today(),
-                    'notes' => $data['notes'] ?? $payment->notes,
+                    'notes' => $notePrefix . ($data['notes'] ?? $payment->notes),
                 ]);
             } else {
                 $payment = Payment::create([
@@ -57,13 +105,24 @@ class OrderLifecycleService
                     'reference_number' => $ref,
                     'payment_date' => $data['payment_date'] ?? Carbon::today(),
                     'recorded_by_user_id' => $user?->id,
-                    'notes' => $data['notes'] ?? ("በ" . ($user?->name ?? 'ሲስተም') . " የጸደቀ ክፍያ"),
+                    'notes' => $notePrefix . ($data['notes'] ?? ("በ" . ($user?->name ?? 'ሲስተም') . " የጸደቀ ክፍያ")),
                 ]);
             }
 
             $old = $lockedOrder->toArray();
 
-            $lockedOrder->payment_status = 'paid';
+            // AUTHORITATIVE ACCOUNTING: Compute actual sum of approved payments
+            $newTotalPaid = round((float)$lockedOrder->payments()->sum('amount'), 2);
+
+            if ($orderTotal > 0 && $newTotalPaid >= ($orderTotal - 0.01)) {
+                $newStatus = 'paid';
+            } elseif ($newTotalPaid > 0) {
+                $newStatus = 'partially_paid';
+            } else {
+                $newStatus = 'unpaid';
+            }
+
+            $lockedOrder->payment_status = $newStatus;
             $lockedOrder->payment_method = $method;
             $lockedOrder->payment_reference = $ref;
             $lockedOrder->payment_approved_at = now();
@@ -80,21 +139,31 @@ class OrderLifecycleService
                 [
                     'payment_id' => $payment->id,
                     'payment_number' => $payment->payment_number,
-                    'payment_status' => 'paid',
+                    'payment_status' => $newStatus,
                     'payment_method' => $method,
                     'amount' => $amount,
+                    'total_paid' => $newTotalPaid,
+                    'order_total' => $orderTotal,
+                    'remaining_balance' => max(0, round($orderTotal - $newTotalPaid, 2)),
                     'approved_by' => $user?->name,
                 ]
             );
 
-            // Execute automatic post-payment review lifecycle transition
-            self::checkCompletionAndTriggerReview($lockedOrder);
+            // Execute automatic post-payment review lifecycle transition ONLY if fully paid and completed
+            if ($newStatus === 'paid') {
+                self::checkCompletionAndTriggerReview($lockedOrder);
+            }
 
             return [
                 'success' => true,
-                'message' => 'ክፍያው በተሳካ ሁኔታ ጸድቋል (Payment approved and recorded).',
+                'message' => $newStatus === 'paid'
+                    ? 'ክፍያው ሙሉ በሙሉ በተሳካ ሁኔታ ጸድቋል (Payment fully approved and verified).'
+                    : 'ከፊል ክፍያው በተሳካ ሁኔታ ጸድቋል (Partial payment approved and verified).',
                 'order' => $lockedOrder->fresh(['customer', 'assignedTeam', 'items', 'payments']),
                 'payment' => $payment,
+                'total_paid' => $newTotalPaid,
+                'remaining_balance' => max(0, round($orderTotal - $newTotalPaid, 2)),
+                'payment_status' => $newStatus,
             ];
         });
     }
