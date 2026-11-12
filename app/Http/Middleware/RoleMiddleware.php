@@ -22,7 +22,7 @@ class RoleMiddleware
         }
 
         // Suspended or deactivated user cannot continue using existing tokens
-        if (!$user->is_active) {
+        if (isset($user->is_active) && $user->is_active === false) {
             $user->tokens()->delete();
             return response()->json([
                 'message' => 'Your account has been deactivated. Please contact the administrator.',

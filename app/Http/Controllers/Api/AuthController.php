@@ -52,7 +52,7 @@ class AuthController extends Controller
         // Clear rate limiter upon successful authentication
         RateLimiter::clear($throttleKey);
 
-        if (! $user->is_active) {
+        if (isset($user->is_active) && $user->is_active === false) {
             return response()->json([
                 'message' => 'Your account has been deactivated. Please contact the administrator.',
             ], 403);
@@ -81,7 +81,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->is_active) {
+        if (isset($user->is_active) && $user->is_active === false) {
             $user->tokens()->delete();
             return response()->json([
                 'message' => 'Your account has been deactivated. Please contact the administrator.',

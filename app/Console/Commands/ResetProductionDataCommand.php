@@ -43,7 +43,19 @@ class ResetProductionDataCommand extends Command
 
         $isForce = (bool) $this->option('force');
 
-        if (!$isForce && !$this->confirm('Are you ABSOLUTELY sure you want to clean all data and make system ready for work?')) {
+        // Production safeguard: strictly prohibit automated or accidental production database wipes
+        if (app()->environment('production')) {
+            $this->error('CRITICAL PRODUCTION SAFEGUARD: meash:clean-and-ready is a destructive maintenance command.');
+            if (!$this->input->isInteractive()) {
+                $this->error('Automated or headless execution of meash:clean-and-ready in production is strictly blocked.');
+                return 1;
+            }
+
+            if (!$this->confirm('WARNING: THIS IS PRODUCTION! Are you ABSOLUTELY certain you want to purge all customer orders and transaction history?', false)) {
+                $this->info('Operation cancelled by user.');
+                return 0;
+            }
+        } elseif (!$isForce && !$this->confirm('Are you ABSOLUTELY sure you want to clean all data and make system ready for work?')) {
             $this->info('Operation cancelled by user.');
             return 0;
         }
