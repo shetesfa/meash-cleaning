@@ -20,8 +20,12 @@
   }
   $phone1 = $websiteSettings['contact_phone_1'] ?? '0970075509';
   $phone2 = $websiteSettings['contact_phone_2'] ?? '0998142190';
+  // If the second hotline is the same number as the first (the live settings
+  // currently hold the same value in both fields), show it only once instead
+  // of printing the same number twice in a row.
+  $phone2 = ($phone2 && $phone2 !== $phone1) ? $phone2 : null;
   $companyName = $websiteSettings['company_name'] ?? 'MEASH CLEANING SOLUTION';
-  $companyNameAm = $websiteSettings['company_name_am'] ?? 'ሜሽ የጽዳት አገልግሎት';
+  $companyNameAm = $websiteSettings['company_name_am'] ?? 'ሜአሽ የጽዳት አገልግሎት';
   // STRICTLY IN ENGLISH EVERYWHERE — DO NOT TRANSLATE TO AMHARIC
   $sloganEn = 'Your Environment, Our Responsibility.';
   $sloganAm = 'Your Environment, Our Responsibility.';
@@ -41,24 +45,10 @@
   $facebookUrl = $websiteSettings['facebook'] ?? 'https://facebook.com/meashcleaningsolution';
   $socialHandle = $websiteSettings['social_handle'] ?? '@meashcleaningsolution';
 @endphp
-<html lang="am" data-lang="am" class="dark">
+<html lang="am" data-lang="am" class="scroll-smooth dark">
 <head>
 <script>
   (function() {
-    // 1. Disable browser scroll restoration so page always opens at the top header on mobile & desktop
-    try {
-      if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-      }
-      if (!window.location.hash || window.location.hash === '#top' || window.location.hash === '#qr-code' || window.location.hash === '#book') {
-        if (window.location.hash === '#qr-code' || window.location.hash === '#book') {
-          history.replaceState(null, '', window.location.pathname + window.location.search);
-        }
-        window.scrollTo(0, 0);
-      }
-    } catch (e) {}
-
-    // 2. Initialize theme
     try {
       var saved = localStorage.getItem('meash_theme');
       if (saved === 'light') {
@@ -77,8 +67,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>{{ $companyName }} | Best Commercial & Deep Cleaning in Addis Ababa | {{ $companyNameAm }}</title>
-<meta name="description" content="{{ $companyName }} ({{ $companyNameAm }}) — {{ $subtitleEn }}. {{ $sloganEn }} Call {{ $phone1 }} / {{ $phone2 }}">
-<meta name="keywords" content="Cleaning Services in Addis Ababa, Commercial Cleaning Addis Ababa, Hotel Cleaning Addis Ababa, Restaurant Sanitation, Office Cleaning Addis Ababa, Deep Cleaning Ethiopia, Meash Cleaning Solution, ሜሽ የጽዳት አገልግሎት, የቢሮ ጽዳት, የሆቴል ጽዳት, የወለል እጥበት, የሶፋ እጥበት">
+<meta name="description" content="{{ $companyName }} ({{ $companyNameAm }}) — {{ $subtitleEn }}. {{ $sloganEn }} Call {{ $phone1 }}{{ $phone2 ? ' / ' . $phone2 : '' }}">
+<meta name="keywords" content="Cleaning Services in Addis Ababa, Commercial Cleaning Addis Ababa, Hotel Cleaning Addis Ababa, Restaurant Sanitation, Office Cleaning Addis Ababa, Deep Cleaning Ethiopia, Meash Cleaning Solution, ሜአሽ የጽዳት አገልግሎት, የቢሮ ጽዳት, የሆቴል ጽዳት, የወለል እጥበት, የሶፋ እጥበት">
 <meta name="author" content="{{ $companyName }}">
 <meta name="theme-color" content="#0B1220">
 <link rel="manifest" href="/manifest.json">
@@ -89,7 +79,7 @@
 
 <!-- Open Graph & Social SEO -->
 <meta property="og:title" content="{{ $companyName }} | {{ $sloganEn }}">
-<meta property="og:description" content="{{ $subtitleEn }} — {{ $sloganEn }} Call {{ $phone1 }} / {{ $phone2 }}.">
+<meta property="og:description" content="{{ $subtitleEn }} — {{ $sloganEn }} Call {{ $phone1 }}{{ $phone2 ? ' / ' . $phone2 : '' }}.">
 <meta property="og:image" content="/logo.jpg">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url('/') }}">
@@ -185,12 +175,10 @@
   *, *::before, *::after { box-sizing: border-box; }
 
   html {
+    scroll-behavior: smooth;
     scroll-padding-top: 5rem;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-  }
-  html.scroll-smooth {
-    scroll-behavior: smooth;
   }
 
   body {
@@ -247,84 +235,13 @@
 
   /* ---------- Decorative surfaces ---------- */
   .duo {
-    background-color: #08111F !important;
-    background-image:
-      radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
-      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
-      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
-    background-size: 14px 14px, auto, auto !important;
-    color: #FFFFFF !important;
+    background:
+      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .22) 0%, transparent 55%),
+      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%);
   }
   .grain {
     background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px);
     background-size: 14px 14px;
-  }
-  .duo.grain {
-    background-color: #08111F !important;
-    background-image:
-      radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
-      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
-      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
-    background-size: 14px 14px, auto, auto !important;
-    color: #FFFFFF !important;
-  }
-  .duo h3,
-  .duo p:not(.text-navy *):not(.bg-white *),
-  .duo span:not(.text-navy *):not(.bg-white *) {
-    color: #FFFFFF !important;
-  }
-  .duo .text-white\/80 {
-    color: rgba(255, 255, 255, .90) !important;
-  }
-
-  /* Missing gradient utilities fallback */
-  .from-teal {
-    --tw-gradient-from: #0E7C7B var(--tw-gradient-from-position);
-    --tw-gradient-to: rgba(14, 124, 123, 0) var(--tw-gradient-to-position);
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-  }
-  .to-teal-dark {
-    --tw-gradient-to: #0A5F5E var(--tw-gradient-to-position);
-  }
-  .hover\:from-teal-dark:hover {
-    --tw-gradient-from: #0A5F5E var(--tw-gradient-from-position);
-    --tw-gradient-to: rgba(10, 95, 94, 0) var(--tw-gradient-to-position);
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-  }
-  .hover\:to-teal:hover {
-    --tw-gradient-to: #0E7C7B var(--tw-gradient-to-position);
-  }
-  .bg-gradient-to-r.from-teal.to-teal-dark,
-  [class*="from-teal"][class*="to-teal-dark"] {
-    background-color: #0E7C7B !important;
-    background-image: linear-gradient(to right, #0E7C7B, #0A5F5E) !important;
-    color: #FFFFFF !important;
-  }
-  .bg-gradient-to-r.from-teal.to-teal-dark *,
-  [class*="from-teal"][class*="to-teal-dark"] * {
-    color: #FFFFFF !important;
-  }
-
-  /* Header CTA Booking Button — Default & Dark Mode */
-  header a[href="#book"],
-  #mobile-nav-drawer a[href="#book"] {
-    background: linear-gradient(135deg, #0E7C7B 0%, #0A5F5E 100%) !important;
-    background-color: #0E7C7B !important;
-    color: #FFFFFF !important;
-    border: 1px solid rgba(45, 212, 191, .35) !important;
-    box-shadow: 0 4px 14px -2px rgba(14, 124, 123, .45) !important;
-  }
-  header a[href="#book"]:hover,
-  #mobile-nav-drawer a[href="#book"]:hover {
-    background: linear-gradient(135deg, #0A5F5E 0%, #08111F 100%) !important;
-    background-color: #0A5F5E !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 6px 18px -2px rgba(10, 95, 94, .55) !important;
-  }
-  header a[href="#book"] *,
-  #mobile-nav-drawer a[href="#book"] * {
-    color: #FFFFFF !important;
-    font-weight: 800 !important;
   }
 
   /* ---------- Smooth interactions (all pages elements) ---------- */
@@ -378,6 +295,31 @@
     color: var(--text) !important;
   }
   html.dark .bg-fog, html:not(.light) .bg-fog { background-color: var(--bg-soft) !important; }
+
+  /* Primary navy buttons (wizard Next / Continue, Track) stay clearly visible
+     in dark mode: navy #0B1220 is almost the same as the dark page
+     background, so the buttons looked disabled. Brand teal instead.
+     Light mode is untouched. */
+  html.dark .btn-primary-dark, html:not(.light) .btn-primary-dark {
+    background-color: var(--brand) !important;
+    color: #FFFFFF !important;
+  }
+  html.dark .btn-primary-dark:hover, html:not(.light) .btn-primary-dark:hover {
+    background-color: var(--brand-bright) !important;
+    color: #0B1220 !important;
+  }
+
+  /* Body copy is never clamped: the hero intro, About and Why-Meash
+     paragraphs always render in full (no line-clamp / truncation anywhere). */
+  #about p, #advantage p, main#top p {
+    display: block !important;
+    -webkit-line-clamp: unset !important;
+    line-clamp: unset !important;
+    max-height: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+  }
   html.dark .bg-slate-50, html.dark .bg-gray-50,
   html:not(.light) .bg-slate-50, html:not(.light) .bg-gray-50 { background-color: var(--surface) !important; }
   html.dark .bg-slate-100, html.dark .bg-gray-100,
@@ -464,416 +406,43 @@
   /* ================= LIGHT MODE (when toggled) ================= */
   html.light {
     color-scheme: light;
-
-    /* Complete Light Mode Design Tokens */
-    --bg: #F8FAFC;
-    --bg-soft: #F1F5F9;
-    --surface: #FFFFFF;
-    --surface-2: #F8FAFC;
-    --line: #E2E8F0;
-    --line-soft: #EDF2F7;
-
-    --text: #0F172A;
-    --text-strong: #020617;
-    --text-body: #1E293B;
-    --text-muted: #334155;
-    --text-faint: #64748B;
-
-    --brand: #0E7C7B;
-    --brand-bright: #0A5F5E;
-
-    --shadow-card: 0 1px 3px rgba(15, 23, 42, .06), 0 10px 24px -4px rgba(15, 23, 42, .08);
-    --shadow-lift: 0 4px 6px -1px rgba(15, 23, 42, .08), 0 20px 25px -5px rgba(15, 23, 42, .12);
-    --ring: 0 0 0 3px rgba(14, 124, 123, .22);
-
-    background-color: var(--bg);
+    background-color: #FFFFFF;
   }
-
-  html.light body {
-    background-color: var(--bg) !important;
-    color: var(--text-body) !important;
-  }
-
-  /* Header: frosted glass in light mode */
+  html.light body { background: #FFFFFF !important; color: #0B1220 !important; }
   html.light header {
-    background-color: rgba(255, 255, 255, .95) !important;
+    background: rgba(255, 255, 255, .78) !important;
     -webkit-backdrop-filter: saturate(180%) blur(16px);
     backdrop-filter: saturate(180%) blur(16px);
     border-color: #E2E8F0 !important;
-    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, .05);
   }
-  html.light nav {
-    color: #0F172A !important;
-  }
-  html.light nav a {
-    color: #0F172A !important;
-    font-weight: 700 !important;
-  }
-  html.light nav a:hover {
-    color: #0E7C7B !important;
-    background-color: #F1F5F9 !important;
-  }
-  html.light .bg-navy-800 {
-    background-color: #08111F !important;
-    color: #E2E8F0 !important;
-  }
-  html.light .bg-navy-800 a {
-    color: #FFFFFF !important;
-  }
-  html.light .bg-navy-800 a:hover {
-    color: #2DD4BF !important;
-  }
-
-  /* ================= LIGHT MODE HEADER CTA [ቀጠሮ ያዙ / BOOK NOW] ================= */
-  /* Ultra high-contrast luxury Navy/Teal button with crisp pure white typography */
-  html.light header a[href="#book"],
-  html.light #mobile-nav-drawer a[href="#book"] {
-    background: linear-gradient(135deg, #0B1220 0%, #0A5F5E 100%) !important;
-    background-color: #0B1220 !important;
-    color: #FFFFFF !important;
-    border: 1px solid rgba(14, 124, 123, .45) !important;
-    box-shadow: 0 4px 14px -1px rgba(11, 18, 32, .25), 0 2px 6px -1px rgba(14, 124, 123, .35) !important;
-  }
-  html.light header a[href="#book"]:hover,
-  html.light #mobile-nav-drawer a[href="#book"]:hover {
-    background: linear-gradient(135deg, #0E7C7B 0%, #0A5F5E 100%) !important;
-    background-color: #0E7C7B !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 6px 20px -2px rgba(14, 124, 123, .55) !important;
-  }
-  html.light header a[href="#book"] *,
-  html.light #mobile-nav-drawer a[href="#book"] * {
-    color: #FFFFFF !important;
-    font-weight: 800 !important;
-  }
-
-  /* Surfaces & section backgrounds */
+  html.light .text-navy { color: #0B1220 !important; }
+  html.light .text-navy\/70 { color: rgba(11, 18, 32, .7) !important; }
+  html.light .bg-fog { background: #F6F7F9 !important; }
   html.light .bg-white {
-    background-color: #FFFFFF !important;
-    color: var(--text-body);
-    border-color: #E2E8F0 !important;
+    background: #FFFFFF !important;
+    color: #0B1220 !important;
+    border-color: rgba(11, 18, 32, .1) !important;
   }
-  html.light .bg-white\/95,
-  html.light .bg-white\/90 {
-    background-color: rgba(255, 255, 255, .96) !important;
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    border-color: #E2E8F0 !important;
-  }
-  html.light .bg-fog {
-    background-color: #F8FAFC !important;
-  }
-  html.light .bg-slate-50, html.light .bg-gray-50 {
-    background-color: #F8FAFC !important;
-    border-color: #E2E8F0 !important;
-  }
-  html.light .bg-slate-100, html.light .bg-gray-100 {
-    background-color: #F1F5F9 !important;
-    color: #1E293B !important;
-    border-color: #E2E8F0 !important;
-  }
-  html.light .bg-teal-light\/20,
-  html.light .bg-teal-light\/30,
-  html.light .bg-teal-light\/40 {
-    background-color: rgba(14, 124, 123, .09) !important;
-  }
-  html.light .bg-teal-light {
-    background-color: #E3F3F2 !important;
-  }
-
-  /* ================= LIGHT MODE TYPOGRAPHY CONTRAST (Fixes all washed-out / invisible letters) ================= */
-  html.light .text-navy {
-    color: var(--text-strong) !important; /* #020617 - bold, crisp contrast */
-  }
-  html.light .text-navy\/90,
-  html.light .text-navy\/85,
-  html.light .text-navy\/80,
-  html.light .text-navy\/75 {
-    color: var(--text-body) !important; /* #1E293B */
-  }
-  html.light .text-navy\/70,
-  html.light .text-navy\/65,
-  html.light .text-navy\/60 {
-    color: #1E293B !important; /* rich dark slate - 100% readable text */
-  }
-  html.light .text-navy\/55,
-  html.light .text-navy\/50,
-  html.light .text-navy\/40 {
-    color: #334155 !important; /* clear secondary dark slate - WCAG AAA compliant */
-  }
-  html.light .text-navy\/30,
-  html.light .text-navy\/20,
-  html.light .text-navy\/15,
-  html.light .text-navy\/10 {
-    color: #64748B !important; /* subtle tertiary hints & step counters - never washed out */
-  }
-
-  html.light .text-slate-900,
-  html.light .text-slate-800 {
-    color: #0F172A !important;
-  }
-  html.light .text-slate-700 {
-    color: #1E293B !important;
-  }
-  html.light .text-slate-600,
-  html.light .text-slate-500 {
-    color: #334155 !important;
-  }
-  html.light .text-teal-dark {
-    color: #0A5F5E !important;
-  }
-  html.light .text-teal {
-    color: #0E7C7B !important;
-  }
-
-  /* Light mode borders */
-  html.light .border-navy\/10,
-  html.light .border-navy\/15,
-  html.light .border-navy\/20 {
-    border-color: #E2E8F0 !important;
-  }
-  html.light .border-slate-200,
-  html.light .border-gray-200 {
-    border-color: #E2E8F0 !important;
-  }
-  html.light .border-slate-100 {
-    border-color: #F1F5F9 !important;
-  }
-  html.light .divide-navy\/10 > :not([hidden]) ~ :not([hidden]) {
-    border-color: #E2E8F0 !important;
-  }
-
-  /* Light mode form controls */
-  html.light input,
-  html.light select,
-  html.light textarea {
-    background-color: #FFFFFF !important;
-    color: #0F172A !important;
+  html.light .bg-slate-50, html.light .bg-gray-50 { background: #F8FAFC !important; }
+  html.light input, html.light select, html.light textarea {
+    background: #FFFFFF !important;
+    color: #0B1220 !important;
     border-color: #CBD5E1 !important;
     border-radius: var(--radius-sm);
   }
-  html.light input:hover,
-  html.light select:hover,
-  html.light textarea:hover {
-    border-color: #94A3B8 !important;
-  }
-  html.light input:focus,
-  html.light select:focus,
-  html.light textarea:focus {
+  html.light input:focus, html.light select:focus, html.light textarea:focus {
     border-color: var(--brand) !important;
     box-shadow: 0 0 0 3px rgba(14, 124, 123, .22);
     outline: none;
   }
-  html.light select option {
-    background-color: #FFFFFF !important;
-    color: #0F172A !important;
-  }
-  html.light input::placeholder,
-  html.light textarea::placeholder {
-    color: #94A3B8 !important;
-  }
-
-  /* Light mode shadows & card lift */
-  html.light .shadow-xl,
-  html.light .shadow-lg,
-  html.light .shadow-md,
-  html.light .shadow-sm {
-    box-shadow: var(--shadow-card) !important;
-  }
-  html.light .rounded-2xl.border:hover,
-  html.light .rounded-3xl.border:hover {
-    box-shadow: var(--shadow-lift) !important;
-  }
-
-  /* Light mode theme toggle button */
-  html.light #theme-toggle-btn {
-    border-color: #CBD5E1 !important;
-    color: #0F172A !important;
-    background-color: #F1F5F9 !important;
-  }
-  html.light #theme-toggle-btn:hover {
-    background-color: #E2E8F0 !important;
-    color: #0E7C7B !important;
-  }
-
-  /* Booking wizard step indicators & cards in light mode */
-  html.light .step-dot.text-teal-dark {
-    color: #0A5F5E !important;
-    background-color: rgba(14, 124, 123, .12) !important;
-  }
-  html.light .step-dot:not(.text-teal-dark) {
-    color: #475569 !important;
-  }
-  html.light .step-dot:not(.text-teal-dark):hover {
-    color: #020617 !important;
-  }
-  html.light .svc-btn {
-    background-color: #FFFFFF !important;
-    border-color: #E2E8F0 !important;
-  }
-  html.light .svc-btn:hover {
-    border-color: #0E7C7B !important;
-  }
-  html.light .svc-btn.border-navy {
-    border-color: #0E7C7B !important;
-    background-color: rgba(14, 124, 123, .05) !important;
-    box-shadow: 0 0 0 1px #0E7C7B;
-  }
-
-  /* Reviews & test cards in light mode */
-  html.light #dynamic-reviews-grid > div,
-  html.light #reviews .border-l-2 {
-    background-color: #FFFFFF !important;
-    border-color: #0E7C7B !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
-  }
-
-  /* ================= PRESERVE INTENTIONALLY DARK CARDS & SECTIONS IN LIGHT MODE ================= */
-  /* 1. Hero Feature Card (.duo) */
-  html.light .duo,
-  html.light .duo.grain {
-    background-color: #08111F !important;
-    background-image:
-      radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
-      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
-      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
-    background-size: 14px 14px, auto, auto !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 10px 30px -10px rgba(10, 107, 106, .45), 0 20px 40px -15px rgba(8, 17, 31, .6) !important;
-  }
-  html.light .duo h3,
-  html.light .duo h2,
-  html.light .duo p:not(.text-navy *):not(.bg-white *),
-  html.light .duo span:not(.text-navy *):not(.bg-white *),
-  html.light .duo div:not(.bg-white):not(.bg-white *) {
-    color: #FFFFFF !important;
-  }
-  html.light .duo .text-white\/80 {
-    color: rgba(255, 255, 255, .90) !important;
-  }
-
-  /* 2. Process Section (#process) */
-  html.light #process {
-    background-color: #0B1220 !important;
-    color: #FFFFFF !important;
-    border-color: rgba(255, 255, 255, .10) !important;
-  }
-  html.light #process h2,
-  html.light #process h3,
-  html.light #process p,
-  html.light #process span,
-  html.light #process .text-white {
-    color: #FFFFFF !important;
-  }
-  html.light #process [class*="text-white/"] {
-    color: rgba(255, 255, 255, .80) !important;
-  }
-  html.light #process .text-teal,
-  html.light #process .text-teal-dark {
-    color: #2DD4BF !important;
-  }
-
-  /* 3. About Section Company Badge Box */
-  html.light .from-slate-900.to-navy,
-  html.light .from-navy.to-slate-900 {
-    background: linear-gradient(135deg, #0B1220 0%, #0F172A 100%) !important;
-    background-color: #0B1220 !important;
-    color: #FFFFFF !important;
-    border-color: rgba(45, 212, 191, .3) !important;
-    box-shadow: 0 15px 35px -10px rgba(11, 18, 32, .5) !important;
-  }
-  html.light .from-slate-900.to-navy h3,
-  html.light .from-slate-900.to-navy p,
-  html.light .from-slate-900.to-navy span,
-  html.light .from-slate-900.to-navy div,
-  html.light .from-navy.to-slate-900 h3,
-  html.light .from-navy.to-slate-900 p,
-  html.light .from-navy.to-slate-900 span {
-    color: inherit;
-  }
-  html.light .from-slate-900.to-navy [class*="text-white/"],
-  html.light .from-navy.to-slate-900 [class*="text-white/"] {
-    color: rgba(255, 255, 255, .78) !important;
-  }
-  html.light .from-slate-900.to-navy .text-teal-light,
-  html.light .from-navy.to-slate-900 .text-teal-light {
-    color: #5EEAD4 !important;
-  }
-
-  /* 4. Full-Width CTA Section */
-  html.light .from-slate-900.via-navy.to-slate-900 {
-    background: linear-gradient(90deg, #0F172A 0%, #0B1220 50%, #0F172A 100%) !important;
-    background-color: #0B1220 !important;
-    color: #FFFFFF !important;
-  }
-  html.light .from-slate-900.via-navy.to-slate-900 h2,
-  html.light .from-slate-900.via-navy.to-slate-900 p,
-  html.light .from-slate-900.via-navy.to-slate-900 span,
-  html.light .from-slate-900.via-navy.to-slate-900 .text-white {
-    color: #FFFFFF !important;
-  }
-  html.light .from-slate-900.via-navy.to-slate-900 [class*="text-white/"] {
-    color: rgba(255, 255, 255, .85) !important;
-  }
-
-  /* 5. Footer */
-  html.light footer {
-    background-color: #070D18 !important;
-    color: #FFFFFF !important;
-    border-color: rgba(255, 255, 255, .10) !important;
-  }
-  html.light footer h4,
-  html.light footer p,
-  html.light footer a,
-  html.light footer span,
-  html.light footer .text-white {
-    color: #FFFFFF !important;
-  }
-  html.light footer [class*="text-white/"] {
-    color: rgba(255, 255, 255, .72) !important;
-  }
-  html.light footer a:hover {
-    color: #2DD4BF !important;
-  }
-  html.light footer .text-teal,
-  html.light footer .text-teal-dark {
-    color: #2DD4BF !important;
-  }
-
-  /* 6. Solid Navy Buttons & Badges */
-  html.light .bg-navy,
-  html.light a.bg-navy,
-  html.light button.bg-navy {
-    background-color: #0B1220 !important;
-    color: #FFFFFF !important;
-  }
-  html.light .bg-navy *,
-  html.light a.bg-navy *,
-  html.light button.bg-navy * {
-    color: #FFFFFF !important;
-  }
-  html.light a.bg-navy:hover,
-  html.light button.bg-navy:hover {
-    background-color: #0E7C7B !important;
-    color: #FFFFFF !important;
-  }
-
   html.light ::selection { background: rgba(14, 124, 123, .25); color: #0B1220; }
   html.light { scrollbar-color: #CBD5E1 #fff; }
   html.light ::-webkit-scrollbar-track { background: #fff; }
   html.light ::-webkit-scrollbar-thumb { background: #CBD5E1; border-color: #fff; }
 
-  /* Sticky Header — permanently stuck at the top across all viewports */
-  header {
-    position: -webkit-sticky !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 50 !important;
-  }
-
   /* ================= Mobile responsiveness / no horizontal overflow ================= */
   html, body {
-    overflow-x: clip !important;
+    overflow-x: hidden !important;
     width: 100% !important;
     max-width: 100vw !important;
     margin: 0;
@@ -914,7 +483,7 @@
   }
 </style>
 </head>
-<body id="top" class="antialiased">
+<body class="antialiased">
 
 <!-- ================= TOP ANNOUNCEMENT & HOTLINE BAR (Desktop/Tablet) ================= -->
 <div class="hidden md:block bg-[#070D18] text-slate-300 text-[11px] font-medium border-b border-white/10 relative z-50">
@@ -937,10 +506,12 @@
         <i data-lucide="phone-call" class="w-3 h-3 text-teal-400"></i>
         <span>{{ $phone1 }}</span>
       </a>
+      @if($phone2)
       <span class="text-slate-600">/</span>
       <a href="tel:{{ $phone2 }}" class="hover:text-teal-400 transition flex items-center gap-1 font-bold text-white">
         <span>{{ $phone2 }}</span>
       </a>
+      @endif
       <span class="text-slate-600">|</span>
       <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition flex items-center gap-1 text-cyan-300 font-semibold">
         <i data-lucide="send" class="w-3 h-3 text-cyan-400"></i>
@@ -955,15 +526,14 @@
   </div>
 </div>
 
-<!-- ================= MAIN NAVIGATION ================= -->
-<header class="sticky top-0 z-50 bg-white/95 dark:bg-[#0B1220]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
+<!-- ================= MAIN STICKY NAVIGATION ================= -->
+<header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0B1220]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
     
     <!-- Brand Logo & Name -->
     <a href="#top" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
       <div class="relative">
         <img src="/logo.jpg" alt="Meash Cleaning Logo" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-300 border border-teal/20">
-        <span class="absolute -bottom-0.5 -right-0.5 w-2.5 sm:w-3 h-2.5 sm:h-3 bg-emerald-500 border-2 border-white dark:border-[#0B1220] rounded-full"></span>
       </div>
       <div class="leading-tight">
         <div class="flex items-center gap-1.5">
@@ -1002,7 +572,7 @@
       </a>
 
       <!-- Dark Mode Toggle Button (Default Dark) -->
-      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 rounded-full border border-slate-700 dark:border-slate-700 text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
+      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 rounded-full border border-slate-700 text-amber-400 hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
         <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
       </button>
 
@@ -1013,21 +583,21 @@
       </div>
 
       <!-- Main CTA: Quote / Book -->
-      <a href="#book" class="header-book-btn bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-[12px] sm:text-[13px] font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5" style="background-color: #0E7C7B; color: #FFFFFF;">
-        <i data-lucide="calendar" class="w-4 h-4 hidden sm:inline text-white"></i>
-        <span data-lang-block="am" class="text-white font-black">ቀጠሮ ያዙ</span><span data-lang-block="en" class="text-white font-black">Book Now</span>
+      <a href="#book" class="bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-[12px] sm:text-[13px] font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5">
+        <i data-lucide="calendar" class="w-4 h-4 hidden sm:inline"></i>
+        <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span>
       </a>
 
-      <!-- Hamburger Menu Button (Available on all screens: mobile, tablet & desktop) -->
-      <button type="button" onclick="toggleMobileNav()" id="mobile-menu-btn" class="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center justify-center cursor-pointer shrink-0" aria-label="Open Navigation Menu" title="ምናሌ (Menu)">
+      <!-- Mobile Hamburger Button (Visible on screens < xl) -->
+      <button type="button" onclick="toggleMobileNav()" id="mobile-menu-btn" class="xl:hidden p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center justify-center cursor-pointer shrink-0" aria-label="Open Navigation Menu">
         <i data-lucide="menu" id="mobile-menu-icon" class="w-5 h-5"></i>
       </button>
     </div>
   </div>
 </header>
 
-<!-- ================= NAVIGATION DRAWER (Mobile, Tablet & Desktop) ================= -->
-<div id="mobile-nav-drawer" class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm hidden transition-all duration-300" onclick="if(event.target === this) closeMobileNav()">
+<!-- ================= MOBILE NAVIGATION DRAWER (Full Phone Experience) ================= -->
+<div id="mobile-nav-drawer" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden xl:hidden transition-all duration-300" onclick="if(event.target === this) closeMobileNav()">
   <div class="fixed inset-y-0 right-0 max-w-xs w-full bg-white dark:bg-[#0B1220] shadow-2xl flex flex-col justify-between border-l border-slate-200 dark:border-slate-800">
     <!-- Drawer Top Header -->
     <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -1101,9 +671,9 @@
 
     <!-- Drawer Footer -->
     <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 space-y-2">
-      <a href="#book" onclick="closeMobileNav()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-dark text-white font-black text-xs flex items-center justify-center gap-2 shadow-md" style="background-color: #0E7C7B; color: #FFFFFF;">
-        <i data-lucide="calendar" class="w-4 h-4 text-white"></i>
-        <span class="text-white font-black">ዋጋ አስላ / ቀጠሮ ያዝ (Book Now)</span>
+      <a href="#book" onclick="closeMobileNav()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-dark text-white font-black text-xs flex items-center justify-center gap-2 shadow-md">
+        <i data-lucide="calendar" class="w-4 h-4"></i>
+        <span>ዋጋ አስላ / ቀጠሮ ያዝ (Book Now)</span>
       </a>
       <button type="button" onclick="closeMobileNav(); openStaffModal();" class="w-full py-2 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-teal flex items-center justify-center gap-1.5 cursor-pointer">
         <i data-lucide="lock" class="w-3.5 h-3.5"></i>
@@ -1113,7 +683,7 @@
   </div>
 </div>
 
-<main id="main-content">
+<main id="top">
 
 <!-- ================= HERO ================= -->
 <section class="relative bg-gradient-to-b from-teal-light/20 via-transparent to-transparent">
@@ -1131,7 +701,7 @@
       </div>
 
       <h1 class="font-serif font-bold text-[2.4rem] sm:text-[3.2rem] md:text-[3.6rem] leading-[1.08] tracking-tight text-navy">
-        MEASH CLEANING SOLUTION<br><span class="text-teal-dark text-[0.65em] font-bold block mt-1"><span data-lang-block="am">ሜሽ የጽዳት አገልግሎት</span><span data-lang-block="en">Premium Commercial Cleaning Partner</span></span>
+        MEASH CLEANING SOLUTION<br><span class="text-teal-dark text-[0.65em] font-bold block mt-1"><span data-lang-block="am">ሜአሽ የጽዳት አገልግሎት</span><span data-lang-block="en">Premium Commercial Cleaning Partner</span></span>
       </h1>
 
       <p class="mt-4 text-teal-dark font-extrabold text-[15px] sm:text-[17px] leading-snug">
@@ -1163,9 +733,11 @@
         <a href="tel:{{ $phone1 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
           <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone1 }}
         </a>
+        @if($phone2)
         <a href="tel:{{ $phone2 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
           <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone2 }}
         </a>
+        @endif
         <a href="https://wa.me/251{{ ltrim($phone1, '0') }}?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20inquire%20about%20your%20services" target="_blank" class="hover:opacity-90 flex items-center gap-1.5 bg-[#25D366]/15 text-[#128C7E] dark:text-[#25D366] border border-[#25D366]/30 px-3 py-1.5 rounded-md">
           <i data-lucide="message-circle" class="w-3.5 h-3.5 text-[#25D366]"></i> WhatsApp
         </a>
@@ -1210,14 +782,17 @@
           </p>
         </div>
 
+        <!-- Photo area: no real photo supplied yet — honest placeholder, not a fake image -->
+        <div class="flex-1 flex items-center justify-center py-6">
+          <span class="text-[11px] font-bold text-white/70 bg-white/10 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> የስራ ፎቶ በቅርቡ • Work photo coming soon</span>
+        </div>
 
-
-        <div class="bg-white/95 text-navy backdrop-blur rounded-xl p-4 shadow-xl border border-white/20">
+        <div class="bg-white/95 text-navy backdrop-blur rounded-xl p-4 shadow-xl border border-white/20 min-w-0 break-words">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <span class="text-xs font-bold text-teal-dark flex items-center gap-1.5 min-w-0">
+            <span class="text-xs font-bold text-teal-dark flex items-center gap-1.5 min-w-0 break-words">
               <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 shrink-0"></i> በቅርቡ የተጠናቀቀ አገልግሎት
             </span>
-            <span class="text-[11px] text-navy/50 shrink-0 whitespace-nowrap">ቦሌ፣ አዲስ አበባ</span>
+            <span class="text-[11px] text-navy/50 shrink-0">ቦሌ፣ አዲስ አበባ</span>
           </div>
           <p class="text-xs text-navy/80 font-medium">
             የቢሮ እና የመኖሪያ ቤት ጥልቅ የጽዳት ስራ<br>
@@ -1250,12 +825,12 @@
       </div>
       <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight mb-6">
         <span class="block text-teal-dark font-mono text-xs uppercase tracking-widest mb-1">"Your Environment, Our Responsibility."</span>
-        <span data-lang-block="am">ሜሽ የጽዳት አገልግሎት<br><span class="text-teal-dark font-normal text-[0.8em]">ለተቋማትና ንግድ ቦታዎች ፕሪሚየም አጋር</span></span>
+        <span data-lang-block="am">ሜአሽ የጽዳት አገልግሎት<br><span class="text-teal-dark font-normal text-[0.8em]">ለተቋማትና ንግድ ቦታዎች ፕሪሚየም አጋር</span></span>
         <span data-lang-block="en">MEASH CLEANING SOLUTION<br><span class="text-teal-dark font-normal text-[0.8em]">Licensed &amp; Insured Premium B2B Partner</span></span>
       </h2>
       <div class="text-navy/75 text-[15px] sm:text-[16px] leading-relaxed space-y-4">
         <p data-lang-block="am" class="font-medium">
-          ሜሽ የጽዳት አገልግሎት (MEASH CLEANING) ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማት ፕሪሚየም የጽዳት አገልግሎት የሚሰጥ ተቋም ነው። የሥራ ቦታዎን ንፅህና ለድርጅትዎ ስምና ክብር፣ እንዲሁም ለሰራተኞችዎ ጤና እና ምርታማነት ወሳኝ መሆኑን ተረድተን በላቀ ጥራት እንሰራለን።
+          ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING) ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማት ፕሪሚየም የጽዳት አገልግሎት የሚሰጥ ተቋም ነው። የሥራ ቦታዎን ንፅህና ለድርጅትዎ ስምና ክብር፣ እንዲሁም ለሰራተኞችዎ ጤና እና ምርታማነት ወሳኝ መሆኑን ተረድተን በላቀ ጥራት እንሰራለን።
         </p>
         <p data-lang-block="en" class="font-medium">
           Meash Cleaning Solution is a fully licensed and insured premium B2B cleaning partner based at Ayat Square. We deliver exceptional commercial-grade sanitation services designed to protect your facility, project a flawless corporate image, and boost workplace productivity.
@@ -1311,7 +886,7 @@
           <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ዋና መስሪያ ቤት አድራሻ</span><span data-lang-block="en">Head Office Location</span></div>
           <div class="font-semibold flex items-center gap-2">
             <i data-lucide="map-pin" class="w-4 h-4 text-teal"></i>
-            <span>{{ $addressAm }} • {{ $addressEn }}</span>
+            <span><span data-lang-block="am">{{ $addressAm }}</span><span data-lang-block="en">{{ $addressEn }}</span></span>
           </div>
         </div>
 
@@ -1321,9 +896,11 @@
             <a href="tel:{{ $phone1 }}" class="font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
               <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone1 }}
             </a>
+            @if($phone2)
             <a href="tel:{{ $phone2 }}" class="font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
               <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone2 }}
             </a>
+            @endif
           </div>
         </div>
 
@@ -1365,10 +942,10 @@
     <div class="text-center max-w-2xl mx-auto mb-14">
       <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
         <i data-lucide="award" class="w-3.5 h-3.5"></i>
-        <span data-lang-block="am">ለምን ሜሽን ይመርጣሉ?</span><span data-lang-block="en">WHY MEASH? — THE MEASH ADVANTAGE</span>
+        <span data-lang-block="am">ለምን ሜአሽን ይመርጣሉ?</span><span data-lang-block="en">WHY MEASH? — THE MEASH ADVANTAGE</span>
       </div>
       <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight">
-        <span data-lang-block="am">የሜሽ 5ቱ የላቁ መለያዎች (5 Core Pillars)</span>
+        <span data-lang-block="am">የሜአሽ 5ቱ የላቁ መለያዎች (5 Core Pillars)</span>
         <span data-lang-block="en">5 Pillars of Cleaning Excellence</span>
       </h2>
       <p class="text-navy/70 text-sm sm:text-base mt-2">
@@ -1502,7 +1079,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ተለዋዋጭ ሰዓት (ምሽት/ቅዳሜ)</span><span data-lang-block="en">After-Hours / Weekends</span></span>
-          <a href="#book" onclick="preselectService('office')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
+          <a href="#book" onclick="preselectService('office')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition"><span data-lang-block="am">ውል ይያዙ</span><span data-lang-block="en">Get a Contract</span></a>
         </div>
       </div>
 
@@ -1522,7 +1099,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">የቱሪዝም ደረጃ ጥራት</span><span data-lang-block="en">Hospitality Standards</span></span>
-          <a href="#book" onclick="preselectService('hotel_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
+          <a href="#book" onclick="preselectService('hotel_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition"><span data-lang-block="am">ውል ይያዙ</span><span data-lang-block="en">Get a Contract</span></a>
         </div>
       </div>
 
@@ -1542,7 +1119,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ጤና ጥበቃ ደረጃ</span><span data-lang-block="en">Food-Safe Chemicals</span></span>
-          <a href="#book" onclick="preselectService('restaurant_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
+          <a href="#book" onclick="preselectService('restaurant_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition"><span data-lang-block="am">ውል ይያዙ</span><span data-lang-block="en">Get a Contract</span></a>
         </div>
       </div>
 
@@ -1562,7 +1139,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">በጅምላ ቅናሽ ያለው</span><span data-lang-block="en">Volume Discounts</span></span>
-          <a href="#book" onclick="preselectService('hall_chair_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
+          <a href="#book" onclick="preselectService('hall_chair_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition"><span data-lang-block="am">ውል ይያዙ</span><span data-lang-block="en">Get a Contract</span></a>
         </div>
       </div>
 
@@ -1582,7 +1159,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ጭረት የማይተው እጥበት</span><span data-lang-block="en">Streak-Free</span></span>
-          <a href="#book" onclick="preselectService('glass')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
+          <a href="#book" onclick="preselectService('glass')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition"><span data-lang-block="am">ውል ይያዙ</span><span data-lang-block="en">Get a Contract</span></a>
         </div>
       </div>
 
@@ -1603,7 +1180,7 @@
         <div class="mt-6 pt-5 border-t border-white/20 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-light"><span data-lang-block="am">እስከ 15% የኮንትራት ቅናሽ</span><span data-lang-block="en">Up to 15% Off</span></span>
           <a href="tel:{{ $phone1 }}" class="text-xs font-bold bg-teal text-white px-3.5 py-1.5 rounded hover:bg-teal-dark transition flex items-center gap-1">
-            <i data-lucide="phone-call" class="w-3 h-3"></i> ደውለው ይወያዩ
+            <i data-lucide="phone-call" class="w-3 h-3"></i> <span data-lang-block="am">ደውለው ይወያዩ</span><span data-lang-block="en">Call to Discuss</span>
           </a>
         </div>
       </div>
@@ -1619,7 +1196,7 @@
       <span data-lang-block="am">ዋና ዋና አገልግሎቶቻችን</span><span data-lang-block="en">OUR CORE SERVICES</span>
     </div>
     <h2 class="font-serif font-bold text-3xl md:text-4xl text-navy leading-tight">
-      <span data-lang-block="am">ሜሽ የሚሰጣቸው 6ቱ ይፋዊ አገልግሎቶች</span>
+      <span data-lang-block="am">ሜአሽ የሚሰጣቸው 6ቱ ይፋዊ አገልግሎቶች</span>
       <span data-lang-block="en">6 Core Commercial &amp; Deep Cleaning Solutions</span>
     </h2>
     <p class="text-navy/70 text-sm sm:text-base mt-2">
@@ -1690,7 +1267,7 @@
 </section>
 
 <!-- ================= OUR PROCESS (5-STEP PROCESS SECTION) ================= -->
-<section id="process" class="bg-navy text-white py-24 border-t border-b border-white/10">
+<section id="process" class="bg-navy text-white py-16 border-t border-b border-white/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="max-w-2xl mb-14">
       <div class="inline-flex items-center gap-2 text-teal font-bold text-xs tracking-wider uppercase mb-3 bg-teal/20 px-3.5 py-1.5 rounded-full">
@@ -1818,7 +1395,7 @@
     <div class="flex flex-col sm:flex-row items-center justify-end gap-3.5">
       <a href="tel:{{ $phone1 }}" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
         <i data-lucide="phone-call" class="w-4 h-4"></i>
-        <span>{{ $phone1 }} / {{ $phone2 }}</span>
+        <span>{{ $phone1 }}{{ $phone2 ? ' / ' . $phone2 : '' }}</span>
       </a>
       <a href="#book" class="w-full sm:w-auto bg-white hover:bg-slate-100 text-navy font-black text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow">
         <i data-lucide="calendar" class="w-4 h-4 text-teal"></i>
@@ -2117,14 +1694,19 @@
           <div class="flex items-center gap-3 mt-1.5 mb-2">
             <button type="button" onclick="changeQty(-1)" class="w-9 h-9 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">−</button>
             <span id="qty-display" class="font-serif font-semibold text-xl w-8 text-center text-navy">1</span>
+            <span id="qty-unit" class="text-sm font-semibold text-navy/60">sqm</span>
             <button type="button" onclick="changeQty(1)" class="w-9 h-9 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">+</button>
           </div>
-          <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-5 flex items-center justify-between">
+          <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-2 flex items-center justify-between">
             <span class="text-xs sm:text-sm font-semibold text-teal-dark"><span data-lang-block="am">የግምት ድምር (Estimated Price)</span><span data-lang-block="en">Estimated total</span></span>
-            <span id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">{{ number_format($firstWizardPrice) }} ETB</span>
+            <span class="text-right">
+              <span id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">{{ number_format($firstWizardPrice) }} ETB</span>
+              <span id="wiz-total-unit" class="block text-[11px] font-bold text-teal-dark/70">1 sqm</span>
+            </span>
           </div>
+          <p class="text-[11px] text-navy/60 mb-5"><span data-lang-block="am">ይህ ግምታዊ ዋጋ ነው፤ የመጨረሻው ዋጋ ከነፃ የቦታ ምልከታ በኋላ ይረጋገጣል።</span><span data-lang-block="en">Estimated total — the final price is confirmed after a free on-site inspection.</span></p>
           <button type="button" onclick="resetWizard()" class="w-full mt-1 text-xs font-bold text-navy/50 hover:text-red-600 py-2 cursor-pointer"><span data-lang-block="am">↺ ቀጠሮውን አጽዳ</span><span data-lang-block="en">↺ Clear booking</span></button>
-          <button type="button" onclick="showWizardStep(2)" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-2">
+          <button type="button" onclick="showWizardStep(2)" class="w-full bg-navy hover:bg-teal-dark btn-primary-dark text-white font-bold py-3.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-2">
             <span data-lang-block="am">ቀጣይ: አድራሻ ያስገቡ</span><span data-lang-block="en">Next: Address &amp; Location</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
@@ -2160,7 +1742,7 @@
           </p>
           <div class="flex gap-3">
             <button type="button" onclick="showWizardStep(1)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
-            <button type="button" onclick="validateStep2AndContinue()" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
+            <button type="button" onclick="validateStep2AndContinue()" class="flex-1 bg-navy hover:bg-teal-dark btn-primary-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
           </div>
         </div>
 
@@ -2484,7 +2066,7 @@
   <p class="text-xs text-navy/60 mb-5 max-w-md mx-auto"><span data-lang-block="am">የትዕዛዝ ቁጥርዎን ወይም ስልክዎን በማስገባት የትዕዛዝዎን የስራ ሂደት እና የቀጠሮ ቀን ይመልከቱ</span><span data-lang-block="en">Enter your order ID or phone number to see real-time order status and schedule.</span></p>
   <form onsubmit="trackOrder(event)" class="max-w-md mx-auto flex gap-2">
     <input id="track-input" type="text" placeholder="MEASH-000123 or phone" class="flex-1 rounded-md border border-navy/15 px-4 py-3 text-sm focus:outline-none focus:border-teal">
-    <button type="submit" id="btn-track-submit" class="bg-navy hover:bg-teal-dark text-white font-bold px-6 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ፈልግ</span><span data-lang-block="en">Track</span></button>
+    <button type="submit" id="btn-track-submit" class="bg-navy hover:bg-teal-dark btn-primary-dark text-white font-bold px-6 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ፈልግ</span><span data-lang-block="en">Track</span></button>
   </form>
   <div id="track-result" class="hidden mt-6 text-left"></div>
 </section>
@@ -2492,7 +2074,7 @@
 </section>
 
 <!-- ================= CONTACT US & GOOGLE MAPS SECTION ================= -->
-<section id="contact" class="py-24 bg-white dark:bg-slate-900 border-t border-navy/10">
+<section id="contact" class="py-16 bg-white dark:bg-slate-900 border-t border-navy/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="text-center max-w-2xl mx-auto mb-16">
       <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
@@ -2520,7 +2102,7 @@
             </div>
             <h4 class="font-bold text-xs uppercase tracking-wider text-navy/50 dark:text-slate-400 mb-1"><span data-lang-block="am">ቀጥታ ስልክ መስመሮች (24/7)</span><span data-lang-block="en">Direct Hotlines</span></h4>
             <a href="tel:{{ $phone1 }}" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition">{{ $phone1 }}</a>
-            <a href="tel:{{ $phone2 }}" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition mt-0.5">{{ $phone2 }}</a>
+            @if($phone2)<a href="tel:{{ $phone2 }}" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition mt-0.5">{{ $phone2 }}</a>@endif
           </div>
 
           <div class="bg-fog dark:bg-slate-800 p-5 rounded-2xl border border-navy/10">
@@ -2549,14 +2131,14 @@
             <i data-lucide="map-pin" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
             <div>
               <h5 class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">ዋና ቢሮ አድራሻ</span><span data-lang-block="en">Head Office Location</span></h5>
-              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">{{ $addressAm }} • {{ $addressEn }}</p>
+              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5"><span data-lang-block="am">{{ $addressAm }}</span><span data-lang-block="en">{{ $addressEn }}</span></p>
             </div>
           </div>
           <div class="flex items-start gap-3">
             <i data-lucide="clock" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
             <div>
               <h5 class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">የስራ ሰዓት</span><span data-lang-block="en">Working Hours</span></h5>
-              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">{{ $hoursAm }} • {{ $hoursEn }}</p>
+              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5"><span data-lang-block="am">{{ $hoursAm }}</span><span data-lang-block="en">{{ $hoursEn }}</span></p>
             </div>
           </div>
         </div>
@@ -2624,7 +2206,7 @@
       </div>
 
       <!-- Google Maps Embed Container -->
-      <div class="rounded-3xl overflow-hidden border border-navy/10 shadow-lg h-[460px] lg:h-[580px] bg-slate-100 dark:bg-slate-800 relative">
+      <div class="rounded-3xl overflow-hidden border border-navy/10 shadow-lg h-[460px] lg:h-[580px] bg-slate-100 dark:bg-slate-800">
         <iframe
           title="Meash Cleaning Location in Ayat Addis Ababa"
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15760.329864205844!2d38.861111!3d9.022778!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b910055555555%3A0x1111111111111111!2sAyat%20Addis%20Ababa!5e0!3m2!1sen!2set!4v1700000000000!5m2!1sen!2set"
@@ -2636,8 +2218,9 @@
           referrerpolicy="no-referrer-when-downgrade"
           class="w-full h-full grayscale-[20%] hover:grayscale-0 transition-all duration-500">
         </iframe>
-        <!-- Floating Pill over Map -->
-        <div class="absolute bottom-5 left-5 right-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur p-4 rounded-2xl shadow-xl border border-navy/10 text-navy dark:text-white flex items-center justify-between">
+      </div>
+      <!-- Meash Cleaning HQ card: sits below the map (it used to overlap it) -->
+      <div class="mt-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur p-4 rounded-2xl shadow-xl border border-navy/10 text-navy dark:text-white flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-teal-light text-teal-dark flex items-center justify-center shrink-0">
               <i data-lucide="map-pin" class="w-5 h-5 text-teal"></i>
@@ -2650,7 +2233,6 @@
           <a href="https://maps.google.com/?q=Ayat+Square+Addis+Ababa" target="_blank" class="text-xs font-bold bg-navy hover:bg-teal text-white px-3 py-1.5 rounded-lg transition shrink-0">
             Open Map
           </a>
-        </div>
       </div>
     </div>
   </div>
@@ -2666,43 +2248,43 @@
       </div>
       <p class="text-xs text-teal-light font-semibold mb-3">"Your Environment, Our Responsibility."</p>
       <p class="text-xs text-white/70 leading-relaxed mb-3">
-        ሜሽ የጽዳት አገልግሎት ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማትና ለመኖሪያ ቤቶች ፕሪሚየም የጥልቅ ጽዳት አገልግሎት የሚሰጥ ተቋም ነው።
+        ሜአሽ የጽዳት አገልግሎት ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማትና ለመኖሪያ ቤቶች ፕሪሚየም የጥልቅ ጽዳት አገልግሎት የሚሰጥ ተቋም ነው።
       </p>
       <div class="font-bold text-white text-sm space-y-1">
         <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> <a href="tel:{{ $phone1 }}" class="hover:text-teal transition">{{ $phone1 }}</a></p>
-        <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> <a href="tel:{{ $phone2 }}" class="hover:text-teal transition">{{ $phone2 }}</a></p>
+        @if($phone2)<p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> <a href="tel:{{ $phone2 }}" class="hover:text-teal transition">{{ $phone2 }}</a></p>@endif
       </div>
     </div>
     <div>
-      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ይፋዊ የጽዳት አገልግሎቶች</p>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4"><span data-lang-block="am">ይፋዊ የጽዳት አገልግሎቶች</span><span data-lang-block="en">Official Cleaning Services</span></p>
       <ul class="space-y-2 text-xs">
         @forelse($activeServices as $s)
-          <li><a href="#services" onclick="preselectService('{{ $s->code }}')" class="hover:text-teal transition">{{ $s->name_am ?: $s->name_en }}</a></li>
+          <li><a href="#services" onclick="preselectService('{{ $s->code }}')" class="hover:text-teal transition"><span data-lang-block="am">{{ $s->name_am ?: $s->name_en }}</span><span data-lang-block="en">{{ $s->name_en ?: $s->name_am }}</span></a></li>
         @empty
-          <li><a href="#services" class="hover:text-teal transition">የወለል፣ የተቋማትና የሶፋ ጥልቅ ጽዳት</a></li>
+          <li><a href="#services" class="hover:text-teal transition"><span data-lang-block="am">የወለል፣ የተቋማትና የሶፋ ጥልቅ ጽዳት</span><span data-lang-block="en">Floor, facility &amp; sofa deep cleaning</span></a></li>
         @endforelse
       </ul>
     </div>
     <div>
-      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ድርጅት እና መረጃ</p>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4"><span data-lang-block="am">ድርጅት እና መረጃ</span><span data-lang-block="en">Company &amp; Information</span></p>
       <ul class="space-y-2 text-xs">
-        <li><a href="#about" class="hover:text-teal transition">ስለ እኛ (About Us)</a></li>
-        <li><a href="#advantage" class="hover:text-teal transition">ለምን ሜሽን ይመርጣሉ? (5 Pillars)</a></li>
-        <li><a href="#process" class="hover:text-teal transition">ቀላል አሰራራችን (5-Step Process)</a></li>
-        <li><a href="#gallery" class="hover:text-teal transition">የስራ ጋለሪ (Before &amp; After)</a></li>
-        <li><a href="#reviews" class="hover:text-teal transition">የደንበኞች አስተያየት (Reviews)</a></li>
-        <li><a href="#contact" class="hover:text-teal transition">አድራሻ እና ካርታ (Contact)</a></li>
+        <li><a href="#about" class="hover:text-teal transition"><span data-lang-block="am">ስለ እኛ</span><span data-lang-block="en">About Us</span></a></li>
+        <li><a href="#advantage" class="hover:text-teal transition"><span data-lang-block="am">ለምን ሜአሽን ይመርጣሉ?</span><span data-lang-block="en">Why Meash? (5 Pillars)</span></a></li>
+        <li><a href="#process" class="hover:text-teal transition"><span data-lang-block="am">ቀላል አሰራራችን</span><span data-lang-block="en">Our Process (5-Step)</span></a></li>
+        <li><a href="#gallery" class="hover:text-teal transition"><span data-lang-block="am">የስራ ጋለሪ</span><span data-lang-block="en">Projects (Before &amp; After)</span></a></li>
+        <li><a href="#reviews" class="hover:text-teal transition"><span data-lang-block="am">የደንበኞች አስተያየት</span><span data-lang-block="en">Customer Reviews</span></a></li>
+        <li><a href="#contact" class="hover:text-teal transition"><span data-lang-block="am">አድራሻ እና ካርታ</span><span data-lang-block="en">Contact &amp; Map</span></a></li>
         <li class="pt-2">
           <!-- Staff & Admin Secure Access Button -->
           <button type="button" onclick="openStaffModal()" class="inline-flex items-center gap-1.5 text-xs text-teal hover:text-white transition cursor-pointer py-1 border-b border-teal/40 hover:border-white">
             <i data-lucide="lock" class="w-3.5 h-3.5 text-teal"></i>
-            <span>የሰራተኞች እና አድሚን መግቢያ (Staff OS)</span>
+            <span><span data-lang-block="am">የሰራተኞች እና አድሚን መግቢያ</span><span data-lang-block="en">Staff &amp; Admin Login</span></span>
           </button>
         </li>
       </ul>
     </div>
     <div>
-      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ማህበራዊ ትስስር ({{ $socialHandle }})</p>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4"><span data-lang-block="am">ማህበራዊ ትስስር ({{ $socialHandle }})</span><span data-lang-block="en">Social Channels ({{ $socialHandle }})</span></p>
       <ul class="space-y-2 text-xs">
         <li><a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaningsolution' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashcleaningsolution)</a></li>
         <li><a href="{{ $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="message-circle" class="w-3.5 h-3.5 text-teal"></i> Direct Telegram (@meashcleaning)</a></li>
@@ -2712,7 +2294,7 @@
         <li><a href="{{ $facebookUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="facebook" class="w-3.5 h-3.5 text-teal"></i> Facebook</a></li>
       </ul>
       <div class="mt-4 pt-4 border-t border-white/10 text-xs text-white/50">
-        {{ $addressAm }} ({{ $addressEn }})
+        <span data-lang-block="am">{{ $addressAm }}</span><span data-lang-block="en">{{ $addressEn }}</span>
       </div>
     </div>
   </div>
@@ -2730,7 +2312,7 @@
 </main>
 
 <!-- ================= STAFF & ADMIN SECURE AUTH MODAL ================= -->
-<div id="staff-auth-modal" class="fixed inset-0 z-[70] hidden bg-navy/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto transition-all duration-300" onclick="if(event.target === this) closeStaffModal()">
+<div id="staff-auth-modal" class="fixed inset-0 z-50 hidden bg-navy/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto transition-all duration-300" onclick="if(event.target === this) closeStaffModal()">
   <div class="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-6 border border-navy/10 text-navy my-auto">
     <!-- Header -->
     <div class="flex items-center justify-between pb-3 border-b border-navy/10">
@@ -3053,10 +2635,8 @@
     }
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
     }
   }
 
@@ -3066,7 +2646,6 @@
     if (drawer && !drawer.classList.contains('hidden')) {
       drawer.classList.add('hidden');
       document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
       if (icon) {
         icon.setAttribute('data-lucide', 'menu');
         if (window.lucide) lucide.createIcons();
@@ -3324,7 +2903,20 @@
     const totalEl = document.getElementById('wiz-total');
     const text = price != null ? ((price * wizardQty).toLocaleString() + ' ' + currency) : formatPrice(null);
     if (totalEl) totalEl.textContent = text;
+    updateQtyUnit();
     updateSubscriptionDiscount();
+  }
+
+  // Show the selected service's unit next to the quantity and in the total
+  // line (sqm for floor/glass, seat for upholstery, job for flat-rate jobs).
+  function updateQtyUnit(){
+    const unitEl = document.getElementById('qty-unit');
+    const totalUnitEl = document.getElementById('wiz-total-unit');
+    const priceEl = document.querySelector('.wiz-price[data-wiz-price="' + selectedSvcId + '"]');
+    const rawUnit = priceEl ? (priceEl.dataset.wizUnit || 'service') : 'service';
+    const label = { sqm: 'sqm', seat: 'seat', service: 'job' }[rawUnit] || rawUnit;
+    if (unitEl) unitEl.textContent = label;
+    if (totalUnitEl) totalUnitEl.textContent = wizardQty + ' ' + label;
   }
 
   // Initial price render — placed here, after the wizard state above exists.
@@ -3349,13 +2941,9 @@
     document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById('step-' + n);
     if (target) target.classList.remove('hidden');
-    document.querySelectorAll('.step-dot').forEach(d => {
-      d.classList.remove('text-teal-dark', 'bg-teal/10', 'font-black');
-    });
+    document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('text-teal-dark'));
     const dot = document.querySelector(`.step-dot[data-step="${n}"]`);
-    if (dot) {
-      dot.classList.add('text-teal-dark', 'bg-teal/10', 'font-black');
-    }
+    if (dot) dot.classList.add('text-teal-dark');
     if (n === 4) updateWizardTotal();
     if (window.lucide) lucide.createIcons();
   }
@@ -4075,8 +3663,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const reviewOrderParam = (urlParams.get('order') || urlParams.get('review_order') || '').trim();
-      if (reviewOrderParam && reviewOrderParam !== 'undefined' && reviewOrderParam !== 'null') {
+      const reviewOrderParam = urlParams.get('order') || urlParams.get('review_order');
+      if (reviewOrderParam) {
         const trackInput = document.getElementById('track-input');
         if (trackInput) {
           trackInput.value = reviewOrderParam;
@@ -4265,32 +3853,11 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    // 1. Keep page locked at top header on initial load
-    if (!window.location.hash || window.location.hash === '#top') {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    }
-
     initTheme();
     if (window.lucide) lucide.createIcons();
     loadServicePrices();
     loadPublicReviews();
     initEthDatePicker();
-
-    // 2. Enable smooth scrolling for user clicks only AFTER initial layout settles
-    setTimeout(() => {
-      document.documentElement.classList.add('scroll-smooth');
-    }, 250);
-  });
-
-  // Ensure top header positioning on mobile back/forward cached restoration (BFCache)
-  window.addEventListener('pageshow', () => {
-    if (!window.location.hash || window.location.hash === '#top') {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    }
   });
 </script>
 
