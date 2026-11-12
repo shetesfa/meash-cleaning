@@ -277,6 +277,56 @@
     color: rgba(255, 255, 255, .90) !important;
   }
 
+  /* Missing gradient utilities fallback */
+  .from-teal {
+    --tw-gradient-from: #0E7C7B var(--tw-gradient-from-position);
+    --tw-gradient-to: rgba(14, 124, 123, 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .to-teal-dark {
+    --tw-gradient-to: #0A5F5E var(--tw-gradient-to-position);
+  }
+  .hover\:from-teal-dark:hover {
+    --tw-gradient-from: #0A5F5E var(--tw-gradient-from-position);
+    --tw-gradient-to: rgba(10, 95, 94, 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .hover\:to-teal:hover {
+    --tw-gradient-to: #0E7C7B var(--tw-gradient-to-position);
+  }
+  .bg-gradient-to-r.from-teal.to-teal-dark,
+  [class*="from-teal"][class*="to-teal-dark"] {
+    background-color: #0E7C7B !important;
+    background-image: linear-gradient(to right, #0E7C7B, #0A5F5E) !important;
+    color: #FFFFFF !important;
+  }
+  .bg-gradient-to-r.from-teal.to-teal-dark *,
+  [class*="from-teal"][class*="to-teal-dark"] * {
+    color: #FFFFFF !important;
+  }
+
+  /* Header CTA Booking Button — Default & Dark Mode */
+  header a[href="#book"],
+  #mobile-nav-drawer a[href="#book"] {
+    background: linear-gradient(135deg, #0E7C7B 0%, #0A5F5E 100%) !important;
+    background-color: #0E7C7B !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(45, 212, 191, .35) !important;
+    box-shadow: 0 4px 14px -2px rgba(14, 124, 123, .45) !important;
+  }
+  header a[href="#book"]:hover,
+  #mobile-nav-drawer a[href="#book"]:hover {
+    background: linear-gradient(135deg, #0A5F5E 0%, #08111F 100%) !important;
+    background-color: #0A5F5E !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 6px 18px -2px rgba(10, 95, 94, .55) !important;
+  }
+  header a[href="#book"] *,
+  #mobile-nav-drawer a[href="#book"] * {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+  }
+
   /* ---------- Smooth interactions (all pages elements) ---------- */
   a, button, input, select, textarea, .rounded-xl, .rounded-2xl, .rounded-3xl {
     transition:
@@ -446,14 +496,55 @@
 
   /* Header: frosted glass in light mode */
   html.light header {
-    background-color: rgba(255, 255, 255, .90) !important;
+    background-color: rgba(255, 255, 255, .95) !important;
     -webkit-backdrop-filter: saturate(180%) blur(16px);
     backdrop-filter: saturate(180%) blur(16px);
     border-color: #E2E8F0 !important;
     box-shadow: 0 1px 3px 0 rgba(15, 23, 42, .05);
   }
   html.light nav {
-    color: #1E293B !important;
+    color: #0F172A !important;
+  }
+  html.light nav a {
+    color: #0F172A !important;
+    font-weight: 700 !important;
+  }
+  html.light nav a:hover {
+    color: #0E7C7B !important;
+    background-color: #F1F5F9 !important;
+  }
+  html.light .bg-navy-800 {
+    background-color: #08111F !important;
+    color: #E2E8F0 !important;
+  }
+  html.light .bg-navy-800 a {
+    color: #FFFFFF !important;
+  }
+  html.light .bg-navy-800 a:hover {
+    color: #2DD4BF !important;
+  }
+
+  /* ================= LIGHT MODE HEADER CTA [ቀጠሮ ያዙ / BOOK NOW] ================= */
+  /* Ultra high-contrast luxury Navy/Teal button with crisp pure white typography */
+  html.light header a[href="#book"],
+  html.light #mobile-nav-drawer a[href="#book"] {
+    background: linear-gradient(135deg, #0B1220 0%, #0A5F5E 100%) !important;
+    background-color: #0B1220 !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(14, 124, 123, .45) !important;
+    box-shadow: 0 4px 14px -1px rgba(11, 18, 32, .25), 0 2px 6px -1px rgba(14, 124, 123, .35) !important;
+  }
+  html.light header a[href="#book"]:hover,
+  html.light #mobile-nav-drawer a[href="#book"]:hover {
+    background: linear-gradient(135deg, #0E7C7B 0%, #0A5F5E 100%) !important;
+    background-color: #0E7C7B !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 6px 20px -2px rgba(14, 124, 123, .55) !important;
+  }
+  html.light header a[href="#book"] *,
+  html.light #mobile-nav-drawer a[href="#book"] * {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
   }
 
   /* Surfaces & section backgrounds */
@@ -922,9 +1013,9 @@
       </div>
 
       <!-- Main CTA: Quote / Book -->
-      <a href="#book" class="bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-[12px] sm:text-[13px] font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5">
-        <i data-lucide="calendar" class="w-4 h-4 hidden sm:inline"></i>
-        <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span>
+      <a href="#book" class="header-book-btn bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-[12px] sm:text-[13px] font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5" style="background-color: #0E7C7B; color: #FFFFFF;">
+        <i data-lucide="calendar" class="w-4 h-4 hidden sm:inline text-white"></i>
+        <span data-lang-block="am" class="text-white font-black">ቀጠሮ ያዙ</span><span data-lang-block="en" class="text-white font-black">Book Now</span>
       </a>
 
       <!-- Hamburger Menu Button (Available on all screens: mobile, tablet & desktop) -->
@@ -1010,9 +1101,9 @@
 
     <!-- Drawer Footer -->
     <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 space-y-2">
-      <a href="#book" onclick="closeMobileNav()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-dark text-white font-black text-xs flex items-center justify-center gap-2 shadow-md">
-        <i data-lucide="calendar" class="w-4 h-4"></i>
-        <span>ዋጋ አስላ / ቀጠሮ ያዝ (Book Now)</span>
+      <a href="#book" onclick="closeMobileNav()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-dark text-white font-black text-xs flex items-center justify-center gap-2 shadow-md" style="background-color: #0E7C7B; color: #FFFFFF;">
+        <i data-lucide="calendar" class="w-4 h-4 text-white"></i>
+        <span class="text-white font-black">ዋጋ አስላ / ቀጠሮ ያዝ (Book Now)</span>
       </a>
       <button type="button" onclick="closeMobileNav(); openStaffModal();" class="w-full py-2 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-teal flex items-center justify-center gap-1.5 cursor-pointer">
         <i data-lucide="lock" class="w-3.5 h-3.5"></i>
