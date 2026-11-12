@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ production-hardening, main ]
 
+permissions:
+  contents: write
+
 jobs:
   laravel-tests:
     name: PHPUnit & Security Tests (PHP 8.2)
@@ -85,10 +88,12 @@ jobs:
           php artisan test --colors=never > test_output.txt 2>&1
           TEST_EXIT_CODE=$?
           cat test_output.txt
-          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat test_output.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B ci-results
+          git add -f test_output.txt
+          git commit -m "chore(ci): save test results [skip ci]" || true
+          git push -f origin ci-results || true
           exit $TEST_EXIT_CODE
 
   frontend-build:
