@@ -41,10 +41,24 @@
   $facebookUrl = $websiteSettings['facebook'] ?? 'https://facebook.com/meashcleaningsolution';
   $socialHandle = $websiteSettings['social_handle'] ?? '@meashcleaningsolution';
 @endphp
-<html lang="am" data-lang="am" class="scroll-smooth dark">
+<html lang="am" data-lang="am" class="dark">
 <head>
 <script>
   (function() {
+    // 1. Disable browser scroll restoration so page always opens at the top header on mobile & desktop
+    try {
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      if (!window.location.hash || window.location.hash === '#top' || window.location.hash === '#qr-code' || window.location.hash === '#book') {
+        if (window.location.hash === '#qr-code' || window.location.hash === '#book') {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+        window.scrollTo(0, 0);
+      }
+    } catch (e) {}
+
+    // 2. Initialize theme
     try {
       var saved = localStorage.getItem('meash_theme');
       if (saved === 'light') {
@@ -171,10 +185,12 @@
   *, *::before, *::after { box-sizing: border-box; }
 
   html {
-    scroll-behavior: smooth;
     scroll-padding-top: 5rem;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+  }
+  html.scroll-smooth {
+    scroll-behavior: smooth;
   }
 
   body {
@@ -231,13 +247,84 @@
 
   /* ---------- Decorative surfaces ---------- */
   .duo {
-    background:
-      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .22) 0%, transparent 55%),
-      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%);
+    background-color: #08111F !important;
+    background-image:
+      radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
+      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
+    background-size: 14px 14px, auto, auto !important;
+    color: #FFFFFF !important;
   }
   .grain {
     background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px);
     background-size: 14px 14px;
+  }
+  .duo.grain {
+    background-color: #08111F !important;
+    background-image:
+      radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
+      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
+    background-size: 14px 14px, auto, auto !important;
+    color: #FFFFFF !important;
+  }
+  .duo h3,
+  .duo p:not(.text-navy *):not(.bg-white *),
+  .duo span:not(.text-navy *):not(.bg-white *) {
+    color: #FFFFFF !important;
+  }
+  .duo .text-white\/80 {
+    color: rgba(255, 255, 255, .90) !important;
+  }
+
+  /* Missing gradient utilities fallback */
+  .from-teal {
+    --tw-gradient-from: #0E7C7B var(--tw-gradient-from-position);
+    --tw-gradient-to: rgba(14, 124, 123, 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .to-teal-dark {
+    --tw-gradient-to: #0A5F5E var(--tw-gradient-to-position);
+  }
+  .hover\:from-teal-dark:hover {
+    --tw-gradient-from: #0A5F5E var(--tw-gradient-from-position);
+    --tw-gradient-to: rgba(10, 95, 94, 0) var(--tw-gradient-to-position);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  .hover\:to-teal:hover {
+    --tw-gradient-to: #0E7C7B var(--tw-gradient-to-position);
+  }
+  .bg-gradient-to-r.from-teal.to-teal-dark,
+  [class*="from-teal"][class*="to-teal-dark"] {
+    background-color: #0E7C7B !important;
+    background-image: linear-gradient(to right, #0E7C7B, #0A5F5E) !important;
+    color: #FFFFFF !important;
+  }
+  .bg-gradient-to-r.from-teal.to-teal-dark *,
+  [class*="from-teal"][class*="to-teal-dark"] * {
+    color: #FFFFFF !important;
+  }
+
+  /* Header CTA Booking Button — Default & Dark Mode */
+  header a[href="#book"],
+  #mobile-nav-drawer a[href="#book"] {
+    background: linear-gradient(135deg, #0E7C7B 0%, #0A5F5E 100%) !important;
+    background-color: #0E7C7B !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(45, 212, 191, .35) !important;
+    box-shadow: 0 4px 14px -2px rgba(14, 124, 123, .45) !important;
+  }
+  header a[href="#book"]:hover,
+  #mobile-nav-drawer a[href="#book"]:hover {
+    background: linear-gradient(135deg, #0A5F5E 0%, #08111F 100%) !important;
+    background-color: #0A5F5E !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 6px 18px -2px rgba(10, 95, 94, .55) !important;
+  }
+  header a[href="#book"] *,
+  #mobile-nav-drawer a[href="#book"] * {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
   }
 
   /* ---------- Smooth interactions (all pages elements) ---------- */
@@ -377,43 +464,416 @@
   /* ================= LIGHT MODE (when toggled) ================= */
   html.light {
     color-scheme: light;
-    background-color: #FFFFFF;
+
+    /* Complete Light Mode Design Tokens */
+    --bg: #F8FAFC;
+    --bg-soft: #F1F5F9;
+    --surface: #FFFFFF;
+    --surface-2: #F8FAFC;
+    --line: #E2E8F0;
+    --line-soft: #EDF2F7;
+
+    --text: #0F172A;
+    --text-strong: #020617;
+    --text-body: #1E293B;
+    --text-muted: #334155;
+    --text-faint: #64748B;
+
+    --brand: #0E7C7B;
+    --brand-bright: #0A5F5E;
+
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, .06), 0 10px 24px -4px rgba(15, 23, 42, .08);
+    --shadow-lift: 0 4px 6px -1px rgba(15, 23, 42, .08), 0 20px 25px -5px rgba(15, 23, 42, .12);
+    --ring: 0 0 0 3px rgba(14, 124, 123, .22);
+
+    background-color: var(--bg);
   }
-  html.light body { background: #FFFFFF !important; color: #0B1220 !important; }
+
+  html.light body {
+    background-color: var(--bg) !important;
+    color: var(--text-body) !important;
+  }
+
+  /* Header: frosted glass in light mode */
   html.light header {
-    background: rgba(255, 255, 255, .78) !important;
+    background-color: rgba(255, 255, 255, .95) !important;
     -webkit-backdrop-filter: saturate(180%) blur(16px);
     backdrop-filter: saturate(180%) blur(16px);
     border-color: #E2E8F0 !important;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, .05);
   }
-  html.light .text-navy { color: #0B1220 !important; }
-  html.light .text-navy\/70 { color: rgba(11, 18, 32, .7) !important; }
-  html.light .bg-fog { background: #F6F7F9 !important; }
+  html.light nav {
+    color: #0F172A !important;
+  }
+  html.light nav a {
+    color: #0F172A !important;
+    font-weight: 700 !important;
+  }
+  html.light nav a:hover {
+    color: #0E7C7B !important;
+    background-color: #F1F5F9 !important;
+  }
+  html.light .bg-navy-800 {
+    background-color: #08111F !important;
+    color: #E2E8F0 !important;
+  }
+  html.light .bg-navy-800 a {
+    color: #FFFFFF !important;
+  }
+  html.light .bg-navy-800 a:hover {
+    color: #2DD4BF !important;
+  }
+
+  /* ================= LIGHT MODE HEADER CTA [ቀጠሮ ያዙ / BOOK NOW] ================= */
+  /* Ultra high-contrast luxury Navy/Teal button with crisp pure white typography */
+  html.light header a[href="#book"],
+  html.light #mobile-nav-drawer a[href="#book"] {
+    background: linear-gradient(135deg, #0B1220 0%, #0A5F5E 100%) !important;
+    background-color: #0B1220 !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(14, 124, 123, .45) !important;
+    box-shadow: 0 4px 14px -1px rgba(11, 18, 32, .25), 0 2px 6px -1px rgba(14, 124, 123, .35) !important;
+  }
+  html.light header a[href="#book"]:hover,
+  html.light #mobile-nav-drawer a[href="#book"]:hover {
+    background: linear-gradient(135deg, #0E7C7B 0%, #0A5F5E 100%) !important;
+    background-color: #0E7C7B !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 6px 20px -2px rgba(14, 124, 123, .55) !important;
+  }
+  html.light header a[href="#book"] *,
+  html.light #mobile-nav-drawer a[href="#book"] * {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+  }
+
+  /* Surfaces & section backgrounds */
   html.light .bg-white {
-    background: #FFFFFF !important;
-    color: #0B1220 !important;
-    border-color: rgba(11, 18, 32, .1) !important;
+    background-color: #FFFFFF !important;
+    color: var(--text-body);
+    border-color: #E2E8F0 !important;
   }
-  html.light .bg-slate-50, html.light .bg-gray-50 { background: #F8FAFC !important; }
-  html.light input, html.light select, html.light textarea {
-    background: #FFFFFF !important;
-    color: #0B1220 !important;
+  html.light .bg-white\/95,
+  html.light .bg-white\/90 {
+    background-color: rgba(255, 255, 255, .96) !important;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-color: #E2E8F0 !important;
+  }
+  html.light .bg-fog {
+    background-color: #F8FAFC !important;
+  }
+  html.light .bg-slate-50, html.light .bg-gray-50 {
+    background-color: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+  }
+  html.light .bg-slate-100, html.light .bg-gray-100 {
+    background-color: #F1F5F9 !important;
+    color: #1E293B !important;
+    border-color: #E2E8F0 !important;
+  }
+  html.light .bg-teal-light\/20,
+  html.light .bg-teal-light\/30,
+  html.light .bg-teal-light\/40 {
+    background-color: rgba(14, 124, 123, .09) !important;
+  }
+  html.light .bg-teal-light {
+    background-color: #E3F3F2 !important;
+  }
+
+  /* ================= LIGHT MODE TYPOGRAPHY CONTRAST (Fixes all washed-out / invisible letters) ================= */
+  html.light .text-navy {
+    color: var(--text-strong) !important; /* #020617 - bold, crisp contrast */
+  }
+  html.light .text-navy\/90,
+  html.light .text-navy\/85,
+  html.light .text-navy\/80,
+  html.light .text-navy\/75 {
+    color: var(--text-body) !important; /* #1E293B */
+  }
+  html.light .text-navy\/70,
+  html.light .text-navy\/65,
+  html.light .text-navy\/60 {
+    color: #1E293B !important; /* rich dark slate - 100% readable text */
+  }
+  html.light .text-navy\/55,
+  html.light .text-navy\/50,
+  html.light .text-navy\/40 {
+    color: #334155 !important; /* clear secondary dark slate - WCAG AAA compliant */
+  }
+  html.light .text-navy\/30,
+  html.light .text-navy\/20,
+  html.light .text-navy\/15,
+  html.light .text-navy\/10 {
+    color: #64748B !important; /* subtle tertiary hints & step counters - never washed out */
+  }
+
+  html.light .text-slate-900,
+  html.light .text-slate-800 {
+    color: #0F172A !important;
+  }
+  html.light .text-slate-700 {
+    color: #1E293B !important;
+  }
+  html.light .text-slate-600,
+  html.light .text-slate-500 {
+    color: #334155 !important;
+  }
+  html.light .text-teal-dark {
+    color: #0A5F5E !important;
+  }
+  html.light .text-teal {
+    color: #0E7C7B !important;
+  }
+
+  /* Light mode borders */
+  html.light .border-navy\/10,
+  html.light .border-navy\/15,
+  html.light .border-navy\/20 {
+    border-color: #E2E8F0 !important;
+  }
+  html.light .border-slate-200,
+  html.light .border-gray-200 {
+    border-color: #E2E8F0 !important;
+  }
+  html.light .border-slate-100 {
+    border-color: #F1F5F9 !important;
+  }
+  html.light .divide-navy\/10 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #E2E8F0 !important;
+  }
+
+  /* Light mode form controls */
+  html.light input,
+  html.light select,
+  html.light textarea {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
     border-color: #CBD5E1 !important;
     border-radius: var(--radius-sm);
   }
-  html.light input:focus, html.light select:focus, html.light textarea:focus {
+  html.light input:hover,
+  html.light select:hover,
+  html.light textarea:hover {
+    border-color: #94A3B8 !important;
+  }
+  html.light input:focus,
+  html.light select:focus,
+  html.light textarea:focus {
     border-color: var(--brand) !important;
     box-shadow: 0 0 0 3px rgba(14, 124, 123, .22);
     outline: none;
   }
+  html.light select option {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+  }
+  html.light input::placeholder,
+  html.light textarea::placeholder {
+    color: #94A3B8 !important;
+  }
+
+  /* Light mode shadows & card lift */
+  html.light .shadow-xl,
+  html.light .shadow-lg,
+  html.light .shadow-md,
+  html.light .shadow-sm {
+    box-shadow: var(--shadow-card) !important;
+  }
+  html.light .rounded-2xl.border:hover,
+  html.light .rounded-3xl.border:hover {
+    box-shadow: var(--shadow-lift) !important;
+  }
+
+  /* Light mode theme toggle button */
+  html.light #theme-toggle-btn {
+    border-color: #CBD5E1 !important;
+    color: #0F172A !important;
+    background-color: #F1F5F9 !important;
+  }
+  html.light #theme-toggle-btn:hover {
+    background-color: #E2E8F0 !important;
+    color: #0E7C7B !important;
+  }
+
+  /* Booking wizard step indicators & cards in light mode */
+  html.light .step-dot.text-teal-dark {
+    color: #0A5F5E !important;
+    background-color: rgba(14, 124, 123, .12) !important;
+  }
+  html.light .step-dot:not(.text-teal-dark) {
+    color: #475569 !important;
+  }
+  html.light .step-dot:not(.text-teal-dark):hover {
+    color: #020617 !important;
+  }
+  html.light .svc-btn {
+    background-color: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+  }
+  html.light .svc-btn:hover {
+    border-color: #0E7C7B !important;
+  }
+  html.light .svc-btn.border-navy {
+    border-color: #0E7C7B !important;
+    background-color: rgba(14, 124, 123, .05) !important;
+    box-shadow: 0 0 0 1px #0E7C7B;
+  }
+
+  /* Reviews & test cards in light mode */
+  html.light #dynamic-reviews-grid > div,
+  html.light #reviews .border-l-2 {
+    background-color: #FFFFFF !important;
+    border-color: #0E7C7B !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+  }
+
+  /* ================= PRESERVE INTENTIONALLY DARK CARDS & SECTIONS IN LIGHT MODE ================= */
+  /* 1. Hero Feature Card (.duo) */
+  html.light .duo,
+  html.light .duo.grain {
+    background-color: #08111F !important;
+    background-image:
+      radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
+      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
+      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
+    background-size: 14px 14px, auto, auto !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 10px 30px -10px rgba(10, 107, 106, .45), 0 20px 40px -15px rgba(8, 17, 31, .6) !important;
+  }
+  html.light .duo h3,
+  html.light .duo h2,
+  html.light .duo p:not(.text-navy *):not(.bg-white *),
+  html.light .duo span:not(.text-navy *):not(.bg-white *),
+  html.light .duo div:not(.bg-white):not(.bg-white *) {
+    color: #FFFFFF !important;
+  }
+  html.light .duo .text-white\/80 {
+    color: rgba(255, 255, 255, .90) !important;
+  }
+
+  /* 2. Process Section (#process) */
+  html.light #process {
+    background-color: #0B1220 !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, .10) !important;
+  }
+  html.light #process h2,
+  html.light #process h3,
+  html.light #process p,
+  html.light #process span,
+  html.light #process .text-white {
+    color: #FFFFFF !important;
+  }
+  html.light #process [class*="text-white/"] {
+    color: rgba(255, 255, 255, .80) !important;
+  }
+  html.light #process .text-teal,
+  html.light #process .text-teal-dark {
+    color: #2DD4BF !important;
+  }
+
+  /* 3. About Section Company Badge Box */
+  html.light .from-slate-900.to-navy,
+  html.light .from-navy.to-slate-900 {
+    background: linear-gradient(135deg, #0B1220 0%, #0F172A 100%) !important;
+    background-color: #0B1220 !important;
+    color: #FFFFFF !important;
+    border-color: rgba(45, 212, 191, .3) !important;
+    box-shadow: 0 15px 35px -10px rgba(11, 18, 32, .5) !important;
+  }
+  html.light .from-slate-900.to-navy h3,
+  html.light .from-slate-900.to-navy p,
+  html.light .from-slate-900.to-navy span,
+  html.light .from-slate-900.to-navy div,
+  html.light .from-navy.to-slate-900 h3,
+  html.light .from-navy.to-slate-900 p,
+  html.light .from-navy.to-slate-900 span {
+    color: inherit;
+  }
+  html.light .from-slate-900.to-navy [class*="text-white/"],
+  html.light .from-navy.to-slate-900 [class*="text-white/"] {
+    color: rgba(255, 255, 255, .78) !important;
+  }
+  html.light .from-slate-900.to-navy .text-teal-light,
+  html.light .from-navy.to-slate-900 .text-teal-light {
+    color: #5EEAD4 !important;
+  }
+
+  /* 4. Full-Width CTA Section */
+  html.light .from-slate-900.via-navy.to-slate-900 {
+    background: linear-gradient(90deg, #0F172A 0%, #0B1220 50%, #0F172A 100%) !important;
+    background-color: #0B1220 !important;
+    color: #FFFFFF !important;
+  }
+  html.light .from-slate-900.via-navy.to-slate-900 h2,
+  html.light .from-slate-900.via-navy.to-slate-900 p,
+  html.light .from-slate-900.via-navy.to-slate-900 span,
+  html.light .from-slate-900.via-navy.to-slate-900 .text-white {
+    color: #FFFFFF !important;
+  }
+  html.light .from-slate-900.via-navy.to-slate-900 [class*="text-white/"] {
+    color: rgba(255, 255, 255, .85) !important;
+  }
+
+  /* 5. Footer */
+  html.light footer {
+    background-color: #070D18 !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, .10) !important;
+  }
+  html.light footer h4,
+  html.light footer p,
+  html.light footer a,
+  html.light footer span,
+  html.light footer .text-white {
+    color: #FFFFFF !important;
+  }
+  html.light footer [class*="text-white/"] {
+    color: rgba(255, 255, 255, .72) !important;
+  }
+  html.light footer a:hover {
+    color: #2DD4BF !important;
+  }
+  html.light footer .text-teal,
+  html.light footer .text-teal-dark {
+    color: #2DD4BF !important;
+  }
+
+  /* 6. Solid Navy Buttons & Badges */
+  html.light .bg-navy,
+  html.light a.bg-navy,
+  html.light button.bg-navy {
+    background-color: #0B1220 !important;
+    color: #FFFFFF !important;
+  }
+  html.light .bg-navy *,
+  html.light a.bg-navy *,
+  html.light button.bg-navy * {
+    color: #FFFFFF !important;
+  }
+  html.light a.bg-navy:hover,
+  html.light button.bg-navy:hover {
+    background-color: #0E7C7B !important;
+    color: #FFFFFF !important;
+  }
+
   html.light ::selection { background: rgba(14, 124, 123, .25); color: #0B1220; }
   html.light { scrollbar-color: #CBD5E1 #fff; }
   html.light ::-webkit-scrollbar-track { background: #fff; }
   html.light ::-webkit-scrollbar-thumb { background: #CBD5E1; border-color: #fff; }
 
+  /* Sticky Header — permanently stuck at the top across all viewports */
+  header {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+  }
+
   /* ================= Mobile responsiveness / no horizontal overflow ================= */
   html, body {
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
     width: 100% !important;
     max-width: 100vw !important;
     margin: 0;
@@ -454,7 +914,7 @@
   }
 </style>
 </head>
-<body class="antialiased">
+<body id="top" class="antialiased">
 
 <!-- ================= TOP ANNOUNCEMENT & HOTLINE BAR (Desktop/Tablet) ================= -->
 <div class="hidden md:block bg-[#070D18] text-slate-300 text-[11px] font-medium border-b border-white/10 relative z-50">
@@ -495,8 +955,8 @@
   </div>
 </div>
 
-<!-- ================= MAIN STICKY NAVIGATION ================= -->
-<header class="sticky top-0 z-40 bg-white/95 dark:bg-[#0B1220]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
+<!-- ================= MAIN NAVIGATION ================= -->
+<header class="sticky top-0 z-50 bg-white/95 dark:bg-[#0B1220]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-slate-800 shadow-sm transition-colors duration-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
     
     <!-- Brand Logo & Name -->
@@ -542,7 +1002,7 @@
       </a>
 
       <!-- Dark Mode Toggle Button (Default Dark) -->
-      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 rounded-full border border-slate-700 text-amber-400 hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
+      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 rounded-full border border-slate-700 dark:border-slate-700 text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
         <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
       </button>
 
@@ -553,21 +1013,21 @@
       </div>
 
       <!-- Main CTA: Quote / Book -->
-      <a href="#book" class="bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-[12px] sm:text-[13px] font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5">
-        <i data-lucide="calendar" class="w-4 h-4 hidden sm:inline"></i>
-        <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span>
+      <a href="#book" class="header-book-btn bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-[12px] sm:text-[13px] font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5" style="background-color: #0E7C7B; color: #FFFFFF;">
+        <i data-lucide="calendar" class="w-4 h-4 hidden sm:inline text-white"></i>
+        <span data-lang-block="am" class="text-white font-black">ቀጠሮ ያዙ</span><span data-lang-block="en" class="text-white font-black">Book Now</span>
       </a>
 
-      <!-- Mobile Hamburger Button (Visible on screens < xl) -->
-      <button type="button" onclick="toggleMobileNav()" id="mobile-menu-btn" class="xl:hidden p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center justify-center cursor-pointer shrink-0" aria-label="Open Navigation Menu">
+      <!-- Hamburger Menu Button (Available on all screens: mobile, tablet & desktop) -->
+      <button type="button" onclick="toggleMobileNav()" id="mobile-menu-btn" class="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center justify-center cursor-pointer shrink-0" aria-label="Open Navigation Menu" title="ምናሌ (Menu)">
         <i data-lucide="menu" id="mobile-menu-icon" class="w-5 h-5"></i>
       </button>
     </div>
   </div>
 </header>
 
-<!-- ================= MOBILE NAVIGATION DRAWER (Full Phone Experience) ================= -->
-<div id="mobile-nav-drawer" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden xl:hidden transition-all duration-300" onclick="if(event.target === this) closeMobileNav()">
+<!-- ================= NAVIGATION DRAWER (Mobile, Tablet & Desktop) ================= -->
+<div id="mobile-nav-drawer" class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm hidden transition-all duration-300" onclick="if(event.target === this) closeMobileNav()">
   <div class="fixed inset-y-0 right-0 max-w-xs w-full bg-white dark:bg-[#0B1220] shadow-2xl flex flex-col justify-between border-l border-slate-200 dark:border-slate-800">
     <!-- Drawer Top Header -->
     <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -641,9 +1101,9 @@
 
     <!-- Drawer Footer -->
     <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 space-y-2">
-      <a href="#book" onclick="closeMobileNav()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-dark text-white font-black text-xs flex items-center justify-center gap-2 shadow-md">
-        <i data-lucide="calendar" class="w-4 h-4"></i>
-        <span>ዋጋ አስላ / ቀጠሮ ያዝ (Book Now)</span>
+      <a href="#book" onclick="closeMobileNav()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-dark text-white font-black text-xs flex items-center justify-center gap-2 shadow-md" style="background-color: #0E7C7B; color: #FFFFFF;">
+        <i data-lucide="calendar" class="w-4 h-4 text-white"></i>
+        <span class="text-white font-black">ዋጋ አስላ / ቀጠሮ ያዝ (Book Now)</span>
       </a>
       <button type="button" onclick="closeMobileNav(); openStaffModal();" class="w-full py-2 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-teal flex items-center justify-center gap-1.5 cursor-pointer">
         <i data-lucide="lock" class="w-3.5 h-3.5"></i>
@@ -653,7 +1113,7 @@
   </div>
 </div>
 
-<main id="top">
+<main id="main-content">
 
 <!-- ================= HERO ================= -->
 <section class="relative bg-gradient-to-b from-teal-light/20 via-transparent to-transparent">
@@ -750,10 +1210,7 @@
           </p>
         </div>
 
-        <!-- Photo area: no real photo supplied yet — honest placeholder, not a fake image -->
-        <div class="flex-1 flex items-center justify-center py-6">
-          <span class="text-[11px] font-bold text-white/70 bg-white/10 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> የስራ ፎቶ በቅርቡ • Work photo coming soon</span>
-        </div>
+
 
         <div class="bg-white/95 text-navy backdrop-blur rounded-xl p-4 shadow-xl border border-white/20">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -2273,7 +2730,7 @@
 </main>
 
 <!-- ================= STAFF & ADMIN SECURE AUTH MODAL ================= -->
-<div id="staff-auth-modal" class="fixed inset-0 z-50 hidden bg-navy/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto transition-all duration-300" onclick="if(event.target === this) closeStaffModal()">
+<div id="staff-auth-modal" class="fixed inset-0 z-[70] hidden bg-navy/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto transition-all duration-300" onclick="if(event.target === this) closeStaffModal()">
   <div class="relative w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-6 border border-navy/10 text-navy my-auto">
     <!-- Header -->
     <div class="flex items-center justify-between pb-3 border-b border-navy/10">
@@ -2596,8 +3053,10 @@
     }
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
   }
 
@@ -2607,6 +3066,7 @@
     if (drawer && !drawer.classList.contains('hidden')) {
       drawer.classList.add('hidden');
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
       if (icon) {
         icon.setAttribute('data-lucide', 'menu');
         if (window.lucide) lucide.createIcons();
@@ -2889,9 +3349,13 @@
     document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById('step-' + n);
     if (target) target.classList.remove('hidden');
-    document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('text-teal-dark'));
+    document.querySelectorAll('.step-dot').forEach(d => {
+      d.classList.remove('text-teal-dark', 'bg-teal/10', 'font-black');
+    });
     const dot = document.querySelector(`.step-dot[data-step="${n}"]`);
-    if (dot) dot.classList.add('text-teal-dark');
+    if (dot) {
+      dot.classList.add('text-teal-dark', 'bg-teal/10', 'font-black');
+    }
     if (n === 4) updateWizardTotal();
     if (window.lucide) lucide.createIcons();
   }
@@ -3611,8 +4075,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const reviewOrderParam = urlParams.get('order') || urlParams.get('review_order');
-      if (reviewOrderParam) {
+      const reviewOrderParam = (urlParams.get('order') || urlParams.get('review_order') || '').trim();
+      if (reviewOrderParam && reviewOrderParam !== 'undefined' && reviewOrderParam !== 'null') {
         const trackInput = document.getElementById('track-input');
         if (trackInput) {
           trackInput.value = reviewOrderParam;
@@ -3801,11 +4265,32 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // 1. Keep page locked at top header on initial load
+    if (!window.location.hash || window.location.hash === '#top') {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+
     initTheme();
     if (window.lucide) lucide.createIcons();
     loadServicePrices();
     loadPublicReviews();
     initEthDatePicker();
+
+    // 2. Enable smooth scrolling for user clicks only AFTER initial layout settles
+    setTimeout(() => {
+      document.documentElement.classList.add('scroll-smooth');
+    }, 250);
+  });
+
+  // Ensure top header positioning on mobile back/forward cached restoration (BFCache)
+  window.addEventListener('pageshow', () => {
+    if (!window.location.hash || window.location.hash === '#top') {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
   });
 </script>
 
