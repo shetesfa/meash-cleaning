@@ -20,10 +20,6 @@
   }
   $phone1 = $websiteSettings['contact_phone_1'] ?? '0970075509';
   $phone2 = $websiteSettings['contact_phone_2'] ?? '0998142190';
-  // If the second hotline is the same number as the first (the live settings
-  // currently hold the same value in both fields), show it only once instead
-  // of printing the same number twice in a row.
-  $phone2 = ($phone2 && $phone2 !== $phone1) ? $phone2 : null;
   $companyName = $websiteSettings['company_name'] ?? 'MEASH CLEANING SOLUTION';
   $companyNameAm = $websiteSettings['company_name_am'] ?? 'ሜአሽ የጽዳት አገልግሎት';
   // STRICTLY IN ENGLISH EVERYWHERE — DO NOT TRANSLATE TO AMHARIC
@@ -67,7 +63,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>{{ $companyName }} | Best Commercial & Deep Cleaning in Addis Ababa | {{ $companyNameAm }}</title>
-<meta name="description" content="{{ $companyName }} ({{ $companyNameAm }}) — {{ $subtitleEn }}. {{ $sloganEn }} Call {{ $phone1 }}{{ $phone2 ? ' / ' . $phone2 : '' }}">
+<meta name="description" content="{{ $companyName }} ({{ $companyNameAm }}) — {{ $subtitleEn }}. {{ $sloganEn }} Call {{ $phone1 }} / {{ $phone2 }}">
 <meta name="keywords" content="Cleaning Services in Addis Ababa, Commercial Cleaning Addis Ababa, Hotel Cleaning Addis Ababa, Restaurant Sanitation, Office Cleaning Addis Ababa, Deep Cleaning Ethiopia, Meash Cleaning Solution, ሜአሽ የጽዳት አገልግሎት, የቢሮ ጽዳት, የሆቴል ጽዳት, የወለል እጥበት, የሶፋ እጥበት">
 <meta name="author" content="{{ $companyName }}">
 <meta name="theme-color" content="#0B1220">
@@ -79,7 +75,7 @@
 
 <!-- Open Graph & Social SEO -->
 <meta property="og:title" content="{{ $companyName }} | {{ $sloganEn }}">
-<meta property="og:description" content="{{ $subtitleEn }} — {{ $sloganEn }} Call {{ $phone1 }}{{ $phone2 ? ' / ' . $phone2 : '' }}.">
+<meta property="og:description" content="{{ $subtitleEn }} — {{ $sloganEn }} Call {{ $phone1 }} / {{ $phone2 }}.">
 <meta property="og:image" content="/logo.jpg">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url('/') }}">
@@ -295,31 +291,6 @@
     color: var(--text) !important;
   }
   html.dark .bg-fog, html:not(.light) .bg-fog { background-color: var(--bg-soft) !important; }
-
-  /* Primary navy buttons (wizard Next / Continue, Track) stay clearly visible
-     in dark mode: navy #0B1220 is almost the same as the dark page
-     background, so the buttons looked disabled. Brand teal instead.
-     Light mode is untouched. */
-  html.dark .btn-primary-dark, html:not(.light) .btn-primary-dark {
-    background-color: var(--brand) !important;
-    color: #FFFFFF !important;
-  }
-  html.dark .btn-primary-dark:hover, html:not(.light) .btn-primary-dark:hover {
-    background-color: var(--brand-bright) !important;
-    color: #0B1220 !important;
-  }
-
-  /* Body copy is never clamped: the hero intro, About and Why-Meash
-     paragraphs always render in full (no line-clamp / truncation anywhere). */
-  #about p, #advantage p, main#top p {
-    display: block !important;
-    -webkit-line-clamp: unset !important;
-    line-clamp: unset !important;
-    max-height: none !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    white-space: normal !important;
-  }
   html.dark .bg-slate-50, html.dark .bg-gray-50,
   html:not(.light) .bg-slate-50, html:not(.light) .bg-gray-50 { background-color: var(--surface) !important; }
   html.dark .bg-slate-100, html.dark .bg-gray-100,
@@ -506,12 +477,10 @@
         <i data-lucide="phone-call" class="w-3 h-3 text-teal-400"></i>
         <span>{{ $phone1 }}</span>
       </a>
-      @if($phone2)
       <span class="text-slate-600">/</span>
       <a href="tel:{{ $phone2 }}" class="hover:text-teal-400 transition flex items-center gap-1 font-bold text-white">
         <span>{{ $phone2 }}</span>
       </a>
-      @endif
       <span class="text-slate-600">|</span>
       <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition flex items-center gap-1 text-cyan-300 font-semibold">
         <i data-lucide="send" class="w-3 h-3 text-cyan-400"></i>
@@ -534,6 +503,7 @@
     <a href="#top" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
       <div class="relative">
         <img src="/logo.jpg" alt="Meash Cleaning Logo" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-300 border border-teal/20">
+        <span class="absolute -bottom-0.5 -right-0.5 w-2.5 sm:w-3 h-2.5 sm:h-3 bg-emerald-500 border-2 border-white dark:border-[#0B1220] rounded-full"></span>
       </div>
       <div class="leading-tight">
         <div class="flex items-center gap-1.5">
@@ -733,11 +703,9 @@
         <a href="tel:{{ $phone1 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
           <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone1 }}
         </a>
-        @if($phone2)
         <a href="tel:{{ $phone2 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
           <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone2 }}
         </a>
-        @endif
         <a href="https://wa.me/251{{ ltrim($phone1, '0') }}?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20inquire%20about%20your%20services" target="_blank" class="hover:opacity-90 flex items-center gap-1.5 bg-[#25D366]/15 text-[#128C7E] dark:text-[#25D366] border border-[#25D366]/30 px-3 py-1.5 rounded-md">
           <i data-lucide="message-circle" class="w-3.5 h-3.5 text-[#25D366]"></i> WhatsApp
         </a>
@@ -787,12 +755,12 @@
           <span class="text-[11px] font-bold text-white/70 bg-white/10 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> የስራ ፎቶ በቅርቡ • Work photo coming soon</span>
         </div>
 
-        <div class="bg-white/95 text-navy backdrop-blur rounded-xl p-4 shadow-xl border border-white/20 min-w-0 break-words">
+        <div class="bg-white/95 text-navy backdrop-blur rounded-xl p-4 shadow-xl border border-white/20">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <span class="text-xs font-bold text-teal-dark flex items-center gap-1.5 min-w-0 break-words">
+            <span class="text-xs font-bold text-teal-dark flex items-center gap-1.5 min-w-0">
               <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 shrink-0"></i> በቅርቡ የተጠናቀቀ አገልግሎት
             </span>
-            <span class="text-[11px] text-navy/50 shrink-0">ቦሌ፣ አዲስ አበባ</span>
+            <span class="text-[11px] text-navy/50 shrink-0 whitespace-nowrap">ቦሌ፣ አዲስ አበባ</span>
           </div>
           <p class="text-xs text-navy/80 font-medium">
             የቢሮ እና የመኖሪያ ቤት ጥልቅ የጽዳት ስራ<br>
@@ -886,7 +854,7 @@
           <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ዋና መስሪያ ቤት አድራሻ</span><span data-lang-block="en">Head Office Location</span></div>
           <div class="font-semibold flex items-center gap-2">
             <i data-lucide="map-pin" class="w-4 h-4 text-teal"></i>
-            <span><span data-lang-block="am">{{ $addressAm }}</span><span data-lang-block="en">{{ $addressEn }}</span></span>
+            <span>{{ $addressAm }} • {{ $addressEn }}</span>
           </div>
         </div>
 
@@ -896,11 +864,9 @@
             <a href="tel:{{ $phone1 }}" class="font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
               <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone1 }}
             </a>
-            @if($phone2)
             <a href="tel:{{ $phone2 }}" class="font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
               <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone2 }}
             </a>
-            @endif
           </div>
         </div>
 
@@ -1079,7 +1045,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ተለዋዋጭ ሰዓት (ምሽት/ቅዳሜ)</span><span data-lang-block="en">After-Hours / Weekends</span></span>
-          <a href="#book" onclick="preselectService('office')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition"><span data-lang-block="am">ውል ይያዙ</span><span data-lang-block="en">Get a Contract</span></a>
+          <a href="#book" onclick="preselectService('office')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
         </div>
       </div>
 
@@ -1099,7 +1065,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">የቱሪዝም ደረጃ ጥራት</span><span data-lang-block="en">Hospitality Standards</span></span>
-          <a href="#book" onclick="preselectService('hotel_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition"><span data-lang-block="am">ውል ይያዙ</span><span data-lang-block="en">Get a Contract</span></a>
+          <a href="#book" onclick="preselectService('hotel_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
         </div>
       </div>
 
@@ -1119,7 +1085,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ጤና ጥበቃ ደረጃ</span><span data-lang-block="en">Food-Safe Chemicals</span></span>
-          <a href="#book" onclick="preselectService('restaurant_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition"><span data-lang-block="am">ውል ይያዙ</span><span data-lang-block="en">Get a Contract</span></a>
+          <a href="#book" onclick="preselectService('restaurant_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
         </div>
       </div>
 
@@ -1139,7 +1105,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">በጅምላ ቅናሽ ያለው</span><span data-lang-block="en">Volume Discounts</span></span>
-          <a href="#book" onclick="preselectService('hall_chair_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition"><span data-lang-block="am">ውል ይያዙ</span><span data-lang-block="en">Get a Contract</span></a>
+          <a href="#book" onclick="preselectService('hall_chair_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
         </div>
       </div>
 
@@ -1159,7 +1125,7 @@
         </div>
         <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ጭረት የማይተው እጥበት</span><span data-lang-block="en">Streak-Free</span></span>
-          <a href="#book" onclick="preselectService('glass')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition"><span data-lang-block="am">ውል ይያዙ</span><span data-lang-block="en">Get a Contract</span></a>
+          <a href="#book" onclick="preselectService('glass')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
         </div>
       </div>
 
@@ -1180,7 +1146,7 @@
         <div class="mt-6 pt-5 border-t border-white/20 flex items-center justify-between">
           <span class="text-xs font-bold text-teal-light"><span data-lang-block="am">እስከ 15% የኮንትራት ቅናሽ</span><span data-lang-block="en">Up to 15% Off</span></span>
           <a href="tel:{{ $phone1 }}" class="text-xs font-bold bg-teal text-white px-3.5 py-1.5 rounded hover:bg-teal-dark transition flex items-center gap-1">
-            <i data-lucide="phone-call" class="w-3 h-3"></i> <span data-lang-block="am">ደውለው ይወያዩ</span><span data-lang-block="en">Call to Discuss</span>
+            <i data-lucide="phone-call" class="w-3 h-3"></i> ደውለው ይወያዩ
           </a>
         </div>
       </div>
@@ -1267,7 +1233,7 @@
 </section>
 
 <!-- ================= OUR PROCESS (5-STEP PROCESS SECTION) ================= -->
-<section id="process" class="bg-navy text-white py-16 border-t border-b border-white/10">
+<section id="process" class="bg-navy text-white py-24 border-t border-b border-white/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="max-w-2xl mb-14">
       <div class="inline-flex items-center gap-2 text-teal font-bold text-xs tracking-wider uppercase mb-3 bg-teal/20 px-3.5 py-1.5 rounded-full">
@@ -1395,7 +1361,7 @@
     <div class="flex flex-col sm:flex-row items-center justify-end gap-3.5">
       <a href="tel:{{ $phone1 }}" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
         <i data-lucide="phone-call" class="w-4 h-4"></i>
-        <span>{{ $phone1 }}{{ $phone2 ? ' / ' . $phone2 : '' }}</span>
+        <span>{{ $phone1 }} / {{ $phone2 }}</span>
       </a>
       <a href="#book" class="w-full sm:w-auto bg-white hover:bg-slate-100 text-navy font-black text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow">
         <i data-lucide="calendar" class="w-4 h-4 text-teal"></i>
@@ -1694,19 +1660,14 @@
           <div class="flex items-center gap-3 mt-1.5 mb-2">
             <button type="button" onclick="changeQty(-1)" class="w-9 h-9 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">−</button>
             <span id="qty-display" class="font-serif font-semibold text-xl w-8 text-center text-navy">1</span>
-            <span id="qty-unit" class="text-sm font-semibold text-navy/60">sqm</span>
             <button type="button" onclick="changeQty(1)" class="w-9 h-9 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">+</button>
           </div>
-          <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-2 flex items-center justify-between">
+          <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-5 flex items-center justify-between">
             <span class="text-xs sm:text-sm font-semibold text-teal-dark"><span data-lang-block="am">የግምት ድምር (Estimated Price)</span><span data-lang-block="en">Estimated total</span></span>
-            <span class="text-right">
-              <span id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">{{ number_format($firstWizardPrice) }} ETB</span>
-              <span id="wiz-total-unit" class="block text-[11px] font-bold text-teal-dark/70">1 sqm</span>
-            </span>
+            <span id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">{{ number_format($firstWizardPrice) }} ETB</span>
           </div>
-          <p class="text-[11px] text-navy/60 mb-5"><span data-lang-block="am">ይህ ግምታዊ ዋጋ ነው፤ የመጨረሻው ዋጋ ከነፃ የቦታ ምልከታ በኋላ ይረጋገጣል።</span><span data-lang-block="en">Estimated total — the final price is confirmed after a free on-site inspection.</span></p>
           <button type="button" onclick="resetWizard()" class="w-full mt-1 text-xs font-bold text-navy/50 hover:text-red-600 py-2 cursor-pointer"><span data-lang-block="am">↺ ቀጠሮውን አጽዳ</span><span data-lang-block="en">↺ Clear booking</span></button>
-          <button type="button" onclick="showWizardStep(2)" class="w-full bg-navy hover:bg-teal-dark btn-primary-dark text-white font-bold py-3.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-2">
+          <button type="button" onclick="showWizardStep(2)" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-2">
             <span data-lang-block="am">ቀጣይ: አድራሻ ያስገቡ</span><span data-lang-block="en">Next: Address &amp; Location</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
@@ -1742,7 +1703,7 @@
           </p>
           <div class="flex gap-3">
             <button type="button" onclick="showWizardStep(1)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
-            <button type="button" onclick="validateStep2AndContinue()" class="flex-1 bg-navy hover:bg-teal-dark btn-primary-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
+            <button type="button" onclick="validateStep2AndContinue()" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
           </div>
         </div>
 
@@ -2066,7 +2027,7 @@
   <p class="text-xs text-navy/60 mb-5 max-w-md mx-auto"><span data-lang-block="am">የትዕዛዝ ቁጥርዎን ወይም ስልክዎን በማስገባት የትዕዛዝዎን የስራ ሂደት እና የቀጠሮ ቀን ይመልከቱ</span><span data-lang-block="en">Enter your order ID or phone number to see real-time order status and schedule.</span></p>
   <form onsubmit="trackOrder(event)" class="max-w-md mx-auto flex gap-2">
     <input id="track-input" type="text" placeholder="MEASH-000123 or phone" class="flex-1 rounded-md border border-navy/15 px-4 py-3 text-sm focus:outline-none focus:border-teal">
-    <button type="submit" id="btn-track-submit" class="bg-navy hover:bg-teal-dark btn-primary-dark text-white font-bold px-6 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ፈልግ</span><span data-lang-block="en">Track</span></button>
+    <button type="submit" id="btn-track-submit" class="bg-navy hover:bg-teal-dark text-white font-bold px-6 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ፈልግ</span><span data-lang-block="en">Track</span></button>
   </form>
   <div id="track-result" class="hidden mt-6 text-left"></div>
 </section>
@@ -2074,7 +2035,7 @@
 </section>
 
 <!-- ================= CONTACT US & GOOGLE MAPS SECTION ================= -->
-<section id="contact" class="py-16 bg-white dark:bg-slate-900 border-t border-navy/10">
+<section id="contact" class="py-24 bg-white dark:bg-slate-900 border-t border-navy/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="text-center max-w-2xl mx-auto mb-16">
       <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
@@ -2102,7 +2063,7 @@
             </div>
             <h4 class="font-bold text-xs uppercase tracking-wider text-navy/50 dark:text-slate-400 mb-1"><span data-lang-block="am">ቀጥታ ስልክ መስመሮች (24/7)</span><span data-lang-block="en">Direct Hotlines</span></h4>
             <a href="tel:{{ $phone1 }}" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition">{{ $phone1 }}</a>
-            @if($phone2)<a href="tel:{{ $phone2 }}" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition mt-0.5">{{ $phone2 }}</a>@endif
+            <a href="tel:{{ $phone2 }}" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition mt-0.5">{{ $phone2 }}</a>
           </div>
 
           <div class="bg-fog dark:bg-slate-800 p-5 rounded-2xl border border-navy/10">
@@ -2131,14 +2092,14 @@
             <i data-lucide="map-pin" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
             <div>
               <h5 class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">ዋና ቢሮ አድራሻ</span><span data-lang-block="en">Head Office Location</span></h5>
-              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5"><span data-lang-block="am">{{ $addressAm }}</span><span data-lang-block="en">{{ $addressEn }}</span></p>
+              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">{{ $addressAm }} • {{ $addressEn }}</p>
             </div>
           </div>
           <div class="flex items-start gap-3">
             <i data-lucide="clock" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
             <div>
               <h5 class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">የስራ ሰዓት</span><span data-lang-block="en">Working Hours</span></h5>
-              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5"><span data-lang-block="am">{{ $hoursAm }}</span><span data-lang-block="en">{{ $hoursEn }}</span></p>
+              <p class="text-xs text-navy/70 dark:text-slate-300 mt-0.5">{{ $hoursAm }} • {{ $hoursEn }}</p>
             </div>
           </div>
         </div>
@@ -2206,7 +2167,7 @@
       </div>
 
       <!-- Google Maps Embed Container -->
-      <div class="rounded-3xl overflow-hidden border border-navy/10 shadow-lg h-[460px] lg:h-[580px] bg-slate-100 dark:bg-slate-800">
+      <div class="rounded-3xl overflow-hidden border border-navy/10 shadow-lg h-[460px] lg:h-[580px] bg-slate-100 dark:bg-slate-800 relative">
         <iframe
           title="Meash Cleaning Location in Ayat Addis Ababa"
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15760.329864205844!2d38.861111!3d9.022778!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b910055555555%3A0x1111111111111111!2sAyat%20Addis%20Ababa!5e0!3m2!1sen!2set!4v1700000000000!5m2!1sen!2set"
@@ -2218,9 +2179,8 @@
           referrerpolicy="no-referrer-when-downgrade"
           class="w-full h-full grayscale-[20%] hover:grayscale-0 transition-all duration-500">
         </iframe>
-      </div>
-      <!-- Meash Cleaning HQ card: sits below the map (it used to overlap it) -->
-      <div class="mt-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur p-4 rounded-2xl shadow-xl border border-navy/10 text-navy dark:text-white flex items-center justify-between">
+        <!-- Floating Pill over Map -->
+        <div class="absolute bottom-5 left-5 right-5 bg-white/95 dark:bg-slate-900/95 backdrop-blur p-4 rounded-2xl shadow-xl border border-navy/10 text-navy dark:text-white flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-teal-light text-teal-dark flex items-center justify-center shrink-0">
               <i data-lucide="map-pin" class="w-5 h-5 text-teal"></i>
@@ -2233,6 +2193,7 @@
           <a href="https://maps.google.com/?q=Ayat+Square+Addis+Ababa" target="_blank" class="text-xs font-bold bg-navy hover:bg-teal text-white px-3 py-1.5 rounded-lg transition shrink-0">
             Open Map
           </a>
+        </div>
       </div>
     </div>
   </div>
@@ -2252,39 +2213,39 @@
       </p>
       <div class="font-bold text-white text-sm space-y-1">
         <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> <a href="tel:{{ $phone1 }}" class="hover:text-teal transition">{{ $phone1 }}</a></p>
-        @if($phone2)<p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> <a href="tel:{{ $phone2 }}" class="hover:text-teal transition">{{ $phone2 }}</a></p>@endif
+        <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> <a href="tel:{{ $phone2 }}" class="hover:text-teal transition">{{ $phone2 }}</a></p>
       </div>
     </div>
     <div>
-      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4"><span data-lang-block="am">ይፋዊ የጽዳት አገልግሎቶች</span><span data-lang-block="en">Official Cleaning Services</span></p>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ይፋዊ የጽዳት አገልግሎቶች</p>
       <ul class="space-y-2 text-xs">
         @forelse($activeServices as $s)
-          <li><a href="#services" onclick="preselectService('{{ $s->code }}')" class="hover:text-teal transition"><span data-lang-block="am">{{ $s->name_am ?: $s->name_en }}</span><span data-lang-block="en">{{ $s->name_en ?: $s->name_am }}</span></a></li>
+          <li><a href="#services" onclick="preselectService('{{ $s->code }}')" class="hover:text-teal transition">{{ $s->name_am ?: $s->name_en }}</a></li>
         @empty
-          <li><a href="#services" class="hover:text-teal transition"><span data-lang-block="am">የወለል፣ የተቋማትና የሶፋ ጥልቅ ጽዳት</span><span data-lang-block="en">Floor, facility &amp; sofa deep cleaning</span></a></li>
+          <li><a href="#services" class="hover:text-teal transition">የወለል፣ የተቋማትና የሶፋ ጥልቅ ጽዳት</a></li>
         @endforelse
       </ul>
     </div>
     <div>
-      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4"><span data-lang-block="am">ድርጅት እና መረጃ</span><span data-lang-block="en">Company &amp; Information</span></p>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ድርጅት እና መረጃ</p>
       <ul class="space-y-2 text-xs">
-        <li><a href="#about" class="hover:text-teal transition"><span data-lang-block="am">ስለ እኛ</span><span data-lang-block="en">About Us</span></a></li>
-        <li><a href="#advantage" class="hover:text-teal transition"><span data-lang-block="am">ለምን ሜአሽን ይመርጣሉ?</span><span data-lang-block="en">Why Meash? (5 Pillars)</span></a></li>
-        <li><a href="#process" class="hover:text-teal transition"><span data-lang-block="am">ቀላል አሰራራችን</span><span data-lang-block="en">Our Process (5-Step)</span></a></li>
-        <li><a href="#gallery" class="hover:text-teal transition"><span data-lang-block="am">የስራ ጋለሪ</span><span data-lang-block="en">Projects (Before &amp; After)</span></a></li>
-        <li><a href="#reviews" class="hover:text-teal transition"><span data-lang-block="am">የደንበኞች አስተያየት</span><span data-lang-block="en">Customer Reviews</span></a></li>
-        <li><a href="#contact" class="hover:text-teal transition"><span data-lang-block="am">አድራሻ እና ካርታ</span><span data-lang-block="en">Contact &amp; Map</span></a></li>
+        <li><a href="#about" class="hover:text-teal transition">ስለ እኛ (About Us)</a></li>
+        <li><a href="#advantage" class="hover:text-teal transition">ለምን ሜአሽን ይመርጣሉ? (5 Pillars)</a></li>
+        <li><a href="#process" class="hover:text-teal transition">ቀላል አሰራራችን (5-Step Process)</a></li>
+        <li><a href="#gallery" class="hover:text-teal transition">የስራ ጋለሪ (Before &amp; After)</a></li>
+        <li><a href="#reviews" class="hover:text-teal transition">የደንበኞች አስተያየት (Reviews)</a></li>
+        <li><a href="#contact" class="hover:text-teal transition">አድራሻ እና ካርታ (Contact)</a></li>
         <li class="pt-2">
           <!-- Staff & Admin Secure Access Button -->
           <button type="button" onclick="openStaffModal()" class="inline-flex items-center gap-1.5 text-xs text-teal hover:text-white transition cursor-pointer py-1 border-b border-teal/40 hover:border-white">
             <i data-lucide="lock" class="w-3.5 h-3.5 text-teal"></i>
-            <span><span data-lang-block="am">የሰራተኞች እና አድሚን መግቢያ</span><span data-lang-block="en">Staff &amp; Admin Login</span></span>
+            <span>የሰራተኞች እና አድሚን መግቢያ (Staff OS)</span>
           </button>
         </li>
       </ul>
     </div>
     <div>
-      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4"><span data-lang-block="am">ማህበራዊ ትስስር ({{ $socialHandle }})</span><span data-lang-block="en">Social Channels ({{ $socialHandle }})</span></p>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ማህበራዊ ትስስር ({{ $socialHandle }})</p>
       <ul class="space-y-2 text-xs">
         <li><a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaningsolution' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashcleaningsolution)</a></li>
         <li><a href="{{ $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="message-circle" class="w-3.5 h-3.5 text-teal"></i> Direct Telegram (@meashcleaning)</a></li>
@@ -2294,7 +2255,7 @@
         <li><a href="{{ $facebookUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="facebook" class="w-3.5 h-3.5 text-teal"></i> Facebook</a></li>
       </ul>
       <div class="mt-4 pt-4 border-t border-white/10 text-xs text-white/50">
-        <span data-lang-block="am">{{ $addressAm }}</span><span data-lang-block="en">{{ $addressEn }}</span>
+        {{ $addressAm }} ({{ $addressEn }})
       </div>
     </div>
   </div>
@@ -2903,20 +2864,7 @@
     const totalEl = document.getElementById('wiz-total');
     const text = price != null ? ((price * wizardQty).toLocaleString() + ' ' + currency) : formatPrice(null);
     if (totalEl) totalEl.textContent = text;
-    updateQtyUnit();
     updateSubscriptionDiscount();
-  }
-
-  // Show the selected service's unit next to the quantity and in the total
-  // line (sqm for floor/glass, seat for upholstery, job for flat-rate jobs).
-  function updateQtyUnit(){
-    const unitEl = document.getElementById('qty-unit');
-    const totalUnitEl = document.getElementById('wiz-total-unit');
-    const priceEl = document.querySelector('.wiz-price[data-wiz-price="' + selectedSvcId + '"]');
-    const rawUnit = priceEl ? (priceEl.dataset.wizUnit || 'service') : 'service';
-    const label = { sqm: 'sqm', seat: 'seat', service: 'job' }[rawUnit] || rawUnit;
-    if (unitEl) unitEl.textContent = label;
-    if (totalUnitEl) totalUnitEl.textContent = wizardQty + ' ' + label;
   }
 
   // Initial price render — placed here, after the wizard state above exists.
