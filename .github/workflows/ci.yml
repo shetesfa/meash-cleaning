@@ -80,7 +80,16 @@ jobs:
         run: php artisan migrate:fresh --force
 
       - name: Execute Full Test Suite
-        run: php artisan test --colors=always
+        run: |
+          set +e
+          php artisan test --colors=never > test_output.txt 2>&1
+          TEST_EXIT_CODE=$?
+          cat test_output.txt
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat test_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          exit $TEST_EXIT_CODE
 
   frontend-build:
     name: Frontend Assets Build & Lint
