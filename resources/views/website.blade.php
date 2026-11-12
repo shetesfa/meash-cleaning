@@ -377,35 +377,255 @@
   /* ================= LIGHT MODE (when toggled) ================= */
   html.light {
     color-scheme: light;
-    background-color: #FFFFFF;
+
+    /* Complete Light Mode Design Tokens */
+    --bg: #F8FAFC;
+    --bg-soft: #F1F5F9;
+    --surface: #FFFFFF;
+    --surface-2: #F8FAFC;
+    --line: #E2E8F0;
+    --line-soft: #EDF2F7;
+
+    --text: #0F172A;
+    --text-strong: #020617;
+    --text-body: #1E293B;
+    --text-muted: #334155;
+    --text-faint: #64748B;
+
+    --brand: #0E7C7B;
+    --brand-bright: #0A5F5E;
+
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, .06), 0 10px 24px -4px rgba(15, 23, 42, .08);
+    --shadow-lift: 0 4px 6px -1px rgba(15, 23, 42, .08), 0 20px 25px -5px rgba(15, 23, 42, .12);
+    --ring: 0 0 0 3px rgba(14, 124, 123, .22);
+
+    background-color: var(--bg);
   }
-  html.light body { background: #FFFFFF !important; color: #0B1220 !important; }
+
+  html.light body {
+    background-color: var(--bg) !important;
+    color: var(--text-body) !important;
+  }
+
+  /* Header: frosted glass in light mode */
   html.light header {
-    background: rgba(255, 255, 255, .78) !important;
+    background-color: rgba(255, 255, 255, .90) !important;
     -webkit-backdrop-filter: saturate(180%) blur(16px);
     backdrop-filter: saturate(180%) blur(16px);
     border-color: #E2E8F0 !important;
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, .05);
   }
-  html.light .text-navy { color: #0B1220 !important; }
-  html.light .text-navy\/70 { color: rgba(11, 18, 32, .7) !important; }
-  html.light .bg-fog { background: #F6F7F9 !important; }
+  html.light nav {
+    color: #1E293B !important;
+  }
+
+  /* Surfaces & section backgrounds */
   html.light .bg-white {
-    background: #FFFFFF !important;
-    color: #0B1220 !important;
-    border-color: rgba(11, 18, 32, .1) !important;
+    background-color: #FFFFFF !important;
+    color: var(--text-body);
+    border-color: #E2E8F0 !important;
   }
-  html.light .bg-slate-50, html.light .bg-gray-50 { background: #F8FAFC !important; }
-  html.light input, html.light select, html.light textarea {
-    background: #FFFFFF !important;
-    color: #0B1220 !important;
+  html.light .bg-white\/95,
+  html.light .bg-white\/90 {
+    background-color: rgba(255, 255, 255, .96) !important;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-color: #E2E8F0 !important;
+  }
+  html.light .bg-fog {
+    background-color: #F8FAFC !important;
+  }
+  html.light .bg-slate-50, html.light .bg-gray-50 {
+    background-color: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+  }
+  html.light .bg-slate-100, html.light .bg-gray-100 {
+    background-color: #F1F5F9 !important;
+    color: #1E293B !important;
+    border-color: #E2E8F0 !important;
+  }
+  html.light .bg-teal-light\/20,
+  html.light .bg-teal-light\/30,
+  html.light .bg-teal-light\/40 {
+    background-color: rgba(14, 124, 123, .09) !important;
+  }
+  html.light .bg-teal-light {
+    background-color: #E3F3F2 !important;
+  }
+
+  /* ================= LIGHT MODE TYPOGRAPHY CONTRAST (Fixes all washed-out / invisible letters) ================= */
+  html.light .text-navy {
+    color: var(--text-strong) !important; /* #020617 - bold, crisp contrast */
+  }
+  html.light .text-navy\/90,
+  html.light .text-navy\/85,
+  html.light .text-navy\/80,
+  html.light .text-navy\/75 {
+    color: var(--text-body) !important; /* #1E293B */
+  }
+  html.light .text-navy\/70,
+  html.light .text-navy\/65,
+  html.light .text-navy\/60 {
+    color: #1E293B !important; /* rich dark slate - 100% readable text */
+  }
+  html.light .text-navy\/55,
+  html.light .text-navy\/50,
+  html.light .text-navy\/40 {
+    color: #334155 !important; /* clear secondary dark slate - WCAG AAA compliant */
+  }
+  html.light .text-navy\/30,
+  html.light .text-navy\/20,
+  html.light .text-navy\/15,
+  html.light .text-navy\/10 {
+    color: #64748B !important; /* subtle tertiary hints & step counters - never washed out */
+  }
+
+  html.light .text-slate-900,
+  html.light .text-slate-800 {
+    color: #0F172A !important;
+  }
+  html.light .text-slate-700 {
+    color: #1E293B !important;
+  }
+  html.light .text-slate-600,
+  html.light .text-slate-500 {
+    color: #334155 !important;
+  }
+  html.light .text-teal-dark {
+    color: #0A5F5E !important;
+  }
+  html.light .text-teal {
+    color: #0E7C7B !important;
+  }
+
+  /* Light mode borders */
+  html.light .border-navy\/10,
+  html.light .border-navy\/15,
+  html.light .border-navy\/20 {
+    border-color: #E2E8F0 !important;
+  }
+  html.light .border-slate-200,
+  html.light .border-gray-200 {
+    border-color: #E2E8F0 !important;
+  }
+  html.light .border-slate-100 {
+    border-color: #F1F5F9 !important;
+  }
+  html.light .divide-navy\/10 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #E2E8F0 !important;
+  }
+
+  /* Light mode form controls */
+  html.light input,
+  html.light select,
+  html.light textarea {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
     border-color: #CBD5E1 !important;
     border-radius: var(--radius-sm);
   }
-  html.light input:focus, html.light select:focus, html.light textarea:focus {
+  html.light input:hover,
+  html.light select:hover,
+  html.light textarea:hover {
+    border-color: #94A3B8 !important;
+  }
+  html.light input:focus,
+  html.light select:focus,
+  html.light textarea:focus {
     border-color: var(--brand) !important;
     box-shadow: 0 0 0 3px rgba(14, 124, 123, .22);
     outline: none;
   }
+  html.light select option {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+  }
+  html.light input::placeholder,
+  html.light textarea::placeholder {
+    color: #94A3B8 !important;
+  }
+
+  /* Light mode shadows & card lift */
+  html.light .shadow-xl,
+  html.light .shadow-lg,
+  html.light .shadow-md,
+  html.light .shadow-sm {
+    box-shadow: var(--shadow-card) !important;
+  }
+  html.light .rounded-2xl.border:hover,
+  html.light .rounded-3xl.border:hover {
+    box-shadow: var(--shadow-lift) !important;
+  }
+
+  /* Light mode theme toggle button */
+  html.light #theme-toggle-btn {
+    border-color: #CBD5E1 !important;
+    color: #0F172A !important;
+    background-color: #F1F5F9 !important;
+  }
+  html.light #theme-toggle-btn:hover {
+    background-color: #E2E8F0 !important;
+    color: #0E7C7B !important;
+  }
+
+  /* Booking wizard step indicators & cards in light mode */
+  html.light .step-dot.text-teal-dark {
+    color: #0A5F5E !important;
+    background-color: rgba(14, 124, 123, .12) !important;
+  }
+  html.light .step-dot:not(.text-teal-dark) {
+    color: #475569 !important;
+  }
+  html.light .step-dot:not(.text-teal-dark):hover {
+    color: #020617 !important;
+  }
+  html.light .svc-btn {
+    background-color: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+  }
+  html.light .svc-btn:hover {
+    border-color: #0E7C7B !important;
+  }
+  html.light .svc-btn.border-navy {
+    border-color: #0E7C7B !important;
+    background-color: rgba(14, 124, 123, .05) !important;
+    box-shadow: 0 0 0 1px #0E7C7B;
+  }
+
+  /* Reviews & test cards in light mode */
+  html.light #dynamic-reviews-grid > div,
+  html.light #reviews .border-l-2 {
+    background-color: #FFFFFF !important;
+    border-color: #0E7C7B !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
+  }
+
+  /* Preserve intentionally dark cards and sections in light mode */
+  html.light .bg-navy .text-white,
+  html.light .duo .text-white,
+  html.light footer .text-white,
+  html.light #process .text-white,
+  html.light .from-slate-900 .text-white,
+  html.light .to-navy .text-white {
+    color: #FFFFFF !important;
+  }
+  html.light .bg-navy [class*="text-white/"],
+  html.light .duo [class*="text-white/"],
+  html.light footer [class*="text-white/"],
+  html.light #process [class*="text-white/"],
+  html.light .from-slate-900 [class*="text-white/"] {
+    color: rgba(255, 255, 255, .82) !important;
+  }
+  html.light .bg-navy .text-teal,
+  html.light footer .text-teal,
+  html.light #process .text-teal {
+    color: #2DD4BF !important;
+  }
+  html.light .bg-navy .text-teal-light,
+  html.light footer .text-teal-light {
+    color: #A7F3D0 !important;
+  }
+
   html.light ::selection { background: rgba(14, 124, 123, .25); color: #0B1220; }
   html.light { scrollbar-color: #CBD5E1 #fff; }
   html.light ::-webkit-scrollbar-track { background: #fff; }
@@ -542,7 +762,7 @@
       </a>
 
       <!-- Dark Mode Toggle Button (Default Dark) -->
-      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 rounded-full border border-slate-700 text-amber-400 hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
+      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 rounded-full border border-slate-700 dark:border-slate-700 text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
         <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
       </button>
 
@@ -2886,9 +3106,13 @@
     document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById('step-' + n);
     if (target) target.classList.remove('hidden');
-    document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('text-teal-dark'));
+    document.querySelectorAll('.step-dot').forEach(d => {
+      d.classList.remove('text-teal-dark', 'bg-teal/10', 'font-black');
+    });
     const dot = document.querySelector(`.step-dot[data-step="${n}"]`);
-    if (dot) dot.classList.add('text-teal-dark');
+    if (dot) {
+      dot.classList.add('text-teal-dark', 'bg-teal/10', 'font-black');
+    }
     if (n === 4) updateWizardTotal();
     if (window.lucide) lucide.createIcons();
   }
