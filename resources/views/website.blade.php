@@ -778,16 +778,16 @@
         <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span>
       </a>
 
-      <!-- Mobile Hamburger Button (Visible on screens < xl) -->
-      <button type="button" onclick="toggleMobileNav()" id="mobile-menu-btn" class="xl:hidden p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center justify-center cursor-pointer shrink-0" aria-label="Open Navigation Menu">
+      <!-- Hamburger Menu Button (Available on all screens: mobile, tablet & desktop) -->
+      <button type="button" onclick="toggleMobileNav()" id="mobile-menu-btn" class="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center justify-center cursor-pointer shrink-0" aria-label="Open Navigation Menu" title="ምናሌ (Menu)">
         <i data-lucide="menu" id="mobile-menu-icon" class="w-5 h-5"></i>
       </button>
     </div>
   </div>
 </header>
 
-<!-- ================= MOBILE NAVIGATION DRAWER (Full Phone Experience) ================= -->
-<div id="mobile-nav-drawer" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden xl:hidden transition-all duration-300" onclick="if(event.target === this) closeMobileNav()">
+<!-- ================= NAVIGATION DRAWER (Mobile, Tablet & Desktop) ================= -->
+<div id="mobile-nav-drawer" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden transition-all duration-300" onclick="if(event.target === this) closeMobileNav()">
   <div class="fixed inset-y-0 right-0 max-w-xs w-full bg-white dark:bg-[#0B1220] shadow-2xl flex flex-col justify-between border-l border-slate-200 dark:border-slate-800">
     <!-- Drawer Top Header -->
     <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
