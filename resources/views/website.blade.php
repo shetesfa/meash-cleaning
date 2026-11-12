@@ -41,10 +41,24 @@
   $facebookUrl = $websiteSettings['facebook'] ?? 'https://facebook.com/meashcleaningsolution';
   $socialHandle = $websiteSettings['social_handle'] ?? '@meashcleaningsolution';
 @endphp
-<html lang="am" data-lang="am" class="scroll-smooth dark">
+<html lang="am" data-lang="am" class="dark">
 <head>
 <script>
   (function() {
+    // 1. Disable browser scroll restoration so page always opens at the top header on mobile & desktop
+    try {
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      if (!window.location.hash || window.location.hash === '#top' || window.location.hash === '#qr-code' || window.location.hash === '#book') {
+        if (window.location.hash === '#qr-code' || window.location.hash === '#book') {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+        window.scrollTo(0, 0);
+      }
+    } catch (e) {}
+
+    // 2. Initialize theme
     try {
       var saved = localStorage.getItem('meash_theme');
       if (saved === 'light') {
@@ -171,10 +185,12 @@
   *, *::before, *::after { box-sizing: border-box; }
 
   html {
-    scroll-behavior: smooth;
     scroll-padding-top: 5rem;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+  }
+  html.scroll-smooth {
+    scroll-behavior: smooth;
   }
 
   body {
@@ -674,7 +690,7 @@
   }
 </style>
 </head>
-<body class="antialiased">
+<body id="top" class="antialiased">
 
 <!-- ================= TOP ANNOUNCEMENT & HOTLINE BAR (Desktop/Tablet) ================= -->
 <div class="hidden md:block bg-[#070D18] text-slate-300 text-[11px] font-medium border-b border-white/10 relative z-50">
@@ -873,7 +889,7 @@
   </div>
 </div>
 
-<main id="top">
+<main id="main-content">
 
 <!-- ================= HERO ================= -->
 <section class="relative bg-gradient-to-b from-teal-light/20 via-transparent to-transparent">
@@ -3832,8 +3848,8 @@
   document.addEventListener('DOMContentLoaded', () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const reviewOrderParam = urlParams.get('order') || urlParams.get('review_order');
-      if (reviewOrderParam) {
+      const reviewOrderParam = (urlParams.get('order') || urlParams.get('review_order') || '').trim();
+      if (reviewOrderParam && reviewOrderParam !== 'undefined' && reviewOrderParam !== 'null') {
         const trackInput = document.getElementById('track-input');
         if (trackInput) {
           trackInput.value = reviewOrderParam;
@@ -4022,11 +4038,32 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    // 1. Keep page locked at top header on initial load
+    if (!window.location.hash || window.location.hash === '#top') {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+
     initTheme();
     if (window.lucide) lucide.createIcons();
     loadServicePrices();
     loadPublicReviews();
     initEthDatePicker();
+
+    // 2. Enable smooth scrolling for user clicks only AFTER initial layout settles
+    setTimeout(() => {
+      document.documentElement.classList.add('scroll-smooth');
+    }, 250);
+  });
+
+  // Ensure top header positioning on mobile back/forward cached restoration (BFCache)
+  window.addEventListener('pageshow', () => {
+    if (!window.location.hash || window.location.hash === '#top') {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
   });
 </script>
 
