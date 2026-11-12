@@ -10001,14 +10001,14 @@
             if (perm === 'granted') {
                 if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
                     const reg = await navigator.serviceWorker.ready;
-                    reg.showNotification('ሜአሽ የጽዳት አገልግሎት | MEASH CLEANING', {
+                    reg.showNotification('ሜሽ የጽዳት አገልግሎት | MEASH CLEANING', {
             body: ' ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል! የትዕዛዝ እና የቀጠሮ ማንቂያዎች ይደርሱዎታል።',
                         icon: '/assets/icon-192.png',
                         badge: '/assets/icon-192.png',
                         vibrate: [200, 100, 200]
                     });
                 } else {
-                    new Notification('ሜአሽ የጽዳት አገልግሎት | MEASH CLEANING', {
+                    new Notification('ሜሽ የጽዳት አገልግሎት | MEASH CLEANING', {
             body: ' ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል!',
                         icon: '/assets/icon-192.png'
                     });

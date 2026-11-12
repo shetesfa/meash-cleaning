@@ -304,10 +304,10 @@ class TelegramController extends Controller
       // CARD 1: All-in-One Official Showcase (Shown first on empty search)
       [
         'id' => 'meash_all_in_one',
-        'title' => 'ሜአሽ የጽዳት አገልግሎት | MEASH CLEANING SOLUTION',
+        'title' => 'ሜሽ የጽዳት አገልግሎት | MEASH CLEANING SOLUTION',
         'description' => "6ቱ አገልግሎቶች | \"Your Environment, Our Responsibility.\" | {$combinedPhones}",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=240&h=240&fit=crop',
-        'message_text' => "<b>ሜአሽ የጽዳት አገልግሎት | MEASH CLEANING SOLUTION</b>\n" .
+        'message_text' => "<b>ሜሽ የጽዳት አገልግሎት | MEASH CLEANING SOLUTION</b>\n" .
           "<b>\"Your Environment, Our Responsibility.\"</b>\n" .
           "<i>(Premium Commercial Cleaning Solutions — Hotels | Restaurants | Cafés | Offices)</i>\n\n" .
           "በአዲስ አበባ እና አካባቢው ዓለም አቀፍ ደረጃቸውን በጠበቁ የኢንዱስትሪ ማሽኖች፣ በስቲም (Steam) እና በደህንነታቸው በተረጋገጡ ኬሚካሎች አስተማማኝ የጽዳት አገልግሎት እንሰጣለን::\n\n" .
@@ -354,7 +354,7 @@ class TelegramController extends Controller
         'title' => '6ቱ ይፋዊ አገልግሎቶች | Core Services & Rates',
         'description' => 'የወለል፣ የተቋማት፣ የወጥ ቤት፣ የርክክብ፣ የመስታወት፣ የሶፋና ምንጣፍ ጥልቅ ጽዳት',
         'thumbnail_url' => 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=240&h=240&fit=crop',
-        'message_text' => "<b>የሜአሽ የጽዳት አገልግሎቶች (MEASH CLEANING SOLUTION)</b>\n" .
+        'message_text' => "<b>የሜሽ የጽዳት አገልግሎቶች (MEASH CLEANING SOLUTION)</b>\n" .
           "<b>\"Your Environment, Our Responsibility.\"</b>\n" .
           "<i>(Official 6 Core Cleaning Services)</i>\n\n" .
           "1. <b>የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት</b>\n" .
@@ -390,7 +390,7 @@ class TelegramController extends Controller
         'title' => 'ሶሻል ሚዲያ እና አድራሻ | Social Media & Hotline',
         'description' => "TikTok | Instagram | Facebook | ስልክ {$combinedPhones}",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=240&h=240&fit=crop',
-        'message_text' => "<b>ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION)</b>\n" .
+        'message_text' => "<b>ሜሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION)</b>\n" .
           "<b>\"Your Environment, Our Responsibility.\"</b>\n\n" .
           "የስራዎቻችንን ቪዲዮዎች፣ ቅናሾችና ጠቃሚ የጽዳት ምክሮችን ለማግኘት ይከተሉን:\n\n" .
           "• <b>TikTok:</b> {$tiktokUrl}\n" .
@@ -427,7 +427,7 @@ class TelegramController extends Controller
         'description' => 'ሶፋ፣ ምንጣፍ፣ ፍራሽ፣ መስታወትና ቤት ፅዳት ቀጠሮ በቀላሉ ይያዙ',
         'thumbnail_url' => 'https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=240&h=240&fit=crop',
         'message_text' => "<b>ፈጣን የቀጠሮ ማስያዣ | Fast Appointment Booking</b>\n" .
-          "<i>ሜአሽ የጽዳት አገልግሎት — MEASH CLEANING SOLUTION</i>\n" .
+          "<i>ሜሽ የጽዳት አገልግሎት — MEASH CLEANING SOLUTION</i>\n" .
           "<b>\"Your Environment, Our Responsibility.\"</b>\n\n" .
           "በጣም ቀላል እና ፈጣን! የሚፈልጉትን አገልግሎት፣ ቀን እና አድራሻዎን በማስገባት በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዝ ይችላሉ::\n\n" .
           "1. የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት\n" .
@@ -818,7 +818,7 @@ class TelegramController extends Controller
         return;
       }
 
-      $welcomeAm = WebsiteSetting::getVal('bot_welcome_am', "<b>እንኳን ወደ ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) በደህና መጡ!</b>\n\n\"Your Environment, Our Responsibility.\"\n\nከፍተኛ ጥራት የጠበቀ የንግድ ተቋማት የጽዳት አገልግሎት — ሆቴሎች | ሬስቶራንቶች | ካፌዎች | ቢሮዎች።\n\nዛሬ ምን ማፅዳት ይፈልጋሉ? ከታች ካሉት አማራጮች አንዱን ይምረጡ:");
+      $welcomeAm = WebsiteSetting::getVal('bot_welcome_am', "<b>እንኳን ወደ ሜሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) በደህና መጡ!</b>\n\n\"Your Environment, Our Responsibility.\"\n\nከፍተኛ ጥራት የጠበቀ የንግድ ተቋማት የጽዳት አገልግሎት — ሆቴሎች | ሬስቶራንቶች | ካፌዎች | ቢሮዎች።\n\nዛሬ ምን ማፅዳት ይፈልጋሉ? ከታች ካሉት አማራጮች አንዱን ይምረጡ:");
       $welcomeEn = WebsiteSetting::getVal('bot_welcome_en', "Welcome to MEASH CLEANING SOLUTION!\n\n\"Your Environment, Our Responsibility.\"\n\nPremium Commercial Cleaning Solutions — Hotels | Restaurants | Cafés | Offices.");
       $welcome = "{$welcomeAm}\n\n<i>{$welcomeEn}</i>";
 
@@ -888,7 +888,7 @@ class TelegramController extends Controller
       // General guidance
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "ጤና ይስጥልኝ! ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) ነው::\n\n\"Your Environment, Our Responsibility.\"\n\nቀጠሮ ለመያዝ፣ አገልግሎቶችን ለማየት ወይም ሪሴፕሽን ለማነጋገር /start ብለው ይላኩ::\n\nለበለጠ መረጃ: " . $this->getPhonesCombined() . "\nቦት: @{$this->botUsername}",
+        'text' => "ጤና ይስጥልኝ! ሜሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) ነው::\n\n\"Your Environment, Our Responsibility.\"\n\nቀጠሮ ለመያዝ፣ አገልግሎቶችን ለማየት ወይም ሪሴፕሽን ለማነጋገር /start ብለው ይላኩ::\n\nለበለጠ መረጃ: " . $this->getPhonesCombined() . "\nቦት: @{$this->botUsername}",
         'parse_mode' => 'HTML',
         'reply_markup' => json_encode([
           'inline_keyboard' => [
@@ -1303,7 +1303,7 @@ class TelegramController extends Controller
     $tgSupportUrl = str_starts_with($tgSupport, 'http') ? $tgSupport : 'https://t.me/' . ltrim($tgSupport, '@');
     $tiktokUrl = (string)WebsiteSetting::getVal('tiktok', 'https://www.tiktok.com/@meashcleaningsolution');
 
-    $msg = "<b>የሜአሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION)</b>\n" .
+    $msg = "<b>የሜሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION)</b>\n" .
       "<b>\"Your Environment, Our Responsibility.\"</b>\n\n" .
       "<b>የደንበኞች አገልግሎትና ሪሴፕሽን (Customer Support Desk):</b>\n\n" .
       "• <b>ዋና ስልክ:</b> {$phone1}\n" .
@@ -3167,7 +3167,7 @@ class TelegramController extends Controller
       }
 
       $instance = app(self::class);
-      $text = "<b>ክቡር ደንበኛችን</b>፣ የሜአሽ ጽዳት አገልግሎታችን እንዴት ነበር?\n\n" .
+      $text = "<b>ክቡር ደንበኛችን</b>፣ የሜሽ ጽዳት አገልግሎታችን እንዴት ነበር?\n\n" .
         "የትዕዛዝ ቁጥር: <code>{$order->order_number}</code>\n\n" .
         "እባክዎ ከ1 እስከ 5 ኮከብ በመስጠት ደረጃ ይስጡን፦";
 

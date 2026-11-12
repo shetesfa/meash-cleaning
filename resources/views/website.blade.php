@@ -21,7 +21,7 @@
   $phone1 = $websiteSettings['contact_phone_1'] ?? '0970075509';
   $phone2 = $websiteSettings['contact_phone_2'] ?? '0998142190';
   $companyName = $websiteSettings['company_name'] ?? 'MEASH CLEANING SOLUTION';
-  $companyNameAm = $websiteSettings['company_name_am'] ?? 'ሜአሽ የጽዳት አገልግሎት';
+  $companyNameAm = $websiteSettings['company_name_am'] ?? 'ሜሽ የጽዳት አገልግሎት';
   // STRICTLY IN ENGLISH EVERYWHERE — DO NOT TRANSLATE TO AMHARIC
   $sloganEn = 'Your Environment, Our Responsibility.';
   $sloganAm = 'Your Environment, Our Responsibility.';
@@ -64,7 +64,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>{{ $companyName }} | Best Commercial & Deep Cleaning in Addis Ababa | {{ $companyNameAm }}</title>
 <meta name="description" content="{{ $companyName }} ({{ $companyNameAm }}) — {{ $subtitleEn }}. {{ $sloganEn }} Call {{ $phone1 }} / {{ $phone2 }}">
-<meta name="keywords" content="Cleaning Services in Addis Ababa, Commercial Cleaning Addis Ababa, Hotel Cleaning Addis Ababa, Restaurant Sanitation, Office Cleaning Addis Ababa, Deep Cleaning Ethiopia, Meash Cleaning Solution, ሜአሽ የጽዳት አገልግሎት, የቢሮ ጽዳት, የሆቴል ጽዳት, የወለል እጥበት, የሶፋ እጥበት">
+<meta name="keywords" content="Cleaning Services in Addis Ababa, Commercial Cleaning Addis Ababa, Hotel Cleaning Addis Ababa, Restaurant Sanitation, Office Cleaning Addis Ababa, Deep Cleaning Ethiopia, Meash Cleaning Solution, ሜሽ የጽዳት አገልግሎት, የቢሮ ጽዳት, የሆቴል ጽዳት, የወለል እጥበት, የሶፋ እጥበት">
 <meta name="author" content="{{ $companyName }}">
 <meta name="theme-color" content="#0B1220">
 <link rel="manifest" href="/manifest.json">
@@ -671,7 +671,7 @@
       </div>
 
       <h1 class="font-serif font-bold text-[2.4rem] sm:text-[3.2rem] md:text-[3.6rem] leading-[1.08] tracking-tight text-navy">
-        MEASH CLEANING SOLUTION<br><span class="text-teal-dark text-[0.65em] font-bold block mt-1"><span data-lang-block="am">ሜአሽ የጽዳት አገልግሎት</span><span data-lang-block="en">Premium Commercial Cleaning Partner</span></span>
+        MEASH CLEANING SOLUTION<br><span class="text-teal-dark text-[0.65em] font-bold block mt-1"><span data-lang-block="am">ሜሽ የጽዳት አገልግሎት</span><span data-lang-block="en">Premium Commercial Cleaning Partner</span></span>
       </h1>
 
       <p class="mt-4 text-teal-dark font-extrabold text-[15px] sm:text-[17px] leading-snug">
@@ -790,12 +790,12 @@
       </div>
       <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight mb-6">
         <span class="block text-teal-dark font-mono text-xs uppercase tracking-widest mb-1">"Your Environment, Our Responsibility."</span>
-        <span data-lang-block="am">ሜአሽ የጽዳት አገልግሎት<br><span class="text-teal-dark font-normal text-[0.8em]">ለተቋማትና ንግድ ቦታዎች ፕሪሚየም አጋር</span></span>
+        <span data-lang-block="am">ሜሽ የጽዳት አገልግሎት<br><span class="text-teal-dark font-normal text-[0.8em]">ለተቋማትና ንግድ ቦታዎች ፕሪሚየም አጋር</span></span>
         <span data-lang-block="en">MEASH CLEANING SOLUTION<br><span class="text-teal-dark font-normal text-[0.8em]">Licensed &amp; Insured Premium B2B Partner</span></span>
       </h2>
       <div class="text-navy/75 text-[15px] sm:text-[16px] leading-relaxed space-y-4">
         <p data-lang-block="am" class="font-medium">
-          ሜአሽ የጽዳት አገልግሎት (MEASH CLEANING) ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማት ፕሪሚየም የጽዳት አገልግሎት የሚሰጥ ተቋም ነው። የሥራ ቦታዎን ንፅህና ለድርጅትዎ ስምና ክብር፣ እንዲሁም ለሰራተኞችዎ ጤና እና ምርታማነት ወሳኝ መሆኑን ተረድተን በላቀ ጥራት እንሰራለን።
+          ሜሽ የጽዳት አገልግሎት (MEASH CLEANING) ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማት ፕሪሚየም የጽዳት አገልግሎት የሚሰጥ ተቋም ነው። የሥራ ቦታዎን ንፅህና ለድርጅትዎ ስምና ክብር፣ እንዲሁም ለሰራተኞችዎ ጤና እና ምርታማነት ወሳኝ መሆኑን ተረድተን በላቀ ጥራት እንሰራለን።
         </p>
         <p data-lang-block="en" class="font-medium">
           Meash Cleaning Solution is a fully licensed and insured premium B2B cleaning partner based at Ayat Square. We deliver exceptional commercial-grade sanitation services designed to protect your facility, project a flawless corporate image, and boost workplace productivity.
@@ -905,10 +905,10 @@
     <div class="text-center max-w-2xl mx-auto mb-14">
       <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
         <i data-lucide="award" class="w-3.5 h-3.5"></i>
-        <span data-lang-block="am">ለምን ሜአሽን ይመርጣሉ?</span><span data-lang-block="en">WHY MEASH? — THE MEASH ADVANTAGE</span>
+        <span data-lang-block="am">ለምን ሜሽን ይመርጣሉ?</span><span data-lang-block="en">WHY MEASH? — THE MEASH ADVANTAGE</span>
       </div>
       <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight">
-        <span data-lang-block="am">የሜአሽ 5ቱ የላቁ መለያዎች (5 Core Pillars)</span>
+        <span data-lang-block="am">የሜሽ 5ቱ የላቁ መለያዎች (5 Core Pillars)</span>
         <span data-lang-block="en">5 Pillars of Cleaning Excellence</span>
       </h2>
       <p class="text-navy/70 text-sm sm:text-base mt-2">
@@ -1159,7 +1159,7 @@
       <span data-lang-block="am">ዋና ዋና አገልግሎቶቻችን</span><span data-lang-block="en">OUR CORE SERVICES</span>
     </div>
     <h2 class="font-serif font-bold text-3xl md:text-4xl text-navy leading-tight">
-      <span data-lang-block="am">ሜአሽ የሚሰጣቸው 6ቱ ይፋዊ አገልግሎቶች</span>
+      <span data-lang-block="am">ሜሽ የሚሰጣቸው 6ቱ ይፋዊ አገልግሎቶች</span>
       <span data-lang-block="en">6 Core Commercial &amp; Deep Cleaning Solutions</span>
     </h2>
     <p class="text-navy/70 text-sm sm:text-base mt-2">
@@ -2206,7 +2206,7 @@
       </div>
       <p class="text-xs text-teal-light font-semibold mb-3">"Your Environment, Our Responsibility."</p>
       <p class="text-xs text-white/70 leading-relaxed mb-3">
-        ሜአሽ የጽዳት አገልግሎት ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማትና ለመኖሪያ ቤቶች ፕሪሚየም የጥልቅ ጽዳት አገልግሎት የሚሰጥ ተቋም ነው።
+        ሜሽ የጽዳት አገልግሎት ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማትና ለመኖሪያ ቤቶች ፕሪሚየም የጥልቅ ጽዳት አገልግሎት የሚሰጥ ተቋም ነው።
       </p>
       <div class="font-bold text-white text-sm space-y-1">
         <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> <a href="tel:{{ $phone1 }}" class="hover:text-teal transition">{{ $phone1 }}</a></p>
@@ -2227,7 +2227,7 @@
       <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ድርጅት እና መረጃ</p>
       <ul class="space-y-2 text-xs">
         <li><a href="#about" class="hover:text-teal transition">ስለ እኛ (About Us)</a></li>
-        <li><a href="#advantage" class="hover:text-teal transition">ለምን ሜአሽን ይመርጣሉ? (5 Pillars)</a></li>
+        <li><a href="#advantage" class="hover:text-teal transition">ለምን ሜሽን ይመርጣሉ? (5 Pillars)</a></li>
         <li><a href="#process" class="hover:text-teal transition">ቀላል አሰራራችን (5-Step Process)</a></li>
         <li><a href="#gallery" class="hover:text-teal transition">የስራ ጋለሪ (Before &amp; After)</a></li>
         <li><a href="#reviews" class="hover:text-teal transition">የደንበኞች አስተያየት (Reviews)</a></li>

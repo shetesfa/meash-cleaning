@@ -461,8 +461,8 @@ class FullEndToEndSystemFlowTest extends TestCase
 
         // 4. 1-Click Telegram Broadcast
         $broadcastRes = $this->actingAs($this->owner)->postJson('/api/telegram-broadcast/dispatch', [
-            'title' => 'የሜአሽ ይፋዊ የበዓል ቅናሽ',
-            'message' => 'የሜአሽ ይፋዊ የበዓል ቅናሽ! "Your Environment, Our Responsibility."',
+            'title' => 'የሜሽ ይፋዊ የበዓል ቅናሽ',
+            'message' => 'የሜሽ ይፋዊ የበዓል ቅናሽ! "Your Environment, Our Responsibility."',
             'filter_type' => 'all',
         ]);
         $broadcastRes->assertStatus(200);
@@ -470,7 +470,7 @@ class FullEndToEndSystemFlowTest extends TestCase
 
         // 5. iPhone 1-Scan Auto-SMS Session Creation
         $smsSessionRes = $this->actingAs($this->owner)->postJson('/api/telegram-broadcast/create-sms-session', [
-            'message' => 'ሜአሽ የጽዳት አገልግሎት፦ ለቢሮዎ እና ለመኖሪያ ቤትዎ በ 0970075509 ይደውሉ።',
+            'message' => 'ሜሽ የጽዳት አገልግሎት፦ ለቢሮዎ እና ለመኖሪያ ቤትዎ በ 0970075509 ይደውሉ።',
             'filter_type' => 'all',
         ]);
         $smsSessionRes->assertStatus(200);

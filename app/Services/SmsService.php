@@ -101,7 +101,7 @@ class SmsService
         $baseUrl = rtrim(config('app.url') ?: env('APP_URL', url('/')), '/');
         $reviewUrl = "{$baseUrl}/?order={$order->order_number}&review=1#track-order";
 
-        $msg = "ውድ {$name}፣ የሜአሽ ጽዳት አገልግሎታችን እንዴት ነበር? እባክዎ ከ1 እስከ 5 ኮከብ በመስጠት ደረጃ ይስጡን፦ {$reviewUrl} | ሪሴፕሽን: 0970075509";
+        $msg = "ውድ {$name}፣ የሜሽ ጽዳት አገልግሎታችን እንዴት ነበር? እባክዎ ከ1 እስከ 5 ኮከብ በመስጠት ደረጃ ይስጡን፦ {$reviewUrl} | ሪሴፕሽን: 0970075509";
 
         return self::sendDirectSms($formattedPhone, $msg, [
             'event' => 'review_request',
