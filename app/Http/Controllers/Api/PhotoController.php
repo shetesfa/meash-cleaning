@@ -7,13 +7,15 @@ use App\Models\Photo;
 use App\Services\CloudinaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class PhotoController extends Controller
 {
     /**
-     * List every website photo, grouped by section, plus whether
-     * Cloudinary uploads are configured yet.
+     * List every website photo, grouped by section, plus which
+     * storage is active (cloudinary when keys exist, local otherwise).
      */
     public function index(CloudinaryService $cloudinary): JsonResponse
     {
@@ -35,14 +37,15 @@ class PhotoController extends Controller
         return response()->json([
             'success' => true,
             'cloudinary_configured' => $cloudinary->configured(),
+            'storage' => $cloudinary->configured() ? 'cloudinary' : 'local',
             'photos' => $photos,
         ]);
     }
 
     /**
-     * Add a photo. Uploads the file to Cloudinary when configured;
-     * otherwise returns a friendly 422 explaining the keys are missing.
-     * A plain image URL may be given instead of a file.
+     * Add a photo. Uploads the file to Cloudinary when configured,
+     * otherwise saves it on this server (test mode — see
+     * storeLocally). A plain image URL may be given instead of a file.
      */
     public function store(Request $request, CloudinaryService $cloudinary): JsonResponse
     {
@@ -66,20 +69,17 @@ class PhotoController extends Controller
 
         $url = $validated['url'] ?? null;
         if ($request->hasFile('photo')) {
-            if (!$cloudinary->configured()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cloudinary is not configured yet — add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET in the Render environment variables, then redeploy. Until then you can still add a photo by pasting its image URL.',
-                    'cloudinary_configured' => false,
-                ], 422);
-            }
-            try {
-                $url = $cloudinary->upload($request->file('photo'));
-            } catch (\RuntimeException $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage(),
-                ], 422);
+            if ($cloudinary->configured()) {
+                try {
+                    $url = $cloudinary->upload($request->file('photo'));
+                } catch (\RuntimeException $e) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage(),
+                    ], 422);
+                }
+            } else {
+                $url = $this->storeLocally($request->file('photo'));
             }
         }
 
@@ -109,7 +109,8 @@ class PhotoController extends Controller
 
     /**
      * Edit captions / section / service / status / order, and optionally
-     * replace the image file (Cloudinary upload when configured).
+     * replace the image file (Cloudinary when configured, local save
+     * otherwise).
      */
     public function update(Request $request, Photo $photo, CloudinaryService $cloudinary): JsonResponse
     {
@@ -148,29 +149,31 @@ class PhotoController extends Controller
         $data['service_code'] = $serviceCode;
 
         if ($request->hasFile('photo')) {
-            if (!$cloudinary->configured()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cloudinary is not configured yet — add the keys in the Render environment variables first.',
-                    'cloudinary_configured' => false,
-                ], 422);
-            }
-            try {
-                $data['url'] = $cloudinary->upload($request->file('photo'));
-            } catch (\RuntimeException $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage(),
-                ], 422);
+            if ($cloudinary->configured()) {
+                try {
+                    $data['url'] = $cloudinary->upload($request->file('photo'));
+                } catch (\RuntimeException $e) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage(),
+                    ], 422);
+                }
+            } else {
+                $data['url'] = $this->storeLocally($request->file('photo'));
             }
         } elseif (!empty($validated['url'])) {
             $data['url'] = $validated['url'];
         }
 
-        // Changing a photo keeps its old file out of the live site only
-        // when the row itself is deleted; old Cloudinary files are
-        // removed best-effort on delete (see destroy()).
+        $oldUrl = $photo->url;
         $photo->update($data);
+
+        // If the image was replaced, remove the old file best-effort
+        // (Cloudinary and/or local gallery file).
+        if (!empty($data['url']) && $data['url'] !== $oldUrl) {
+            $cloudinary->deleteByUrl($oldUrl);
+            $this->deleteLocalFile($oldUrl);
+        }
 
         return response()->json([
             'success' => true,
@@ -201,12 +204,51 @@ class PhotoController extends Controller
     public function destroy(Photo $photo, CloudinaryService $cloudinary): JsonResponse
     {
         $cloudinary->deleteByUrl($photo->url);
+        $this->deleteLocalFile($photo->url);
         $photo->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Photo deleted.',
         ]);
+    }
+
+    /**
+     * Test-mode storage: save an uploaded image on this server under
+     * public/images/gallery (the same folder as the seeded photos),
+     * and return its root-relative URL. Used only while Cloudinary
+     * is not configured. On Render the file is wiped on the next
+     * deploy/restart; on Plesk (real domain, later) it persists.
+     * The file is already validated as an image (jpg/png/webp, max
+     * 5 MB) by the request rules, and gets a unique name so an
+     * upload can never overwrite a seeded photo.
+     */
+    protected function storeLocally(UploadedFile $file): string
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $name = 'upload-' . time() . '-' . Str::random(8) . '.' . $extension;
+        $file->move(public_path('images/gallery'), $name);
+
+        return '/images/gallery/' . $name;
+    }
+
+    /**
+     * Best-effort delete of a locally stored gallery file. Only
+     * touches paths under /images/gallery; never throws.
+     */
+    protected function deleteLocalFile(?string $url): void
+    {
+        try {
+            if (empty($url) || !str_starts_with($url, '/images/gallery/')) {
+                return;
+            }
+            $path = public_path(ltrim($url, '/'));
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        } catch (\Throwable) {
+            // Best effort only — the row delete always wins.
+        }
     }
 
     protected function present(Photo $photo): array
