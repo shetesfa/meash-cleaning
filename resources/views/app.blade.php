@@ -510,7 +510,12 @@
         let activeTab = 'dashboard';
         let deferredPwaPrompt = null;
         let activeConflict = null;
-        let activeCleaningTeamId = localStorage.getItem('meash_active_team_id') || 1;
+        // Batch 15: never default to a hardcoded team id (was `|| 1`, i.e.
+        // team 1). A cleaner with no stored team must ask my-jobs WITHOUT a
+        // team_id so the server picks the cleaner's own first team; asking
+        // for team 1 got a 403 for every cleaner not on team 1, and the view
+        // then rendered empty tabs instead of the error. Null = no team yet.
+        let activeCleaningTeamId = localStorage.getItem('meash_active_team_id') || null;
         // Batch 14: never default to a fake seeded team name. The real name
         // comes from the my-jobs response (renderCleanerView); until then the
         // header falls back to the neutral 'የጽዳት ቡድን'. A stale stored fake
@@ -2206,6 +2211,10 @@
                 // to the else branch and referencing it in the template threw
                 // "ReferenceError: data is not defined" on every render.
                 let teamStats = null;
+                // Batch 15: set when my-jobs fails (403/500/…) so the view shows
+                // an honest error panel instead of empty tabs that look like
+                // "no jobs". Null = loaded fine (or loaded from offline cache).
+                let cleanerLoadError = null;
 
                 // Check offline cached jobs first if available
                 let cached = [];
@@ -2222,11 +2231,29 @@
                     todayList = cached;
                 } else {
                     const teamParam = activeCleaningTeamId ? `?team_id=${activeCleaningTeamId}` : '';
-                    const res = await apiFetch('/api/teams/my-jobs' + teamParam);
+                    let res = await apiFetch('/api/teams/my-jobs' + teamParam);
                     if (res.status === 401) {
                         return; // Redirected to login screen cleanly
                     }
-                    const data = await res.json();
+                    // Batch 15: a stored team id the cleaner no longer belongs
+                    // to (or a stale id left by another account on this device)
+                    // gets a 403 from my-jobs. Never render that as an empty
+                    // jobs list — retry once WITHOUT a team_id so the server
+                    // picks the cleaner's own first team. One retry only, no loop.
+                    if (res.status === 403 && activeCleaningTeamId) {
+                        try { localStorage.removeItem('meash_active_team_id'); } catch (e) { /* storage unavailable */ }
+                        activeCleaningTeamId = null;
+                        res = await apiFetch('/api/teams/my-jobs');
+                        if (res.status === 401) {
+                            return; // Redirected to login screen cleanly
+                        }
+                    }
+                    // Batch 15: a failed my-jobs load (403 even without a
+                    // team_id, 500, …) must surface as an error, never as
+                    // empty tabs that look like "no jobs". data stays null
+                    // and the lists stay empty; cleanerLoadError is shown.
+                    const data = res.ok ? await res.json() : null;
+                    if (data) {
                     teamStats = data.stats || null;
                     todayList = data.today_jobs || [];
                     upcomingList = data.upcoming_jobs || [];
@@ -2265,6 +2292,12 @@
                         } catch (e) {
                             console.warn('Offline caching skipped:', e);
                         }
+                    }
+                    } else {
+                        // Batch 15: my-jobs failed (403 even without a team_id,
+                        // 500, …). Show the failure honestly instead of empty
+                        // tabs that look like "no jobs for this team".
+                        cleanerLoadError = 'ቡድን መጫን አልተቻለም — እባክዎ እንደገና ይሞክሩ (' + res.status + ')';
                     }
                 }
 
@@ -2352,10 +2385,10 @@
                         </div>
 
                         ${jobs.length === 0 ? `
-                            <div class="p-12 text-center bg-slate-900 rounded-3xl border border-slate-800">
-                                <i data-lucide="${activeTab === 'cleaner_history' ? 'clock' : (activeTab === 'cleaner_upcoming' ? 'calendar' : 'check-circle-2')}" class="w-12 h-12 ${activeTab === 'cleaner_history' ? 'text-emerald-400' : 'text-cyan-400'} mx-auto mb-3"></i>
-                                <h4 class="text-lg font-bold text-white">${emptyTitle}</h4>
-                                <p class="text-xs text-slate-400 mt-1">${emptyMsg}</p>
+                            <div class="p-12 text-center bg-slate-900 rounded-3xl border ${cleanerLoadError ? 'border-red-500/40' : 'border-slate-800'}">
+                                <i data-lucide="${cleanerLoadError ? 'alert-triangle' : (activeTab === 'cleaner_history' ? 'clock' : (activeTab === 'cleaner_upcoming' ? 'calendar' : 'check-circle-2'))}" class="w-12 h-12 ${cleanerLoadError ? 'text-red-400' : (activeTab === 'cleaner_history' ? 'text-emerald-400' : 'text-cyan-400')} mx-auto mb-3"></i>
+                                <h4 class="text-lg font-bold text-white">${cleanerLoadError || emptyTitle}</h4>
+                                <p class="text-xs text-slate-400 mt-1">${cleanerLoadError ? 'ቡድንዎን መጫን አልተቻለም፤ ገጹን እንደገና ይጫኑ ወይም እንደገና ይግቡ።' : emptyMsg}</p>
                             </div>
                         ` : ''}
 
