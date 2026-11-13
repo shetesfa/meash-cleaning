@@ -74,9 +74,20 @@ class PublicWebsiteController extends Controller
             'items' => 'required|array|min:1',
             'items.*.service_id' => 'required|exists:services,id',
             'items.*.item_name' => 'required|string',
-            'items.*.quantity' => 'required|numeric|min:0.1',
+            'items.*.quantity' => 'required|numeric|min:0.1|max:1000',
             'items.*.unit_price' => 'required|numeric|min:0',
         ]);
+
+        // Server-side phone enforcement (public, unauthenticated endpoint):
+        // normalize to the canonical 09XXXXXXXX form first, then require a
+        // valid Ethiopian mobile — a malformed number such as "123" must
+        // fail with a clear 422.
+        $validated['customer_phone'] = SecurityTokenService::normalizePhone($validated['customer_phone']);
+        if (!preg_match('/^0[79]\d{8}$/', (string)$validated['customer_phone'])) {
+            throw ValidationException::withMessages([
+                'customer_phone' => ['ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (ለምሳሌ 0912345678) — Please enter a valid Ethiopian mobile number.'],
+            ]);
+        }
 
         return DB::transaction(function () use ($validated) {
             $phone = SecurityTokenService::normalizePhone($validated['customer_phone']);

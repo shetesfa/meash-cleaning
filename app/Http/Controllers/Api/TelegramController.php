@@ -14,6 +14,7 @@ use App\Models\TelegramUser;
 use App\Models\WebsiteSetting;
 use App\Services\EthiopianCalendarService;
 use App\Services\OrderLifecycleService;
+use App\Services\SecurityTokenService;
 use App\Services\SmsService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -1446,7 +1447,7 @@ class TelegramController extends Controller
       'subcity' => 'nullable|string',
       'latitude' => 'nullable|numeric',
       'longitude' => 'nullable|numeric',
-      'appointment_date' => 'required|date',
+      'appointment_date' => 'required|date|after_or_equal:today',
       'appointment_time_slot' => 'nullable|string',
       'subscription_plan' => 'nullable|string|in:one_time,weekly,biweekly,monthly',
       'telegram_user_id' => 'nullable|string',
@@ -1456,9 +1457,20 @@ class TelegramController extends Controller
       'items.*.service_id' => 'nullable|exists:services,id',
       'items.*.service_code' => 'nullable|string|max:64',
       'items.*.item_name' => 'required|string',
-      'items.*.quantity' => 'required|numeric|min:0.1',
+      'items.*.quantity' => 'required|numeric|min:0.1|max:1000',
       'items.*.unit_price' => 'required|numeric|min:0',
     ]);
+
+    // Server-side phone enforcement (public, unauthenticated endpoint):
+    // normalize to the canonical 09XXXXXXXX form first so +251/09
+    // variants map to one customer, then require a valid Ethiopian mobile.
+    // A malformed number such as "123" must fail with a clear 422.
+    $validated['customer_phone'] = SecurityTokenService::normalizePhone($validated['customer_phone']);
+    if (!preg_match('/^0[79]\d{8}$/', (string)$validated['customer_phone'])) {
+      throw ValidationException::withMessages([
+        'customer_phone' => ['ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (ለምሳሌ 0912345678) — Please enter a valid Ethiopian mobile number.'],
+      ]);
+    }
 
     $initData = $request->input('init_data');
     $enforceInitData = config('services.telegram.enforce_initdata') !== null
