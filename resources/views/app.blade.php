@@ -5970,6 +5970,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800">
                         <div class="text-[11px] text-slate-400 space-y-0.5">
                             <p>• የሚላክላቸው ጠቅላላ፦ <strong class="text-emerald-400 font-mono font-bold" id="label-send-count">${eligibleCount.toLocaleString()}</strong> ደንበኞች</p>
+                            <p>• በተመረጡ (checkbox)፦ <strong class="text-cyan-400 font-mono font-bold" id="label-selected-count">0</strong> ደንበኞች</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-3">
                             <!-- 1. Phone SMS Button -->
@@ -5997,7 +5998,7 @@
 
                         <!-- Bulk Actions Toolbar -->
                         <div class="flex flex-wrap items-center gap-2 text-xs">
-                            <button type="button" onclick="bulkActionContacts('delete')" class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 font-bold flex items-center gap-1 cursor-pointer transition">
+                            <button type="button" onclick="bulkActionContacts('delete', this)" class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 font-bold flex items-center gap-1 cursor-pointer transition">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                 <span>በቋሚነት ሰርዝ (Delete)</span>
                             </button>
@@ -6100,7 +6101,7 @@
                             <button type="button" onclick="openEditRecipientModal(${u.id})" class="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 transition cursor-pointer" title="አስተካክል (Edit)">
                                 <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                             </button>
-                            <button type="button" onclick="deleteSingleRecipient(${u.id}, '${encodeURIComponent(u.name || '')}')" class="p-1 rounded-lg bg-slate-800 hover:bg-rose-900/40 text-rose-400 transition cursor-pointer" title="በቋሚነት ሰርዝ (Delete)">
+                            <button type="button" onclick="deleteSingleRecipient(${u.id}, '${encodeURIComponent(u.name || '')}', this)" class="p-1 rounded-lg bg-slate-800 hover:bg-rose-900/40 text-rose-400 transition cursor-pointer" title="በቋሚነት ሰርዝ (Delete)">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
@@ -6198,6 +6199,7 @@
             } else {
                 selectedContactIds.delete(id);
             }
+            updateBroadcastCountersDom();
         }
 
         function toggleSelectAllBroadcast(selectAll) {
@@ -6213,6 +6215,7 @@
                     }
                 }
             });
+            updateBroadcastCountersDom();
         }
 
         // Toggle friend exclusion single contact
@@ -6248,8 +6251,15 @@
             }
         }
 
-        // Bulk Action: Exclude, Include, or Delete selected contacts
-        async function bulkActionContacts(action) {
+        // Two-tap arming state for broadcast deletes (same pattern as the
+        // Photos tab). No native confirm() — automated browsers silently
+        // dismiss those dialogs, so delete never ran.
+        window._broadcastDeleteArmed = window._broadcastDeleteArmed || {};
+
+        // Bulk Action: Exclude, Include, or Delete selected contacts.
+        // First tap arms the button ("are you sure? tap again"), second tap
+        // within 4 seconds executes; the arm auto-expires after 4 seconds.
+        async function bulkActionContacts(action, btn) {
             const ids = Array.from(selectedContactIds);
             if (ids.length === 0) {
                 alert('እባክዎ መጀመሪያ ከሰንጠረዡ ውስጥ ደንበኞችን በቼክቦክስ ይምረጡ!');
@@ -6257,9 +6267,25 @@
             }
 
             const actionAm = action === 'delete' ? 'በቋሚነት ይሰረዙ' : (action === 'exclude' ? 'እንደ ጓደኛ/ቤተሰብ ከስርጭት ይገለሉ' : 'ወደ ስርጭት ዝርዝር ይመለሱ');
-            if (!confirm(`የተመረጡት ${ids.length} ደንበኞች ${actionAm}?`)) {
+            const armKey = 'bulk-' + action;
+            const span = btn ? btn.querySelector('span') : null;
+            const origText = span ? span.innerText : '';
+            if (!window._broadcastDeleteArmed[armKey]) {
+                window._broadcastDeleteArmed[armKey] = true;
+                if (btn) {
+                    btn.classList.add('bg-red-600', 'text-white');
+                    if (span) span.innerText = 'እርግጠኛ ነህ? እንደገና ጠቅ አድርግ';
+                }
+                setTimeout(() => {
+                    window._broadcastDeleteArmed[armKey] = false;
+                    if (btn && btn.isConnected) {
+                        btn.classList.remove('bg-red-600', 'text-white');
+                        if (span) span.innerText = origText;
+                    }
+                }, 4000);
                 return;
             }
+            window._broadcastDeleteArmed[armKey] = false;
 
             try {
                 const res = await apiFetch('/api/telegram-broadcast/recipients/bulk-action', {
@@ -6276,15 +6302,36 @@
                 }
             } catch (err) {
                 alert('የኔትወርክ ስህተት፡ ' + err.message);
+            } finally {
+                if (btn && btn.isConnected) {
+                    btn.classList.remove('bg-red-600', 'text-white');
+                    if (span) span.innerText = origText;
+                }
             }
         }
 
-        // Single contact delete
-        async function deleteSingleRecipient(id, encodedName) {
+        // Single contact delete — two-tap confirmation (same pattern as the
+        // Photos tab): first tap arms the button (red + prompt), second tap
+        // within 4 seconds executes. No native confirm() — automated
+        // browsers silently dismiss those, so delete never ran.
+        async function deleteSingleRecipient(id, encodedName, btn) {
             const name = decodeURIComponent(encodedName || 'ደንበኛ');
-            if (!confirm(`ደንበኛ "${name}" በቋሚነት ከዳታቤዝ ይሰረዝ?`)) {
+            if (!window._broadcastDeleteArmed[id]) {
+                window._broadcastDeleteArmed[id] = true;
+                if (btn) {
+                    btn.classList.add('bg-red-600', 'text-white');
+                    btn.title = 'እርግጠኛ ነህ? እንደገና ጠቅ አድርግ';
+                }
+                setTimeout(() => {
+                    window._broadcastDeleteArmed[id] = false;
+                    if (btn && btn.isConnected) {
+                        btn.classList.remove('bg-red-600', 'text-white');
+                        btn.title = 'በቋሚነት ሰርዝ (Delete)';
+                    }
+                }, 4000);
                 return;
             }
+            window._broadcastDeleteArmed[id] = false;
 
             try {
                 const res = await apiFetch(`/api/telegram-broadcast/recipients/${id}`, { method: 'DELETE' });
@@ -6304,9 +6351,28 @@
             }
         }
 
-        // Export contacts to CSV
-        function exportContactsCsv() {
-            window.open('/api/telegram-broadcast/export?format=csv', '_blank');
+        // Export contacts to CSV (auth:sanctum route — window.open sends no
+        // Authorization header, so fetch with the token and download a blob).
+        async function exportContactsCsv() {
+            const token = await getAuthToken();
+            const res = await fetch('/api/telegram-broadcast/export?format=csv', {
+                headers: token
+                    ? { 'Authorization': `Bearer ${token}`, 'Accept': 'text/csv' }
+                    : { 'Accept': 'text/csv' },
+            });
+            if (!res.ok) {
+                alert('Export አልተቻለም (' + res.status + ')። እባክዎ እንደገና ይግቡ።');
+                return;
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'meash_contacts_' + new Date().toISOString().slice(0, 10).replace(/-/g, '_') + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
         }
 
         // Update counters without re-rendering page
@@ -6319,11 +6385,13 @@
             const elExcluded = document.getElementById('stat-excluded-count');
             const elLabelSend = document.getElementById('label-send-count');
             const elLabelExcluded = document.getElementById('label-excluded-count');
+            const elSelected = document.getElementById('label-selected-count');
 
             if (elEligible) elEligible.textContent = eligibleCount.toLocaleString();
             if (elExcluded) elExcluded.textContent = excludedCount.toLocaleString();
             if (elLabelSend) elLabelSend.textContent = eligibleCount.toLocaleString();
             if (elLabelExcluded) elLabelExcluded.textContent = excludedCount.toLocaleString();
+            if (elSelected) elSelected.textContent = selectedContactIds.size.toLocaleString();
         }
 
         // Apply templates into in-page message writer

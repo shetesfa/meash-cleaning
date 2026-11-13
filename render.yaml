@@ -13,6 +13,8 @@ services:
         value: production
       - key: APP_DEBUG
         value: "false"
+      - key: QUEUE_CONNECTION
+        value: "sync"
       - key: APP_KEY
         generateValue: true
       - key: APP_URL

@@ -858,7 +858,10 @@ class TelegramBroadcastController extends Controller
 
         $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
 
-        $explicitExcluded = array_map('strval', $validated['excluded_telegram_ids'] ?? []);
+        // NOTE: the admin UI sends TelegramUser DB ids (u.id), NOT Telegram
+        // chat ids — so exclude by DB id. (Chat ids cannot be used: many
+        // recipients are phone-only and have no telegram_id.)
+        $explicitExcluded = array_map('intval', $validated['excluded_telegram_ids'] ?? []);
         $recipientIds = $validated['recipient_ids'] ?? [];
         $tag = $validated['tag'] ?? null;
         $routePhoneToSms = (bool)($request->input('route_phone_to_sms', true));
@@ -891,11 +894,16 @@ class TelegramBroadcastController extends Controller
         $phoneOnlyTargets = [];
 
         foreach ($allCandidates as $u) {
+            // Explicit per-send exclusion (DB ids from the UI).
+            if (in_array((int)$u->id, $explicitExcluded, true)) {
+                continue;
+            }
+
             $chatId = $u->telegram_id ? (string)$u->telegram_id : null;
             $phone = $u->phone_number;
 
             // Validate telegram_chat_id: must be numeric and valid Telegram ID (typically > 10000)
-            $isValidTelegram = !empty($chatId) && is_numeric($chatId) && (int)$chatId > 10000 && !in_array($chatId, $explicitExcluded);
+            $isValidTelegram = !empty($chatId) && is_numeric($chatId) && (int)$chatId > 10000;
 
             if ($isValidTelegram) {
                 $telegramTargets[$chatId] = [
