@@ -915,9 +915,11 @@
 
   /* ============ MEASH MODERN (approved sample) — hero 3D slider, photo service cards, 3-step, gallery ============ */
   .ms-hero-panel { background: linear-gradient(160deg, #0A2A4A 0%, #061A30 78%); border-radius: 1.25rem; overflow: hidden; position: relative; box-shadow: 0 25px 50px rgba(6,26,48,.35); }
-  .ms-stage { position: relative; height: 520px; perspective: 1400px; outline: none; }
+  .ms-stage { position: relative; height: 520px; perspective: 1400px; outline: none; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
+  .ms-stage.ms-dragging { cursor: grabbing; }
+  .ms-stage.ms-dragging .ms-slide { transition: none; }
   .ms-slide { position: absolute; top: 50%; left: 50%; width: min(302px, 64vw); aspect-ratio: 3/4; border-radius: 22px; overflow: hidden; background: #0d2c49; box-shadow: 0 30px 60px rgba(0,0,0,.45); transition: transform .65s cubic-bezier(.22,.9,.28,1), opacity .65s ease, filter .65s ease; will-change: transform; cursor: pointer; border: 1px solid rgba(255,255,255,.14); margin: 0; }
-  .ms-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ms-slide img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-user-drag: none; }
   .ms-slide figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 34px 16px 13px; color: #fff; background: linear-gradient(transparent, rgba(4,20,36,.85)); font-weight: 700; font-size: .92rem; }
   .ms-slide figcaption .ms-cap-name { display: block; }
   .ms-slide figcaption .ms-cap-price { display: block; font-size: .82rem; color: #7dd3fc; font-weight: 800; margin-top: 2px; }
@@ -4408,31 +4410,32 @@
     if (stage) {
       var slides = Array.prototype.slice.call(stage.querySelectorAll('.ms-slide'));
       var dotsBox = document.getElementById('ms-dots');
-      var dots = [], active = 0, timer = null;
+      var dots = [], active = 0, pos = 0, timer = null;
+      var dragging = false, dragged = false, dragX = 0, dragStartX = 0, dragPos = 0, dragStep = 170, lastX = 0, lastT = 0;
 
       slides.forEach(function (fig, i) {
         var d = document.createElement('button');
         d.type = 'button'; d.className = 'ms-dot'; d.setAttribute('aria-label', 'Photo ' + (i + 1));
         d.addEventListener('click', function () { goTo(i); restart(); });
         dotsBox.appendChild(d); dots.push(d);
-        fig.addEventListener('click', function () { goTo(i); restart(); });
+        fig.addEventListener('click', function () { if (dragged) { dragged = false; return; } goTo(i); restart(); });
       });
 
       function layout() {
         slides.forEach(function (s, i) {
-          var off = i - active, ao = Math.abs(off);
-          var x = off * 56, z = -ao * 190, r = off === 0 ? 0 : (off > 0 ? -34 : 34);
+          var off = i - pos, ao = Math.abs(off);
+          var x = off * 56, z = -ao * 190, r = Math.max(-34, Math.min(34, -off * 34));
           s.style.transform = 'translate(-50%,-50%) translateX(' + x + '%) translateZ(' + z + 'px) rotateY(' + r + 'deg)';
-          s.style.zIndex = String(20 - ao);
-          s.style.opacity = ao > 2 ? '0' : (ao === 2 ? '.45' : '1');
-          s.style.filter = ao === 0 ? 'none' : 'brightness(.72) saturate(.85)';
-          s.style.pointerEvents = ao > 2 ? 'none' : 'auto';
+          s.style.zIndex = String(20 - Math.floor(ao));
+          s.style.opacity = ao > 2.5 ? '0' : (ao <= 1 ? '1' : String(1 - (ao - 1) * 0.55));
+          s.style.filter = ao === 0 ? 'none' : 'brightness(' + (1 - Math.min(ao, 1) * 0.28).toFixed(2) + ') saturate(' + (1 - Math.min(ao, 1) * 0.15).toFixed(2) + ')';
+          s.style.pointerEvents = ao > 2.5 ? 'none' : 'auto';
           var fc = s.querySelector('figcaption');
-          if (fc) fc.style.opacity = ao >= 2 ? '0' : '1';
+          if (fc) fc.style.opacity = ao >= 2 ? '0' : (ao <= 1 ? '1' : String(2 - ao));
         });
-        dots.forEach(function (d, i) { d.classList.toggle('on', i === active); });
+        dots.forEach(function (d, i) { d.classList.toggle('on', i === Math.round(pos)); });
       }
-      function goTo(i) { active = (i + slides.length) % slides.length; layout(); }
+      function goTo(i) { active = (i + slides.length) % slides.length; pos = active; layout(); }
       function next() { goTo(active + 1); }
       function prev() { goTo(active - 1); }
       function restart() {
@@ -4442,18 +4445,55 @@
       document.getElementById('ms-next-btn').addEventListener('click', function () { next(); restart(); });
       document.getElementById('ms-prev-btn').addEventListener('click', function () { prev(); restart(); });
       stage.addEventListener('mouseenter', function () { if (timer) clearInterval(timer); });
-      stage.addEventListener('mouseleave', restart);
+      stage.addEventListener('mouseleave', function () { if (!dragging) restart(); });
       stage.addEventListener('keydown', function (e) {
         if (e.key === 'ArrowRight') { next(); restart(); }
         if (e.key === 'ArrowLeft') { prev(); restart(); }
       });
-      var sx = null;
-      stage.addEventListener('pointerdown', function (e) { sx = e.clientX; });
-      stage.addEventListener('pointerup', function (e) {
-        if (sx === null) return;
-        var dx = e.clientX - sx; sx = null;
-        if (Math.abs(dx) > 42) { if (dx < 0) next(); else prev(); restart(); }
-      });
+      /* Hand drag: the slide follows your finger / mouse, then snaps smoothly
+         to the nearest photo. Touch and mouse both work; arrows, dots and
+         keyboard still work as before. */
+      function dragStart(e) {
+        if (e.target && e.target.closest && e.target.closest('button')) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        dragging = true; dragged = false;
+        dragX = e.clientX; dragStartX = e.clientX; dragPos = pos;
+        lastX = e.clientX; lastT = Date.now();
+        dragStep = (slides[0] && slides[0].offsetWidth > 0) ? slides[0].offsetWidth * 0.56 : 170;
+        if (timer) clearInterval(timer);
+        stage.classList.add('ms-dragging');
+        try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+        if (e.pointerType === 'mouse') e.preventDefault();
+      }
+      function dragMove(e) {
+        if (!dragging) return;
+        var dx = e.clientX - dragX;
+        pos = dragPos - dx / dragStep;
+        var max = slides.length - 1;
+        if (pos < 0) pos = pos * 0.25;
+        else if (pos > max) pos = max + (pos - max) * 0.25;
+        if (Math.abs(e.clientX - dragStartX) > 8) dragged = true;
+        lastX = e.clientX; lastT = Date.now();
+        layout();
+      }
+      function dragEnd(e) {
+        if (!dragging) return;
+        dragging = false;
+        stage.classList.remove('ms-dragging');
+        var now = Date.now(), dt = now - lastT;
+        var vel = dt > 0 ? (e.clientX - lastX) / dt : 0;
+        var target = Math.round(pos);
+        if (Math.abs(vel) > 0.45 && Math.abs(e.clientX - dragStartX) > 25 && target === active) {
+          target = active + (vel < 0 ? 1 : -1);
+        }
+        target = Math.max(0, Math.min(slides.length - 1, target));
+        active = target; pos = target;
+        layout(); restart();
+      }
+      stage.addEventListener('pointerdown', dragStart);
+      stage.addEventListener('pointermove', dragMove);
+      stage.addEventListener('pointerup', dragEnd);
+      stage.addEventListener('pointercancel', dragEnd);
       layout(); restart();
     }
 
