@@ -491,7 +491,20 @@ class TelegramBroadcastController extends Controller
 
         // Try JSON parsing first (Telegram Desktop result.json or any machine-readable JSON array/object)
         $jsonData = json_decode($raw, true);
+        $jsonError = json_last_error();
         if ($jsonData) {
+            // A single-chat export (one conversation) has no contacts list —
+            // tell the user to use the full export instead of shredding it.
+            if (isset($jsonData['messages']) && is_array($jsonData['messages'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ይህ ፋይል የአንድ chat export ነው — እባክዎ ሙሉውን የ contacts ዝርዝር (result.json) ይጠቀሙ።',
+                ], 422);
+            }
+            // {"contacts": [...]} — a plain list, not the Desktop {"list": [...]} shape.
+            if (isset($jsonData['contacts']) && is_array($jsonData['contacts']) && array_is_list($jsonData['contacts'])) {
+                return $this->processGenericJsonArray($jsonData['contacts']);
+            }
             if (isset($jsonData['contacts']) || isset($jsonData['frequent_contacts']) || isset($jsonData['chats'])) {
                 return $this->processTelegramDesktopJson($jsonData);
             }
@@ -512,6 +525,15 @@ class TelegramBroadcastController extends Controller
             if ($list !== null) {
                 return $this->processGenericJsonArray($list);
             }
+        }
+
+        // It looked like JSON but did not parse — never shred it as CSV
+        // lines (that used to create junk rows with a false success).
+        if ($jsonError !== JSON_ERROR_NONE) {
+            return response()->json([
+                'success' => false,
+                'message' => 'የ JSON ፋይሉ ትክክል አይደለም። እባክዎ ትክክለኛ Telegram export (result.json) ወይም CSV ይጠቀሙ።',
+            ], 422);
         }
 
         // Otherwise process as plain text / CSV lines

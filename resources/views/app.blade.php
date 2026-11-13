@@ -6744,7 +6744,7 @@
             }
 
             try {
-                const token = getAuthToken();
+                const token = await getAuthToken();
                 const res = await fetch('/api/telegram-broadcast/import', {
                     method: 'POST',
                     headers: {

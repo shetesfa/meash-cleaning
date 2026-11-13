@@ -27,6 +27,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # 4. Copy Server Configurations (Nginx, PHP-FPM, OPcache, Supervisor)
 COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY docker/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY docker/www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/nginx.conf /etc/nginx/sites-available/default
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
