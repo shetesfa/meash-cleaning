@@ -520,6 +520,10 @@
         // comes from the my-jobs response (renderCleanerView); until then the
         // header falls back to the neutral 'የጽዳት ቡድን'. A stale stored fake
         // name from an older build is treated as empty.
+        // Batch 17: the stored name is never rendered at login at all
+        // (switchRole always uses the generic label until renderCleanerView
+        // sets the fresh name) — a stored name may be stale from an earlier
+        // session in a shared browser profile.
         let activeCleaningTeamName = localStorage.getItem('meash_active_team_name') || '';
         if (activeCleaningTeamName === 'Team Alpha (Upholstery & Carpet)' || activeCleaningTeamName === 'Team Alpha') activeCleaningTeamName = '';
 
@@ -1332,7 +1336,14 @@
                 currentUser.name = 'ቤተልሔም ታደሰ (ሪሴፕሽን)';
                 activeTab = 'reception_desk';
             } else if (role === 'cleaner') {
-                currentUser.name = activeCleaningTeamName || 'የጽዳት ቡድን';
+                // Batch 17: never render the STORED team name here. The stored
+                // name may belong to another team from an earlier session in
+                // a shared browser profile (e.g. TEST-Team3) and it showed in
+                // the header for the first seconds until the fresh my-jobs
+                // response arrived. Show the generic label until then;
+                // renderCleanerView sets the real team name once currentTeam
+                // arrives. The localStorage persistence itself is untouched.
+                currentUser.name = 'የጽዳት ቡድን';
                 activeTab = 'cleaner_jobs';
             } else if (role === 'sales') {
                 currentUser.name = 'ዳንኤል ግርማ (የውጭ ሽያጭ)';
@@ -1357,7 +1368,11 @@
             // Update header badge text
             const badge = document.getElementById('header-role-badge');
             if (badge) {
-        const cleanerLabel = activeCleaningTeamName ? ` ${activeCleaningTeamName.split('(')[0].trim()}` : ' የፅዳት ቡድን';
+                // Batch 17: the cleaner badge is the generic label until the
+                // fresh my-jobs response arrives (renderCleanerView sets the
+                // real team name). The stored name is never rendered here —
+                // it may be stale from an earlier session.
+                const cleanerLabel = ' የፅዳት ቡድን';
                 const roleLabels = {
           owner: ' ዋና ስራ አስኪያጅ',
           reception: ' ሪሴፕሽን & ሽያጭ',
@@ -8632,9 +8647,14 @@
                                             </span>
                                         </td>
                                         <td class="p-3.5 text-right">
-                                            <button type="button" onclick="toggleServiceActiveState(${s.id}, ${s.is_active ? 0 : 1})" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border transition ${s.is_active ? 'border-amber-500/30 text-amber-400 hover:bg-amber-950' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-950'} cursor-pointer">
-                                                ${s.is_active ? 'ደብቅ' : 'አሳይ'}
-                                            </button>
+                                            <div class="flex items-center justify-end gap-1.5">
+                                                <button type="button" onclick="openEditServiceNameModal(${s.id})" title="የአገልግሎት ስም አስተካክል" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-950 transition cursor-pointer">
+                                                    ✎ ስም
+                                                </button>
+                                                <button type="button" onclick="toggleServiceActiveState(${s.id}, ${s.is_active ? 0 : 1})" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border transition ${s.is_active ? 'border-amber-500/30 text-amber-400 hover:bg-amber-950' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-950'} cursor-pointer">
+                                                    ${s.is_active ? 'ደብቅ' : 'አሳይ'}
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -8685,6 +8705,83 @@
                 }
             } catch (err) {
                 alert('ስህተት፡ ' + err.message);
+            }
+        }
+
+        // Batch 17: edit an existing service's NAME (Amharic + English).
+        // The backend PUT /api/services/{id} already accepts name_en/name_am
+        // (ServiceController@update, sometimes|required|string) — only the
+        // UI was missing, so price and deactivate worked but a rename was
+        // impossible. The website and mini app read names from the live
+        // services API, so a rename here flows through on their next sync.
+        function openEditServiceNameModal(id) {
+            const s = cmsServicesData.find(x => x.id === id);
+            if (!s) {
+                showToast('አገልግሎቱን ማግኘት አልተቻለም።', 'error');
+                return;
+            }
+            const modalHtml = `
+                <div id="cms-edit-service-name-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 text-white">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <h3 class="font-bold text-base flex items-center gap-2">
+                                <i data-lucide="pencil" class="w-4 h-4 text-cyan-400"></i>
+                                <span>የአገልግሎት ስም አስተካክል (${escapeHtml(s.code)})</span>
+                            </h3>
+                            <button type="button" onclick="document.getElementById('cms-edit-service-name-modal').remove()" class="text-slate-400 hover:text-white cursor-pointer">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <form onsubmit="saveServiceName(event, ${s.id})" class="space-y-3 text-xs">
+                            <div>
+                                <label class="text-slate-400 block mb-1">የአማርኛ ስም (Amharic Name)</label>
+                                <input id="edit-svc-name-am" type="text" required maxlength="128" value="${escapeHtml(s.name_am || '')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                            </div>
+                            <div>
+                                <label class="text-slate-400 block mb-1">የእንግሊዝኛ ስም (English Name)</label>
+                                <input id="edit-svc-name-en" type="text" required maxlength="128" value="${escapeHtml(s.name_en || '')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                            </div>
+                            <div class="pt-2 flex justify-end gap-2">
+                                <button type="button" onclick="document.getElementById('cms-edit-service-name-modal').remove()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold cursor-pointer">ይቅር</button>
+                                <button type="submit" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold cursor-pointer">አስቀምጥ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            lucide.createIcons();
+        }
+
+        async function saveServiceName(e, id) {
+            e.preventDefault();
+            const nameAm = document.getElementById('edit-svc-name-am').value.trim();
+            const nameEn = document.getElementById('edit-svc-name-en').value.trim();
+            if (!nameAm || !nameEn) {
+                showToast('እባክዎ ሁለቱንም ስሞች ያስገቡ።', 'error');
+                return;
+            }
+            if (nameAm.length > 128 || nameEn.length > 128) {
+                showToast('ስም በጣም ረጅም ነው (ከ128 ቁምፊ በላይ)።', 'error');
+                return;
+            }
+
+            try {
+                const res = await apiFetch(`/api/services/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name_am: nameAm, name_en: nameEn })
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    showToast('የአገልግሎት ስሙ በተሳካ ሁኔታ ተዘምኗል!', 'success');
+                    document.getElementById('cms-edit-service-name-modal')?.remove();
+                    loadCmsTabData();
+                } else {
+                    showToast('ስህተት፡ ' + (d.message || 'ስም ማስተካከል አልተቻለም'), 'error');
+                }
+            } catch (err) {
+                showToast('የግንኙነት ችግር፡ ' + err.message, 'error');
             }
         }
 
