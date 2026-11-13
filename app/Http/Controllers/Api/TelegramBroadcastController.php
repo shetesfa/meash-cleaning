@@ -989,10 +989,9 @@ class TelegramBroadcastController extends Controller
 
         $title = $validated['title'];
         $body = $validated['message'];
-        $formattedMessage = "<b>" . htmlspecialchars($title) . "</b>\n\n" . htmlspecialchars($body) . "\n\n—\n<b>ሜሽ የፅዳት አገልግሎት (Meash Cleaning)</b>\n 0970075509 / 0998142190";
         $userId = $request->user()?->id;
 
-        dispatch(function () use ($telegramTargets, $phoneOnlyTargets, $routePhoneToSms, $botToken, $formattedMessage, $body, $campaign, $title, $totalTargets, $userId) {
+        dispatch(function () use ($telegramTargets, $phoneOnlyTargets, $routePhoneToSms, $botToken, $body, $campaign, $title, $totalTargets, $userId) {
             $sentSuccess = 0;
             $failedCount = 0;
 
@@ -1006,10 +1005,18 @@ class TelegramBroadcastController extends Controller
                             continue; // Skip invalid IDs without throwing errors
                         }
 
+                        // Batch 11a: per-recipient {name} substitution — the
+                        // same pattern the SMS-Bridge path already uses
+                        // (createSmsSession ~1189). Previously one message
+                        // was built for everyone, so broadcasts went out
+                        // greeting every customer with literal "{name}".
+                        $recipientName = trim((string)($info['name'] ?? '')) ?: 'ውድ ደንበኛችን';
+                        $personalizedMessage = "<b>" . htmlspecialchars(str_replace(['{name}', '{ስም}', '{first_name}'], $recipientName, $title)) . "</b>\n\n" . htmlspecialchars(str_replace(['{name}', '{ስም}', '{first_name}'], $recipientName, $body)) . "\n\n—\n<b>ሜሽ የጽዳት አገልግሎት (Meash Cleaning)</b>\n 0970075509 / 0998142190";
+
                         try {
                             $response = Http::timeout(6)->connectTimeout(2)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                                 'chat_id' => (int)$chatId,
-                                'text' => $formattedMessage,
+                                'text' => $personalizedMessage,
                                 'parse_mode' => 'HTML',
                                 'disable_web_page_preview' => false,
                             ]);
@@ -1038,7 +1045,11 @@ class TelegramBroadcastController extends Controller
             if ($routePhoneToSms && !empty($phoneOnlyTargets)) {
                 foreach ($phoneOnlyTargets as $pTarget) {
                     try {
-                        $smsResult = SmsService::sendDirectSms($pTarget['phone'], $body);
+                        // Batch 11a: same per-recipient {name} substitution
+                        // for the SMS-routed leg (was raw $body before).
+                        $recipientName = trim((string)($pTarget['name'] ?? '')) ?: 'ውድ ደንበኛችን';
+                        $personalizedBody = str_replace(['{name}', '{ስም}', '{first_name}'], $recipientName, $body);
+                        $smsResult = SmsService::sendDirectSms($pTarget['phone'], $personalizedBody);
                         if (!empty($smsResult['is_live'])) {
                             $sentSuccess++;
                         } else {

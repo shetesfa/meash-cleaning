@@ -282,6 +282,29 @@ class OrderController extends Controller
             'items.*.notes' => 'nullable|string',
         ]);
 
+        // Batch 11a (F4): only the owner may grant a discount. Reception
+        // and other roles can create orders, but a non-zero discount from
+        // anyone else is refused outright (was: any creator could set an
+        // unlimited discount with no cap at all).
+        $requestedDiscount = (float)($validated['discount'] ?? 0);
+        if ($requestedDiscount > 0 && !($user && $user->isOwner())) {
+            return response()->json([
+                'message' => 'ቅናሽ (discount) መስጠት የሚችለው የድርጅቱ ባለቤት (owner) ብቻ ነው።',
+            ], 403);
+        }
+
+        // Batch 11a: same-class fake-phone fix as the bot/app.blade.php
+        // fallbacks — never create or merge customers under the placeholder
+        // number 0900000000. An order without an existing customer needs a
+        // real phone number (previously every phoneless order silently
+        // merged into one fake 0900000000 customer row).
+        $rawPhoneCheck = $validated['customer_phone'] ?? $validated['phone'] ?? $request->input('phone') ?? $request->input('customer_phone');
+        if (empty($validated['customer_id']) && empty($rawPhoneCheck)) {
+            return response()->json([
+                'message' => 'የደንበኛ ስልክ ቁጥር ያስፈልጋል — ያለ ደንበኛ ወይም ያለ ስልክ ትዕዛዝ መፍጠር አይቻልም።',
+            ], 422);
+        }
+
         return DB::transaction(function () use ($validated, $request) {
             $user = $request->user();
 
@@ -297,7 +320,9 @@ class OrderController extends Controller
             if (!empty($validated['customer_id'])) {
                 $customer = Customer::findOrFail($validated['customer_id']);
             } else {
-                $normalizedPhone = $rawPhone ? SecurityTokenService::normalizePhone($rawPhone) : '0900000000';
+                // Batch 11a: $rawPhone is guaranteed non-empty here by the
+                // pre-transaction check above — no fake-phone fallback.
+                $normalizedPhone = SecurityTokenService::normalizePhone($rawPhone);
                 $customer = Customer::firstOrCreate(
                     ['phone' => $normalizedPhone],
                     [
@@ -409,6 +434,29 @@ class OrderController extends Controller
                         ]
                     );
                 }
+            }
+
+            // Batch 11a (F4): cap the discount at 100% of the order's items
+            // subtotal (discount is an ETB amount: total = subtotal -
+            // discount + tax). Previously an uncapped discount was stored
+            // as-is, so a discount larger than the order silently zeroed
+            // the total while the inflated discount stayed on record.
+            $requestedDiscount = (float)($validated['discount'] ?? 0);
+            $itemsSubtotal = (float)$order->items()->sum('subtotal');
+            $cappedDiscount = min($requestedDiscount, $itemsSubtotal);
+            if ($cappedDiscount < $requestedDiscount) {
+                AuditLog::logAction(
+                    $request->user()?->id,
+                    'discount_capped',
+                    Order::class,
+                    $order->id,
+                    ['requested_discount' => $requestedDiscount],
+                    ['order_number' => $order->order_number, 'capped_discount' => $cappedDiscount, 'items_subtotal' => $itemsSubtotal]
+                );
+            }
+            if ((float)$order->discount !== $cappedDiscount) {
+                $order->discount = $cappedDiscount;
+                $order->recalculateTotals();
             }
 
             // 4. Create Appointment if appointment_date is provided and one does not already exist
@@ -790,7 +838,11 @@ class OrderController extends Controller
                 'amount' => $validated['amount'],
                 'payment_method' => $method,
                 'reference_number' => $validated['reference_number'] ?? null,
-                'payment_date' => $validated['payment_date'] ?? Carbon::today(),
+                // Default to the Addis Ababa date, not the server UTC
+                // date: a payment recorded 00:00–02:59 EAT is Friday
+                // for the user but still Thursday in UTC, and would be
+                // bucketed under the wrong day in the 7-day trend.
+                'payment_date' => $validated['payment_date'] ?? Carbon::today('Africa/Addis_Ababa'),
                 'recorded_by_user_id' => $request->user()?->id,
                 'notes' => $validated['notes'] ?? null,
             ]);

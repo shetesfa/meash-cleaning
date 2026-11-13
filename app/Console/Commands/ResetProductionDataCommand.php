@@ -255,12 +255,12 @@ class ResetProductionDataCommand extends Command
             'company_name_am' => 'ሜሽ የጽዳት አገልግሎት',
             'company_slogan' => 'Your Environment, Our Responsibility.',
             'phone' => '0970075509',
-            'phone_secondary' => '0970075509',
+            'phone_secondary' => '0998142190',
             'telegram_username' => 'meashcleaning',
             'telegram_channel' => 'meashcleaningsolution',
             'tiktok' => 'meashcleaningsolution',
             'contact_person_name' => 'አቶ አምሃ (Amha)',
-            'address' => 'አዲስ አበባ፣ ኢትዮጵያ (Addis Ababa, Ethiopia)',
+            'address' => 'Ayat Square, Addis Ababa, Ethiopia',
         ];
 
         foreach ($officialSettings as $k => $v) {

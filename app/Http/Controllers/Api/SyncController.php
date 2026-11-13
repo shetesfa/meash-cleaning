@@ -204,7 +204,14 @@ class SyncController extends Controller
                         $customerId = $payload['customer_id'] ?? null;
                         if (!$customerId) {
                             $rawPhone = $payload['customer_phone'] ?? $payload['phone'] ?? null;
-                            $normPhone = $rawPhone ? \App\Services\SecurityTokenService::normalizePhone($rawPhone) : '0900000000';
+                            // Batch 11a: same-class fake-phone fix — never
+                            // merge phoneless synced orders into the
+                            // placeholder 0900000000 customer. Fail this
+                            // sync record with a clear error instead.
+                            if (empty($rawPhone)) {
+                                throw new \Exception('Sync rejected: order has no customer_id and no customer phone number.');
+                            }
+                            $normPhone = \App\Services\SecurityTokenService::normalizePhone($rawPhone);
                             $cust = Customer::firstOrCreate(
                                 ['phone' => $normPhone],
                                 [

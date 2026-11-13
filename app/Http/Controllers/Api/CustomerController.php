@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Customer;
+use App\Models\Expense;
+use App\Models\Order;
+use App\Models\Payment;
 use App\Services\EthiopianCalendarService;
 use App\Services\OrderLifecycleService;
 use Illuminate\Http\JsonResponse;
@@ -51,16 +54,40 @@ class CustomerController extends Controller
 
         $customers = $query->latest()->paginate($request->input('per_page', 20));
 
+        // Net spend needs refunds per customer. Refunds are Expense rows
+        // (category 'refund') tagged "#<order_number>" in the
+        // description — the same link OrderController::
+        // refundTotalsByOrderNumber() and FinanceController::
+        // recordRefund use. One query pair for the whole page.
+        $pageCustomerIds = $customers->getCollection()->pluck('id')->all();
+        $ordersOnPage = Order::whereIn('customer_id', $pageCustomerIds)
+            ->get(['customer_id', 'order_number']);
+        $refundTotals = $this->refundsByOrderNumber($ordersOnPage->pluck('order_number')->all());
+        $refundsByCustomer = [];
+        foreach ($ordersOnPage as $ord) {
+            $refundsByCustomer[$ord->customer_id] = round(
+                ($refundsByCustomer[$ord->customer_id] ?? 0) + ($refundTotals[$ord->order_number] ?? 0),
+                2
+            );
+        }
+
         // Format customer fields for UI display
-        $customers->getCollection()->transform(function ($cust) {
+        $customers->getCollection()->transform(function ($cust) use ($refundsByCustomer) {
             $latestFb = $cust->feedbacks->first();
             $cust->latest_rating = $latestFb ? (int)$latestFb->rating : null;
             $cust->latest_comment = $latestFb ? $latestFb->comment : null;
             $cust->latest_feedback_date = $latestFb ? $latestFb->created_at->toIso8601String() : null;
             $cust->total_orders = $cust->total_orders ?: $cust->orders_count;
-            if ((float)$cust->total_spent <= 0) {
-                $cust->total_spent = (float)\App\Models\Payment::where('customer_id', $cust->id)->sum('amount');
+            // Spend shown in the list is NET: gross payments minus
+            // refunds. Gross is the fresh payments sum; the stored
+            // total_spent is only a fallback for customers with no
+            // payment rows (legacy data).
+            $grossPaid = (float) Payment::where('customer_id', $cust->id)->sum('amount');
+            if ($grossPaid <= 0) {
+                $grossPaid = (float) $cust->total_spent;
             }
+            $cust->total_refunded = $refundsByCustomer[$cust->id] ?? 0.0;
+            $cust->total_spent = max(0, round($grossPaid - $cust->total_refunded, 2));
             return $cust;
         });
 
@@ -101,7 +128,25 @@ class CustomerController extends Controller
         $totalOrders = $customer->orders->count();
         $completedOrders = $customer->orders->where('order_status', 'completed')->count();
         $cancelledOrders = $customer->orders->where('order_status', 'cancelled')->count();
-        $totalSpending = $customer->orders->sum('total');
+        // Net spend: what the customer actually paid minus refunds.
+        // (The old value summed order totals, so a 2,250 ETB order with
+        // a 500 ETB refund still showed 2,250 instead of 1,750.)
+        $grossPaid = 0.0;
+        $orderNumbers = [];
+        foreach ($customer->orders as $order) {
+            $orderNumbers[] = $order->order_number;
+            $grossPaid += (float) $order->payments->sum('amount');
+        }
+        if ($grossPaid <= 0) {
+            // No payment rows: fall back to the stored total, then to
+            // paid order totals (same fallback the stored value uses).
+            $grossPaid = (float) $customer->total_spent;
+            if ($grossPaid <= 0) {
+                $grossPaid = (float) $customer->orders->where('payment_status', 'paid')->sum('total');
+            }
+        }
+        $totalRefunded = array_sum($this->refundsByOrderNumber($orderNumbers));
+        $totalSpending = max(0, round($grossPaid - $totalRefunded, 2));
         $lastOrder = $customer->orders->first();
 
         $lastServiceEth = null;
@@ -175,12 +220,44 @@ class CustomerController extends Controller
                 'completed_orders' => $completedOrders,
                 'cancelled_orders' => $cancelledOrders,
                 'total_spending' => (float) $totalSpending,
+                'total_paid_gross' => round($grossPaid, 2),
+                'total_refunded' => round($totalRefunded, 2),
                 'last_service_eth' => $lastServiceEth ? $lastServiceEth['formatted_en'] : null,
                 'last_rating' => $lastFeedback ? $lastFeedback->rating : null,
                 'complaints_count' => $complaintCount,
             ],
             'timeline' => $timeline,
         ]);
+    }
+
+    /**
+     * Refund totals keyed by order number, in ONE query.
+     * Refunds are Expense rows (category 'refund') whose description
+     * carries "#<order_number>" — the same link FinanceController::
+     * recordRefund uses and OrderController::refundTotalsByOrderNumber()
+     * reads. Duplicated here because that helper is private to
+     * OrderController.
+     *
+     * @param string[] $orderNumbers
+     * @return array<string, float>
+     */
+    private function refundsByOrderNumber(array $orderNumbers): array
+    {
+        $orderNumbers = array_values(array_filter(array_unique($orderNumbers)));
+        if (empty($orderNumbers)) {
+            return [];
+        }
+        $totals = [];
+        $refunds = Expense::where('category', 'refund')->get(['description', 'amount']);
+        foreach ($refunds as $refund) {
+            foreach ($orderNumbers as $number) {
+                if ($number !== '' && str_contains((string) $refund->description, '#' . $number)) {
+                    $totals[$number] = round(($totals[$number] ?? 0) + (float) $refund->amount, 2);
+                    break;
+                }
+            }
+        }
+        return $totals;
     }
 
     public function store(Request $request): JsonResponse

@@ -56,7 +56,14 @@ class TelegramController extends Controller
   public function getPhone2(): string
   {
     try {
-      return (string)WebsiteSetting::getVal('contact_phone_2', '0998142190');
+      // Batch 11a: a stale stored value equal to phone 1 (or empty) made
+      // /contact print 0970075509 twice. Fall back to the real 2nd line.
+      $val = trim((string)WebsiteSetting::getVal('contact_phone_2', '0998142190'));
+      $phone1 = trim((string)WebsiteSetting::getVal('contact_phone_1', '0970075509'));
+      if ($val === '' || $val === $phone1) {
+        return '0998142190';
+      }
+      return $val;
     } catch (\Throwable $e) {
       return '0998142190';
     }
@@ -120,7 +127,14 @@ class TelegramController extends Controller
   public function getTelegramChannelUrl(): string
   {
     try {
-      return (string)WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashcleaningsolution');
+      // Batch 11a: a stale stored telegram_channel value pointed at a
+      // non-existent username (dead channel button). Only trust a stored
+      // value that is the real channel; otherwise use the canonical URL.
+      $val = trim((string)WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashcleaningsolution'));
+      if ($val !== '' && str_contains($val, 'meashcleaningsolution')) {
+        return $val;
+      }
+      return 'https://t.me/meashcleaningsolution';
     } catch (\Throwable $e) {
       return 'https://t.me/meashcleaningsolution';
     }
@@ -147,10 +161,52 @@ class TelegramController extends Controller
   public function getAddress(): string
   {
     try {
-      return (string)WebsiteSetting::getVal('office_address_am', 'አያት አደባባይ፣ አዲስ አበባ');
+      // Batch 11a: guard against a stale stored office address (the old
+      // "አዲስ አበባ፣ ኢትዮጵያ" with no street). Canonical address is Ayat Sq.
+      $val = trim((string)WebsiteSetting::getVal('office_address_am', 'አያት አደባባይ፣ አዲስ አበባ'));
+      if ($val === '' || $val === 'አዲስ አበባ፣ ኢትዮጵያ' || $val === 'አዲስ አበባ፣ ኢትዮጵያ (Addis Ababa, Ethiopia)') {
+        return 'አያት አደባባይ፣ አዲስ አበባ';
+      }
+      return $val;
     } catch (\Throwable $e) {
       return 'አያት አደባባይ፣ አዲስ አበባ';
     }
+  }
+
+  /**
+   * Batch 11a: canonical English office address for bot replies.
+   * Reads company_address from settings; a stale stored value (the old
+   * "አዲስ አበባ፣ ኢትዮጵያ") falls back to "Ayat Square, Addis Ababa, Ethiopia".
+   */
+  public function getAddressEn(): string
+  {
+    try {
+      $val = trim((string)WebsiteSetting::getVal('company_address', 'Ayat Square, Addis Ababa, Ethiopia'));
+      if ($val === '' || $val === 'አዲስ አበባ፣ ኢትዮጵያ' || $val === 'አዲስ አበባ፣ ኢትዮጵያ (Addis Ababa, Ethiopia)') {
+        return 'Ayat Square, Addis Ababa, Ethiopia';
+      }
+      return $val;
+    } catch (\Throwable $e) {
+      return 'Ayat Square, Addis Ababa, Ethiopia';
+    }
+  }
+
+  /**
+   * Batch 11a: Amharic label for a service's real billing unit.
+   * The services table only has `unit` (sqm/seat/piece/room/hour/service);
+   * there is no pricing_unit / pricing_unit_am column, so reading those
+   * always fell through to "አገልግሎት" ("per service") for every service.
+   */
+  public static function unitLabelAm(?string $unit): string
+  {
+    return match (strtolower(trim((string)$unit))) {
+      'sqm', 'ካሬ', 'ካሬ ሜትር' => 'ካሬ ሜትር',
+      'seat', 'ወንበር' => 'ወንበር',
+      'piece', 'እቃ' => 'እቃ',
+      'room', 'ክፍል' => 'ክፍል',
+      'hour', 'ሰዓት' => 'ሰዓት',
+      default => 'አገልግሎት',
+    };
   }
 
   public function getMiniAppHttpsUrl(): ?string
@@ -311,7 +367,7 @@ class TelegramController extends Controller
         'message_text' => "<b>ሜሽ የጽዳት አገልግሎት | MEASH CLEANING SOLUTION</b>\n" .
           "<b>\"Your Environment, Our Responsibility.\"</b>\n" .
           "<i>(Premium Commercial Cleaning Solutions — Hotels | Restaurants | Cafés | Offices)</i>\n\n" .
-          "በአዲስ አበባ እና አካባቢው ዓለም አቀፍ ደረጃቸውን በጠበቁ የኢንዱስትሪ ማሽኖች፣ በስቲም (Steam) እና በደህንነታቸው በተረጋገጡ ኬሚካሎች አስተማማኝ የጽዳት አገልግሎት እንሰጣለን::\n\n" .
+          "በአዲስ አበባ እና አካባቢው ዓለም አቀፍ ደረጃቸውን በጠበቁ የኢንዱስትሪ ማሽኖች፣ በስቲም (Steam) እና በደህንነታቸው በተረጋገጡ ኬሚካሎች አስተማማኝ የጽዳት አገልግሎት እንሰጣለን።\n\n" .
           "<b>የምንሰጣቸው 6ቱ ዋና ዋና ይፋዊ አገልግሎቶች:</b>\n" .
           "1. <b>የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት</b> (Ceramic & Hardwood Floor)\n" .
           "2. <b>የተቋማት አጠቃላይ እና ጥልቅ ጽዳት</b> (Deep & General Facilities Cleaning)\n" .
@@ -430,14 +486,14 @@ class TelegramController extends Controller
         'message_text' => "<b>ፈጣን የቀጠሮ ማስያዣ | Fast Appointment Booking</b>\n" .
           "<i>ሜሽ የጽዳት አገልግሎት — MEASH CLEANING SOLUTION</i>\n" .
           "<b>\"Your Environment, Our Responsibility.\"</b>\n\n" .
-          "በጣም ቀላል እና ፈጣን! የሚፈልጉትን አገልግሎት፣ ቀን እና አድራሻዎን በማስገባት በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዝ ይችላሉ::\n\n" .
+          "በጣም ቀላል እና ፈጣን! የሚፈልጉትን አገልግሎት፣ ቀን እና አድራሻዎን በማስገባት በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዝ ይችላሉ።\n\n" .
           "1. የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት\n" .
           "2. የተቋማት አጠቃላይ እና ጥልቅ ጽዳት\n" .
           "3. የወጥ ቤት እና የምግብ ማስተናገጃ ቦታዎች ጽዳት\n" .
           "4. ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት\n" .
           "5. የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት\n" .
           "6. የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ\n\n" .
-          "ወዲያውኑ ቦታ ለማስያዝ ከታች ያለውን ቁልፍ ይጫኑ ወይም በ {$combinedPhones} ይደውሉ::",
+          "ወዲያውኑ ቦታ ለማስያዝ ከታች ያለውን ቁልፍ ይጫኑ ወይም በ {$combinedPhones} ይደውሉ።",
         'buttons' => [
           [
             $bookingButton,
@@ -454,7 +510,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_sofa',
         'title' => ' የሶፋ እና ወንበር ጥልቅ እጥበት | Sofa Cleaning',
-        'description' => "{$sofaP} ብር/ወንበር:: አቧራ፣ እድፍና መጥፎ ጠረን በስቲም ማስወገድ::",
+        'description' => "{$sofaP} ብር/ወንበር። አቧራ፣ እድፍና መጥፎ ጠረን በስቲም ማስወገድ።",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=240&h=240&fit=crop',
         'message_text' => " <b>የሶፋ እና ወንበር ጥልቅ አረፋ እጥበት (SOFA CLEANING)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -464,7 +520,7 @@ class TelegramController extends Controller
           "3. በሮተሪ ብሩሽ በጥንቃቄ ማሸትና እድፍ ማስለቀቅ\n" .
           "4. በባለሁለት ሞተር ማሽን የቆሸሸውን ውሃ ሙሉ በሙሉ መምጠጥ\n\n" .
           " <b>ዋጋ:</b> {$sofaP} ብር / በአንድ መቀመጫ ወንበር\n" .
-          " ለቆዳ (Leather)፣ ለቬልቬት፣ ለጨርቅና ለተለያዩ ሶፋዎች ፍቱን::\n\n" .
+          " ለቆዳ (Leather)፣ ለቬልቬት፣ ለጨርቅና ለተለያዩ ሶፋዎች ፍቱን።\n\n" .
           " <b>ስልክ:</b> {$phone1}\n" .
           " <b>ቦት:</b> @{$this->botUsername}",
         'buttons' => [
@@ -480,7 +536,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_carpet',
         'title' => ' የምንጣፍ ማጠብና ስቲም እጥበት | Carpet Washing',
-        'description' => "{$carpetP} ብር/ካሬ ሜትር:: በቦታው ወይም ወስደን በሮተሪ ማሽን ማጠብ::",
+        'description' => "{$carpetP} ብር/ካሬ ሜትር። በቦታው ወይም ወስደን በሮተሪ ማሽን ማጠብ።",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=240&h=240&fit=crop',
         'message_text' => " <b>የምንጣፍ ማጠብ እና ስቲም እጥበት (CARPET WASHING)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -504,7 +560,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_mattress',
         'title' => ' የፍራሽ ሳኒታይዜሽንና እጥበት | Mattress Sanitization',
-        'description' => "{$mattressP} ብር/ፍራሽ:: በሙቅ ስቲም ፀረ-ተባይና የአቧራ ትሎች ማጥፋት::",
+        'description' => "{$mattressP} ብር/ፍራሽ። በሙቅ ስቲም ፀረ-ተባይና የአቧራ ትሎች ማጥፋት።",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=240&h=240&fit=crop',
         'message_text' => " <b>የፍራሽ ሳኒታይዜሽን እና ጥልቅ እጥበት (MATTRESS SANITIZATION)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -528,7 +584,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_glass',
         'title' => ' የመስታወት እና ፊት ለፊት ግድግዳ ፅዳት | Glass Facade',
-        'description' => "{$glassP} ብር/ካሬ ሜትር:: የቪላ፤ አፓርታማና የህንፃ መስታወት ፅዳት::",
+        'description' => "{$glassP} ብር/ካሬ ሜትር። የቪላ፤ አፓርታማና የህንፃ መስታወት ፅዳት።",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=240&h=240&fit=crop',
         'message_text' => " <b>የመስታወት እና የፊት ለፊት ህንፃ ፅዳት (GLASS & FACADE)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -552,7 +608,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_home',
         'title' => ' የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት | Residential Deep Clean',
-        'description' => "ከ {$homeP} ብር:: የግንባታ ማጠናቀቂያ ወይም የመኖሪያ ቤት ፅዳት::",
+        'description' => "ከ {$homeP} ብር። የግንባታ ማጠናቀቂያ ወይም የመኖሪያ ቤት ፅዳት።",
         'thumbnail_url' => 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=240&h=240&fit=crop',
         'message_text' => " <b>የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት (RESIDENTIAL DEEP CLEAN)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -577,7 +633,7 @@ class TelegramController extends Controller
       [
         'id' => 'meash_office',
         'title' => ' የቢሮ እና ተቋማት ፅዳት | Commercial & Office Cleaning',
-        'description' => 'ለባንኮች፤ ኤምባሲዎች፤ ሆቴሎች እና ድርጅቶች በኮንትራት ወይም በፕሮፎርማ::',
+        'description' => 'ለባንኮች፤ ኤምባሲዎች፤ ሆቴሎች እና ድርጅቶች በኮንትራት ወይም በፕሮፎርማ።',
         'thumbnail_url' => 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=240&h=240&fit=crop',
         'message_text' => " <b>የቢሮ እና የተቋማት ፅዳት (COMMERCIAL & CORPORATE)</b>\n" .
           "<i>ሜሽ የፅዳት አገልግሎት - Meash Cleaning Solution</i>\n\n" .
@@ -730,6 +786,19 @@ class TelegramController extends Controller
       }
     }
 
+    // Batch 11a: complete a parked standalone feedback rating once the
+    // user shares their phone (see handleFeedbackRating()). The rating
+    // was saved nowhere yet — only now is it recorded, honestly.
+    // Skipped while a booking wizard is in progress: a shared contact
+    // there belongs to the booking, not to feedback.
+    $midBooking = $tgUser && $tgUser->bot_state && str_starts_with($tgUser->bot_state, 'booking_');
+    if (!empty($extractedPhone) && !$midBooking && Cache::has("tg_pending_feedback_{$chatId}")) {
+      $pending = Cache::get("tg_pending_feedback_{$chatId}");
+      Cache::forget("tg_pending_feedback_{$chatId}");
+      $this->saveStandaloneFeedback($tgUser, $chatId, $extractedPhone, (int)($pending['stars'] ?? 5));
+      return;
+    }
+
     // Handle Mini App WebApp Data submission (Telegram.WebApp.sendData)
     if (isset($message['web_app_data'])) {
       $this->handleWebAppData($chatId, $from, $message['web_app_data']);
@@ -745,7 +814,7 @@ class TelegramController extends Controller
       }
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " <b>የቀጠሮ ምዝገባው ተሰርዟል::</b>\n\nአዲስ ቀጠሮ ለመያዝ /book ወይም /start ብለው መጀመር ይችላሉ::",
+        'text' => " <b>የቀጠሮ ምዝገባው ተሰርዟል።</b>\n\nአዲስ ቀጠሮ ለመያዝ /book ወይም /start ብለው መጀመር ይችላሉ።",
         'parse_mode' => 'HTML',
         'reply_markup' => json_encode(['remove_keyboard' => true]),
       ]);
@@ -760,7 +829,7 @@ class TelegramController extends Controller
       if ($text === '/skip' || $text === 'ዝለል') {
         $this->telegramApi('sendMessage', [
           'chat_id' => $chatId,
-          'text' => "እናመሰግናለን! መልካም ቀን ይሁንልዎ::",
+          'text' => "እናመሰግናለን! መልካም ቀን ይሁንልዎ።",
           'parse_mode' => 'HTML',
         ]);
         return;
@@ -788,7 +857,7 @@ class TelegramController extends Controller
 
         $this->telegramApi('sendMessage', [
           'chat_id' => $chatId,
-          'text' => "<b>አስተያየትዎን ተቀብለናል!</b>\n\nአገልግሎታችንን ለማሻሻል ስላገዙን እና የተሰማዎትን ስላጋሩን ከልብ እናመሰግናለን:: መልካም ቀን ይሁንልዎ!",
+          'text' => "<b>አስተያየትዎን ተቀብለናል!</b>\n\nአገልግሎታችንን ለማሻሻል ስላገዙን እና የተሰማዎትን ስላጋሩን ከልብ እናመሰግናለን። መልካም ቀን ይሁንልዎ!",
           'parse_mode' => 'HTML',
         ]);
         return;
@@ -796,7 +865,15 @@ class TelegramController extends Controller
     }
 
     // Handle Interactive Booking Wizard States (Name, Phone, Location Pin, Address)
-    if ($tgUser && $tgUser->bot_state && str_starts_with($tgUser->bot_state, 'booking_')) {
+    // Batch 11a (F1 /book dead): commands ALWAYS win over wizard state.
+    // Previously this block ran before command dispatch, so a user who had
+    // left a booking mid-flow (bot_state booking_name/phone/location/...)
+    // and then typed /book, /start, /services or /help had the command
+    // silently swallowed as wizard input ("/book" was even stored as the
+    // customer's name) and the booking flow never opened. Slash commands
+    // now fall through to the command router below, which resets state
+    // via startInteractiveBooking().
+    if ($tgUser && $tgUser->bot_state && str_starts_with($tgUser->bot_state, 'booking_') && !str_starts_with($text, '/')) {
       if ($this->handleInteractiveBookingMessage($tgUser, $message, $chatId)) {
         return;
       }
@@ -868,6 +945,10 @@ class TelegramController extends Controller
     } elseif (str_starts_with($text, '/services') || $text === 'አገልግሎቶች') {
       $this->sendServicesMenu($chatId);
     } elseif (str_starts_with($text, '/book') || $text === 'ቀጠሮ') {
+      // Batch 11a (F1): /book opens the SAME interactive wizard as the
+      // "በቦቱ ቀጠሮ ያስይዙ" button (callback book_start_wizard) — both call
+      // startInteractiveBooking(), which resets bot_state to booking_service
+      // and sends Step 1/5 with the live service list.
       $this->startInteractiveBooking($tgUser, $chatId);
     } elseif (str_starts_with($text, '/contact') || $text === 'ስልክ' || $text === 'ሪሴፕሽን') {
       $this->sendContactInfo($chatId);
@@ -889,7 +970,7 @@ class TelegramController extends Controller
       // General guidance
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "ጤና ይስጥልኝ! ሜሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) ነው::\n\n\"Your Environment, Our Responsibility.\"\n\nቀጠሮ ለመያዝ፣ አገልግሎቶችን ለማየት ወይም ሪሴፕሽን ለማነጋገር /start ብለው ይላኩ::\n\nለበለጠ መረጃ: " . $this->getPhonesCombined() . "\nቦት: @{$this->botUsername}",
+        'text' => "ጤና ይስጥልኝ! ሜሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION) ነው።\n\n\"Your Environment, Our Responsibility.\"\n\nቀጠሮ ለመያዝ፣ አገልግሎቶችን ለማየት ወይም ሪሴፕሽን ለማነጋገር /start ብለው ይላኩ።\n\nለበለጠ መረጃ: " . $this->getPhonesCombined() . "\nቦት: @{$this->botUsername}",
         'parse_mode' => 'HTML',
         'reply_markup' => json_encode([
           'inline_keyboard' => [
@@ -1052,8 +1133,8 @@ class TelegramController extends Controller
       " <b>አድራሻ:</b> {$address} ({$subcity})\n" .
       " <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$ethAppt['formatted_am']}) ጠዋት 2:00\n" .
       " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
-      " <b>የማረጋገጫ ኤስኤምኤስ (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
-      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (" . $this->getPhone1() . ") ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
+      " <b>የማረጋገጫ ኤስኤምኤስ (SMS) ወደ ስልክዎ ({$phone}) ተልኳል።</b>\n" .
+      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (" . $this->getPhone1() . ") ደውሎ ያረጋግጥልዎታል። ስለመረጡን እናመሰግናለን! ";
 
     $this->telegramApi('sendMessage', [
       'chat_id' => $chatId,
@@ -1135,7 +1216,7 @@ class TelegramController extends Controller
 
         $this->telegramApi('sendMessage', [
           'chat_id' => $chatId,
-          'text' => "<b>እናመሰግናለን!</b> የሰጡት ደረጃ ({$stars}/5) በተሳካ ሁኔታ ተመዝግቧል::\n\nተጨማሪ አስተያየት ካለዎት በጽሑፍ ይላኩልን (ወይም /skip ይበሉ)።",
+          'text' => "<b>እናመሰግናለን!</b> የሰጡት ደረጃ ({$stars}/5) በተሳካ ሁኔታ ተመዝግቧል።\n\nተጨማሪ አስተያየት ካለዎት በጽሑፍ ይላኩልን (ወይም /skip ይበሉ)።",
           'parse_mode' => 'HTML',
         ]);
         return;
@@ -1146,6 +1227,20 @@ class TelegramController extends Controller
         ]);
         return;
       }
+    }
+
+    // Batch 11a: standalone in-bot feedback — star tap from the Feedback
+    // button (menu_feedback). Saves through the existing Feedback/review
+    // path (OrderLifecycleService::recordCustomerReviewAndPromote, order
+    // may be null), then asks for a comment via the existing
+    // tg_awaiting_feedback text handler. No fake save: without a phone
+    // number we cannot attach the review to a customer, so the rating is
+    // parked and the user is asked to share their phone first.
+    if (str_starts_with($data, 'feedback_rate:')) {
+      $stars = max(1, min(5, (int)substr($data, 14)));
+      $this->telegramApi('answerCallbackQuery', ['callback_query_id' => $id]);
+      $this->handleFeedbackRating($tgUser, $chatId, $stars);
+      return;
     }
 
     // Handle interactive booking wizard callbacks
@@ -1160,7 +1255,7 @@ class TelegramController extends Controller
       $orderNo = trim(str_replace('resched_', '', $data));
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " <b>ቀጠሮዎን ለማራዘም ወይም አዲስ ቀን ለመቀየር:</b>\n\nየትዕዛዝ ቁጥር: <code>{$orderNo}</code>\n\nእባክዎ የሚፈልጉትን አዲስ ቀን በ " . $this->getPhone1() . " ደውለው ወይም በ " . $this->getTelegramSupportHandle() . " መልዕክት ይንገሩን:: ሪሴፕሽናችን ወዲያውኑ ያስተካክላል::",
+        'text' => " <b>ቀጠሮዎን ለማራዘም ወይም አዲስ ቀን ለመቀየር:</b>\n\nየትዕዛዝ ቁጥር: <code>{$orderNo}</code>\n\nእባክዎ የሚፈልጉትን አዲስ ቀን በ " . $this->getPhone1() . " ደውለው ወይም በ " . $this->getTelegramSupportHandle() . " መልዕክት ይንገሩን። ሪሴፕሽናችን ወዲያውኑ ያስተካክላል።",
         'parse_mode' => 'HTML',
         'reply_markup' => json_encode([
           'inline_keyboard' => [
@@ -1189,19 +1284,18 @@ class TelegramController extends Controller
     } elseif ($data === 'menu_status') {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "<b>የትዕዛዝዎን ሁኔታ ለመከታተል:</b>\n\nየትዕዛዝ ቁጥርዎን (ለምሳሌ <code>ORD-2026-0001</code>) ጽፈው ይላኩልን:: የትዕዛዝዎን ዝርዝር እና የቡድኑን ሁኔታ ወዲያውኑ እንልክልዎታለን::",
+        'text' => "<b>የትዕዛዝዎን ሁኔታ ለመከታተል:</b>\n\nየትዕዛዝ ቁጥርዎን (ለምሳሌ <code>ORD-2026-0001</code>) ጽፈው ይላኩልን። የትዕዛዝዎን ዝርዝር እና የቡድኑን ሁኔታ ወዲያውኑ እንልክልዎታለን።",
         'parse_mode' => 'HTML',
       ]);
     } elseif ($data === 'menu_feedback') {
-      $this->telegramApi('sendMessage', [
-        'chat_id' => $chatId,
-        'text' => "<b>የደንበኞች አስተያየት እና ደረጃ:</b>\n\nየተሰጠዎት የፅዳት አገልግሎት እንዴት ነበር? አስተያየትዎን ወይም ደረጃዎን ከ 1 እስከ 5 ኮከብ በ " . $this->getPhone1() . " ይንገሩን:: የእርስዎ እርካታ የኩባንያችን ዋና አላማ ነው!",
-        'parse_mode' => 'HTML',
-      ]);
+      // Batch 11a: the Feedback button now actually collects feedback
+      // in the bot (star picker -> comment -> saved via the existing
+      // Feedback/review path) instead of just telling users to call.
+      $this->sendFeedbackPrompt($chatId);
     } elseif ($data === 'menu_complaint') {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "<b>ቅሬታ ማሳወቂያ እና አስቸኳይ ክትትል:</b>\n\nበተሰጠው አገልግሎት ላይ ያልተሟላ ነገር ካለ ወይም ቅሬታ ካለዎት ወዲያውኑ በ " . $this->getPhone1() . " ይደውሉልን:: የቡድን መሪያችን በ 24 ሰዓት ውስጥ መጥቶ ያለምንም ተጨማሪ ክፍያ ዳግም እንዲፀዳ ይደረጋል!",
+        'text' => "<b>ቅሬታ ማሳወቂያ እና አስቸኳይ ክትትል:</b>\n\nበተሰጠው አገልግሎት ላይ ያልተሟላ ነገር ካለ ወይም ቅሬታ ካለዎት ወዲያውኑ በ " . $this->getPhone1() . " ይደውሉልን። የቡድን መሪያችን በ 24 ሰዓት ውስጥ መጥቶ ያለምንም ተጨማሪ ክፍያ ዳግም እንዲፀዳ ይደረጋል!",
         'parse_mode' => 'HTML',
       ]);
     } elseif ($data === 'menu_start') {
@@ -1210,6 +1304,105 @@ class TelegramController extends Controller
 
     $this->telegramApi('answerCallbackQuery', [
       'callback_query_id' => $id,
+    ]);
+  }
+
+  /**
+   * Batch 11a: Feedback button — ask for a 1-5 star rating in the bot.
+   */
+  private function sendFeedbackPrompt(int|string $chatId): void
+  {
+    $this->telegramApi('sendMessage', [
+      'chat_id' => $chatId,
+      'text' => "<b>የደንበኞች አስተያየት እና ደረጃ:</b>\n\nየተሰጠዎት የፅዳት አገልግሎት እንዴት ነበር? ከ 1 እስከ 5 ኮከብ ይምረጡ።",
+      'parse_mode' => 'HTML',
+      'reply_markup' => json_encode([
+        'inline_keyboard' => [
+          [
+            ['text' => '⭐ 1', 'callback_data' => 'feedback_rate:1'],
+            ['text' => '⭐⭐ 2', 'callback_data' => 'feedback_rate:2'],
+            ['text' => '⭐⭐⭐ 3', 'callback_data' => 'feedback_rate:3'],
+          ],
+          [
+            ['text' => '⭐⭐⭐⭐ 4', 'callback_data' => 'feedback_rate:4'],
+            ['text' => '⭐⭐⭐⭐⭐ 5', 'callback_data' => 'feedback_rate:5'],
+          ],
+        ]
+      ]),
+    ]);
+  }
+
+  /**
+   * Batch 11a: save a standalone bot feedback rating through the existing
+   * Feedback/review path (no order needed — matched by customer_id).
+   * If the user has no phone on file, park the rating and ask them to
+   * share their phone; handleMessage() completes it once the phone is
+   * captured (see tg_pending_feedback_* cache handling there).
+   */
+  private function handleFeedbackRating(?TelegramUser $tgUser, int|string $chatId, int $stars): void
+  {
+    $phone = $tgUser?->phone_number
+      ? Customer::normalizePhone($tgUser->phone_number)
+      : null;
+
+    if (!$phone) {
+      Cache::put("tg_pending_feedback_{$chatId}", ['stars' => $stars], now()->addMinutes(30));
+      $this->telegramApi('sendMessage', [
+        'chat_id' => $chatId,
+        'text' => "<b>እናመሰግናለን!</b> የሰጡት ደረጃ ({$stars}/5) ለመመዝገብ ስልክ ቁጥርዎ ያስፈልገናል። እባክዎ ከስር ያለውን ቁልፍ በመጫን ስልክ ቁጥርዎን ያጋሩ።",
+        'parse_mode' => 'HTML',
+        'reply_markup' => json_encode([
+          'keyboard' => [
+            [['text' => ' ስልክ ቁጥሬን አጋራ (Share Phone)', 'request_contact' => true]],
+          ],
+          'resize_keyboard' => true,
+          'one_time_keyboard' => true,
+        ]),
+      ]);
+      return;
+    }
+
+    $this->saveStandaloneFeedback($tgUser, $chatId, $phone, $stars);
+  }
+
+  /**
+   * Batch 11a: resolve (or create, from the user's own Telegram name +
+   * phone — the same auto-sync handleMessage already does) the Customer
+   * for a standalone bot rating, record it, and prompt for a comment.
+   * Marketing consent is NOT set: leaving feedback is not consent.
+   */
+  private function saveStandaloneFeedback(?TelegramUser $tgUser, int|string $chatId, string $phone, int $stars): void
+  {
+    $customer = Customer::where('phone', $phone)->first();
+    if (!$customer) {
+      $name = trim(($tgUser?->first_name ?? '') . ' ' . ($tgUser?->last_name ?? '')) ?: 'የቴሌግራም ደንበኛ';
+      $customer = Customer::create([
+        'customer_code' => Customer::generateNextCode(),
+        'full_name' => $name,
+        'phone' => $phone,
+        'address' => 'አዲስ አበባ',
+        'telegram_user_id' => (string)$chatId,
+        'marketing_consent' => false,
+      ]);
+    }
+
+    $feedback = OrderLifecycleService::recordCustomerReviewAndPromote(
+      $customer,
+      null,
+      $stars,
+      null,
+      'telegram'
+    );
+
+    Cache::put("tg_awaiting_feedback_{$chatId}", [
+      'feedback_id' => $feedback->id,
+      'order_id' => null,
+    ], now()->addHours(2));
+
+    $this->telegramApi('sendMessage', [
+      'chat_id' => $chatId,
+      'text' => "<b>እናመሰግናለን!</b> የሰጡት ደረጃ ({$stars}/5) በተሳካ ሁኔታ ተመዝግቧል።\n\nተጨማሪ አስተያየት ካለዎት በጽሑፍ ይላኩልን (ወይም /skip ይበሉ)።",
+      'parse_mode' => 'HTML',
     ]);
   }
 
@@ -1236,7 +1429,7 @@ class TelegramController extends Controller
       "1. <b>በቦቱ ደረጃ-በደረጃ ቀጠሮ ማስያዝ (Interactive Wizard):</b>\n" .
       "  አገልግሎት፣ ስም፣ ስልክና አድራሻዎን በማስገባት በ 1 ደቂቃ ውስጥ ይመዝገቡ!\n\n" .
       "2. <b>በቴሌግራም ሚኒ አፕ (Telegram Mini App):</b>\n" .
-      "  ቀጥታ በስማርት ፎርም እቃዎችን መርጠው ዋጋውን እያዩ ማዘዝ ይችላሉ::\n\n" .
+      "  ቀጥታ በስማርት ፎርም እቃዎችን መርጠው ዋጋውን እያዩ ማዘዝ ይችላሉ።\n\n" .
       "3. <b>በስልክ በቀጥታ ለማዘዝ:</b>\n" .
       "  • " . $this->getPhonesCombined() . "\n\n" .
       "አሁኑኑ ለመጀመር ከታች ያለውን <b>' በቦቱ ቀጠሮ ያስይዙ'</b> የሚለውን ቁልፍ ይጫኑ ";
@@ -1259,7 +1452,10 @@ class TelegramController extends Controller
       foreach ($dbServices as $svc) {
         $name = $svc->name_am ?: $svc->name_en;
         $price = number_format((float)$svc->base_price);
-        $unit = $svc->pricing_unit_am ?: ($svc->pricing_unit ?: 'አገልግሎት');
+        // Batch 11a: use the REAL unit from the services table. There is no
+        // pricing_unit / pricing_unit_am column, so the old code always fell
+        // through to "አገልግሎት" ("per service") for every service.
+        $unit = self::unitLabelAm($svc->unit ?? null);
         $desc = $svc->description_am ? "  • {$svc->description_am}\n" : '';
         $msg .= "{$idx}. <b>{$name}</b>\n  • ዋጋ: <b>{$price} ብር</b> / {$unit}\n{$desc}\n";
         $idx++;
@@ -1295,24 +1491,37 @@ class TelegramController extends Controller
 
   private function sendContactInfo(int|string $chatId): void
   {
-    $phone1 = WebsiteSetting::getVal('contact_phone_1', '0970075509');
-    $phone2 = WebsiteSetting::getVal('contact_phone_2', '0998142190');
-    $addressAm = WebsiteSetting::getVal('company_address_am', 'አያት አደባባይ፣ አዲስ አበባ');
+    $phone1 = $this->getPhone1();
+    // Batch 11a: getPhone2() already falls back to 0998142190 when the
+    // stored value is empty or a duplicate of phone 1, so /contact can
+    // never again print 0970075509 twice.
+    $phone2 = $this->getPhone2();
+    // Batch 11a: address from settings — canonical English address
+    // "Ayat Square, Addis Ababa, Ethiopia" (getAddressEn() guards the
+    // stale stored "አዲስ አበባ፣ ኢትዮጵያ"), plus the Amharic street address.
+    $addressEn = $this->getAddressEn();
+    $addressAm = $this->getAddress();
     $hoursAm = WebsiteSetting::getVal('working_hours_am', 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)');
     $channelUrl = $this->getTelegramChannelUrl();
     $tgSupport = $this->getTelegramSupportHandle();
     $tgSupportUrl = str_starts_with($tgSupport, 'http') ? $tgSupport : 'https://t.me/' . ltrim($tgSupport, '@');
     $tiktokUrl = (string)WebsiteSetting::getVal('tiktok', 'https://www.tiktok.com/@meashcleaningsolution');
 
+    // Build the contact block as a line list and drop empties, so a missing
+    // value can never render as an empty "•" bullet (perfection-test bug).
+    $lines = array_values(array_filter([
+      "• <b>ዋና ስልክ:</b> {$phone1}",
+      ($phone2 && $phone2 !== $phone1) ? "• <b>ተጨማሪ ስልክ:</b> {$phone2}" : '',
+      "• <b>ኢሜይል:</b> meashcleaningsolution@gmail.com",
+      $tgSupport ? "• <b>የቴሌግራም ቀጥታ ማውሪያ:</b> {$tgSupport}" : '',
+      $hoursAm ? "• <b>የስራ ሰዓት:</b> {$hoursAm}" : '',
+      "• <b>አድራሻ:</b> {$addressAm} ({$addressEn})",
+    ], fn($l) => trim((string)$l) !== ''));
+
     $msg = "<b>የሜሽ የጽዳት አገልግሎት (MEASH CLEANING SOLUTION)</b>\n" .
       "<b>\"Your Environment, Our Responsibility.\"</b>\n\n" .
       "<b>የደንበኞች አገልግሎትና ሪሴፕሽን (Customer Support Desk):</b>\n\n" .
-      "• <b>ዋና ስልክ:</b> {$phone1}\n" .
-      ($phone2 ? "• <b>ተጨማሪ ስልክ:</b> {$phone2}\n" : '') .
-      "• <b>ኢሜይል:</b> meashcleaningsolution@gmail.com\n" .
-      "• <b>የቴሌግራም ቀጥታ ማውሪያ:</b> {$tgSupport}\n" .
-      "• <b>የስራ ሰዓት:</b> {$hoursAm}\n" .
-      "• <b>አድራሻ:</b> {$addressAm}\n\n" .
+      implode("\n", $lines) . "\n\n" .
       "• <b>TikTok:</b> @meashcleaningsolution\n" .
       "• <b>Instagram | Facebook:</b> @meashcleaningsolution\n" .
       "• <b>ኦፊሴላዊ ቦት:</b> @{$this->botUsername}\n" .
@@ -1341,7 +1550,7 @@ class TelegramController extends Controller
     if (empty($orderCode)) {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => "እባክዎን የትዕዛዝ ቁጥርዎን አያይዘው ይላኩ (ለምሳሌ <code>/status ORD-2026-0001</code>)::",
+        'text' => "እባክዎን የትዕዛዝ ቁጥርዎን አያይዘው ይላኩ (ለምሳሌ <code>/status ORD-2026-0001</code>)።",
         'parse_mode' => 'HTML',
       ]);
       return;
@@ -1351,7 +1560,7 @@ class TelegramController extends Controller
     if (!$order) {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " ይቅርታ፣ በትዕዛዝ ቁጥር <code>{$orderCode}</code> የተመዘገበ መረጃ አልተገኘም:: እባክዎን ቁጥሩን አስተካክለው ይሞክሩ ወይም በ " . $this->getPhone1() . " ይደውሉ::",
+        'text' => " ይቅርታ፣ በትዕዛዝ ቁጥር <code>{$orderCode}</code> የተመዘገበ መረጃ አልተገኘም። እባክዎን ቁጥሩን አስተካክለው ይሞክሩ ወይም በ " . $this->getPhone1() . " ይደውሉ።",
         'parse_mode' => 'HTML',
       ]);
       return;
@@ -1390,7 +1599,7 @@ class TelegramController extends Controller
       " <b>የትዕዛዝ ሁኔታ:</b> <b>{$statusAm}</b>\n" .
       " <b>የተመደበው ቡድን:</b> {$teamName}\n" .
       " <b>ጠቅላላ ክፍያ:</b> " . number_format((float)($order->total ?? $order->total_amount ?? 0), 2) . " ብር\n\n" .
-      "ቀጠሮዎን መቀየር ወይም ማራዘም ከፈለጉ ከስር ያለውን ቁልፍ ይጫኑ ወይም በ " . $this->getPhone1() . " ይደውሉ::";
+      "ቀጠሮዎን መቀየር ወይም ማራዘም ከፈለጉ ከስር ያለውን ቁልፍ ይጫኑ ወይም በ " . $this->getPhone1() . " ይደውሉ።";
 
     $buttons = [
       [
@@ -1683,7 +1892,7 @@ class TelegramController extends Controller
           " <b>የቀጠሮ ቀን:</b> {$order->appointment_date->format('Y-m-d')} ({$order->appointment_time_slot}){$planTxt}\n" .
           " <b>አድራሻ:</b> {$order->address}\n" .
           " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
-          "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (" . $this->getPhone1() . ") ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ",
+          "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (" . $this->getPhone1() . ") ደውሎ ያረጋግጥልዎታል። ስለመረጡን እናመሰግናለን! ",
         'parse_mode' => 'HTML',
       ]);
     }
@@ -1697,7 +1906,7 @@ class TelegramController extends Controller
     $this->dispatchPostBookingSideEffects($order, 'telegram_miniapp_api');
 
     return response()->json([
-      'message' => 'ቀጠሮዎ በተሳካ ሁኔታ ተመዝግቧል! የሪሴፕሽን ሰራተኞቻችን በቅርቡ ያረጋግጡልዎታል::',
+      'message' => 'ቀጠሮዎ በተሳካ ሁኔታ ተመዝግቧል! የሪሴፕሽን ሰራተኞቻችን በቅርቡ ያረጋግጡልዎታል።',
       'booking_id' => $order->order_number,
       'order' => $order->fresh(['items', 'customer']),
     ], 201);
@@ -1929,7 +2138,8 @@ class TelegramController extends Controller
         $icon = $s->icon ?: '';
         $name = $s->name_am ?: $s->name_en;
         $price = number_format((float)$s->base_price);
-        $unit = $s->unit ?: 'ስራ';
+        // Batch 11a: real unit label (was raw DB code like "sqm").
+        $unit = self::unitLabelAm($s->unit ?? null);
         $buttons[] = [
           ['text' => "{$icon} {$name} ({$price} ብር/{$unit})", 'callback_data' => 'book_svc:' . $s->code],
         ];
@@ -1971,7 +2181,7 @@ class TelegramController extends Controller
       }
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " <b>የቀጠሮ ምዝገባው ተሰርዟል::</b>\n\nእንደገና ለመጀመር /book ወይም /start ብለው መጀመር ይችላሉ::",
+        'text' => " <b>የቀጠሮ ምዝገባው ተሰርዟል።</b>\n\nእንደገና ለመጀመር /book ወይም /start ብለው መጀመር ይችላሉ።",
         'parse_mode' => 'HTML',
         'reply_markup' => json_encode(['remove_keyboard' => true]),
       ]);
@@ -2148,6 +2358,11 @@ class TelegramController extends Controller
   {
     $state = $tgUser->bot_state;
     $text = trim($message['text'] ?? '');
+    // Batch 11a (F1 /book dead): never consume a slash command as wizard
+    // input — return false so the command router in handleMessage runs.
+    if (str_starts_with($text, '/')) {
+      return false;
+    }
     $location = $message['location'] ?? null;
     $contact = $message['contact'] ?? null;
     $payload = $tgUser->payload_cache ?? [];
@@ -2157,7 +2372,7 @@ class TelegramController extends Controller
         if (empty($text)) {
           $this->telegramApi('sendMessage', [
             'chat_id' => $chatId,
-            'text' => "እባክዎን ስምዎን በጽሁፍ ይላኩ (ለምሳሌ፡ ተስፋ ካሳ)::",
+            'text' => "እባክዎን ስምዎን በጽሁፍ ይላኩ (ለምሳሌ፡ ተስፋ ካሳ)።",
           ]);
           return true;
         }
@@ -2308,7 +2523,7 @@ class TelegramController extends Controller
 
     $msg = "<b>ደረጃ 4/5፡ አድራሻዎን ይምረጡ ወይም ይጻፉ (Address):</b>\n\n" .
       "ደንበኛ: <b>{$name}</b> ({$phone})\n\n" .
-      "ፅዳቱ የሚከናወንበትን ክፍለ ከተማ ከስር ካሉት ቁልፎች ይምረጡ ወይም የሰፈር/ጎዳና አድራሻዎን ጽፈው ይላኩልን (ለምሳሌ፡ <i>አያት ተስፉ ሞል ፊት ለፊት</i>)::";
+      "ፅዳቱ የሚከናወንበትን ክፍለ ከተማ ከስር ካሉት ቁልፎች ይምረጡ ወይም የሰፈር/ጎዳና አድራሻዎን ጽፈው ይላኩልን (ለምሳሌ፡ <i>አያት ተስፉ ሞል ፊት ለፊት</i>)።";
 
     $replyKeyboard = [
       'keyboard' => [
@@ -2481,7 +2696,7 @@ class TelegramController extends Controller
 
     $msg = " <b>ደረጃ 5/5፡ የቀጠሮ ቀን እና ሰዓት ይምረጡ:</b>\n" .
       "<i>(Step 5/5: Choose Appointment Date)</i>\n\n" .
-      "ዛሬ <b>{$d0Am} ({$d0->format('l')}, {$d0Format})</b> ነው:: የፅዳት ስራው የሚከናወንበትን ትክክለኛ ቀን ይምረጡ:";
+      "ዛሬ <b>{$d0Am} ({$d0->format('l')}, {$d0Format})</b> ነው። የፅዳት ስራው የሚከናወንበትን ትክክለኛ ቀን ይምረጡ:";
 
     $this->telegramApi('sendMessage', [
       'chat_id' => $chatId,
@@ -2596,14 +2811,30 @@ class TelegramController extends Controller
     if (empty($payload)) {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " ይቅርታ፣ የቀጠሮ መረጃው አልተገኘም:: እባክዎን /book ብለው እንደገና ይጀምሩ::",
+        'text' => " ይቅርታ፣ የቀጠሮ መረጃው አልተገኘም። እባክዎን /book ብለው እንደገና ይጀምሩ።",
         'parse_mode' => 'HTML',
       ]);
       return;
     }
 
     $name = $payload['customer_name'] ?? ($tgUser?->first_name ?: 'ደንበኛ');
-    $phone = $payload['customer_phone'] ?? '0911000000';
+    // Batch 11a: never book against the fake fallback phone 0911000000.
+    // A booking without a real phone is refused with a clear error
+    // instead of creating an order on a number nobody owns.
+    $phone = $payload['customer_phone'] ?? null;
+    if (empty($phone)) {
+      $this->telegramApi('sendMessage', [
+        'chat_id' => $chatId,
+        'text' => " ይቅርታ፣ የቀጠሮ መረጃው ያልተሟላ ነው — ስልክ ቁጥር አልተገኘም። እባክዎን /book ብለው እንደገና ይጀምሩ።",
+        'parse_mode' => 'HTML',
+      ]);
+      if ($tgUser) {
+        $tgUser->bot_state = null;
+        $tgUser->payload_cache = null;
+        $tgUser->save();
+      }
+      return;
+    }
     $svcCode = $payload['service_code'] ?? 'sofa';
     $svcName = $payload['service_name'] ?? 'የሶፋ ጥልቅ እጥበት';
     $qty = (float)($payload['quantity'] ?? 1);
@@ -2712,8 +2943,8 @@ class TelegramController extends Controller
       "• <b>ቴሌብር:</b> <code>{$telebirrAcc}</code>\n" .
       "• <b>ንግድ ባንክ (CBE):</b> <code>{$cbeAcc}</code>\n" .
       "• ወይም በቦታው በጥሬ ገንዘብ (Cash)\n\n" .
-      " <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
-      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ ({$receptionPhone}) ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
+      " <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል።</b>\n" .
+      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ ({$receptionPhone}) ደውሎ ያረጋግጥልዎታል። ስለመረጡን እናመሰግናለን! ";
 
     $actionButtons = [];
     if ($lat && $lng) {
@@ -2754,7 +2985,7 @@ class TelegramController extends Controller
     if (!$data || !is_array($data)) {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " <b>የላኩት መረጃ በትክክል አልደረሰም::</b> እባክዎ እንደገና ይሞክሩ::",
+        'text' => " <b>የላኩት መረጃ በትክክል አልደረሰም።</b> እባክዎ እንደገና ይሞክሩ።",
         'parse_mode' => 'HTML',
       ]);
       return;
@@ -2780,7 +3011,7 @@ class TelegramController extends Controller
     if (empty($phone)) {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " <b>እባክዎ ትክክለኛ ስልክ ቁጥር ያስገቡ::</b>",
+        'text' => " <b>እባክዎ ትክክለኛ ስልክ ቁጥር ያስገቡ።</b>",
         'parse_mode' => 'HTML',
       ]);
       return;
@@ -2789,7 +3020,7 @@ class TelegramController extends Controller
     if (!is_array($items) || count($items) === 0) {
       $this->telegramApi('sendMessage', [
         'chat_id' => $chatId,
-        'text' => " <b>እባክዎ ቢያንስ አንድ አገልግሎት ይምረጡ::</b>",
+        'text' => " <b>እባክዎ ቢያንስ አንድ አገልግሎት ይምረጡ።</b>",
         'parse_mode' => 'HTML',
       ]);
       return;
@@ -2803,7 +3034,7 @@ class TelegramController extends Controller
       if (!$service) {
         $this->telegramApi('sendMessage', [
           'chat_id' => $chatId,
-          'text' => " <b>የተመረጠው አገልግሎት አልተገኘም::</b> እባክዎ ሚኒ አፑን አድስና እንደገና ይሞክሩ::",
+          'text' => " <b>የተመረጠው አገልግሎት አልተገኘም።</b> እባክዎ ሚኒ አፑን አድስና እንደገና ይሞክሩ።",
           'parse_mode' => 'HTML',
         ]);
         return;
@@ -2910,8 +3141,8 @@ class TelegramController extends Controller
       " <b>አድራሻ:</b> {$address}" . ($subcity ? " ({$subcity})" : "") . "\n" .
       " <b>የቀጠሮ ቀን:</b> " . (is_string($order->appointment_date) ? $order->appointment_date : $order->appointment_date->format('Y-m-d')) . " ({$ethAppt['formatted_am']}) {$timeSlot}\n" .
       " <b>ጠቅላላ ክፍያ / ዋጋ:</b> " . number_format($totalEst, 2) . " ብር\n\n" .
-      " <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል::</b>\n" .
-      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (" . $this->getPhone1() . ") ደውሎ ያረጋግጥልዎታል:: ስለመረጡን እናመሰግናለን! ";
+      " <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል።</b>\n" .
+      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ (" . $this->getPhone1() . ") ደውሎ ያረጋግጥልዎታል። ስለመረጡን እናመሰግናለን! ";
 
     $actionButtons = [];
     if ($lat && $lng) {
@@ -2984,7 +3215,7 @@ class TelegramController extends Controller
       " <b>አዲሱ የቀጠሮ ቀን:</b> {$newDate} ({$ethDateStr})\n" .
       " <b>ሰዓት:</b> {$timeSlotAm}\n" .
       "━━━━━━━━━━━━━━━━━━━━\n" .
-      "ለተፈጠረው መስተጓጎል ከልብ ይቅርታ እንጠይቃለን! የሜሽ የፅዳት ቡድን በተጠቀሰው አዲስ ሰዓት የሚገኝ ይሆናል::\n\n" .
+      "ለተፈጠረው መስተጓጎል ከልብ ይቅርታ እንጠይቃለን! የሜሽ የፅዳት ቡድን በተጠቀሰው አዲስ ሰዓት የሚገኝ ይሆናል።\n\n" .
       " <b>ለማንኛውም ጥያቄ ወይም ሰዓት ለማስተካከል:</b> " . $this->getPhone1();
 
     $resp = $this->telegramApi('sendMessage', [
@@ -3030,7 +3261,7 @@ class TelegramController extends Controller
         'masked_token' => $maskedToken,
         'valid' => false,
         'error' => $getMe['description'] ?? 'Unauthorized / Invalid Token',
-        'message' => 'ልክ ያልሆነ ወይም የተሰረዘ (Revoked) የቦት ቶከን ነው! አዲስ ቶከን ከ @BotFather ወስደው ያስገቡ::',
+        'message' => 'ልክ ያልሆነ ወይም የተሰረዘ (Revoked) የቦት ቶከን ነው! አዲስ ቶከን ከ @BotFather ወስደው ያስገቡ።',
         'get_me' => $getMe,
       ]);
     }
@@ -3092,11 +3323,30 @@ class TelegramController extends Controller
     $resp = $this->telegramApi('setWebhook', $params);
 
     if ($resp['ok'] ?? false) {
+      // Batch 11a (F1): register the bot commands with Telegram so /book
+      // (and the other commands) appear in the client's command menu.
+      // /book was never registered via setMyCommands, so users had to
+      // discover it from help text. Best-effort: a failure here must not
+      // fail the webhook setup.
+      try {
+        $this->telegramApi('setMyCommands', ['commands' => [
+          ['command' => 'start', 'description' => 'Main menu / ዋና ማውጫ'],
+          ['command' => 'book', 'description' => 'Book cleaning in 1 minute / በ 1 ደቂቃ ቀጠሮ ያስይዙ'],
+          ['command' => 'services', 'description' => 'Services & prices / አገልግሎቶችና ዋጋ'],
+          ['command' => 'status', 'description' => 'Track your order / የትዕዛዝ ሁኔታ'],
+          ['command' => 'contact', 'description' => 'Reception hotline / ሪሴፕሽን'],
+          ['command' => 'help', 'description' => 'Help guide / እርዳታ'],
+          ['command' => 'cancel', 'description' => 'Cancel current booking / ቀጠሮ ሰርዝ'],
+        ]]);
+      } catch (\Throwable $th) {
+        Log::warning('setMyCommands failed (webhook still set): ' . $th->getMessage());
+      }
+
       $botName = $getMe['result']['first_name'] ?? 'Meash Bot';
       $botUser = $getMe['result']['username'] ?? $this->botUsername;
       return response()->json([
         'success' => true,
-        'message' => "ቦቱ (@{$botUser}) በተሳካ ሁኔታ ከ Webhook ጋር ተገናኝቷል! አሁን 24 ሰዓት ይሰራል::",
+        'message' => "ቦቱ (@{$botUser}) በተሳካ ሁኔታ ከ Webhook ጋር ተገናኝቷል! አሁን 24 ሰዓት ይሰራል።",
         'bot' => $getMe['result'] ?? null,
         'webhook_url' => $url,
       ]);

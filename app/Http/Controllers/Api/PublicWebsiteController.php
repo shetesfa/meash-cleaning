@@ -517,7 +517,19 @@ class PublicWebsiteController extends Controller
 
         $orderNumber = trim($validated['order_number'] ?? '');
         $orderId = $validated['order_id'] ?? null;
+        // Batch 11a (F5): a review now REQUIRES the order's customer phone
+        // and it must match. Previously phone was optional, so anyone who
+        // knew (or guessed) a sequential order number could post a review
+        // in a stranger's name. The website review form sends the phone
+        // from the verified track-order portal data (see website.blade.php
+        // submitWebsiteReview); the bot's own rating flow is unaffected.
         $phone = !empty($validated['phone']) ? SecurityTokenService::normalizePhone($validated['phone']) : null;
+        if (empty($phone)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'አስተያየት ለመስጠት በትዕዛዙ ላይ የተመዘገበው ስልክ ቁጥር ያስፈልጋል::',
+            ], 422);
+        }
 
         $orderQuery = Order::with('customer');
         if (!empty($orderId)) {
@@ -539,14 +551,20 @@ class PublicWebsiteController extends Controller
             ], 404);
         }
 
-        if ($phone && $order->customer) {
-            $cleanCustPhone = SecurityTokenService::normalizePhone($order->customer->phone ?? '');
-            if ($cleanCustPhone !== $phone) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ያስገቡት ስልክ ቁጥር ከትዕዛዙ መረጃ ጋር አይዛመድም::',
-                ], 403);
-            }
+        if (!$order->customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'የደንበኛ መረጃ አልተገኘም::',
+            ], 404);
+        }
+
+        // Batch 11a (F5): phone must match the order's customer exactly.
+        $cleanCustPhone = SecurityTokenService::normalizePhone($order->customer->phone ?? '');
+        if (empty($cleanCustPhone) || $cleanCustPhone !== $phone) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ያስገቡት ስልክ ቁጥር ከትዕዛዙ መረጃ ጋር አይዛመድም::',
+            ], 403);
         }
 
         $rating = (int)$validated['rating'];
@@ -682,11 +700,21 @@ class PublicWebsiteController extends Controller
             ]);
 
             $phoneInput = trim($validated['phone']);
-            $cleanPhone = preg_replace('/[^\d+]/', '', $phoneInput);
+            // Batch 11a (F6): normalize + validate the phone (Ethiopian
+            // 09/07 mobile) instead of storing whatever was typed, and
+            // stop forcing marketing_consent=true — sending a contact
+            // message is not consent to marketing.
+            $cleanPhone = \App\Models\Customer::normalizePhone($phoneInput);
+            if (empty($cleanPhone) || !preg_match('/^0[79]\d{8}$/', $cleanPhone)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'እባክዎን ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (ለምሳሌ 0912345678)::',
+                ], 422);
+            }
+            $phoneInput = $cleanPhone;
 
             // Find or create customer safely without violating unique constraints
             $customer = Customer::where('phone', $phoneInput)
-                ->orWhere('phone', $cleanPhone)
                 ->first();
 
             if (!$customer) {
@@ -703,20 +731,19 @@ class PublicWebsiteController extends Controller
                     'full_name' => $validated['name'],
                     'phone' => $phoneInput,
                     'customer_type' => 'individual',
-                    'marketing_consent' => true,
-                    'consent_timestamp' => now(),
+                    'marketing_consent' => false,
                 ]);
             }
 
             // Create notification record
             Notification::create([
                 'title' => 'አዲስ ፈጣን መልእክት ከድረ-ገጽ',
-                'body' => "ደንበኛ፡ {$validated['name']} ({$validated['phone']})\nመልእክት፡ {$validated['message']}",
+                'body' => "ደንበኛ፡ {$validated['name']} ({$phoneInput})\nመልእክት፡ {$validated['message']}",
                 'type' => 'customer_inquiry',
                 'data' => [
                     'customer_id' => $customer->id,
                     'name' => $validated['name'],
-                    'phone' => $validated['phone'],
+                    'phone' => $phoneInput,
                     'message' => $validated['message'],
                 ],
             ]);
@@ -728,7 +755,7 @@ class PublicWebsiteController extends Controller
                 try {
                     $text = "<b>🔔 አዲስ ፈጣን መልእክት ከድረ-ገጽ ደርሷል!</b>\n\n" .
                         "<b>ስም:</b> " . htmlspecialchars($validated['name']) . "\n" .
-                        "<b>ስልክ:</b> <code>" . htmlspecialchars($validated['phone']) . "</code>\n" .
+                        "<b>ስልክ:</b> <code>" . htmlspecialchars($phoneInput) . "</code>\n" .
                         "<b>የደንበኛው ጥያቄ:</b>\n" . htmlspecialchars($validated['message']) . "\n\n" .
                         "እባክዎ ደውለው ያነጋግሯቸው!";
                     \Illuminate\Support\Facades\Http::timeout(5)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [

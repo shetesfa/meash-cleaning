@@ -503,6 +503,7 @@
         let currentUser = {
             id: 1,
             name: 'Meash General Manager',
+            username: '',
             role: 'owner',
             phone: '0970075550',
         };
@@ -586,6 +587,7 @@
                     localStorage.setItem('meash_token', data.token);
                     localStorage.setItem('meash_user', JSON.stringify(data.user));
                     currentUser = Object.assign(currentUser, data.user);
+                    renderProfileDropdown();
                     checkAuthStatus();
                     initApp();
                 } else if (res.status === 429) {
@@ -621,8 +623,10 @@
                 const u = JSON.parse(storedUser);
                 currentUser.id = u.id || currentUser.id;
                 currentUser.name = u.name || currentUser.name;
+                currentUser.username = u.username || currentUser.username;
                 currentUser.role = u.role || currentUser.role;
                 currentUser.phone = u.phone || currentUser.phone;
+                renderProfileDropdown();
             }
         } catch(e) {}
 
@@ -1243,6 +1247,7 @@
             if (isOpen) {
                 closeRoleDropdown();
             } else {
+                renderProfileDropdown();
                 menu.classList.remove('hidden');
                 if (chevron) chevron.classList.add('rotate-180');
             }
@@ -1253,6 +1258,21 @@
             const chevron = document.getElementById('role-chevron');
             if (menu) menu.classList.add('hidden');
             if (chevron) chevron.classList.remove('rotate-180');
+        }
+
+        // Profile dropdown: show the real logged-in user, not the static
+        // "ተጠቃሚ / role" placeholders. The name is the display name the
+        // app uses for the active role (switchRole sets it per role);
+        // the username comes from /api/auth/login (and /api/auth/me)
+        // and survives role switches, so the account is identifiable.
+        function renderProfileDropdown() {
+            const nameEl = document.getElementById('dropdown-user-name');
+            const roleEl = document.getElementById('dropdown-user-role');
+            if (nameEl) nameEl.innerText = currentUser.name || currentUser.username || 'ተጠቃሚ';
+            if (roleEl) {
+                const roleLabel = (currentUser.role || 'role').toUpperCase();
+                roleEl.innerText = currentUser.username ? (currentUser.username + ' · ' + roleLabel) : roleLabel;
+            }
         }
 
         document.addEventListener('click', (e) => {
@@ -1287,6 +1307,7 @@
             const avatarEl = document.getElementById('user-avatar-text');
       if (avatarEl) avatarEl.innerText = '';
 
+            renderProfileDropdown();
             renderNavigation();
             await getAuthToken();
             loadActiveTab();
@@ -1344,6 +1365,7 @@
             const avatarEl = document.getElementById('user-avatar-text');
             if (avatarEl) avatarEl.innerText = currentUser.name.split(' ').map(n=>n[0]).join('').slice(0,2);
 
+            renderProfileDropdown();
             renderNavigation();
             await getAuthToken();
             loadActiveTab();
@@ -4876,6 +4898,7 @@
                 const data = await res.json();
                 if (res.ok) {
                     closeModal();
+                    showToast('ክፍያው በተሳካ ሁኔታ ተመዝግቧል (' + Number(payload.amount).toLocaleString() + ' ETB)', 'success');
                     loadActiveTab();
                 } else {
                     alert('ክፍያውን መመዝገብ አልተቻለም: ' + (data.message || JSON.stringify(data.errors || 'ስህተት')));
@@ -4998,7 +5021,7 @@
                 const data = await res.json();
                 if (res.ok) {
                     closeModal();
-                    alert('ተመላሽ ክፍያ በተሳካ ሁኔታ ተመዝግቧል (' + (data.refund_amount !== undefined ? Number(data.refund_amount).toLocaleString() + ' ETB' : '') + ')');
+                    showToast('ተመላሽ ክፍያ በተሳካ ሁኔታ ተመዝግቧል (' + (data.refund_amount !== undefined ? Number(data.refund_amount).toLocaleString() + ' ETB' : '') + ')', 'success');
                     loadActiveTab();
                 } else {
                     alert('ተመላሽ መመዝገብ አልተቻለም: ' + (data.message || JSON.stringify(data.errors || 'ስህተት')));
@@ -7238,7 +7261,11 @@
                 msgInput.value = 'ውድ {name}፤ የሶፋ፣ ምንጣፍ እና ፍራሽ እድፍና አቧራ አስቸግሮዎታል? በዘመናዊ የእንፋሎት ማሽን ያሉበት ድረስ መጥተን በደቂቃዎች ውስጥ እናጸዳለን! ስልክ: 0970075509';
             } else if (type === 'thanks') {
                 titleInput.value = ' ለሜሽ ክሊኒንግ ቤተሰቦች የቀረበ ልዩ ምስጋና እና ቅናሽ';
-                msgInput.value = 'ውድ {name}፤ ስለመረጡን እናመሰግናለን! ለቀጣይ አገልግሎትዎ የሚሆን የ 15% የታማኝነት ቅናሽ ኮድ ተዘጋጅቶልዎታል። ሜሽ ጽዳት: 0970075509';
+                // Batch 11a: no promo-code mechanism exists in the system,
+                // so the old text promised a "15% discount code" that was
+                // never generated or given. The discount itself is real
+                // (loyalty pricing) — say it applies, with no fake code.
+                msgInput.value = 'ውድ {name}፤ ስለመረጡን እናመሰግናለን! ለቀጣይ አገልግሎትዎ የ 15% የታማኝነት ቅናሽ ይተገበራል — ኮድ አያስፈልግም፤ ቀጠሮ ሲያስይዙ ያሳውቁን። ሜሽ ጽዳት: 0970075509';
             }
         }
 
@@ -9746,7 +9773,7 @@
                                 </div>
                                 <div class="p-3.5 bg-emerald-950/40 border border-emerald-500/30 rounded-2xl">
                                     <span class="text-[10px] text-emerald-300 uppercase font-bold block">የከፈሉት ድምር</span>
-                                    <span class="text-lg font-black text-emerald-400 mt-0.5 block">${parseFloat(summary.total_spending || c.orders?.reduce((sum, o) => sum + parseFloat(o.total || 0), 0) || 0).toLocaleString()} ETB</span>
+                                    <span class="text-lg font-black text-emerald-400 mt-0.5 block">${parseFloat((summary.total_spending !== undefined && summary.total_spending !== null) ? summary.total_spending : (c.orders?.reduce((sum, o) => sum + parseFloat(o.total || 0), 0) || 0)).toLocaleString()} ETB${summary.total_refunded > 0 ? ' (ተመላሽ ' + parseFloat(summary.total_refunded).toLocaleString() + ' ETB)' : ''}</span>
                                 </div>
                             </div>
 
@@ -10572,10 +10599,15 @@
         async function submitResolveComplaint(e, complaintId) {
             e.preventDefault();
             const action = document.getElementById('comp-action').value;
-            await apiFetch(`/api/care/complaints/${complaintId}/resolve`, {
+            const res = await apiFetch(`/api/care/complaints/${complaintId}/resolve`, {
                 method: 'POST',
                 body: JSON.stringify({ resolution_action: action, resolution_notes: action, status: 'resolved' })
             });
+            if (res.ok) {
+                showToast('ቅሬታው ተፈትቶ በተሳካ ሁኔታ ተመዝግቧል', 'success');
+            } else {
+                showToast('ቅሬታውን መፍታት አልተቻለም፤ እባክዎ እንደገና ይሞክሩ', 'error');
+            }
             closeModal();
             loadActiveTab();
         }
@@ -10856,13 +10888,19 @@
                 if (!orgId) {
                     const orgNameInput = document.getElementById('visit-new-org-name');
                     const orgName = orgNameInput ? orgNameInput.value.trim() : 'ተቋም';
+                    // Batch 11a: never create an organization on the fake
+                    // fallback phone 0911000000 — a real phone is required.
+                    if (!phone) {
+                        showToast('ስህተት፡ ለአዲስ ድርጅት እውነተኛ ስልክ ቁጥር ያስፈልጋል።', 'error');
+                        return;
+                    }
                     const newOrgRes = await apiFetch('/api/sales/organizations', {
                         method: 'POST',
                         body: JSON.stringify({
                             name: orgName,
                             industry: 'office',
                             contact_person: contact || 'ኃላፊ',
-                            phone: phone || '0911000000',
+                            phone: phone,
                             address: 'Addis Ababa',
                         })
                     });
@@ -11912,7 +11950,7 @@
                                     </div>
                                     <div>
                                         <label class="block text-[11px] text-slate-400 font-bold mb-0.5">ስልክ ቁጥር *</label>
-                                        <input type="tel" id="sub-inline-phone" placeholder="0911000000" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono">
+                                        <input type="tel" id="sub-inline-phone" placeholder="09xxxxxxxx" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white font-mono">
                                     </div>
                                 </div>
                             </div>

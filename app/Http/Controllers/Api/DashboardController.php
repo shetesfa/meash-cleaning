@@ -25,7 +25,11 @@ class DashboardController extends Controller
 {
     public function ownerSummary(): JsonResponse
     {
-        $today = Carbon::today();
+        // "Today" is the user's day in Addis Ababa (UTC+3), not the
+        // server's UTC day: at 01:00 EAT the UTC date is still
+        // yesterday, so UTC bucketing labelled Friday's early
+        // transactions under Thursday.
+        $today = Carbon::today('Africa/Addis_Ababa');
 
         // Jobs
         $todayJobs = Order::whereDate('appointment_date', $today)->count();
@@ -171,10 +175,12 @@ class DashboardController extends Controller
             };
         }
 
-        // 4. Daily trend (past 7 days)
+        // 4. Daily trend (past 7 days) — bucketed on the Addis Ababa
+        // day, matching how the dates were recorded (see
+        // OrderController::recordPayment / FinanceController::recordRefund).
         $dailyTrend = [];
         for ($i = 6; $i >= 0; $i--) {
-            $d = Carbon::today()->subDays($i);
+            $d = Carbon::today('Africa/Addis_Ababa')->subDays($i);
             $dStr = $d->toDateString();
             $eth = EthiopianCalendarService::toEthiopian($d);
             $inc = (float) Payment::whereDate('payment_date', $dStr)->sum('amount');
@@ -229,7 +235,8 @@ class DashboardController extends Controller
 
     public function receptionOverview(): JsonResponse
     {
-        $today = Carbon::today();
+        // Addis Ababa day, not the server UTC day (see ownerSummary).
+        $today = Carbon::today('Africa/Addis_Ababa');
 
         // Actionable queues for reception - ordered by latest so incoming Website/MiniApp/Bot bookings appear on top
         $newBookings = Order::with(['customer', 'items.service', 'assignedTeam'])

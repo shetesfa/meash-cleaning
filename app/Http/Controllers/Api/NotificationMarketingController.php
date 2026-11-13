@@ -161,9 +161,14 @@ class NotificationMarketingController extends Controller
             foreach ($telegramUsers as $tgUser) {
                 if (!empty($tgUser->telegram_id)) {
                     try {
+                        // Batch 11a: per-recipient {name} substitution (same
+                        // pattern as the SMS-Bridge path). Previously the
+                        // raw template went out with literal "{name}".
+                        $recipientName = trim((string)($tgUser->name ?? '')) ?: 'ውድ ደንበኛችን';
+                        $personalizedText = " " . str_replace(['{name}', '{ስም}', '{first_name}'], $recipientName, $campaign->title) . "\n\n" . str_replace(['{name}', '{ስም}', '{first_name}'], $recipientName, $campaign->message_text);
                         $response = \Illuminate\Support\Facades\Http::timeout(5)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                             'chat_id' => $tgUser->telegram_id,
-                            'text' => " " . $campaign->title . "\n\n" . $campaign->message_text,
+                            'text' => $personalizedText,
                         ]);
                         if ($response->successful() && ($response->json('ok') ?? false)) {
                             $sent++;
@@ -183,7 +188,10 @@ class NotificationMarketingController extends Controller
             foreach ($customers as $cust) {
                 if (!empty($cust->phone)) {
                     try {
-                        $smsResult = \App\Services\SmsService::sendDirectSms($cust->phone, $campaign->message_text, [
+                        // Batch 11a: per-recipient {name} substitution here too.
+                        $recipientName = trim((string)($cust->full_name ?? '')) ?: 'ውድ ደንበኛችን';
+                        $personalizedText = str_replace(['{name}', '{ስም}', '{first_name}'], $recipientName, $campaign->message_text);
+                        $smsResult = \App\Services\SmsService::sendDirectSms($cust->phone, $personalizedText, [
                             'sent_by_user_id' => $request->user()->id,
                             'customer_id' => $cust->id,
                         ]);

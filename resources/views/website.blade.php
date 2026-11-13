@@ -39,6 +39,21 @@
   $tiktokUrl = $websiteSettings['tiktok'] ?? 'https://www.tiktok.com/@meashcleaningsolution';
   $instagramUrl = $websiteSettings['instagram'] ?? 'https://instagram.com/meashcleaningsolution';
   $facebookUrl = $websiteSettings['facebook'] ?? 'https://facebook.com/meashcleaningsolution';
+  // Batch 11a: only trust a stored channel value that is the real channel
+  // @meashcleaningsolution — a stale stored value pointed at a username
+  // that does not exist (dead channel button in the bot test).
+  $telegramChannelUrl = $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaningsolution';
+  if (!str_contains((string)$telegramChannelUrl, 'meashcleaningsolution')) {
+    $telegramChannelUrl = 'https://t.me/meashcleaningsolution';
+  }
+  // Batch 11a: same guard for the 2nd phone + English address — stale
+  // stored values printed phone 1 twice and the old address.
+  if (empty(trim((string)$phone2)) || trim((string)$phone2) === trim((string)$phone1)) {
+    $phone2 = '0998142190';
+  }
+  if (empty(trim((string)$addressEn)) || $addressEn === 'አዲስ አበባ፣ ኢትዮጵያ' || $addressEn === 'አዲስ አበባ፣ ኢትዮጵያ (Addis Ababa, Ethiopia)') {
+    $addressEn = 'Ayat Square, Addis Ababa, Ethiopia';
+  }
   $socialHandle = $websiteSettings['social_handle'] ?? '@meashcleaningsolution';
 @endphp
 <html lang="am" data-lang="am" class="dark">
@@ -121,7 +136,7 @@
     'longitude' => 38.8681
   ],
   'sameAs' => array_values(array_filter([
-    $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaningsolution',
+    $telegramChannelUrl,
     $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning',
     $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot',
     $tiktokUrl,
@@ -137,6 +152,9 @@
 
     <!-- Self-Hosted Vendor Libraries -->
     <script src="/vendor/lucide.min.js"></script>
+    <!-- Batch 11a (F8): vendored QR generator — the public-site QR codes
+         below are now rendered locally instead of api.qrserver.com -->
+    <script src="/vendor/qrcode-generator.min.js"></script>
 
     <!-- Safety Fallbacks -->
     <script>
@@ -1352,24 +1370,11 @@
         </a>
       </div>
 
-      <!-- Key Trust Metrics -->
-      <div class="mt-10 grid grid-cols-3 gap-4 sm:gap-6 border-t border-navy/10 pt-6 max-w-lg">
-        <div>
-          <div class="font-serif font-bold text-2xl sm:text-3xl text-navy">3,200+</div>
-          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="am">የተከናወኑ ስራዎች</div>
-          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="en">Jobs Done</div>
-        </div>
-        <div>
-          <div class="font-serif font-bold text-2xl sm:text-3xl text-navy">4.9<span class="text-base font-normal">/5</span></div>
-          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="am">የደንበኞች እርካታ</div>
-          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="en">Rating</div>
-        </div>
-        <div>
-          <div class="font-serif font-bold text-2xl sm:text-3xl text-navy">100%</div>
-          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="am">የታመኑ ባለሙያዎች</div>
-          <div class="text-[12px] text-navy/60 mt-0.5" data-lang-block="en">Vetted Staff</div>
-        </div>
-      </div>
+      <!-- Key Trust Metrics: REMOVED (batch 11b) — the old "3,200+ Jobs
+           Done / 4.9/5 Rating / 100% Vetted Staff" figures were hardcoded
+           and unverifiable, and no public endpoint returns real
+           completed-order counts, ratings or staff numbers. Do not
+           re-add numbers here unless they come from a real endpoint. -->
     </div>
 
     <!-- Hero Visual — 3D coverflow slider with real Meash work photos -->
@@ -1520,7 +1525,7 @@
             <a href="{{ $facebookUrl }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
               <i data-lucide="facebook" class="w-3.5 h-3.5"></i> Facebook
             </a>
-            <a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaningsolution' }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5" title="Telegram Channel">
+            <a href="{{ $telegramChannelUrl }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5" title="Telegram Channel">
               <i data-lucide="send" class="w-3.5 h-3.5"></i> Channel
             </a>
             <a href="{{ $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="text-xs bg-white/10 hover:bg-teal px-3 py-1.5 rounded-md transition flex items-center gap-1.5" title="Telegram Contact">
@@ -2115,7 +2120,7 @@
         <span data-lang-block="am">ደንበኞቻችን ስለ እኛ ምን ይላሉ?</span><span data-lang-block="en">What our clients say</span>
       </h2>
     </div>
-    <div class="mt-4 sm:mt-0 flex items-center gap-2 text-amber-500 text-sm font-bold" id="reviews-aggregate-block">
+    <div class="mt-4 sm:mt-0 flex items-center gap-2 text-amber-500 text-sm font-bold hidden" id="reviews-aggregate-block">
       <div class="flex">
         <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
         <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
@@ -2123,49 +2128,16 @@
         <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
         <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
       </div>
-      <span class="text-navy dark:text-white font-serif" id="reviews-aggregate-text">4.9 / 5.0 (300+ Reviews)</span>
+      <span class="text-navy dark:text-white font-serif" id="reviews-aggregate-text"></span>
     </div>
   </div>
 
+  <!-- Testimonial cards are rendered ONLY from approved reviews via
+       loadPublicReviews() (/api/public/reviews). The 3 hardcoded sample
+       cards were removed (batch 11b): they were invented quotes with
+       real-sounding names, and the API returns [] today. When there are
+       no approved reviews the whole #reviews section is hidden. -->
   <div id="dynamic-reviews-grid" class="grid md:grid-cols-3 gap-8">
-    <div class="border-l-2 border-teal pl-5 bg-fog/50 dark:bg-slate-800/50 p-4 rounded-r-xl">
-      <div class="flex text-amber-400 mb-2">
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-      </div>
-      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="am">"ሶፋዬ ልክ ዛሬ ከሱቅ እንደተገዛ አዲስ ሆኗል! ቡድኑ በጣም ጨዋና ንጹህ ስራ የሚሰሩ ናቸው።"</p>
-      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="en">"My sofa looks brand new. The team was punctual, respectful, and thorough."</p>
-      <p class="mt-4 font-bold text-sm text-teal-dark">Bethlehem Tadesse — ቦሌ (Bole)</p>
-    </div>
-
-    <div class="border-l-2 border-teal pl-5 bg-fog/50 dark:bg-slate-800/50 p-4 rounded-r-xl">
-      <div class="flex text-amber-400 mb-2">
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-      </div>
-      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="am">"በድረ-ገጹ በኢትዮጵያ ቀን ቀጠሮ መያዝ መቻሉ በጣም አስደስቶኛል። በሰዓቱ ደርሰው በ 1 ሰዓት ውስጥ ጨረሱ።"</p>
-      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="en">"Booking through the Ethiopian calendar was super convenient. Arrived right on schedule."</p>
-      <p class="mt-4 font-bold text-sm text-teal-dark">Yonas Assefa — ካዛንቺስ (Kazanchis)</p>
-    </div>
-
-    <div class="border-l-2 border-teal pl-5 bg-fog/50 dark:bg-slate-800/50 p-4 rounded-r-xl">
-      <div class="flex text-amber-400 mb-2">
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-      </div>
-      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="am">"ለሆቴላችን ወርሃዊ የጽዳት ኮንትራት ገብተናል፤ ህጋዊ ደረሰኝና አስተማማኝ ክትትል ይሰጣሉ። ውጤቱ ድንቅ ነው።"</p>
-      <p class="text-[15px] text-navy/80 dark:text-slate-200 leading-relaxed" data-lang-block="en">"We contracted them for our hotel property — professional SLA compliance &amp; VAT receipts."</p>
-      <p class="mt-4 font-bold text-sm text-teal-dark">Selam Hospitality Group — Corporate</p>
-    </div>
   </div>
 </section>
 
@@ -2190,7 +2162,7 @@
       <!-- Website QR -->
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-navy/10 flex flex-col items-center">
         <div class="p-3 bg-white rounded-xl shadow-inner border border-gray-100 mb-4">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode(url('/')) }}" alt="Website QR Code" class="w-36 h-36 rounded-lg">
+          <img id="qr-website" data-qr="{{ url('/') }}" src="" alt="Website QR Code" class="w-36 h-36 rounded-lg">
         </div>
         <h4 class="font-bold text-sm text-navy dark:text-white flex items-center gap-1.5 mb-1">
           <i data-lucide="globe" class="w-4 h-4 text-teal"></i> Website Direct Booking
@@ -2201,7 +2173,7 @@
       <!-- Telegram Bot QR -->
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-navy/10 flex flex-col items-center">
         <div class="p-3 bg-white rounded-xl shadow-inner border border-gray-100 mb-4">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://t.me/meash_cleaning_solution_bot" alt="Telegram Bot QR Code" class="w-36 h-36 rounded-lg">
+          <img id="qr-telegram" data-qr="https://t.me/meash_cleaning_solution_bot" src="" alt="Telegram Bot QR Code" class="w-36 h-36 rounded-lg">
         </div>
         <h4 class="font-bold text-sm text-navy dark:text-white flex items-center gap-1.5 mb-1">
           <i data-lucide="bot" class="w-4 h-4 text-teal"></i> Telegram Mini App &amp; Bot
@@ -2211,6 +2183,36 @@
     </div>
   </div>
 </section>
+
+<!-- Batch 11a (F8): local QR generation with the vendored qrcode-generator
+     (same pattern as the SMS Bridge QR in app.blade.php) — no third-party
+     call, no data leaves the browser. -->
+<script>
+  (function () {
+    function renderLocalQr(imgEl) {
+      if (!imgEl || !imgEl.dataset.qr) return;
+      if (typeof qrcode === 'undefined') {
+        imgEl.alt = 'QR አልተጫነም — ገጹን እንደገና ይክፈቱ (QR library not loaded)';
+        return;
+      }
+      try {
+        var qr = qrcode(0, 'M'); // 0 = auto version, M = 15% error correction
+        qr.addData(imgEl.dataset.qr);
+        qr.make();
+        imgEl.src = qr.createDataURL(4, 4);
+      } catch (e) { console.error('QR generation failed', e); }
+    }
+    function renderSiteQrs() {
+      renderLocalQr(document.getElementById('qr-website'));
+      renderLocalQr(document.getElementById('qr-telegram'));
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderSiteQrs);
+    } else {
+      renderSiteQrs();
+    }
+  })();
+</script>
 
 <!-- ================= BOOKING WIZARD ================= -->
 <section id="book" class="bg-fog py-24 border-t border-navy/10">
@@ -2273,7 +2275,17 @@
               @php
                 $wIcon = $iconList[$ws->code] ?? 'sparkles';
                 $wPrice = (float)$ws->base_price;
-                $wUnit = $ws->pricing_unit_am ?: ($ws->unit ?: 'unit');
+                // Batch 11a: real unit label — there is no pricing_unit_am
+                // column on services, so the old fallback printed the raw
+                // DB code ("sqm") / "unit" instead of an Amharic label.
+                $wUnit = match (strtolower(trim((string)($ws->unit ?? '')))) {
+                  'sqm' => 'ካሬ ሜትር',
+                  'seat' => 'ወንበር',
+                  'piece' => 'እቃ',
+                  'room' => 'ክፍል',
+                  'hour' => 'ሰዓት',
+                  default => 'አገልግሎት',
+                };
                 $wNameAm = $ws->name_am ?: $ws->name_en;
                 $wNameEn = $ws->name_en ?: $ws->name_am;
               @endphp
@@ -2535,6 +2547,39 @@
         <!-- STEP 4 -->
         <div id="step-4" class="wizard-step hidden">
           <p class="font-semibold mb-3 text-sm"><span data-lang-block="am">የእርስዎ መረጃ</span><span data-lang-block="en">Your details</span></p>
+
+          <!-- Your Booking summary (recap of Steps 1-3, like the mini-app
+               confirmation panel) — values filled by updateStep4Summary(). -->
+          <div class="mb-4 p-4 rounded-xl bg-teal-light/40 border border-teal/30">
+            <p class="text-xs font-bold text-teal-dark uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+              <i data-lucide="clipboard-check" class="w-3.5 h-3.5"></i>
+              <span data-lang-block="am">የእርስዎ ቀጠሮ</span>
+              <span data-lang-block="en">Your Booking</span>
+            </p>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between gap-3 pb-2 border-b border-teal/15">
+                <span class="text-navy/60 font-semibold shrink-0"><span data-lang-block="am">አገልግሎት</span><span data-lang-block="en">Service</span></span>
+                <span class="font-bold text-navy text-right" id="sum4-service">—</span>
+              </div>
+              <div class="flex justify-between gap-3 pb-2 border-b border-teal/15">
+                <span class="text-navy/60 font-semibold shrink-0"><span data-lang-block="am">ብዛት</span><span data-lang-block="en">Quantity</span></span>
+                <span class="font-bold text-navy text-right" id="sum4-qty">—</span>
+              </div>
+              <div class="flex justify-between gap-3 pb-2 border-b border-teal/15">
+                <span class="text-navy/60 font-semibold shrink-0"><span data-lang-block="am">ቀጠሮ ቀን</span><span data-lang-block="en">Date</span></span>
+                <span class="font-bold text-navy text-right" id="sum4-date">—</span>
+              </div>
+              <div class="flex justify-between gap-3 pb-2 border-b border-teal/15">
+                <span class="text-navy/60 font-semibold shrink-0"><span data-lang-block="am">የቀጠሮ ሰዓት</span><span data-lang-block="en">Time Slot</span></span>
+                <span class="font-bold text-navy text-right" id="sum4-slot">—</span>
+              </div>
+              <div class="flex justify-between gap-3">
+                <span class="text-navy/60 font-semibold shrink-0"><span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Address</span></span>
+                <span class="font-bold text-navy text-right" id="sum4-address">—</span>
+              </div>
+            </div>
+          </div>
+
           <input id="book-name" type="text" placeholder="Full name / ሙሉ ስም" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
           <input id="book-phone" type="tel" placeholder="Phone / ስልክ ቁጥር (09...)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
 
@@ -2882,7 +2927,7 @@
     <div>
       <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ማህበራዊ ትስስር ({{ $socialHandle }})</p>
       <ul class="space-y-2 text-xs">
-        <li><a href="{{ $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaningsolution' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashcleaningsolution)</a></li>
+        <li><a href="{{ $telegramChannelUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashcleaningsolution)</a></li>
         <li><a href="{{ $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="message-circle" class="w-3.5 h-3.5 text-teal"></i> Direct Telegram (@meashcleaning)</a></li>
         <li><a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="bot" class="w-3.5 h-3.5 text-teal"></i> Telegram Bot</a></li>
         <li><a href="{{ $tiktokUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="video" class="w-3.5 h-3.5 text-teal"></i> TikTok</a></li>
@@ -2994,10 +3039,21 @@
     monthsEn: ['Meskerem','Tikimt','Hidar','Tahsas','Tir','Yekatit','Megabit','Miyazia','Ginbot','Sene','Hamle','Nehase','Pagume'],
     weekdays: ['ሰኞ','ማክሰኞ','ረቡዕ','ሐሙስ','አርብ','ቅዳሜ','እሁድ'],
 
-    // Convert Gregorian → Ethiopian
+    // Convert Gregorian → Ethiopian.
+    // NOTE: the date is read from its Y/M/D components, never via
+    // new Date('YYYY-MM-DD') — that parses as UTC midnight, so in any
+    // timezone west of UTC it read the PREVIOUS day (the picker showed
+    // Hidar 4 for 14 Nov 2026). JDN math matches the mini app, whose
+    // converter is verified against known anchors.
     toEth(gcDate) {
-      const d = new Date(gcDate);
-      const gcY = d.getFullYear(), gcM = d.getMonth() + 1, gcD = d.getDate();
+      let gcY, gcM, gcD;
+      if (typeof gcDate === 'string') {
+        const parts = gcDate.split('T')[0].split('-').map(Number);
+        [gcY, gcM, gcD] = parts;
+      } else {
+        const d = new Date(gcDate);
+        gcY = d.getFullYear(); gcM = d.getMonth() + 1; gcD = d.getDate();
+      }
       // Julian Day Number from Gregorian
       const a = Math.floor((14 - gcM) / 12);
       const y = gcY + 4800 - a;
@@ -3014,8 +3070,12 @@
 
     // Convert Ethiopian → Gregorian date string (YYYY-MM-DD)
     toGreg(etY, etM, etD) {
-      // JDN from Ethiopian
-      const jdn = etD + 30 * (etM - 1) + 365 * etY + Math.floor(etY / 4) + 1723856;
+      // JDN from Ethiopian — same formula as the mini app
+      // (ethiopianToJdn: JDN of 1 Meskerem 1 EE is 1724221).
+      // The old constant (1723856 + 365*etY) was one day too high, so
+      // every Ethiopian date picked in the wizard was submitted as the
+      // NEXT Gregorian day (Hidar 5 → 15 Nov 2026 instead of 14 Nov).
+      const jdn = 1724221 - 1 + 365 * (etY - 1) + Math.floor(etY / 4) + 30 * (etM - 1) + etD;
       // Gregorian from JDN
       const a = jdn + 32044;
       const b = Math.floor((4*a+3)/146097);
@@ -3334,22 +3394,29 @@
     updateWizardTotal();
   }
 
+  // Hide the whole testimonials section: it must only ever show real,
+  // approved reviews (there are no hardcoded cards any more).
+  function hideReviewsSection(){
+    document.getElementById('reviews')?.classList.add('hidden');
+  }
+
   async function loadPublicReviews(){
     try {
       const res = await fetch('/api/public/reviews');
-      if (!res.ok) return;
+      if (!res.ok) { hideReviewsSection(); return; }
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.data || []);
       // Honest aggregate: the hardcoded "4.9 / 5.0 (300+ Reviews)" was
       // never real data. With approved reviews, show their real average
-      // and count; with none, hide the aggregate entirely (the 3 sample
-      // cards below stay as fallback content).
+      // and count and render the real review cards; with none, hide the
+      // whole testimonials section (the API returns [] today).
       const aggBlock = document.getElementById('reviews-aggregate-block');
       const aggText = document.getElementById('reviews-aggregate-text');
       if (list && list.length > 0) {
         const avg = list.reduce((a, r) => a + (parseFloat(r.rating) || 0), 0) / list.length;
         if (aggText) aggText.textContent = avg.toFixed(1) + ' / 5.0 (' + list.length + (list.length === 1 ? ' Review)' : ' Reviews)');
         if (aggBlock) aggBlock.classList.remove('hidden');
+        document.getElementById('reviews')?.classList.remove('hidden');
         const grid = document.getElementById('dynamic-reviews-grid');
         if (grid) {
           grid.innerHTML = list.slice(0, 6).map(r => `
@@ -3364,12 +3431,14 @@
           if (window.lucide) lucide.createIcons();
         }
       } else {
-        // No approved reviews yet: do not show the fake "300+ Reviews"
-        // aggregate as if it were real.
+        // No approved reviews yet: hide the testimonials section entirely
+        // instead of showing invented quotes or a fake aggregate.
         if (aggBlock) aggBlock.classList.add('hidden');
+        hideReviewsSection();
       }
     } catch (e) {
       console.warn('Could not load dynamic reviews:', e);
+      hideReviewsSection();
     }
   }
 
@@ -3536,6 +3605,36 @@
     showWizardStep(1);
   }
 
+  // Fill the Step 4 "Your Booking" recap (service, qty, date, slot,
+  // address) from the wizard state, mirroring the mini-app confirmation
+  // panel. Values are set via textContent, never innerHTML, so a typed
+  // address cannot inject markup.
+  function updateStep4Summary(){
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '—'; };
+    setText('sum4-service', (typeof svcNames !== 'undefined' && svcNames[selectedSvc]) ? svcNames[selectedSvc] : selectedSvc);
+    setText('sum4-qty', String(wizardQty));
+    const dateStr = document.getElementById('book-date')?.value || '';
+    if (dateStr && window.EC) {
+      const eth = EC.toEth(dateStr);
+      setText('sum4-date', EC.formatEth(eth.year, eth.month, eth.day) + ' (' + EC.formatGreg(dateStr) + ')');
+    } else {
+      setText('sum4-date', dateStr || '—');
+    }
+    const slotLabels = {
+      morning: 'ጥዋት (Morning, 2:00–6:00 ጠዋቱ ETH • 8am–12pm GC)',
+      afternoon: 'ከሰዓት (Afternoon, 7:00–11:00 ከሰዓቱ ETH • 1pm–5pm GC)',
+      night: 'የሌሊት ፈረቃ (Night Shift, 7:00 PM – 5:00 AM GC)',
+      weekend: 'ቅዳሜና እሁድ (Weekend, Flexible Hours)'
+    };
+    const slot = document.getElementById('book-time-slot')?.value || '';
+    setText('sum4-slot', slotLabels[slot] || slot || '—');
+    const subcity = document.getElementById('book-subcity')?.value || '';
+    const address = document.getElementById('book-address')?.value || '';
+    const landmark = document.getElementById('book-landmark')?.value || '';
+    const addrParts = [subcity, address].filter(Boolean).join(', ');
+    setText('sum4-address', addrParts + (landmark ? ' (' + landmark + ')' : ''));
+  }
+
   function showWizardStep(n){
     document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById('step-' + n);
@@ -3547,7 +3646,7 @@
     if (dot) {
       dot.classList.add('text-teal-dark', 'bg-teal/10', 'font-black');
     }
-    if (n === 4) updateWizardTotal();
+    if (n === 4) { updateWizardTotal(); updateStep4Summary(); }
     if (window.lucide) lucide.createIcons();
   }
 
@@ -3940,6 +4039,7 @@
                   <span class="font-bold text-navy text-right">${escapeHtml((custSubcity ? custSubcity + ', ' : '') + custAddress)}</span>
                 </div>
               </div>
+              ${renderOrderItemsHtml(ord.items || [])}
             </div>
             <div class="mt-4 pt-3 border-t border-navy/10 text-right">
               <span class="text-[11px] text-teal-dark font-extrabold">Your Environment, Our Responsibility.</span>
@@ -3962,6 +4062,43 @@
             <i data-lucide="calendar-plus" class="w-4 h-4"></i>
             <span>ቀጣይ ጽዳት ያዙ (Book Next Cleaning)</span>
           </button>
+        </div>
+      </div>`;
+  }
+
+  // Render the ordered services (name, quantity, amount) from the
+  // track-order response. The endpoint always returns order.items
+  // [{item_name, quantity, unit_price, subtotal}] — the old UI never
+  // rendered them, so a tracked order showed no service, quantity or
+  // amount at all. The summed figure is labelled "Items subtotal":
+  // the order total itself is only returned with a valid tracking
+  // token, and a discount may apply on top of it.
+  function renderOrderItemsHtml(items) {
+    if (!Array.isArray(items) || !items.length) return '';
+    let itemsSubtotal = 0;
+    const rows = items.map(it => {
+      const qty = Number(it.quantity) || 0;
+      const unit = Number(it.unit_price) || 0;
+      const sub = Number(it.subtotal) || (qty * unit);
+      itemsSubtotal += sub;
+      return `<div class="py-1.5 border-b border-navy/5 last:border-0">
+        <div class="flex justify-between gap-3">
+          <span class="font-semibold text-navy">${escapeHtml(it.item_name || 'የፅዳት አገልግሎት')}</span>
+          <span class="font-bold text-navy whitespace-nowrap">${sub.toLocaleString()} ETB</span>
+        </div>
+        <div class="text-[11px] text-navy/55 font-semibold mt-0.5">${qty} × ${unit.toLocaleString()} ETB</div>
+      </div>`;
+    }).join('');
+    return `
+      <div class="mt-4 pt-4 border-t border-navy/10">
+        <p class="text-xs font-black text-navy uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+          <i data-lucide="list-checks" class="w-3.5 h-3.5 text-teal"></i>
+          <span>የተዘመኑ አገልግሎቶች (Ordered Services)</span>
+        </p>
+        <div class="text-xs">${rows}</div>
+        <div class="flex justify-between gap-3 pt-2 mt-1.5 border-t border-navy/10">
+          <span class="font-bold text-navy text-xs">የአገልግሎቶች ድምር (Items subtotal)</span>
+          <span class="font-black text-teal-dark text-sm">${itemsSubtotal.toLocaleString()} ETB</span>
         </div>
       </div>`;
   }
@@ -4120,6 +4257,7 @@
 
         const totalFormatted = ord.total != null ? Number(ord.total).toLocaleString() + ' ETB' : 'በቀጠሮው ወቅት የሚከፈል';
         const paymentLabel = ord.payment_status === 'paid' ? 'ተከፍሏል' : (ord.payment_status === 'unpaid' ? 'ያልተከፈለ' : 'ቅድመ ክፍያ አይጠየቅም');
+        const orderItemsHtml = renderOrderItemsHtml(ord.items || []);
 
         box.innerHTML = `
           <div class="bg-white rounded-2xl p-6 border border-navy/10 shadow-lg">
@@ -4159,6 +4297,7 @@
               </div>
             </div>
 
+            ${orderItemsHtml}
             ${subBadge}
             ${teamInfoHtml}
             ${addressSummaryHtml}
@@ -4204,6 +4343,13 @@
     const msgEl = document.getElementById('website-review-msg');
     const btnEl = document.getElementById('website-review-btn');
     const comment = commentEl ? commentEl.value.trim() : '';
+    // Batch 11a (F5): submitReview now requires the order's customer
+    // phone to match. The track-order portal already verified this
+    // customer (token-gated lookup), so send the phone it holds.
+    const portalPhone = (window.currentCustomerPortalData && window.currentCustomerPortalData.phone)
+      || (window.currentTrackedOrderData && window.currentTrackedOrderData.customer_summary && window.currentTrackedOrderData.customer_summary.phone)
+      || (window.currentTrackedOrderData && window.currentTrackedOrderData.customer_phone)
+      || '';
 
     if (btnEl) {
       btnEl.disabled = true;
@@ -4216,6 +4362,7 @@
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
           order_number: orderNumber,
+          phone: portalPhone,
           rating: selectedReviewRating,
           comment: comment,
           source: 'website',

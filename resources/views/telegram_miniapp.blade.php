@@ -151,7 +151,17 @@
                 'commercial' => 'building-2',
               ];
               $lucideIcon = $iconMap[$svc->code] ?? 'sparkles';
-              $pUnit = $svc->pricing_unit_am ?: ($svc->unit ?: 'ስራ');
+              // Batch 11a: real unit label — there is no pricing_unit_am
+              // column on services; the old fallback printed the raw DB
+              // code ("sqm") instead of an Amharic label.
+              $pUnit = match (strtolower(trim((string)($svc->unit ?? '')))) {
+                'sqm' => 'ካሬ ሜትር',
+                'seat' => 'ወንበር',
+                'piece' => 'እቃ',
+                'room' => 'ክፍል',
+                'hour' => 'ሰዓት',
+                default => 'አገልግሎት',
+              };
               $nameAm = $svc->name_am ?: $svc->name_en;
               $nameEn = $svc->name_en ?: $svc->name_am;
               $priceVal = (float)$svc->base_price;
@@ -287,7 +297,7 @@
         <i data-lucide="check-circle-2" class="w-10 h-10"></i>
       </div>
       <h3 class="text-xl font-black text-white mb-2" id="txt-success-title"> ቀጠሮዎ በተሳካ ሁኔታ ተመዝግቧል!</h3>
-      <p class="text-xs text-slate-300 mb-5 leading-relaxed" id="txt-success-desc">የሜሽ ሪሴፕሽን ሰራተኞቻችን የቡድን ምደባውን በስልክ ደውለው ያረጋግጡልዎታል::</p>
+      <p class="text-xs text-slate-300 mb-5 leading-relaxed" id="txt-success-desc">የሜሽ ሪሴፕሽን ሰራተኞቻችን የቡድን ምደባውን በስልክ ደውለው ያረጋግጡልዎታል።</p>
       <div class="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 mb-4 shadow-md">
         <span class="text-[11px] font-semibold text-slate-400 block mb-1" id="lbl-tracking-id">የትዕዛዝ መለያ ቁጥር (Order ID)</span>
         <span class="text-2xl font-black text-cyan-400 tracking-wider" id="tma-result-id">ORD-2026-0001</span>
@@ -330,12 +340,27 @@
       id: Number(initialLiveServices[0].id),
       code: initialLiveServices[0].code,
       price: parseFloat(initialLiveServices[0].base_price || 0),
-      unit: initialLiveServices[0].pricing_unit_am || initialLiveServices[0].unit || 'መቀመጫ',
+      unit: tmaUnitLabel(initialLiveServices[0].unit),
       nameAm: initialLiveServices[0].name_am || initialLiveServices[0].name_en,
       nameEn: initialLiveServices[0].name_en || initialLiveServices[0].name_am
     } : { id: 1, code: 'floor_ceramic', price: 500, unit: 'ካሬ / sqm', nameAm: 'የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት', nameEn: 'Ceramic & Hardwood Floor Cleaning' };
     let qty = (currentSvc.code === 'carpet' || currentSvc.id === 2) ? 10 : ((currentSvc.code === 'sofa' || currentSvc.id === 1) ? 5 : 1);
     let tgUser = null;
+
+    // Batch 11a: Amharic label for a service's real billing unit. The
+    // services API returns the `unit` column only (sqm/seat/piece/...);
+    // there is no pricing_unit_am / pricing_unit field, so the old
+    // fallbacks always printed "አገልግሎት" ("per service") for all.
+    function tmaUnitLabel(unit) {
+      switch (String(unit || '').toLowerCase()) {
+        case 'sqm': return 'ካሬ ሜትር';
+        case 'seat': return 'ወንበር';
+        case 'piece': return 'እቃ';
+        case 'room': return 'ክፍል';
+        case 'hour': return 'ሰዓት';
+        default: return 'አገልግሎት';
+      }
+    }
 
     const i18nDict = {
       am: {
@@ -354,7 +379,7 @@
         submitBtn: 'ቀጠሮውን አረጋግጥ (Submit Booking)',
         submitting: 'በመመዝገብ ላይ...',
         successTitle: ' ቀጠሮዎ በተሳካ ሁኔታ ተመዝግቧል!',
-        successDesc: 'የሜሽ ሪሴፕሽን ሰራተኞቻችን የቡድን ምደባውን በስልክ ደውለው ያረጋግጡልዎታል::',
+        successDesc: 'የሜሽ ሪሴፕሽን ሰራተኞቻችን የቡድን ምደባውን በስልክ ደውለው ያረጋግጡልዎታል።',
         trackingId: 'የትዕዛዝ መለያ ቁጥር (Order ID)',
         closeApp: 'ዝጋ (Close)',
         currency: 'ብር',
@@ -444,7 +469,7 @@
       if (svcParam && initialLiveServices.length > 0) {
         const found = initialLiveServices.find(s => String(s.id) === svcParam || s.code === svcParam);
         if (found) {
-          selectTmaService(found.id, parseFloat(found.base_price || 0), found.pricing_unit_am || found.unit || 'ስራ', found.name_am || found.name_en, found.name_en || found.name_am, found.code);
+          selectTmaService(found.id, parseFloat(found.base_price || 0), tmaUnitLabel(found.unit), found.name_am || found.name_en, found.name_en || found.name_am, found.code);
         }
       }
 
@@ -508,7 +533,7 @@
             };
             grid.innerHTML = list.map((svc, i) => {
               const price = parseFloat(svc.base_price || 0);
-              const unit = svc.pricing_unit_am || svc.pricing_unit || 'አገልግሎት';
+              const unit = tmaUnitLabel(svc.unit);
               const nameAm = svc.name_am || svc.name_en;
               const nameEn = svc.name_en || svc.name_am;
               const iconName = lucideIconMap[svc.code] || 'sparkles';
@@ -711,7 +736,7 @@
         },
         (err) => {
           btn.innerText = 'አድራሻ ይጻፉ';
-          showTmaAlert('አድራሻዎን ከታች ባለው ሳጥን ውስጥ ይጻፉ:: (Please type your address).');
+          showTmaAlert('አድራሻዎን ከታች ባለው ሳጥን ውስጥ ይጻፉ። (Please type your address).');
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );

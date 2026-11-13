@@ -264,10 +264,11 @@ class FinanceController extends Controller
                 ];
             });
 
-        // Time-series (last 7 days daily breakdown)
+        // Time-series (last 7 days daily breakdown) — Addis Ababa day,
+        // not the server UTC day (see DashboardController::ownerSummary).
         $dailySeries = [];
         for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::today()->subDays($i);
+            $date = Carbon::today('Africa/Addis_Ababa')->subDays($i);
             $dateStr = $date->toDateString();
             $eth = EthiopianCalendarService::toEthiopian($date);
             $dayIncome = (float) Payment::whereDate('payment_date', $dateStr)->sum('amount');
@@ -369,7 +370,7 @@ class FinanceController extends Controller
                 ], 422);
             }
 
-            $date = $validated['refund_date'] ?? Carbon::today();
+            $date = $validated['refund_date'] ?? Carbon::today('Africa/Addis_Ababa');
             $method = $validated['payment_method'] ?? 'cash';
             $ref = $validated['reference_number'] ?? null;
             $reason = $validated['reason'];
