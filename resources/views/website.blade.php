@@ -1185,19 +1185,31 @@
     ['file' => 'villa-carpet.jpg', 'code' => 'facilities_general', 'am' => 'የሆቴል ላውንጅ ጥልቅ ጽዳት', 'en' => 'Hotel lounge deep clean'],
     ['file' => 'rope-access.jpg', 'code' => 'glass', 'am' => 'የረጃጅም ሕንፃ መስታወት ጽዳት', 'en' => 'High-rise glass cleaning'],
     ['file' => 'facade-scaffold.jpg', 'code' => 'post_construction', 'am' => 'የሕንፃ የፊት ገጽ ጽዳት', 'en' => 'Facade cleaning'],
+    // 9 new photos (Gemini-generated Ethiopian situations, sent by the owner
+    // 2026-11-13) — every service now has its own photo, none reused.
+    ['file' => 'living-room.jpg', 'code' => 'facilities_general', 'am' => 'የቤት ጥልቅ ጽዳት', 'en' => 'Home deep cleaning'],
+    ['file' => 'hotel-restaurant.jpg', 'code' => 'facilities_general', 'am' => 'የሆቴል እና ሬስቶራንት ጽዳት', 'en' => 'Hotel & restaurant cleaning'],
+    ['file' => 'office-polisher.jpg', 'code' => 'floor_ceramic', 'am' => 'የቢሮ ወለል ማሽን ጽዳት', 'en' => 'Office floor machine cleaning'],
+    ['file' => 'bedroom.jpg', 'code' => 'facilities_general', 'am' => 'የመኝታ ቤት ጽዳት', 'en' => 'Bedroom cleaning'],
+    ['file' => 'bathroom.jpg', 'code' => 'facilities_general', 'am' => 'የመታጠቢያ ቤት ጽዳት', 'en' => 'Bathroom cleaning'],
+    ['file' => 'sofa-carpet-steam.jpg', 'code' => 'upholstery_carpet', 'am' => 'የሶፋ እና ካርፔት በእንፋሎት ጽዳት', 'en' => 'Sofa & carpet steam cleaning'],
+    ['file' => 'windows-ladder.jpg', 'code' => 'glass', 'am' => 'የመስኮት ጽዳት', 'en' => 'Window cleaning'],
+    ['file' => 'post-construction.jpg', 'code' => 'post_construction', 'am' => 'ከግንባታ በኋላ ጽዳት', 'en' => 'Post-construction cleaning'],
+    ['file' => 'kitchen.jpg', 'code' => 'kitchen_dining', 'am' => 'የኩሽና ጽዳት', 'en' => 'Kitchen cleaning'],
   ];
-  // Service code -> gallery photo (kitchen reuses the hotel-lounge photo;
-  // there is no kitchen photo yet — add one to the gallery to give it its own).
+  // Service code -> gallery photo (kitchen and post-construction now have
+  // their own photos; the old villa-photo reuse is gone).
   $servicePhoto = [
     'floor_ceramic' => 'office-cleaning.jpg',
     'facilities_general' => 'villa-carpet.jpg',
-    'kitchen_dining' => 'villa-carpet.jpg',
-    'post_construction' => 'facade-scaffold.jpg',
+    'kitchen_dining' => 'kitchen.jpg',
+    'post_construction' => 'post-construction.jpg',
     'glass' => 'rope-access.jpg',
     'upholstery_carpet' => 'sofa-steam.jpg',
   ];
-  // Gallery mosaic order (matches the approved sample): office, villa, sofa, rope, facade.
-  $galleryOrder = ['office-cleaning.jpg', 'villa-carpet.jpg', 'sofa-steam.jpg', 'rope-access.jpg', 'facade-scaffold.jpg'];
+  // Gallery mosaic order: the 5 real photos first, then the 9 new ones.
+  // The mosaic shapes (ms-g-a..e) cycle with $gidx % 5 below.
+  $galleryOrder = ['office-cleaning.jpg', 'villa-carpet.jpg', 'sofa-steam.jpg', 'rope-access.jpg', 'facade-scaffold.jpg', 'living-room.jpg', 'hotel-restaurant.jpg', 'office-polisher.jpg', 'bedroom.jpg', 'bathroom.jpg', 'sofa-carpet-steam.jpg', 'windows-ladder.jpg', 'post-construction.jpg', 'kitchen.jpg'];
   $galleryByFile = collect($galleryPhotos)->keyBy('file');
 @endphp
 
@@ -1971,12 +1983,12 @@
           <span data-lang-block="am">የስራ ውጤቶች ጋለሪ</span><span data-lang-block="en">PROJECTS &amp; RESULTS</span>
         </div>
         <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
-          <span data-lang-block="am">ቡድናችን በስራ ላይ</span>
-          <span data-lang-block="en">Our team, on the job</span>
+          <span data-lang-block="am">ሥራችን፣ በየስፍራው</span>
+          <span data-lang-block="en">Our work, in every situation</span>
         </h2>
         <p class="text-navy/65 dark:text-slate-300 text-sm sm:text-base mt-2 max-w-xl">
-          <span data-lang-block="am">ሙሉ ማያ ለማየት ማንኛውንም ፎቶ ይንኩ። ከታች ያሉት ፎቶዎች ሁሉም እውነተኛ የሜሽ ስራዎች ናቸው።</span>
-          <span data-lang-block="en">Tap any photo to view it full-screen. Every picture below is a real Meash job.</span>
+          <span data-lang-block="am">ሙሉ ማያ ለማየት ማንኛውንም ፎቶ ይንኩ።</span>
+          <span data-lang-block="en">Tap any photo to view it full-screen.</span>
         </p>
       </div>
       <div class="mt-6 md:mt-0 flex items-center gap-3">
@@ -1990,7 +2002,7 @@
     <!-- Gallery Grid — real Meash work photos (click to enlarge) -->
     <div class="ms-gal-grid" id="ms-gal-grid">
       @foreach($galleryOrder as $gidx => $gfile)
-        @php $gp = $galleryByFile[$gfile]; $gcls = ['ms-g-a', 'ms-g-b', 'ms-g-c', 'ms-g-d', 'ms-g-e'][$gidx]; @endphp
+        @php $gp = $galleryByFile[$gfile]; $gcls = ['ms-g-a', 'ms-g-b', 'ms-g-c', 'ms-g-d', 'ms-g-e'][$gidx % 5]; @endphp
         <button type="button" class="ms-gcard {{ $gcls }}" data-ms-gal="{{ $gidx }}" data-ms-full="/images/gallery/{{ $gfile }}" data-ms-cap-am="{{ $gp['am'] }}" data-ms-cap-en="{{ $gp['en'] }}" aria-label="{{ $gp['en'] }}">
           <img src="/images/gallery/{{ $gfile }}" alt="{{ $gp['en'] }}" loading="lazy">
           <span class="ms-cap">
