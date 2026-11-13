@@ -539,7 +539,11 @@ class TelegramBroadcastController extends Controller
 
         // It looked like JSON but did not parse — never shred it as CSV
         // lines (that used to create junk rows with a false success).
-        if ($jsonError !== JSON_ERROR_NONE) {
+        // Batch 18: only JSON-looking input (starts with { or [) is
+        // rejected here. Plain CSV text lines also fail json_decode,
+        // but they are legitimate import input and must fall through
+        // to processCsvTextLines() below.
+        if ($jsonError !== JSON_ERROR_NONE && ($raw[0] === '{' || $raw[0] === '[')) {
             return response()->json([
                 'success' => false,
                 'message' => 'የ JSON ፋይሉ ትክክል አይደለም። እባክዎ ትክክለኛ Telegram export (result.json) ወይም CSV ይጠቀሙ።',

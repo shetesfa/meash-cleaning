@@ -102,9 +102,11 @@ class CustomerReviewAndRatingTest extends TestCase
             'version' => 1,
         ]);
 
+        // Batch 11a (F5): the endpoint requires the order's customer phone.
         $res = $this->postJson('/api/public/reviews', [
             'order_number' => 'ORD-REV-002',
             'rating' => 2,
+            'phone' => $customer->phone,
             'comment' => 'ትንሽ ዘግይተው ነበር የመጡት',
         ]);
 
@@ -115,6 +117,38 @@ class CustomerReviewAndRatingTest extends TestCase
             'order_id' => $order->id,
             'rating' => 2,
             'is_approved' => false,
+        ]);
+    }
+
+    /**
+     * Batch 18: locks in the batch 11a (F5) rule — a review WITHOUT the
+     * order's customer phone is rejected, so nobody can post a review
+     * in a stranger's name by guessing a sequential order number.
+     */
+    public function test_public_website_review_without_phone_is_rejected(): void
+    {
+        $customer = $this->getOrCreateCustomer();
+        $order = Order::create([
+            'order_number' => 'ORD-REV-003',
+            'customer_id' => $customer->id,
+            'source' => 'website',
+            'order_status' => 'completed',
+            'payment_status' => 'paid',
+            'total' => 800,
+            'address' => 'CMC, Addis Ababa',
+            'appointment_date' => now()->toDateString(),
+            'version' => 1,
+        ]);
+
+        $res = $this->postJson('/api/public/reviews', [
+            'order_number' => 'ORD-REV-003',
+            'rating' => 5,
+            'comment' => 'ያለ ስልክ የተላከ ግምገማ',
+        ]);
+
+        $res->assertStatus(422);
+        $this->assertDatabaseMissing('feedbacks', [
+            'order_id' => $order->id,
         ]);
     }
 

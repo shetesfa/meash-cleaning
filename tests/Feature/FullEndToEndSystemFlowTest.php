@@ -342,9 +342,11 @@ class FullEndToEndSystemFlowTest extends TestCase
         $compRes->assertStatus(200);
 
         // A. Test Public Review Submission (5-Star rating)
+        // Batch 11a (F5): the endpoint requires the order's customer phone.
         $reviewRes = $this->postJson('/api/public/reviews', [
             'order_number' => 'ORD-COMP-REV-01',
             'rating' => 5,
+            'phone' => $customer->phone,
             'comment' => 'በጣም ፈጣን እና ጥራት ያለው አገልግሎት ነው!',
             'source' => 'website',
         ]);
