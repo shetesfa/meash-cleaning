@@ -764,7 +764,7 @@
                 return { data: [] };
             }
             if (cleanUrl.includes('/api/finance/profit-report')) {
-                return { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, breakdown: [] };
+                return { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, expense_breakdown: [], payment_breakdown: [] };
             }
             if (cleanUrl.includes('/api/finance/expenses') || cleanUrl.includes('/api/expenses')) {
                 return { data: [] };
@@ -1634,10 +1634,10 @@
                                 </div>
                                 <div class="flex items-center gap-6">
                                     <div class="text-center p-4 bg-slate-800/80 rounded-2xl border border-slate-700">
-                                        <span class="text-4xl font-black text-amber-400 block">${data.satisfaction?.avg_rating || 5.0}</span>
+                                        <span class="text-4xl font-black text-amber-400 block">${data.satisfaction?.avg_rating ?? '—'}</span>
                                         <span class="text-xs text-slate-400">ከ 5.0 ኮከቦች</span>
                                         <div class="flex items-center justify-center gap-0.5 text-amber-400 mt-1">
-                                            ${'★'.repeat(Math.round(data.satisfaction?.avg_rating || 5))}${'☆'.repeat(5 - Math.round(data.satisfaction?.avg_rating || 5))}
+                                            ${data.satisfaction?.avg_rating != null ? '★'.repeat(Math.round(data.satisfaction.avg_rating)) + '☆'.repeat(5 - Math.round(data.satisfaction.avg_rating)) : '☆☆☆☆☆'}
                                         </div>
                                     </div>
                                     <div class="flex-1 space-y-1.5">
@@ -1675,7 +1675,7 @@
                                             </div>
                                             <div class="text-right">
                                                 <span class="px-2.5 py-1 rounded-xl text-xs font-black ${tp.completion_rate >= 80 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
-                                                    ${tp.completion_rate}%
+                                                    ${tp.completion_rate ?? '—'}%
                                                 </span>
                                             </div>
                                         </div>
@@ -2148,11 +2148,11 @@
                             </div>
                             <div class="border-x border-slate-800">
                                 <span class="text-[10px] text-slate-400 block font-semibold">ስራ ማጠናቀቅ</span>
-                                <span class="text-base font-black text-cyan-300 mt-0.5 block">${data.stats?.completion_rate || 100}%</span>
+                                <span class="text-base font-black text-cyan-300 mt-0.5 block">${data.stats?.completion_rate ?? '—'}%</span>
                             </div>
                             <div>
                                 <span class="text-[10px] text-slate-400 block font-semibold">አማካይ እርካታ</span>
-                                <span class="text-base font-black text-amber-400 mt-0.5 block">${data.stats?.avg_rating || 5.0} ★</span>
+                                <span class="text-base font-black text-amber-400 mt-0.5 block">${data.stats?.avg_rating ?? '—'} ★</span>
                             </div>
                         </div>
 
@@ -3631,7 +3631,7 @@
                     }
                 }
                 if (!data) {
-                    data = { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, breakdown: [] };
+                    data = { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, expense_breakdown: [], payment_breakdown: [] };
                 }
                 if (!expData) {
                     expData = { data: [] };
@@ -3642,12 +3642,14 @@
                 const categoryLabels = {
                     chemicals: 'ኬሚካሎች እና ሳሙናዎች',
                     fuel: 'ነዳጅ / ትራንስፖርት',
+                    transport: 'ትራንስፖርት',
                     materials: 'የፅዳት መገልገያ እቃዎች',
           employee_payments: ' የሰራተኞች ደመወዝ / ክፍያ',
                     equipment_repair: 'የማሽን ጥገና',
                     rent: 'የቢሮ ኪራይ',
                     marketing: 'ማስታወቂያ እና ፕሮሞሽን',
                     utilities: 'መብራት / ውሃ / ኢንተርኔት',
+                    refund: 'የተመላሽ ክፍያ (Refund)',
                     other: 'ሌሎች ወጪዎች'
                 };
 
@@ -4759,10 +4761,21 @@
 
         async function resolveCurrentConflict(choice) {
             if (activeConflict) {
-                await apiFetch(`/api/sync/conflicts/${activeConflict.conflict_id}/resolve`, {
-                    method: 'POST',
-                    body: JSON.stringify({ resolution: choice }),
-                });
+                try {
+                    const res = await apiFetch(`/api/sync/conflicts/${activeConflict.conflict_id}/resolve`, {
+                        method: 'POST',
+                        body: JSON.stringify({ resolution: choice }),
+                    });
+                    if (!res.ok) {
+                        let msg = 'ግጭቱን መፍታት አልተቻለም';
+                        try { const d = await res.json(); msg = d.message || msg; } catch (_) {}
+                        alert(msg);
+                        return; // keep the modal open — nothing was resolved
+                    }
+                } catch (err) {
+                    alert('የግንኙነት ስህተት: ' + err.message);
+                    return;
+                }
             }
             document.getElementById('conflict-modal').classList.add('hidden');
             activeConflict = null;
@@ -4872,11 +4885,11 @@
                                                 </div>
                                                 <div class="flex items-center justify-between">
                           <span> ስራ ማጠናቀቅ:</span>
-                                                    <span class="text-emerald-400 font-bold">${t.completion_rate || 100}% (${t.completed_jobs_count || 0} የተጠናቀቁ)</span>
+                                                    <span class="text-emerald-400 font-bold">${t.completion_rate ?? '—'}% (${t.completed_jobs_count || 0} የተጠናቀቁ)</span>
                                                 </div>
                                                 <div class="flex items-center justify-between">
                           <span> አማካይ እርካታ:</span>
-                                                    <span class="text-amber-400 font-bold">${t.avg_rating || 5.0} ★</span>
+                                                    <span class="text-amber-400 font-bold">${t.avg_rating ?? '—'} ★</span>
                                                 </div>
                                             </div>
                                             <div class="pt-2 flex items-center justify-between text-xs">
@@ -7105,12 +7118,43 @@
                                         <input type="text" id="setting-owner-phone" value="0970075509" class="w-full bg-slate-800 border border-cyan-500/50 rounded-xl px-3 py-2 text-cyan-300 font-mono font-bold">
                     <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-[10px] whitespace-nowrap"> ተረጋግጧል</span>
                                     </div>
+                                    <button onclick="saveOwnerPhone()" id="btn-save-owner-phone" class="mt-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs cursor-pointer">የባለቤቱን ስልክ አስቀምጥ (Save)</button>
                                 </div>
 
                                 <div>
                                     <label class="block text-slate-400 mb-1">የድርጅት ስም</label>
                                     <input type="text" value="Meash Cleaning Solution (ሜሽ የፅዳት አገልግሎት)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold" readonly>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- 1b. Change Password Card -->
+                        <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+                            <div class="flex items-center gap-2 pb-3 border-b border-slate-800">
+                                <div class="w-8 h-8 rounded-xl bg-amber-600/20 text-amber-400 flex items-center justify-center">
+                                    <i data-lucide="key-round" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-white">የይለፍ ቃል መቀየር (Change Password)</h3>
+                                    <span class="text-[10px] text-slate-400">የራስዎን የመግቢያ ይለፍ ቃል ይቀይሩ</span>
+                                </div>
+                            </div>
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">የአሁኑ ይለፍ ቃል (Current password)</label>
+                                    <input type="password" id="setting-current-password" autocomplete="current-password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 mb-1">አዲስ ይለፍ ቃል (New password)</label>
+                                    <input type="password" id="setting-new-password" autocomplete="new-password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                                    <p class="text-[11px] text-slate-500 mt-1">ቢያንስ 12 ቁምፊዎች — ፊደል (ትንሽና ትልቅ)፣ ቁጥር እና ምልክት መያዝ አለበት።</p>
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 mb-1">አዲሱን ይለፍ ቃል እንደገና (Confirm new password)</label>
+                                    <input type="password" id="setting-new-password-confirm" autocomplete="new-password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                                </div>
+                                <button onclick="changeOwnPassword()" id="btn-change-password" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs cursor-pointer">ይለፍ ቃል ቀይር (Change Password)</button>
+                                <p class="text-[11px] text-slate-500">ከተቀየረ በኋላ ሁሉም የቆዩ ሴሽኖች ይዘጋሉ፤ እዚህ ያለው ሴሽን በራስ-ሰር ይቀጥላል።</p>
                             </div>
                         </div>
 
@@ -7244,6 +7288,17 @@
             `;
             lucide.createIcons();
             updateOwnerSimSmsLink();
+            // Load the owner's phone from the saved website settings
+            // (it was hardcoded 0970075509 with no save before).
+            try {
+                const sRes = await apiFetch('/api/admin/website/settings');
+                const sData = await sRes.json();
+                const savedPhone = sData.settings?.contact_phone_1 || '0970075509';
+                const opEl = document.getElementById('setting-owner-phone');
+                if (opEl) opEl.value = savedPhone;
+                const trEl = document.getElementById('setting-test-recipient');
+                if (trEl && !trEl.value) trEl.value = savedPhone;
+            } catch (_) {}
             // Live SMS status check
             try {
                 apiFetch('/api/sms/status').then(r => r.json()).then(sData => {
@@ -7262,6 +7317,66 @@
 
             // Live Telegram Bot & Webhook Status Check
             checkTelegramBotStatusInSettings();
+        }
+
+        async function saveOwnerPhone() {
+            const input = document.getElementById('setting-owner-phone');
+            const phone = (input?.value || '').trim();
+            if (!phone) { alert('እባክዎ የባለቤቱን ስልክ ቁጥር ያስገቡ።'); return; }
+            const btn = document.getElementById('btn-save-owner-phone');
+            if (btn) btn.disabled = true;
+            try {
+                const res = await apiFetch('/api/admin/website/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contact_phone_1: phone })
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    alert('የባለቤቱ ስልክ ቁጥር ተቀምጧል!');
+                } else {
+                    alert('ስህተት: ' + (d.message || 'ማስቀመጥ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የግንኙነት ስህተት: ' + err.message);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function changeOwnPassword() {
+            const current = document.getElementById('setting-current-password')?.value || '';
+            const next = document.getElementById('setting-new-password')?.value || '';
+            const confirmPw = document.getElementById('setting-new-password-confirm')?.value || '';
+            if (!current || !next) { alert('እባክዎ የአሁኑን እና አዲሱን ይለፍ ቃል ያስገቡ።'); return; }
+            if (next !== confirmPw) { alert('አዲሱ ይለፍ ቃል እና ማረጋገጫው አይዛመዱም።'); return; }
+            const btn = document.getElementById('btn-change-password');
+            if (btn) btn.disabled = true;
+            try {
+                const res = await apiFetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current_password: current, new_password: next })
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    // The server revoked all old tokens and issued a new one —
+                    // store it, or this session dies immediately.
+                    if (d.token) localStorage.setItem('meash_token', d.token);
+                    document.getElementById('setting-current-password').value = '';
+                    document.getElementById('setting-new-password').value = '';
+                    document.getElementById('setting-new-password-confirm').value = '';
+                    alert(d.message || 'የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል!');
+                } else {
+                    let msg = d.message || 'ይለፍ ቃል መቀየር አልተቻለም';
+                    if (d.errors) msg += ': ' + Object.values(d.errors).flat().join(' ');
+                    alert(msg);
+                }
+            } catch (err) {
+                alert('የግንኙነት ስህተት: ' + err.message);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         async function checkTelegramBotStatusInSettings() {
@@ -8236,13 +8351,16 @@
                             <div>
                                 <label class="text-slate-400 block mb-1">የደንበኛው ስም እና ቦታ (e.g. Bethlehem Tadesse — Bole)</label>
                                 <input id="new-rev-name" type="text" required placeholder="Bethlehem Tadesse — Bole" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                                <p class="text-[11px] text-slate-500 mt-1">ስሙ ከተመዘገበ ደንበኛ ጋር መዛመድ አለበት — ያልተመዘገበ ስም ከገባ አይቀመጥም።</p>
                             </div>
                             <div>
                                 <label class="text-slate-400 block mb-1">የኮከብ ደረጃ (Rating 1 - 5)</label>
                                 <select id="new-rev-rating" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
-                  <option value="5"> (5 Stars)</option>
-                  <option value="4"> (4 Stars)</option>
-                  <option value="3"> (3 Stars)</option>
+                  <option value="5">★★★★★ (5 Stars)</option>
+                  <option value="4">★★★★ (4 Stars)</option>
+                  <option value="3">★★★ (3 Stars)</option>
+                  <option value="2">★★ (2 Stars)</option>
+                  <option value="1">★ (1 Star)</option>
                                 </select>
                             </div>
                             <div>
@@ -8282,7 +8400,9 @@
                     document.getElementById('cms-add-review-modal')?.remove();
                     loadCmsTabData();
                 } else {
-                    alert('ስህተት ተፈጥሯል');
+                    let msg = 'ስህተት ተፈጥሯል';
+                    try { const d = await res.json(); msg = d.message || msg; } catch (_) {}
+                    alert(msg);
                 }
             } catch (err) {
                 alert('የግንኙነት ችግር፡ ' + err.message);
