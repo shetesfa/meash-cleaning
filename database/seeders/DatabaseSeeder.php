@@ -45,6 +45,11 @@ class DatabaseSeeder extends Seeder
                 $this->seedEssentialServices();
             }
 
+            // Seed the admin-managed website photos (only when the
+            // photos table is empty — PhotoSeeder guards itself, so
+            // admin edits are never overwritten).
+            $this->call(PhotoSeeder::class);
+
             // Ensure the initial production Owner account exists
             if (User::where('role', 'owner')->count() === 0) {
                 $ownerPass = env('MEASH_OWNER_PASSWORD');
@@ -74,6 +79,9 @@ class DatabaseSeeder extends Seeder
             $this->command->info('Database is already seeded. Skipping seeder to prevent duplicate entries.');
             return;
         }
+
+        // Website photos (only when the photos table is empty).
+        $this->call(PhotoSeeder::class);
 
         // Register seed provenance listener for all demo models created during non-production seeding
         $taggableModels = [

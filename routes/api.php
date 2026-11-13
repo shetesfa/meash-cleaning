@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\NotificationMarketingController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OutdoorSalesController;
+use App\Http\Controllers\Api\PhotoController;
 use App\Http\Controllers\Api\PublicWebsiteController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\SyncController;
@@ -200,6 +201,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/feedbacks', [AdminWebsiteController::class, 'storeFeedback']);
         Route::put('/feedbacks/{id}/toggle-approve', [AdminWebsiteController::class, 'toggleFeedbackApproval']);
         Route::delete('/feedbacks/{id}', [AdminWebsiteController::class, 'deleteFeedback']);
+
+        // Website Photos (admin Photos page — hero slider, service
+        // cards, gallery, feature strip). Same Sanctum + role
+        // protection as the rest of the Website CMS.
+        Route::get('/photos', [PhotoController::class, 'index']);
+        Route::post('/photos', [PhotoController::class, 'store']);
+        Route::match(['put', 'patch'], '/photos/{photo}', [PhotoController::class, 'update']);
+        Route::post('/photos/{photo}/toggle-status', [PhotoController::class, 'toggleStatus']);
+        Route::delete('/photos/{photo}', [PhotoController::class, 'destroy']);
     });
 
     // K. Offline-First Synchronization & Conflicts

@@ -43,4 +43,14 @@ return [
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 
+    // Cloudinary image uploads for the admin Photos page. Credentials
+    // come ONLY from environment variables — never hardcoded. Either
+    // the all-in-one CLOUDINARY_URL or the three separate keys.
+    'cloudinary' => [
+        'url' => env('CLOUDINARY_URL'),
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key' => env('CLOUDINARY_API_KEY'),
+        'api_secret' => env('CLOUDINARY_API_SECRET'),
+    ],
+
 ];

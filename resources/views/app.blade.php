@@ -7325,6 +7325,11 @@
         let cmsServicesData = [];
         let cmsSettingsData = {};
         let cmsFeedbacksData = [];
+        let cmsPhotosData = [];
+        let cmsPhotosCloudinary = false;
+        window._photosFilter = window._photosFilter || 'all';
+        window._photosSearch = window._photosSearch || '';
+        window._photoDeleteArmed = window._photoDeleteArmed || {};
 
         async function renderWebsiteCmsModule(container) {
             container.innerHTML = `
@@ -7365,6 +7370,10 @@
                             <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                             <span>4. ስለ ድርጅቱ ጽሁፍ (About Us Text)</span>
                         </button>
+                        <button type="button" onclick="switchCmsTab('photos')" id="btn-cms-photos" class="px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-2 ${currentCmsSubTab === 'photos' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/20' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">
+                            <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                            <span>5. ፎቶዎች (Photos)</span>
+                        </button>
                     </div>
 
                     <!-- CMS Tab Content Container -->
@@ -7379,7 +7388,7 @@
 
         async function switchCmsTab(tab) {
             currentCmsSubTab = tab;
-            ['services', 'contact', 'reviews', 'about'].forEach(t => {
+            ['services', 'contact', 'reviews', 'about', 'photos'].forEach(t => {
                 const btn = document.getElementById(`btn-cms-${t}`);
                 if (btn) {
                     if (t === tab) {
@@ -7434,6 +7443,23 @@
                     } catch (_) {}
                 }
                 renderCmsAboutTab(container);
+            } else if (currentCmsSubTab === 'photos') {
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">ፎቶዎችን በመጫን ላይ...</div>`;
+                try {
+                    if (!cmsServicesData.length) {
+                        try {
+                            const sres = await apiFetch('/api/services/all');
+                            cmsServicesData = await sres.json();
+                        } catch (_) {}
+                    }
+                    const res = await apiFetch('/api/admin/website/photos');
+                    const d = await res.json();
+                    cmsPhotosData = d.photos || [];
+                    cmsPhotosCloudinary = !!d.cloudinary_configured;
+                    renderCmsPhotosTab(container);
+                } catch (e) {
+                    renderErrorCard(container, 'ፎቶዎችን መጫን አልተቻለም፡ ' + e.message, 'loadCmsTabData()');
+                }
             }
         }
 
@@ -8194,6 +8220,293 @@
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'መግለጫውን መዝግብ (Save About Text)';
+            }
+        }
+
+        // Sub-tab 5: Photos — every website image, controlled from here
+        const PHOTO_SECTIONS = [
+            { id: 'hero', label_en: 'Hero slider', label_am: 'ዋና ስላይደር' },
+            { id: 'service', label_en: 'Service cards', label_am: 'የአገልግሎት ካርዶች' },
+            { id: 'gallery', label_en: 'Gallery', label_am: 'ጋለሪ' },
+            { id: 'feature', label_en: 'Feature strip', label_am: 'የሂደት ክፍል' },
+        ];
+
+        function photoSectionLabel(section) {
+            const s = PHOTO_SECTIONS.find(x => x.id === section);
+            return s ? s.label_en + ' (' + s.label_am + ')' : section;
+        }
+
+        function photosVisibleList() {
+            const q = (window._photosSearch || '').trim().toLowerCase();
+            return cmsPhotosData.filter(p => {
+                if (window._photosFilter === 'added' && p.status !== 'added') return false;
+                if (window._photosFilter === 'not_added' && p.status !== 'not_added') return false;
+                if (q) {
+                    const hay = ((p.title_en || '') + ' ' + (p.title_am || '') + ' ' + (p.service_code || '')).toLowerCase();
+                    if (hay.indexOf(q) === -1) return false;
+                }
+                return true;
+            });
+        }
+
+        function renderCmsPhotosTab(container) {
+            const total = cmsPhotosData.length;
+            const added = cmsPhotosData.filter(p => p.status === 'added').length;
+            const notAdded = total - added;
+            const list = photosVisibleList();
+            const services = Array.isArray(cmsServicesData) ? cmsServicesData : (cmsServicesData.data || []);
+            const serviceOptions = services.map(s =>
+                '<option value="' + escapeHtml(s.code) + '">' + escapeHtml(s.name_en || s.name_am || s.code) + '</option>'
+            ).join('');
+            const filterBtn = (key, label) => '<button type="button" onclick="setPhotosFilter(\'' + key + '\')" class="px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ' + (window._photosFilter === key ? 'bg-cyan-600 text-white shadow' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800') + '">' + label + '</button>';
+
+            let sectionsHtml = '';
+            PHOTO_SECTIONS.forEach(sec => {
+                const secAll = cmsPhotosData.filter(p => p.section === sec.id);
+                const secAdded = secAll.filter(p => p.status === 'added').length;
+                const secList = list.filter(p => p.section === sec.id);
+                if (!secList.length && secAll.length) return; // hidden by current filter
+                sectionsHtml += '<div class="space-y-3">'
+                    + '<div class="flex items-center justify-between"><h4 class="text-sm font-bold text-white">' + sec.label_en + ' <span class="text-slate-400 font-semibold">(' + sec.label_am + ')</span></h4>'
+                    + '<span class="text-[11px] font-bold text-slate-400">' + secAdded + ' Added / ' + secAll.length + ' total</span></div>';
+                if (!secList.length) {
+                    sectionsHtml += '<p class="text-xs text-slate-500 bg-slate-900 border border-dashed border-slate-800 rounded-2xl px-4 py-6 text-center">በዚህ ክፍል ገና ፎቶ የለም — ከላይ ካለው upload control ጨምር።</p>';
+                } else {
+                    sectionsHtml += '<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">' + secList.map(renderPhotoCard).join('') + '</div>';
+                }
+                sectionsHtml += '</div>';
+            });
+
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">የድረ-ገጽ ፎቶዎች (Website Photos)</h3>
+                            <p class="text-xs text-slate-400">የጣቢያውን ሁሉም ፎቶዎች እዚህ ይቆጣጠራሉ — slider፣ service cards፣ gallery እና feature strip። “Added” ማለት በጣቢያ ላይ ይታያል፤ “Not added” ማለት ተደብቋል።</p>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs font-bold">
+                            <span class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">${total} photos</span>
+                            <span class="px-3 py-1.5 rounded-lg bg-emerald-950 border border-emerald-500/30 text-emerald-400">${added} Added</span>
+                            <span class="px-3 py-1.5 rounded-lg bg-amber-950 border border-amber-500/30 text-amber-400">${notAdded} Not added</span>
+                        </div>
+                    </div>
+
+                    ${cmsPhotosCloudinary
+                        ? '<p class="text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-xl px-3.5 py-2.5">Cloudinary ተገናኝቷል — ፎቶ መጫን ይቻላል።</p>'
+                        : '<p class="text-xs font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 rounded-xl px-3.5 py-2.5">Cloudinary ገና አልተዋቀረም — ፎቶ ለመጫን CLOUDINARY_CLOUD_NAME፣ CLOUDINARY_API_KEY እና CLOUDINARY_API_SECRET በ Render env ውስጥ ጨምር። እስከዚያ ድረስ ፎቶ በ URL መጨመር ይቻላል።</p>'}
+
+                    <!-- Upload control -->
+                    <form id="ph-upload-form" onsubmit="uploadNewPhoto(event)" class="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-xl">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-2"><i data-lucide="upload" class="w-4 h-4 text-cyan-400"></i><span>አዲስ ፎቶ ጨምር (Upload a photo)</span></h4>
+                        <div class="grid sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">ፎቶ ፋይል (Choose photo)</label>
+                                <input type="file" name="photo" accept="image/*" class="w-full text-xs text-slate-300 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-cyan-600 file:text-white file:font-bold file:text-xs file:cursor-pointer">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">ወይም የፎቶ URL ለጥፍ (or paste image URL)</label>
+                                <input type="url" name="url" placeholder="https://..." class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">Caption EN (እንግሊዝኛ)</label>
+                                <input type="text" name="title_en" maxlength="255" placeholder="e.g. Kitchen cleaning" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">Caption አማርኛ</label>
+                                <input type="text" name="title_am" maxlength="255" placeholder="ለምሳሌ፡ የኩሽና ጽዳት" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የት ይገባል? (Belongs to)</label>
+                                <select name="section" onchange="document.getElementById('ph-new-service-wrap').style.display = this.value === 'service' ? 'block' : 'none'" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400 cursor-pointer">
+                                    <option value="hero">Hero slider</option>
+                                    <option value="gallery">Gallery</option>
+                                    <option value="service">Service card</option>
+                                    <option value="feature">Feature strip</option>
+                                </select>
+                            </div>
+                            <div id="ph-new-service-wrap" style="display:none">
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የየትኛው አገልግሎት? (Service)</label>
+                                <select name="service_code" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400 cursor-pointer">
+                                    <option value="">— አገልግሎት ምረጥ —</option>
+                                    ${serviceOptions}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button type="submit" id="btn-ph-upload" class="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-cyan-600/20 cursor-pointer">ፎቶ ጨምር (Add photo)</button>
+                            <span id="ph-upload-msg" class="text-xs font-bold"></span>
+                        </div>
+                        <p class="text-[11px] text-slate-500">አዲስ ፎቶ “Not added” ሆኖ ይመጣል — “Add to site” እስኪጫን ድረስ በጣቢያ ላይ አይታይም።</p>
+                    </form>
+
+                    <!-- Filters + search -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        ${filterBtn('all', 'ሁሉም (All)')}
+                        ${filterBtn('added', 'Added')}
+                        ${filterBtn('not_added', 'Not added')}
+                        <div class="flex items-center gap-2 ml-auto">
+                            <input type="text" id="ph-search-input" value="${escapeHtml(window._photosSearch || '')}" placeholder="Caption ፈልግ..." onkeydown="if(event.key==='Enter'){ window._photosSearch = this.value; renderCmsPhotosTab(document.getElementById('cms-tab-content')); }" class="w-48 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-white text-xs focus:outline-none focus:border-cyan-500">
+                            <button type="button" onclick="window._photosSearch = document.getElementById('ph-search-input').value; renderCmsPhotosTab(document.getElementById('cms-tab-content'));" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 cursor-pointer">ፈልግ</button>
+                        </div>
+                    </div>
+
+                    ${list.length ? sectionsHtml : '<p class="text-xs text-slate-500 bg-slate-900 border border-dashed border-slate-800 rounded-2xl px-4 py-8 text-center">ምንም ፎቶ አልተገኘም።</p>'}
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function renderPhotoCard(p) {
+            const added = p.status === 'added';
+            const badge = added
+                ? '<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[11px] font-black">✓ Added</span>'
+                : '<span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[11px] font-black">● Not added</span>';
+            return '<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">'
+                + '<div class="relative"><img src="' + escapeHtml(p.src) + '" alt="' + escapeHtml(p.title_en || p.title_am || 'Photo') + '" class="w-full h-40 object-cover" loading="lazy">'
+                + '<span class="absolute top-2 left-2">' + badge + '</span></div>'
+                + '<div class="p-3.5 space-y-2.5">'
+                + '<div><label class="text-[10px] font-bold text-slate-400 block mb-0.5">Caption EN</label>'
+                + '<input type="text" id="ph-cap-en-' + p.id + '" value="' + escapeHtml(p.title_en || '') + '" maxlength="255" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:border-cyan-400"></div>'
+                + '<div><label class="text-[10px] font-bold text-slate-400 block mb-0.5">Caption አማርኛ</label>'
+                + '<input type="text" id="ph-cap-am-' + p.id + '" value="' + escapeHtml(p.title_am || '') + '" maxlength="255" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:border-cyan-400"></div>'
+                + '<p class="text-[11px] text-slate-500 font-semibold">' + photoSectionLabel(p.section) + (p.service_code ? ' • ' + escapeHtml(p.service_code) : '') + '</p>'
+                + '<div class="flex flex-wrap gap-1.5 pt-1">'
+                + '<button type="button" onclick="savePhotoCaptions(' + p.id + ')" class="px-2.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[11px] rounded-lg cursor-pointer">Caption አስቀምጥ</button>'
+                + '<button type="button" onclick="togglePhotoStatus(' + p.id + ')" class="px-2.5 py-1.5 ' + (added ? 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700' : 'bg-emerald-600 hover:bg-emerald-500 text-white') + ' font-bold text-[11px] rounded-lg cursor-pointer">' + (added ? 'Remove' : 'Add to site') + '</button>'
+                + '<button type="button" onclick="document.getElementById(\'ph-change-' + p.id + '\').click()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] rounded-lg border border-slate-700 cursor-pointer">Change photo</button>'
+                + '<button type="button" onclick="deletePhoto(' + p.id + ', this)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-red-900/60 text-red-300 font-bold text-[11px] rounded-lg border border-slate-700 cursor-pointer">Delete</button>'
+                + '</div>'
+                + '<input type="file" id="ph-change-' + p.id + '" accept="image/*" class="hidden" onchange="changePhotoFile(' + p.id + ', this)">'
+                + '</div></div>';
+        }
+
+        function setPhotosFilter(f) {
+            window._photosFilter = f;
+            renderCmsPhotosTab(document.getElementById('cms-tab-content'));
+        }
+
+        async function refreshPhotosTab() {
+            try {
+                const res = await apiFetch('/api/admin/website/photos');
+                const d = await res.json();
+                cmsPhotosData = d.photos || [];
+                cmsPhotosCloudinary = !!d.cloudinary_configured;
+                renderCmsPhotosTab(document.getElementById('cms-tab-content'));
+            } catch (e) {
+                alert('ፎቶዎችን ማደስ አልተቻለም፡ ' + e.message);
+            }
+        }
+
+        async function savePhotoCaptions(id) {
+            const en = document.getElementById('ph-cap-en-' + id);
+            const am = document.getElementById('ph-cap-am-' + id);
+            try {
+                const res = await apiFetch('/api/admin/website/photos/' + id, {
+                    method: 'PUT',
+                    body: JSON.stringify({ title_en: en ? en.value.trim() : null, title_am: am ? am.value.trim() : null })
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(d.message || ('Save failed (' + res.status + ')'));
+                alert('Caption ተቀምጧል!');
+                refreshPhotosTab();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        async function togglePhotoStatus(id) {
+            try {
+                const res = await apiFetch('/api/admin/website/photos/' + id + '/toggle-status', { method: 'POST' });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(d.message || ('Toggle failed (' + res.status + ')'));
+                refreshPhotosTab();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        async function deletePhoto(id, btn) {
+            if (!window._photoDeleteArmed[id]) {
+                window._photoDeleteArmed[id] = true;
+                btn.innerText = 'እርግጠኛ ነህ? እንደገና ጠቅ አድርግ';
+                btn.classList.add('bg-red-600', 'text-white');
+                setTimeout(() => {
+                    window._photoDeleteArmed[id] = false;
+                    if (btn.isConnected) {
+                        btn.innerText = 'Delete';
+                        btn.classList.remove('bg-red-600', 'text-white');
+                    }
+                }, 4000);
+                return;
+            }
+            window._photoDeleteArmed[id] = false;
+            try {
+                const res = await apiFetch('/api/admin/website/photos/' + id, { method: 'DELETE' });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(d.message || ('Delete failed (' + res.status + ')'));
+                refreshPhotosTab();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        // File uploads use raw fetch (apiFetch forces a JSON content type,
+        // which breaks multipart FormData). POST + _method=PUT lets
+        // Laravel read the multipart body on the update route.
+        async function uploadNewPhoto(e) {
+            e.preventDefault();
+            const form = document.getElementById('ph-upload-form');
+            const btn = document.getElementById('btn-ph-upload');
+            const msg = document.getElementById('ph-upload-msg');
+            const fd = new FormData(form);
+            const file = fd.get('photo');
+            if (!file || !file.size) fd.delete('photo');
+            if (!fd.get('url')) fd.delete('url');
+            btn.disabled = true;
+            btn.innerText = 'በመጫን ላይ...';
+            try {
+                const token = await getAuthToken();
+                const res = await fetch('/api/admin/website/photos', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: fd
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(d.message || ('Upload failed (' + res.status + ')'));
+                msg.className = 'text-xs font-bold text-emerald-400';
+                msg.innerText = d.message || 'Photo added.';
+                form.reset();
+                document.getElementById('ph-new-service-wrap').style.display = 'none';
+                refreshPhotosTab();
+            } catch (err) {
+                msg.className = 'text-xs font-bold text-red-400';
+                msg.innerText = err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'ፎቶ ጨምር (Add photo)';
+            }
+        }
+
+        async function changePhotoFile(id, input) {
+            if (!input.files || !input.files[0]) return;
+            const fd = new FormData();
+            fd.append('photo', input.files[0]);
+            fd.append('_method', 'PUT');
+            try {
+                const token = await getAuthToken();
+                const res = await fetch('/api/admin/website/photos/' + id, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: fd
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(d.message || ('Change failed (' + res.status + ')'));
+                alert('ፎቶ ተቀይሯል!');
+                refreshPhotosTab();
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                input.value = '';
             }
         }
         // ==========================================

@@ -1177,11 +1177,14 @@
 </div>
 
 @php
-  // Real Meash work photos (public/images/gallery/) — used by the hero 3D
-  // slider, the service cards and the gallery. Captions are bilingual; the
-  // price on each slider slide comes from the live $services data (never
-  // hardcoded) via the service `code` below.
-  $galleryPhotos = [
+  // Website photos — admin-managed via the `photos` table (admin Photos
+  // page), with the hardcoded lists below as the FALLBACK. The public
+  // site reads status = 'added' rows per section (hero slider, service
+  // cards, gallery, feature strip); if the table is empty, missing, or
+  // the query fails, the fallback lists are used, so the live site can
+  // never break. Prices on slider slides still come from the live
+  // $services data (never hardcoded) via the service `code` below.
+  $fallbackPhotos = [
     ['file' => 'office-cleaning.jpg', 'code' => 'floor_ceramic', 'am' => 'የወለል ማሽን ጽዳት', 'en' => 'Floor machine cleaning'],
     ['file' => 'sofa-steam.jpg', 'code' => 'upholstery_carpet', 'am' => 'የሶፋ በእንፋሎት ጽዳት', 'en' => 'Sofa steam cleaning'],
     ['file' => 'villa-carpet.jpg', 'code' => 'facilities_general', 'am' => 'የሆቴል ላውንጅ ጥልቅ ጽዳት', 'en' => 'Hotel lounge deep clean'],
@@ -1201,7 +1204,7 @@
   ];
   // Service code -> gallery photo (kitchen and post-construction now have
   // their own photos; the old villa-photo reuse is gone).
-  $servicePhoto = [
+  $fallbackServicePhoto = [
     'floor_ceramic' => 'office-cleaning.jpg',
     'facilities_general' => 'villa-carpet.jpg',
     'kitchen_dining' => 'kitchen.jpg',
@@ -1211,8 +1214,81 @@
   ];
   // Gallery mosaic order: the 5 real photos first, then the 9 new ones.
   // The mosaic shapes (ms-g-a..e) cycle with $gidx % 5 below.
-  $galleryOrder = ['office-cleaning.jpg', 'villa-carpet.jpg', 'sofa-steam.jpg', 'rope-access.jpg', 'facade-scaffold.jpg', 'living-room.jpg', 'hotel-restaurant.jpg', 'office-polisher.jpg', 'bedroom.jpg', 'bathroom.jpg', 'sofa-carpet-steam.jpg', 'windows-ladder.jpg', 'post-construction.jpg', 'kitchen.jpg'];
+  $fallbackGalleryOrder = ['office-cleaning.jpg', 'villa-carpet.jpg', 'sofa-steam.jpg', 'rope-access.jpg', 'facade-scaffold.jpg', 'living-room.jpg', 'hotel-restaurant.jpg', 'office-polisher.jpg', 'bedroom.jpg', 'bathroom.jpg', 'sofa-carpet-steam.jpg', 'windows-ladder.jpg', 'post-construction.jpg', 'kitchen.jpg'];
+  // Feature strip (3-step "How we deliver") fallback photos.
+  $fallbackFeaturePhotos = [
+    ['file' => 'facade-scaffold.jpg', 'am' => 'የመስታወት ጽዳት መፍትሔ የሚያዘጋጅ የሜሽ ሰራተኛ', 'en' => 'Meash cleaner preparing glass-cleaning solution'],
+    ['file' => 'office-cleaning.jpg', 'am' => 'የሜሽ ቡድን በቢሮ ውስጥ እየሰራ', 'en' => 'Meash team at work in an office'],
+    ['file' => 'villa-carpet.jpg', 'am' => 'በብሩህ የሆቴል ላውንጅ ውስጥ አዲስ የታጠበ ካርፔት', 'en' => 'Freshly shampooed carpet in a bright hotel lounge'],
+  ];
+
+  // Resolve a stored photo value to a browser src: Cloudinary URLs are
+  // absolute already; local files live under /images/gallery/.
+  $photoSrc = function ($file) {
+    $file = (string) $file;
+    if ($file === '') return '';
+    if (str_starts_with($file, 'http://') || str_starts_with($file, 'https://') || str_starts_with($file, '/')) return $file;
+    return '/images/gallery/' . ltrim($file, '/');
+  };
+
+  // Live photos from the admin-managed `photos` table. Any failure
+  // (table missing, DB down) keeps the fallback lists above.
+  $galleryPhotos = $fallbackPhotos;
+  $servicePhoto = $fallbackServicePhoto;
+  $galleryOrder = $fallbackGalleryOrder;
+  $featurePhotos = $fallbackFeaturePhotos;
   $galleryByFile = collect($galleryPhotos)->keyBy('file');
+  try {
+    $dbPhotos = \App\Models\Photo::where('status', 'added')->orderBy('sort_order')->orderBy('id')->get();
+    if ($dbPhotos && $dbPhotos->count() > 0) {
+      $hero = $dbPhotos->where('section', 'hero')->values();
+      if ($hero->count() > 0) {
+        $galleryPhotos = $hero->map(function ($row) {
+          return ['file' => $row->url, 'code' => $row->service_code, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
+        })->all();
+      }
+      $svcRows = $dbPhotos->where('section', 'service')->values();
+      if ($svcRows->count() > 0) {
+        $dbServicePhoto = [];
+        foreach ($svcRows as $row) {
+          if ($row->service_code) $dbServicePhoto[$row->service_code] = $row->url;
+        }
+        if (!empty($dbServicePhoto)) $servicePhoto = $dbServicePhoto;
+      }
+      $galRows = $dbPhotos->where('section', 'gallery')->values();
+      if ($galRows->count() > 0) {
+        $galleryOrder = $galRows->pluck('url')->all();
+      }
+      $featRows = $dbPhotos->where('section', 'feature')->values();
+      if ($featRows->count() > 0) {
+        $featurePhotos = $featRows->take(3)->map(function ($row) {
+          return ['file' => $row->url, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
+        })->all();
+        // Pad to 3 steps with the fallback so no step ever loses its photo.
+        while (count($featurePhotos) < 3) {
+          $featurePhotos[] = $fallbackFeaturePhotos[count($featurePhotos)];
+        }
+      }
+      // Gallery lookup must also include gallery-section rows: a photo
+      // can be in the gallery without being in the hero slider, and the
+      // mosaic below looks every gallery file up in this map.
+      $galleryByFile = collect($galleryPhotos)->keyBy('file');
+      foreach ($galRows as $row) {
+        $galleryByFile[$row->url] = ['file' => $row->url, 'code' => $row->service_code, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
+      }
+    }
+  } catch (\Throwable $e) {
+    // Fallback lists above stay in place; the site keeps working.
+  }
+  // Safety net: sections fall back independently, so a gallery file
+  // must always resolve in the lookup even if it is not in the hero
+  // slider rows (otherwise the mosaic below errors).
+  $fallbackByFile = collect($fallbackPhotos)->keyBy('file');
+  foreach ($galleryOrder as $gfile) {
+    if (!isset($galleryByFile[$gfile])) {
+      $galleryByFile[$gfile] = $fallbackByFile[$gfile] ?? ['file' => $gfile, 'code' => null, 'am' => '', 'en' => ''];
+    }
+  }
 @endphp
 
 <main id="main-content">
@@ -1303,7 +1379,7 @@
           @foreach($galleryPhotos as $gi => $p)
             @php $slideSvc = $activeServices->firstWhere('code', $p['code']); @endphp
             <figure class="ms-slide" role="group" aria-label="{{ $gi + 1 }} of {{ count($galleryPhotos) }}" data-ms-slide="{{ $gi }}">
-              <img src="/images/gallery/{{ $p['file'] }}" alt="{{ $p['en'] }}" @if($gi > 0) loading="lazy" @endif>
+              <img src="{{ $photoSrc($p['file']) }}" alt="{{ $p['en'] }}" @if($gi > 0) loading="lazy" @endif>
               <figcaption>
                 <span class="ms-cap-name"><span data-lang-block="am">{{ $p['am'] }}</span><span data-lang-block="en">{{ $p['en'] }}</span></span>
                 @if($slideSvc)
@@ -1744,7 +1820,7 @@
       @endphp
       <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
         @if($svcPhoto)
-          <div class="ms-ph"><img src="/images/gallery/{{ $svcPhoto }}" alt="{{ $svc->name_en ?: $svc->name_am }}" loading="lazy"></div>
+          <div class="ms-ph"><img src="{{ $photoSrc($svcPhoto) }}" alt="{{ $svc->name_en ?: $svc->name_am }}" loading="lazy"></div>
         @else
           <div class="ms-ph flex items-center justify-center bg-teal/10 text-teal-dark"><i data-lucide="{{ $iconName }}" class="w-14 h-14"></i></div>
         @endif
@@ -1818,19 +1894,19 @@
         <span class="ms-num font-serif">01.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">አገልግሎትዎን ይዘዙ</span><span data-lang-block="en">Book your service</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">አገልግሎቱን፣ ቀኑን እና ቦታውን ይምረጡ። መጠኑን ይንገሩን — በካሬ ሜትር፣ በወንበር ወይም በስራ።</span><span data-lang-block="en">Choose the service, date and place. Tell us the size — per square metre, per seat or per job.</span></p>
-        <div class="ms-ph"><img src="/images/gallery/facade-scaffold.jpg" alt="Meash cleaner preparing glass-cleaning solution" loading="lazy"></div>
+        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[0]['file']) }}" alt="{{ $featurePhotos[0]['en'] }}" loading="lazy"></div>
       </div>
       <div class="ms-step">
         <span class="ms-num font-serif">02.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">ቡድናችን ይደርሳል</span><span data-lang-block="en">Our team arrives</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">ዩኒፎርም የለበሰ ቡድን ከሙያዊ ማሽኖች እና ደህንነቱ የተጠበቀ ሳሙናዎች ጋር ይደርሳል።</span><span data-lang-block="en">A uniformed crew arrives with professional machines and safe detergents.</span></p>
-        <div class="ms-ph"><img src="/images/gallery/office-cleaning.jpg" alt="Meash team at work in an office" loading="lazy"></div>
+        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[1]['file']) }}" alt="{{ $featurePhotos[1]['en'] }}" loading="lazy"></div>
       </div>
       <div class="ms-step">
         <span class="ms-num font-serif">03.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">በትኩስነቱ ይደሰቱ</span><span data-lang-block="en">Enjoy the freshness</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">እንጨርሳለን፣ እርስዎ ይፈትሹ። ንጹህ ወለሎች፣ የሚያብረቀርቅ መስታወት እና እንደ አዲስ የሚሸት ቦታ።</span><span data-lang-block="en">We finish, you inspect. Spotless floors, shining glass and a space that smells new again.</span></p>
-        <div class="ms-ph"><img src="/images/gallery/villa-carpet.jpg" alt="Freshly shampooed carpet in a bright hotel lounge" loading="lazy"></div>
+        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[2]['file']) }}" alt="{{ $featurePhotos[2]['en'] }}" loading="lazy"></div>
       </div>
     </div>
   </div>
@@ -2005,8 +2081,8 @@
     <div class="ms-gal-grid" id="ms-gal-grid">
       @foreach($galleryOrder as $gidx => $gfile)
         @php $gp = $galleryByFile[$gfile]; $gcls = ['ms-g-a', 'ms-g-b', 'ms-g-c', 'ms-g-d', 'ms-g-e'][$gidx % 5]; @endphp
-        <button type="button" class="ms-gcard {{ $gcls }}" data-ms-gal="{{ $gidx }}" data-ms-full="/images/gallery/{{ $gfile }}" data-ms-cap-am="{{ $gp['am'] }}" data-ms-cap-en="{{ $gp['en'] }}" aria-label="{{ $gp['en'] }}">
-          <img src="/images/gallery/{{ $gfile }}" alt="{{ $gp['en'] }}" loading="lazy">
+        <button type="button" class="ms-gcard {{ $gcls }}" data-ms-gal="{{ $gidx }}" data-ms-full="{{ $photoSrc($gfile) }}" data-ms-cap-am="{{ $gp['am'] }}" data-ms-cap-en="{{ $gp['en'] }}" aria-label="{{ $gp['en'] }}">
+          <img src="{{ $photoSrc($gfile) }}" alt="{{ $gp['en'] }}" loading="lazy">
           <span class="ms-cap">
             <span><span data-lang-block="am">{{ $gp['am'] }}</span><span data-lang-block="en">{{ $gp['en'] }}</span></span>
             <span class="ms-zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
@@ -2022,7 +2098,7 @@
   <button class="ms-lb-close" id="ms-lb-close" type="button" aria-label="Close viewer">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
   </button>
-  <img id="ms-lb-img" src="/images/gallery/office-cleaning.jpg" alt="Meash cleaning team at work">
+  <img id="ms-lb-img" src="{{ $photoSrc($galleryOrder[0] ?? 'office-cleaning.jpg') }}" alt="Meash cleaning team at work">
   <div class="ms-lb-cap"><span data-lang-block="am" id="ms-lb-cap-am"></span><span data-lang-block="en" id="ms-lb-cap-en"></span></div>
   <div class="ms-lb-row">
     <button id="ms-lb-prev" type="button" aria-label="Previous photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 5.5-6 6.5 6 6.5"/></svg></button>
