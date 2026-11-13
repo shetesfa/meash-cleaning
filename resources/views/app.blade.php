@@ -5021,7 +5021,12 @@
                 const data = await res.json();
                 if (res.ok) {
                     closeModal();
-                    showToast('ተመላሽ ክፍያ በተሳካ ሁኔታ ተመዝግቧል (' + (data.refund_amount !== undefined ? Number(data.refund_amount).toLocaleString() + ' ETB' : '') + ')', 'success');
+                    // The refund endpoint returns the amount as expense.amount
+                    // (201 { success, message, expense, order }) — there is no
+                    // top-level refund_amount, so the old toast rendered "()".
+                    // Fall back to the amount typed in the form.
+                    const refundedAmount = data.expense?.amount ?? data.refund_amount ?? payload.amount;
+                    showToast('ተመላሽ ክፍያ በተሳካ ሁኔታ ተመዝግቧል (' + Number(refundedAmount).toLocaleString() + ' ETB)', 'success');
                     loadActiveTab();
                 } else {
                     alert('ተመላሽ መመዝገብ አልተቻለም: ' + (data.message || JSON.stringify(data.errors || 'ስህተት')));
@@ -10662,13 +10667,17 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
+                    // Was native alert() (invisible to automation and
+                    // inconsistent with every other save) — now a toast,
+                    // mirroring submitResolveComplaint / submitNewComplaint.
+                    showToast('የችግር ሪፖርቱ ተመዝግቧል! ለሪሴፕሽን ተጠቁሟል።', 'success');
                     closeModal();
-                    alert('Problem report logged and flagged for Reception attention.');
+                    loadActiveTab();
                 } else {
-                    alert('ስህተት: ' + (data.message || 'Problem report መመዝገብ አልተቻለም'));
+                    showToast('ስህተት: ' + (data.message || 'Problem report መመዝገብ አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ስህተት: ' + err.message);
+                showToast('የግንኙነት ስህተት: ' + err.message, 'error');
             }
         }
 

@@ -821,8 +821,12 @@ class TelegramController extends Controller
       return;
     }
 
-    // Handle customer text review comment submission after rating
-    if (Cache::has("tg_awaiting_feedback_{$chatId}")) {
+    // Handle customer text review comment submission after rating.
+    // A slash command is NOT a comment: /skip is handled inside, but any
+    // other command (e.g. /start) must fall through to command dispatch
+    // below instead of being saved as the review text — and the parked
+    // session must survive so the user can still send a comment after.
+    if (Cache::has("tg_awaiting_feedback_{$chatId}") && !(str_starts_with($text, '/') && $text !== '/skip')) {
       $feedbackSession = Cache::get("tg_awaiting_feedback_{$chatId}");
       Cache::forget("tg_awaiting_feedback_{$chatId}");
 
