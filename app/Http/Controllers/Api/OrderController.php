@@ -30,6 +30,7 @@ class OrderController extends Controller
             'assignedTeam:id,team_name,phone',
             'items:id,order_id,service_id,item_name,quantity,unit_price,subtotal',
             'items.service:id,name_en,name_am,code',
+            'payments:id,order_id,amount',
         ]);
 
         $filterTeamId = $request->input('assigned_team_id') ?: $request->input('team_id');
@@ -629,8 +630,8 @@ class OrderController extends Controller
     public function assignTeam(Request $request, Order $order): JsonResponse
     {
         $validated = $request->validate([
-            'assigned_team_id' => 'nullable',
-            'team_id' => 'nullable',
+            'assigned_team_id' => 'nullable|exists:cleaning_teams,id',
+            'team_id' => 'nullable|exists:cleaning_teams,id',
             'worker_id' => 'nullable|exists:users,id',
             'appointment_date' => 'nullable|date',
             'appointment_time_slot' => 'nullable|string',
@@ -646,20 +647,12 @@ class OrderController extends Controller
             $teamId = $member?->cleaning_team_id ?? $leaderTeam?->id;
 
             if (!$teamId) {
-                $worker = \App\Models\User::find($workerId);
-                $team = \App\Models\CleaningTeam::create([
-                    'team_name' => $worker ? $worker->name : "ሰራተኛ #{$workerId}",
-                    'team_leader_id' => $workerId,
-                    'phone' => $worker?->phone,
-                    'status' => 'active',
-                ]);
-                \App\Models\TeamMember::firstOrCreate([
-                    'cleaning_team_id' => $team->id,
-                    'user_id' => $workerId,
-                ], [
-                    'role_in_team' => 'cleaner',
-                ]);
-                $teamId = $team->id;
+                // Do NOT auto-create a team: a silent one-person team hides
+                // a staffing mistake. The admin must create the team first.
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ይህ ሰራተኛ የትም ቡድን አባል አይደለም። እባክዎ መጀመሪያ ቡድን ይፍጠሩ ወይም ሰራተኛውን ወደ ነባር ቡድን ያክሉት (Assign failed: worker has no team).',
+                ], 422);
             }
         }
 

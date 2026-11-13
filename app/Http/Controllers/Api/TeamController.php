@@ -515,12 +515,12 @@ class TeamController extends Controller
 
         // 2. Teams and Work History
         $memberTeamIds = \App\Models\TeamMember::where('user_id', $employee->id)->pluck('cleaning_team_id')->toArray();
-        $leaderTeamIds = \App\Models\CleaningTeam::where('leader_id', $employee->id)->pluck('id')->toArray();
+        $leaderTeamIds = \App\Models\CleaningTeam::where('team_leader_id', $employee->id)->pluck('id')->toArray();
         $allTeamIds = array_unique(array_merge($memberTeamIds, $leaderTeamIds));
 
         $teams = \App\Models\CleaningTeam::whereIn('id', $allTeamIds)->get();
 
-        $orders = \App\Models\Order::whereIn('cleaning_team_id', $allTeamIds)
+        $orders = \App\Models\Order::whereIn('assigned_team_id', $allTeamIds)
             ->with(['customer:id,full_name,phone,subcity', 'items.service:id,name_en,name_am'])
             ->orderByDesc('appointment_date')
             ->limit(50)
@@ -540,7 +540,7 @@ class TeamController extends Controller
             });
 
         $completedJobsCount = $orders->where('status', 'completed')->count();
-        $activeJobsCount = $orders->whereIn('status', ['confirmed', 'in_progress'])->count();
+        $activeJobsCount = $orders->whereIn('status', ['confirmed', 'cleaning'])->count();
 
         return response()->json([
             'success' => true,

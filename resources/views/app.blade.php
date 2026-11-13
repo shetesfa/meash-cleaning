@@ -2332,30 +2332,37 @@
         }
 
         async function cleanerJobAction(orderId, action, extraPayload = {}) {
+            // Correct handler: POST /api/teams/jobs/{order}/action
+            // (TeamController@handleJobAction — validates state transitions
+            // and team ownership). The old PATCH /api/orders/{id}/status
+            // call used the wrong method AND the wrong field name, so it
+            // always failed with 405/422 while the UI claimed success.
             const payload = Object.assign({
-                order_id: orderId,
                 action: action,
-                order_status: action === 'complete' ? 'completed' : (action === 'start' ? 'cleaning' : (action === 'on_the_way' ? 'on_the_way' : action)),
             }, extraPayload);
 
             if (navigator.onLine) {
                 try {
-                    const res = await apiFetch(`/api/orders/${orderId}/status`, {
-                        method: 'PATCH',
-                        body: JSON.stringify({ status: payload.order_status, ...extraPayload })
+                    const res = await apiFetch(`/api/teams/jobs/${orderId}/action`, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
                     });
                     if (res && res.ok) {
             alert(action === 'on_the_way' ? ' ጉዞ ጀምረዋል! (Sent)' : ' የስራ ሁኔታ ተቀይሮ ተልኳል (Sent)');
                     } else {
-                        await window.meashOffline.enqueue('order', 'job_action', payload);
-            alert(' Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
+                        // Server rejected it (e.g. wrong state) — say so
+                        // honestly; do NOT queue it offline as if it worked.
+                        let msg = 'ስህተት ተከስቷል';
+                        try { const d = await res.json(); msg = d.message || msg; } catch (e) {}
+                        alert(' ስህተት: ' + msg);
                     }
                 } catch (e) {
-                    await window.meashOffline.enqueue('order', 'job_action', payload);
+                    // Network failure only — queue for later sync.
+                    await window.meashOffline.enqueue('order', 'job_action', Object.assign({ order_id: orderId }, payload));
           alert(' Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
                 }
             } else {
-                await window.meashOffline.enqueue('order', 'job_action', payload);
+                await window.meashOffline.enqueue('order', 'job_action', Object.assign({ order_id: orderId }, payload));
         alert(' Offline ተቀምጧል - ኢንተርኔት ሲኖር ይላካል (Saved offline - will send when online)');
             }
 
@@ -2864,7 +2871,7 @@
                                                             ውድቅ
                                                         </button>
                                                     ` : (o.payment_status !== 'paid' ? `
-                                                        <button onclick="openRecordOrderPaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, 0)" class="px-2.5 py-1 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 font-bold text-[11px] rounded-lg border border-emerald-500/40 transition" title="ክፍያ መዝግብ">
+                                                        <button onclick="openRecordOrderPaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, ${parseFloat(o.payments?.reduce((acc, p) => acc + parseFloat(p.amount), 0) || 0)})" class="px-2.5 py-1 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 font-bold text-[11px] rounded-lg border border-emerald-500/40 transition" title="ክፍያ መዝግብ">
                                                             ክፍያ
                                                         </button>
                                                     ` : '')}
@@ -4157,10 +4164,19 @@
                     loadActiveTab();
                     showOrderCreatedSuccessModal(payload, createdOrder);
                     return;
-                } else {
-                    throw new Error(result.message || JSON.stringify(result.errors || 'ትዕዛዙ አልተመዘገበም'));
                 }
+                // Server REJECTED it (e.g. 422 validation) — show the real
+                // error. Never queue a rejected order offline and never
+                // show the success modal for it.
+                alert('ስህተት፡ ' + (result.message || JSON.stringify(result.errors || 'ትዕዛዙ አልተመዘገበም')));
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'ትዕዛዝ መዝግብ';
+                }
+                return;
             } catch (netErr) {
+                // Network failure only (apiFetch throws for non-GET only
+                // when the request never reached the server) — queue offline.
                 console.warn('Live order creation failed or offline, falling back to offline queue:', netErr);
                 if (window.meashOffline && typeof window.meashOffline.enqueue === 'function') {
                     await window.meashOffline.enqueue('order', 'create', payload);
@@ -4448,10 +4464,11 @@
 
             try {
                 // Ensure order is completed if still in progress with full checklist notes
+                // (correct handler: POST /api/teams/jobs/{id}/action).
                 try {
-                    await apiFetch(`/api/orders/${orderId}/status`, {
-                        method: 'PATCH',
-                        body: JSON.stringify({ status: 'completed', notes: finalNotes, checklist: checkedBoxes })
+                    await apiFetch(`/api/teams/jobs/${orderId}/action`, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'complete', notes: finalNotes, checklist: checkedBoxes })
                     });
                 } catch (stErr) {
                     console.warn('Status completion auto-call:', stErr);
@@ -9609,17 +9626,26 @@
             e.preventDefault();
             const category = document.getElementById('prob-category').value;
             const description = document.getElementById('prob-desc').value;
-            await apiFetch('/api/care/complaints', {
-                method: 'POST',
-                body: JSON.stringify({
-                    order_id: orderId,
-                    category: category,
-                    description: description,
-                    severity: 'medium'
-                })
-            });
-            closeModal();
-            alert('Problem report logged and flagged for Reception attention.');
+            try {
+                const res = await apiFetch('/api/care/complaints', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        category: category,
+                        description: description,
+                        priority: 'medium'
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    closeModal();
+                    alert('Problem report logged and flagged for Reception attention.');
+                } else {
+                    alert('ስህተት: ' + (data.message || 'Problem report መመዝገብ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የግንኙነት ስህተት: ' + err.message);
+            }
         }
 
         function handleOrgSectorChange(val) {

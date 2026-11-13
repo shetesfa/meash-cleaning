@@ -356,14 +356,15 @@ class SyncController extends Controller
                     $incomingStatus = $payload['order_status'] ?? $payload['action'] ?? null;
                     if ($incomingStatus === 'complete') $incomingStatus = 'completed';
                     if ($incomingStatus === 'start') $incomingStatus = 'cleaning';
+                    if ($incomingStatus === 'report_problem') $incomingStatus = 'problem_reported';
 
-                    $allowedStatuses = ['new', 'confirmed', 'assigned', 'on_the_way', 'cleaning', 'completed', 'cancelled', 'rescheduled', 'issue'];
+                    $allowedStatuses = ['new', 'confirmed', 'assigned', 'on_the_way', 'cleaning', 'completed', 'cancelled', 'rescheduled', 'issue', 'problem_reported'];
                     if ($incomingStatus && !in_array($incomingStatus, $allowedStatuses, true)) {
                         throw new \Exception("Invalid or unrecognized order status '{$incomingStatus}'.");
                     }
 
                     if ($user && $user->role === 'cleaner' && $incomingStatus) {
-                        $cleanerPermittedStatuses = ['assigned', 'on_the_way', 'cleaning', 'completed', 'issue'];
+                        $cleanerPermittedStatuses = ['assigned', 'on_the_way', 'cleaning', 'completed', 'issue', 'problem_reported'];
                         if (!in_array($incomingStatus, $cleanerPermittedStatuses, true)) {
                             throw new \Exception("Cleaners are not permitted to set order status to '{$incomingStatus}'.");
                         }

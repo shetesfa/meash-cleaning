@@ -8,6 +8,7 @@ use App\Models\Complaint;
 use App\Models\Customer;
 use App\Models\Feedback;
 use App\Models\Followup;
+use App\Models\Order;
 use App\Services\EthiopianCalendarService;
 use App\Services\OrderLifecycleService;
 use App\Services\SmsService;
@@ -239,13 +240,24 @@ class CustomerCareController extends Controller
     public function storeComplaint(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
+            'customer_id' => 'nullable|exists:customers,id',
             'order_id' => 'nullable|exists:orders,id',
             'category' => 'required|string|max:64',
             'description' => 'required|string',
             'priority' => 'nullable|string|in:low,medium,high,urgent',
             'assigned_to_user_id' => 'nullable|exists:users,id',
         ]);
+
+        // Derive the customer from the order when the caller only knows
+        // the order (e.g. the cleaner problem-report button).
+        if (empty($validated['customer_id']) && !empty($validated['order_id'])) {
+            $validated['customer_id'] = Order::find($validated['order_id'])?->customer_id;
+        }
+        if (empty($validated['customer_id'])) {
+            return response()->json([
+                'message' => 'customer_id is required (or an order_id whose order has a customer).',
+            ], 422);
+        }
 
         $validated['complaint_number'] = Complaint::generateNextNumber();
         $validated['priority'] = $validated['priority'] ?? 'medium';
