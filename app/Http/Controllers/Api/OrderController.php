@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\AuditLog;
 use App\Models\Customer;
+use App\Models\Expense;
 use App\Models\Followup;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -94,11 +95,24 @@ class OrderController extends Controller
         $perPage = $request->boolean('all') ? 200 : min(max((int)$request->input('per_page', 20), 1), 200);
         $orders = $query->latest('appointment_date')->paginate($perPage);
 
+        // Refund totals (one query for the whole page, not per order):
+        // refunds are Expense rows (category 'refund') whose description
+        // carries "#<order_number>" — the same link recordRefund uses.
+        $refundTotals = $this->refundTotalsByOrderNumber(
+            $orders->getCollection()->pluck('order_number')->all()
+        );
+
         // Append Ethiopian calendar formatted strings and alias fields
-        $orders->getCollection()->transform(function ($order) use ($user) {
+        $orders->getCollection()->transform(function ($order) use ($user, $refundTotals) {
             $eth = EthiopianCalendarService::toEthiopian($order->appointment_date);
             $order->eth_appointment_date = $eth['formatted_am'];
             $order->eth_appointment_en = $eth['formatted_en'];
+
+            // Net paid = gross payments minus refunds. The payment modal
+            // and the invoice must show this, not the gross sum.
+            $grossPaid = round((float)$order->payments->sum('amount'), 2);
+            $order->total_refunded = $refundTotals[$order->order_number] ?? 0.0;
+            $order->net_paid = max(0, round($grossPaid - $order->total_refunded, 2));
 
             // Privacy: mask customer personal phone and private street address for Finance role
             if ($user && $user->role === 'finance') {
@@ -121,6 +135,34 @@ class OrderController extends Controller
         });
 
         return response()->json($orders);
+    }
+
+    /**
+     * Refund totals keyed by order number, in ONE query.
+     * Refunds are Expense rows (category 'refund') whose description
+     * carries "#<order_number>" — the same link FinanceController::
+     * recordRefund uses when it checks the refundable balance.
+     *
+     * @param string[] $orderNumbers
+     * @return array<string, float>
+     */
+    private function refundTotalsByOrderNumber(array $orderNumbers): array
+    {
+        $orderNumbers = array_values(array_filter(array_unique($orderNumbers)));
+        if (empty($orderNumbers)) {
+            return [];
+        }
+        $totals = [];
+        $refunds = Expense::where('category', 'refund')->get(['description', 'amount']);
+        foreach ($refunds as $refund) {
+            foreach ($orderNumbers as $number) {
+                if ($number !== '' && str_contains((string)$refund->description, '#' . $number)) {
+                    $totals[$number] = round(($totals[$number] ?? 0) + (float)$refund->amount, 2);
+                    break;
+                }
+            }
+        }
+        return $totals;
     }
 
     public function show(Request $request, Order $order): JsonResponse
@@ -155,6 +197,13 @@ class OrderController extends Controller
         $orderData['eth_appointment_date'] = $ethAppt['formatted_am'];
         $orderData['eth_appointment_en'] = $ethAppt['formatted_en'];
         $orderData['eth_created_date'] = $ethCreated['formatted_am'];
+
+        // Net paid for the invoice / payment modal: gross payments minus
+        // refunds (same "#<order_number>" link recordRefund uses).
+        $refundTotals = $this->refundTotalsByOrderNumber([$order->order_number]);
+        $grossPaid = round((float)$order->payments->sum('amount'), 2);
+        $orderData['total_refunded'] = $refundTotals[$order->order_number] ?? 0.0;
+        $orderData['net_paid'] = max(0, round($grossPaid - $orderData['total_refunded'], 2));
 
         // Privacy: mask customer personal phone, private address, and staff phone numbers for Finance role
         if ($user && $user->role === 'finance') {

@@ -217,8 +217,13 @@
 
         <!-- 3. Right: Compact Language + Website + Logout -->
         <div class="flex items-center gap-1 sm:gap-2">
-            <!-- Language Toggle (Compact) -->
-            <div class="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 text-[10px] sm:text-[11px]">
+            <!-- Language Toggle (Compact) — HIDDEN: the admin is Amharic-only
+                 by design (zero data-i18n bindings; every module renders
+                 hardcoded Amharic). The toggle only switched the ~11 sidebar
+                 labels, so EN looked dead while the whole page stayed
+                 Amharic. A real bilingual admin is a separate translation
+                 job; until then no dead control is shown. -->
+            <div class="hidden items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 text-[10px] sm:text-[11px]">
                 <button type="button" onclick="window.meashI18n.setLanguage('en')" class="px-1.5 py-0.5 rounded font-bold hover:bg-slate-700 text-slate-400" id="app-lang-en">EN</button>
                 <button type="button" onclick="window.meashI18n.setLanguage('am')" class="px-1.5 py-0.5 rounded font-bold hover:bg-slate-700 text-cyan-300" id="app-lang-am">አማ</button>
             </div>
@@ -717,6 +722,85 @@
             return localStorage.getItem('meash_token') || null;
         }
 
+        // Persistent toast (success / error / info). Native alert() is
+        // invisible to automated checks and gives no lasting feedback,
+        // so user-facing results use this instead. (An earlier call site
+        // used showToast before it existed — ReferenceError.)
+        function showToast(message, type = 'info') {
+            let box = document.getElementById('meash-toast-box');
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'meash-toast-box';
+                box.className = 'fixed bottom-4 right-4 z-[9999] space-y-2 max-w-sm w-[calc(100vw-2rem)]';
+                document.body.appendChild(box);
+            }
+            const colors = {
+                success: 'bg-emerald-600 border-emerald-400',
+                error: 'bg-rose-600 border-rose-400',
+                info: 'bg-slate-800 border-cyan-500',
+            };
+            const el = document.createElement('div');
+            el.className = `px-4 py-3 rounded-2xl text-white text-xs font-bold shadow-2xl border ${colors[type] || colors.info}`;
+            el.textContent = message;
+            box.appendChild(el);
+            setTimeout(() => { el.remove(); }, 6000);
+        }
+
+        // Row-scoped busy state for the orders table: a loading spinner
+        // must appear on the row being acted on, never on another row.
+        // (A modal loader once appeared over MEASH-000001 while the action
+        // was on MEASH-042036 — the old code had no per-row spinner.)
+        function setOrderRowBusy(orderId, on) {
+            const row = document.getElementById(`order-row-${orderId}`);
+            if (!row) return;
+            row.style.opacity = on ? '0.55' : '';
+            let badge = row.querySelector('.order-row-busy');
+            if (on && !badge) {
+                badge = document.createElement('span');
+                badge.className = 'order-row-busy inline-block w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin align-middle ml-1';
+                const cell = row.querySelector('td:last-child');
+                if (cell) cell.prepend(badge);
+            } else if (!on && badge) {
+                badge.remove();
+            }
+        }
+
+        // Display date for table cells / invoice: never leak raw ISO
+        // ("2026-11-14T00:00:00.000000Z") to the user.
+        function formatDisplayDate(v) {
+            if (!v) return '—';
+            const d = new Date(v);
+            if (!isNaN(d.getTime())) {
+                return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+            return String(v).split('T')[0];
+        }
+
+        // Net paid for an order: gross payments minus refunds. The server
+        // sends net_paid/total_refunded (OrderController); fall back to the
+        // gross payments sum for older payloads.
+        function netPaidOf(o) {
+            if (!o) return 0;
+            if (typeof o.net_paid === 'number') return Math.max(0, parseFloat(o.net_paid) || 0);
+            const gross = (o.payments || []).reduce((acc, p) => acc + parseFloat(p.amount || 0), 0);
+            return Math.max(0, gross - parseFloat(o.total_refunded || 0));
+        }
+
+        // Complaint category code -> Amharic label (same labels as the
+        // complaint form's <select>; cards used to show the raw code,
+        // e.g. "service_quality: ...").
+        function complaintCategoryLabel(code) {
+            const labels = {
+                service_quality: 'የፅዳት ጥራት ጉድለት',
+                staff_behavior: 'የሰራተኛ ስነ-ምግባር',
+                delay_timing: 'የሰዓት መዘግየት',
+                pricing_billing: 'የዋጋ / ክፍያ አለመግባባት',
+                damage_reported: 'የዕቃ ጉዳት ጥቆማ',
+                other: 'ሌላ ቅሬታ',
+            };
+            return labels[code] || code || 'ቅሬታ';
+        }
+
         // ========================================================
         // UNIVERSAL OFFLINE ENGINE: Caching, Fallbacks & Preloading
         // ========================================================
@@ -900,13 +984,30 @@
             try {
                 let res = await fetch(url, { ...options, headers });
 
-                // CRITICAL ZERO-LOGOUT RULE: Never break script on 401
+                // 401: do NOT nuke the session on a single 401. A transient
+                // 401 (deploy restart race, proxy hiccup, token propagation
+                // delay right after login) used to bounce the user to the
+                // login screen mid-work and lose unsaved form data. Verify
+                // the session first with a raw fetch (never apiFetch — this
+                // check must not recurse into the logout path): only when
+                // /api/auth/me ALSO 401s is the session really dead.
                 if (res.status === 401) {
-                    console.warn('API 401 Unauthorized for ' + url + ' - session expired');
-                    localStorage.removeItem('meash_token');
-                    localStorage.removeItem('meash_user');
-                    currentUser = { role: 'cleaner', name: '', id: null, phone: '' };
-                    showLoginScreen('የሴሽን ጊዜዎ አልቋል፤ እባክዎ እንደገና ይግቡ (Session expired. Please login again.)');
+                    let sessionAlive = false;
+                    try {
+                        const meRes = await fetch('/api/auth/me', {
+                            headers: { 'Accept': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+                        });
+                        sessionAlive = meRes.ok;
+                    } catch (_) { sessionAlive = false; }
+                    if (!sessionAlive) {
+                        console.warn('API 401 Unauthorized for ' + url + ' - session expired');
+                        localStorage.removeItem('meash_token');
+                        localStorage.removeItem('meash_user');
+                        currentUser = { role: 'cleaner', name: '', id: null, phone: '' };
+                        showLoginScreen('የሴሽን ጊዜዎ አልቋል፤ እባክዎ እንደገና ይግቡ (Session expired. Please login again.)');
+                    } else {
+                        console.warn('API 401 for ' + url + ' but the session is still alive — staying signed in.');
+                    }
                     return res;
                 }
 
@@ -925,7 +1026,11 @@
                 return res;
             } catch (netErr) {
                 console.warn('API fetch network error for ' + url + ':', netErr.message);
-                if (isGet) {
+                // noStaleCache: callers rendering admin-editable data (CMS
+                // services/settings) must NEVER render silently stale cached
+                // rows as if they were live — a failed live fetch must
+                // surface as an error with Retry, not a flash of old data.
+                if (isGet && !options.noStaleCache) {
                     setOfflineBanner(true);
                     const cached = localStorage.getItem(cacheKey);
                     if (cached) {
@@ -1049,7 +1154,15 @@
                 renderNavigation();
                 loadActiveTab();
             });
-            await switchRole(currentUser.role || 'owner');
+            // Restore the Marketing sub-tab too (broadcast directory vs
+            // history) — before the first render, so it actually applies.
+            try {
+                const savedMarketingTab = localStorage.getItem('meash_marketing_tab');
+                if (savedMarketingTab === 'campaign_history' || savedMarketingTab === 'telegram_broadcast') {
+                    currentMarketingTab = savedMarketingTab;
+                }
+            } catch (_) {}
+            await switchRole(currentUser.role || 'owner', localStorage.getItem('meash_active_tab'));
             setTimeout(() => {
                 preloadAllAdminOfflineData().catch(() => {});
             }, 1200);
@@ -1179,7 +1292,7 @@
             loadActiveTab();
         }
 
-        async function switchRole(role) {
+        async function switchRole(role, preferredTab) {
             currentUser.role = role;
             if (role === 'owner') {
                 currentUser.name = 'አምሃ (ዋና ስራ አስኪያጅ)';
@@ -1196,6 +1309,18 @@
             } else if (role === 'finance') {
                 currentUser.name = 'ዮናስ ተስፋዬ (ፋይናንስ & ሂሳብ)';
                 activeTab = 'finance';
+            }
+
+            // Restore the previously open tab (after a re-login) when it is
+            // a valid tab for this role — a session bounce must never dump
+            // the admin back on the dashboard mid-work. Sales sub-tabs
+            // (sales_orgs/proformas/contracts/pipeline/visits) live under
+            // the single 'sales' nav entry for the owner role, so accept
+            // them when the role has 'sales' — otherwise a saved sub-tab
+            // would bounce the owner back to the dashboard.
+            const navIds = (roleNavs[role] || []).map(n => n.id);
+            if (preferredTab && (navIds.includes(preferredTab) || (preferredTab.startsWith('sales_') && navIds.includes('sales')))) {
+                activeTab = preferredTab;
             }
 
             // Update header badge text
@@ -1243,9 +1368,11 @@
 
             const navItemsHtml = (isDrawer = false) => navs.map(item => {
                 const label = isAmharic ? (item.label_am || item.label_en) : item.label_en;
+                // The 'sales' entry stays highlighted on its sub-tabs.
+                const isActive = activeTab === item.id || (item.id === 'sales' && activeTab.startsWith('sales_'));
                 const clickHandler = isDrawer ? `setTab('${item.id}'); toggleMobileSidebar();` : `setTab('${item.id}');`;
                 return `
-                    <button onclick="${clickHandler}" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${activeTab === item.id ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}">
+                    <button onclick="${clickHandler}" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${isActive ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}">
                         <i data-lucide="${item.icon}" class="w-4 h-4"></i>
                         <span>${label}</span>
                     </button>
@@ -1301,6 +1428,9 @@
 
         function setTab(tabId) {
             activeTab = tabId;
+            // Remember the open tab, so a re-login after a session bounce
+            // restores it instead of silently resetting to the dashboard.
+            try { localStorage.setItem('meash_active_tab', tabId); } catch (_) {}
             renderNavigation();
             loadActiveTab();
         }
@@ -1848,7 +1978,7 @@
                                                     <button onclick="openRejectPaymentModal(${b.id}, '${escapeHtml(b.order_number)}')" class="px-2 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-500/40 text-xs font-bold cursor-pointer" title="ክፍያ ውድቅ አድርግ">ውድቅ</button>
                                                 ` : ''}
                                                 <button onclick="confirmAndAssignOrder(${b.id})" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition">ሰራተኛ መድብ</button>
-                                                <button onclick="openOrderDetailsModal(${b.id})" class="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold">ዝርዝር</button>
+                                                <button onclick="openOrderDetailsModal(${b.id}, this)" class="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold">ዝርዝር</button>
                                                 <button onclick="openPostponeOrderModal(${b.id}, '${b.order_number}', '${b.customer?.full_name}')" class="px-2 py-1.5 rounded-lg bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-500/40 text-xs font-bold" title="ቀጠሮ አስተላልፍ">አስተላልፍ</button>
                                             </div>
                                         </div>
@@ -1898,7 +2028,7 @@
                                                 ${s.order_status !== 'completed' ? `
                                                     <button onclick="openPostponeOrderModal(${s.id}, '${s.order_number}', '${s.customer?.full_name}')" class="px-2 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 text-[10px] font-bold">አስተላልፍ</button>
                                                 ` : ''}
-                                                <button onclick="openOrderDetailsModal(${s.id})" class="px-2 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] font-bold">ዝርዝር</button>
+                                                <button onclick="openOrderDetailsModal(${s.id}, this)" class="px-2 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] font-bold">ዝርዝር</button>
                                             </div>
                                         </div>
                                     `).join('')}
@@ -1945,7 +2075,7 @@
                                         <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-red-500/30 flex items-center justify-between gap-3">
                                             <div>
                                                 <span class="text-xs font-bold text-white">${c.customer?.full_name}</span>
-                                                <p class="text-[11px] text-red-400 font-semibold">${c.category}: ${c.description}</p>
+                                                <p class="text-[11px] text-red-400 font-semibold">${complaintCategoryLabel(c.category)}: ${c.description}</p>
                                             </div>
                                             <button onclick="openResolveComplaintModal(${c.id})" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold">መፍትሄ ስጥ</button>
                                         </div>
@@ -2453,6 +2583,8 @@
                             </div>
                         </div>
 
+                        ${salesSubTabs()}
+
                         <!-- EXCEL-STYLE TABLE CONTAINER -->
                         <div class="rounded-2xl border-2 border-slate-700 overflow-hidden shadow-2xl bg-white text-slate-900">
                             <!-- Excel Title Banner -->
@@ -2540,6 +2672,27 @@
         }
 
         // --- Sales sub-tab lists (Orgs / Proformas / Contracts / Pipeline) ---
+        // The four sub-lists exist as render functions, but the owner role
+        // has only ONE sidebar entry ('sales') — the sub-tab ids live only
+        // in roleNavs.sales. Without this in-page bar there was no way for
+        // the owner to reach them, so the CRM looked like a single visits
+        // table. Every sales view renders this bar.
+        function salesSubTabs() {
+            const tabs = [
+                { id: 'sales', label: 'እንቅስቃሴ መዝገብ (Visits)' },
+                { id: 'sales_orgs', label: 'ተቋማት / ድርጅቶች' },
+                { id: 'sales_proformas', label: 'ፕሮፎርማዎች' },
+                { id: 'sales_contracts', label: 'ኮንትራቶች' },
+                { id: 'sales_pipeline', label: 'የሽያጭ ሂደት' },
+            ];
+            return `
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-bold">
+                    ${tabs.map(t => `
+                        <button type="button" onclick="setTab('${t.id}')" class="px-3.5 py-2 rounded-xl whitespace-nowrap transition cursor-pointer ${activeTab === t.id ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/20' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">${t.label}</button>
+                    `).join('')}
+                </div>`;
+        }
+
         function salesSubHeader(title, subtitle, actionBtn = '') {
             return `
                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -2549,7 +2702,8 @@
                         <p class="text-xs text-slate-400 mt-0.5">${subtitle}</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2.5">${actionBtn}</div>
-                </div>`;
+                </div>
+                ${salesSubTabs()}`;
         }
 
         async function renderSalesOrgsList(container) {
@@ -2595,6 +2749,7 @@
                 const res = await apiFetch('/api/sales/proformas?per_page=50');
                 const data = await res.json();
                 const rows = data.data || (Array.isArray(data) ? data : []);
+                window._salesProformasCache = rows;
                 container.innerHTML = `
                     <div class="max-w-[98%] mx-auto space-y-6">
                         ${salesSubHeader('ፕሮፎርማዎች (Proformas)', 'የተዘጋጁ የዋጋ ማቅረቢያ ሰነዶች።', `
@@ -2605,17 +2760,20 @@
                             <div class="overflow-x-auto">
                                 <table class="w-full text-xs text-left">
                                     <thead><tr class="bg-slate-800 text-slate-300 font-bold">
-                                        <th class="px-3 py-2.5">ቁጥር</th><th class="px-3 py-2.5">ድርጅት</th><th class="px-3 py-2.5">ንዑስ ድምር</th><th class="px-3 py-2.5">ጠቅላላ</th><th class="px-3 py-2.5">ሁኔታ</th><th class="px-3 py-2.5">የሚያበቃበት ቀን</th>
+                                        <th class="px-3 py-2.5">ቁጥር</th><th class="px-3 py-2.5">ድርጅት</th><th class="px-3 py-2.5">ንዑስ ድምር</th><th class="px-3 py-2.5">ጠቅላላ</th><th class="px-3 py-2.5">ሁኔታ</th><th class="px-3 py-2.5">የሚያበቃበት ቀን</th><th class="px-3 py-2.5 text-right">ድርጊት</th>
                                     </tr></thead>
                                     <tbody class="divide-y divide-slate-800">
-                                        ${rows.length === 0 ? `<tr><td colspan="6" class="px-3 py-10 text-center text-slate-500 italic">እስካሁን የተዘጋጀ ፕሮፎርማ የለም።</td></tr>` : rows.map(p => `
+                                        ${rows.length === 0 ? `<tr><td colspan="7" class="px-3 py-10 text-center text-slate-500 italic">እስካሁን የተዘጋጀ ፕሮፎርማ የለም።</td></tr>` : rows.map(p => `
                                             <tr class="text-slate-200">
                                                 <td class="px-3 py-2.5 font-mono font-bold text-white">${escapeHtml(p.proforma_number || '—')}</td>
                                                 <td class="px-3 py-2.5">${escapeHtml(p.organization?.name || '—')}</td>
                                                 <td class="px-3 py-2.5 font-mono">${parseFloat(p.subtotal || 0).toLocaleString()} ETB</td>
                                                 <td class="px-3 py-2.5 font-mono font-bold text-white">${parseFloat(p.total || 0).toLocaleString()} ETB</td>
                                                 <td class="px-3 py-2.5">${escapeHtml(p.status || '—')}</td>
-                                                <td class="px-3 py-2.5">${escapeHtml(p.validity_date ? String(p.validity_date).slice(0, 10) : '—')}</td>
+                                                <td class="px-3 py-2.5">${p.validity_date ? formatDisplayDate(p.validity_date) : '—'}</td>
+                                                <td class="px-3 py-2.5 text-right">
+                                                    <button type="button" onclick="openSavedProforma(${p.id})" class="px-2.5 py-1 bg-amber-600/90 hover:bg-amber-600 text-white font-bold rounded-lg text-[11px] cursor-pointer">ክፈት (Open)</button>
+                                                </td>
                                             </tr>`).join('')}
                                     </tbody>
                                 </table>
@@ -2735,9 +2893,12 @@
                             <select id="stage-select-direct" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
                                 ${selectOptions}
                             </select>
-                            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
-                                <button onclick="closeModal()" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl">ሰርዝ</button>
-                                <button onclick="confirmStageChange(${visitId})" class="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl">አረጋግጥ</button>
+                            <div class="flex justify-between gap-2 pt-3 border-t border-slate-800">
+                                <button onclick="deleteSalesVisit(${visitId}, this)" id="btn-delete-visit-${visitId}" class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 font-bold rounded-xl">በቋሚነት ሰርዝ (Delete)</button>
+                                <div class="flex gap-2">
+                                    <button onclick="closeModal()" class="px-3 py-1.5 bg-slate-800 text-slate-300 rounded-xl">ዝጋ (Close)</button>
+                                    <button onclick="confirmStageChange(${visitId})" class="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl">አረጋግጥ</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2747,12 +2908,60 @@
 
         async function confirmStageChange(visitId) {
             const newStage = document.getElementById('stage-select-direct').value;
-            await apiFetch(`/api/sales/visits/${visitId}/stage`, {
-                method: 'POST',
-                body: JSON.stringify({ stage: newStage }),
-            });
-            closeModal();
-            loadActiveTab();
+            try {
+                const res = await apiFetch(`/api/sales/visits/${visitId}/stage`, {
+                    method: 'POST',
+                    body: JSON.stringify({ stage: newStage }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message || 'የሽያጭ ደረጃ ተቀይሯል።', 'success');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    showToast('ስህተት: ' + (data.message || 'ደረጃውን መቀየር አልተቻለም'), 'error');
+                }
+            } catch (err) {
+                showToast('የኔትወርክ ስህተት: ' + err.message, 'error');
+            }
+        }
+
+        // Delete a sales visit log entry — two-tap confirm (same pattern
+        // as the Telegram delete). The modal's old "ሰርዝ" button was only
+        // a Cancel that closed the modal, so a delete tap looked broken
+        // and the row stayed; this button really deletes.
+        async function deleteSalesVisit(visitId, btn) {
+            const armKey = 'delete-visit-' + visitId;
+            if (!window._broadcastDeleteArmed) window._broadcastDeleteArmed = {};
+            if (!window._broadcastDeleteArmed[armKey]) {
+                window._broadcastDeleteArmed[armKey] = true;
+                if (btn) {
+                    btn.classList.add('bg-red-600', 'text-white');
+                    btn.innerText = 'እርግጠኛ ነህ? እንደገና ጠቅ አድርግ';
+                }
+                setTimeout(() => {
+                    window._broadcastDeleteArmed[armKey] = false;
+                    if (btn && btn.isConnected) {
+                        btn.classList.remove('bg-red-600', 'text-white');
+                        btn.innerText = 'በቋሚነት ሰርዝ (Delete)';
+                    }
+                }, 4000);
+                return;
+            }
+            window._broadcastDeleteArmed[armKey] = false;
+            try {
+                const res = await apiFetch(`/api/sales/visits/${visitId}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast(data.message || 'የጉብኝት መዝገቡ ተሰርዟል።', 'success');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    showToast('ስህተት: ' + (data.message || 'መሰረዝ አልተቻለም'), 'error');
+                }
+            } catch (err) {
+                showToast('የኔትወርክ ስህተት: ' + err.message, 'error');
+            }
         }
 
         function exportSalesTableToExcel() {
@@ -2999,7 +3208,7 @@
                                                 <td colspan="8" class="p-8 text-center text-slate-500 italic">ምንም የተገኘ ትዕዛዝ የለም።</td>
                                             </tr>
                                         ` : orders.map(o => `
-                                            <tr class="hover:bg-slate-800/40 transition">
+                                            <tr id="order-row-${o.id}" class="hover:bg-slate-800/40 transition">
                                                 <td class="p-4 font-bold text-cyan-400 font-mono">${escapeHtml(o.order_number)}</td>
                                                 <td class="p-4">
                                                     <span class="font-bold text-white block">${escapeHtml(o.customer_name || o.customer?.full_name || o.customer?.name || 'ደንበኛ')}</span>
@@ -3010,7 +3219,7 @@
                                                 </td>
                                                 <td class="p-4">
                                                     <span class="font-bold text-white block text-xs"> ${o.eth_appointment_date || (o.appointment_date ? EC.formatEth(o.appointment_date) : '—')}</span>
-                                                    <span class="text-slate-400 text-[10px] block"> ${escapeHtml(o.appointment_date || '—')}</span>
+                                                    <span class="text-slate-400 text-[10px] block"> ${o.appointment_date ? formatDisplayDate(o.appointment_date) : '—'}</span>
                                                     <span class="text-[10px] font-semibold text-cyan-400 block mt-0.5">
                                                         ${escapeHtml(formatTimeSlot(o.appointment_time_slot))}
                                                     </span>
@@ -3034,14 +3243,14 @@
                                                             ውድቅ
                                                         </button>
                                                     ` : (o.payment_status !== 'paid' ? `
-                                                        <button onclick="openRecordOrderPaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, ${parseFloat(o.payments?.reduce((acc, p) => acc + parseFloat(p.amount), 0) || 0)})" class="px-2.5 py-1 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 font-bold text-[11px] rounded-lg border border-emerald-500/40 transition" title="ክፍያ መዝግብ">
+                                                        <button onclick="openRecordOrderPaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, ${netPaidOf(o)})" class="px-2.5 py-1 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 font-bold text-[11px] rounded-lg border border-emerald-500/40 transition" title="ክፍያ መዝግብ">
                                                             ክፍያ
                                                         </button>
                                                     ` : '')}
                                                     <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ሰራተኛ መድብ">ሰራተኛ</button>
-                                                    <button onclick="printOrderInvoice(${o.id})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-500/40 transition" title="ደረሰኝ አትም (Print Invoice)">ደረሰኝ</button>
+                                                    <button onclick="printOrderInvoice(${o.id}, this)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-500/40 transition" title="ደረሰኝ አትም (Print Invoice)">ደረሰኝ</button>
                                                     <button data-phone="${escapeHtml(o.customer_phone || o.customer?.phone || '')}" data-name="${escapeHtml(o.customer_name || o.customer?.full_name || o.customer?.name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">SMS</button>
-                                                    <button onclick="openOrderDetailsModal(${o.id})" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር</button>
+                                                    <button onclick="openOrderDetailsModal(${o.id}, this)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold text-[11px] rounded-lg border border-slate-700">ዝርዝር</button>
                                                 </td>
                                             </tr>
                                         `).join('')}
@@ -3183,8 +3392,8 @@
                             ${s.plan_type === 'weekly' ? ' ሳምንታዊ (Weekly)' : (s.plan_type === 'biweekly' ? ' የሁለት ሳምንት' : ' ወርሃዊ (Monthly)')}
                                                     </span>
                                                 </td>
-                                                <td class="p-4 font-black text-emerald-400">${s.discount_percentage}% OFF</td>
-                                                <td class="p-4 font-bold text-cyan-400">${s.next_service_date || 'አልተወሰነም'}</td>
+                                                <td class="p-4 font-black text-emerald-400">${(s.discount_percent ?? s.discount_percentage ?? ({ weekly: 15, biweekly: 10, monthly: 5 }[s.plan_type] ?? 0))}% OFF</td>
+                                                <td class="p-4 font-bold text-cyan-400">${s.next_service_date ? formatDisplayDate(s.next_service_date) : 'አልተወሰነም'}</td>
                                                 <td class="p-4">
                                                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${s.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : (s.status === 'paused' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400')}">
                                                         ${s.status === 'active' ? 'ንቁ (Active)' : (s.status === 'paused' ? 'የቆመ (Paused)' : 'የተሰረዘ (Cancelled)')}
@@ -3640,6 +3849,11 @@
             const input = document.getElementById('customer-search-input');
             window._customerSearch = (input?.value || '').trim();
             window._customerPage = 1;
+            // Show a loading state in the grid AT ONCE — the old code left
+            // the stale unfiltered list visible until the fetch finished,
+            // so a search looked slow and showed wrong results first.
+            const grid = document.getElementById('customer-grid');
+            if (grid) grid.innerHTML = `<div class="col-span-full p-8 text-center text-slate-400 text-xs">በመፈለግ ላይ... (Searching...)</div>`;
             const container = document.getElementById('app-viewport');
             if (container) renderCustomersModule(container);
         }
@@ -3725,7 +3939,8 @@
                         </div>
 
                         <!-- Customer Grid -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div id="customer-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${customers.length === 0 ? `<div class="col-span-full p-8 text-center text-slate-500 italic text-xs">ምንም ደንበኛ አልተገኘም።${window._customerSearch ? ' የፍለጋ ቃሉን ይለውጡ ወይም ያጽዱ።' : ''}</div>` : ''}
                             ${customers.length === 0 ? `
                                 <div class="col-span-full py-12 text-center text-slate-500 text-xs">
                                     በዚህ የማጣሪያ ክፍል የተገኘ ደንበኛ የለም።
@@ -3801,7 +4016,7 @@
 
                         <!-- Pagination (server totals, not just the visible page) -->
                         <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-                            <span class="text-[11px] text-slate-400 font-semibold">${custTotal > 0 ? `ይታያል ${((custCurrentPage - 1) * 20) + 1}–${Math.min(custCurrentPage * 20, custTotal)} ከ ${custTotal} ደንበኞች` : 'ምንም ደንበኛ አልተገኘም'}</span>
+                            <span class="text-[11px] text-slate-400 font-semibold">${custTotal > 0 ? `ይታያል ${((custCurrentPage - 1) * 20) + 1}–${Math.min(custCurrentPage * 20, custTotal)} ከ ${custTotal} ደንበኞች` : 'ይታያል 0 ከ 0 ደንበኞች'}</span>
                             <div class="flex items-center gap-2">
                                 <button ${custCurrentPage <= 1 ? 'disabled' : ''} onclick="changeCustomerPage(-1)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold text-xs rounded-lg border border-slate-700 cursor-pointer">← ቀዳሚ</button>
                                 <span class="text-xs text-slate-300 font-bold">ገጽ ${custCurrentPage} / ${custLastPage}</span>
@@ -3824,12 +4039,14 @@
                 const currentPeriod = window._financePeriod || 'all_time';
                 let data = null;
                 let expData = null;
+                let payData = null;
 
                 if (navigator.onLine) {
                     try {
-                        const [reportRes, expRes] = await Promise.all([
+                        const [reportRes, expRes, payRes] = await Promise.all([
                             apiFetch('/api/finance/profit-report?period=' + currentPeriod),
-                            apiFetch('/api/finance/expenses?per_page=50')
+                            apiFetch('/api/finance/expenses?per_page=50'),
+                            apiFetch('/api/finance/payments?per_page=20')
                         ]);
                         if (reportRes.ok && expRes.ok) {
                             data = await reportRes.json();
@@ -3838,6 +4055,10 @@
                                 localStorage.setItem('meash_cached_finance_report', JSON.stringify(data));
                                 localStorage.setItem('meash_cached_finance_expenses', JSON.stringify(expData));
                             } catch (_) {}
+                        }
+                        if (payRes.ok) {
+                            payData = await payRes.json();
+                            try { localStorage.setItem('meash_cached_finance_payments', JSON.stringify(payData)); } catch (_) {}
                         }
                     } catch (netErr) {
                         console.warn('Finance network fetch failed, using offline cache:', netErr);
@@ -3856,14 +4077,24 @@
                         try { expData = JSON.parse(cachedExp); } catch (_) {}
                     }
                 }
+                if (!payData) {
+                    const cachedPay = localStorage.getItem('meash_cached_finance_payments');
+                    if (cachedPay) {
+                        try { payData = JSON.parse(cachedPay); } catch (_) {}
+                    }
+                }
                 if (!data) {
                     data = { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, expense_breakdown: [], payment_breakdown: [] };
                 }
                 if (!expData) {
                     expData = { data: [] };
                 }
+                if (!payData) {
+                    payData = { data: [] };
+                }
 
                 const expensesList = expData.data || (Array.isArray(expData) ? expData : []);
+                const paymentsList = payData.data || (Array.isArray(payData) ? payData : []);
 
                 const categoryLabels = {
                     chemicals: 'ኬሚካሎች እና ሳሙናዎች',
@@ -3959,6 +4190,55 @@
                             </div>
                         </div>
 
+                        <!-- Recent Payments (each payment: amount, method, date, order) -->
+                        <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                                <div>
+                                    <h4 class="text-base font-extrabold text-white flex items-center gap-2">
+                                        <i data-lucide="banknote" class="w-4 h-4 text-emerald-400"></i>
+                                        <span>የቅርብ ጊዜ የተቀበሉ ክፍያዎች</span>
+                                    </h4>
+                                    <p class="text-xs text-slate-400 mt-0.5">እያንዳንዱ ክፍያ — መጠን፣ ዘዴ፣ ቀን እና ትዕዛዝ።</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                                    ${paymentsList.length} ክፍያዎች
+                                </span>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs">
+                                    <thead>
+                                        <tr class="text-slate-400 border-b border-slate-800 text-[11px] uppercase tracking-wider">
+                                            <th class="py-3 px-3">ቀን</th>
+                                            <th class="py-3 px-3">ትዕዛዝ</th>
+                                            <th class="py-3 px-3">ደንበኛ</th>
+                                            <th class="py-3 px-3">ዘዴ</th>
+                                            <th class="py-3 px-3 text-right">የገንዘብ መጠን</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-800/60">
+                                        ${paymentsList.length === 0 ? `
+                                            <tr>
+                                                <td colspan="5" class="py-8 text-center text-slate-500 italic">እስካሁን የተመዘገበ ክፍያ የለም።</td>
+                                            </tr>
+                                        ` : paymentsList.map(pay => `
+                                            <tr class="hover:bg-slate-800/40 transition-colors">
+                                                <td class="py-3 px-3 font-mono text-slate-300">
+                                                    <span class="block font-bold text-white">${pay.eth_date || formatDisplayDate(pay.payment_date || pay.created_at)}</span>
+                                                </td>
+                                                <td class="py-3 px-3 font-mono font-bold text-cyan-300">${escapeHtml(pay.order?.order_number || '—')}</td>
+                                                <td class="py-3 px-3 font-semibold text-white">${escapeHtml(pay.customer?.full_name || '—')}</td>
+                                                <td class="py-3 px-3 text-slate-400">${escapeHtml(pay.payment_method || '—')}</td>
+                                                <td class="py-3 px-3 text-right font-black text-emerald-400 text-sm font-mono">
+                                                    ${parseFloat(pay.amount || 0).toLocaleString()} ETB
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         <!-- Recent Expenses & Payroll Table -->
                         <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
                             <div class="flex items-center justify-between pb-3 border-b border-slate-800">
@@ -3993,8 +4273,7 @@
                                         ` : expensesList.map(exp => `
                                             <tr class="hover:bg-slate-800/40 transition-colors">
                                                 <td class="py-3 px-3 font-mono text-slate-300">
-                                                    <span class="block font-bold text-white">${exp.eth_date || exp.date}</span>
-                                                    <span class="text-[10px] text-slate-500">${exp.date}</span>
+                                                    <span class="block font-bold text-white">${exp.eth_date || formatDisplayDate(exp.date)}</span>
                                                 </td>
                                                 <td class="py-3 px-3">
                                                     <span class="px-2.5 py-1 rounded-lg text-[10px] font-extrabold border ${exp.category === 'employee_payments' ? 'bg-amber-950/80 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}">
@@ -4009,7 +4288,7 @@
                                                     ${exp.entered_by?.name || 'አድሚን'}
                                                 </td>
                                                 <td class="py-3 px-3 text-right font-black ${exp.category === 'employee_payments' ? 'text-amber-400' : 'text-red-400'} text-sm font-mono">
-                                                    -${parseFloat(exp.amount).toLocaleString()} ETB
+                                                    ${parseFloat(exp.amount).toLocaleString()} ETB
                                                 </td>
                                             </tr>
                                         `).join('')}
@@ -4049,6 +4328,19 @@
                 { id: 5, code: 'home', name_am: 'የመኖሪያ ቤት ሙሉ ጥልቅ ፅዳት', name_en: 'Home Deep Cleaning', base_price: 2500, unit: 'ስራ' },
                 { id: 6, code: 'office', name_am: 'የቢሮ እና ተቋማት ፅዳት', name_en: 'Office Cleaning', base_price: 3500, unit: 'ስራ' },
             ];
+
+            // Fetch live teams too — the assign-team dropdown must list
+            // real teams from /api/teams, never hardcoded names.
+            try {
+                const teamRes = await apiFetch('/api/teams');
+                if (teamRes.ok) {
+                    const teamData = await teamRes.json();
+                    window._appTeamsList = Array.isArray(teamData) ? teamData : (teamData.data || []);
+                }
+            } catch (e) {
+                console.error('Failed to load teams:', e);
+            }
+            const teamsList = window._appTeamsList || [];
 
             const container = document.getElementById('generic-modal-container');
             container.innerHTML = `
@@ -4180,10 +4472,7 @@
                 <label class="block text-xs font-semibold text-emerald-400 mb-1"> የፅዳት ቡድን መድብ (Assign Cleaning Team)</label>
                                 <select id="mo-team-id" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-bold cursor-pointer">
                                     <option value="">-- በኋላ መድብ (Unassigned) --</option>
-                                    <option value="1">Team Alpha (Solomon Kebede - Upholstery & Carpet)</option>
-                                    <option value="2">Team Bravo (Rotary Scrub & Mattress)</option>
-                                    <option value="3">Team Delta (Facade & Post-Construction)</option>
-                                    <option value="4">team 1 (Company Shared Car)</option>
+                                    ${teamsList.length === 0 ? `<option value="" disabled>እስካሁን የተመዘገበ ቡድን የለም — መጀመሪያ ቡድን ይፍጠሩ</option>` : teamsList.map(t => `<option value="${t.id}">${escapeHtml(t.team_name || ('ቡድን #' + t.id))}${t.leader ? ' (' + escapeHtml(t.leader.name || '') + ')' : ''}</option>`).join('')}
                                 </select>
                             </div>
 
@@ -5077,20 +5366,20 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    alert('ወጪው በተሳካ ሁኔታ በዳታቤዝ ተመዝግቧል!');
+                    showToast('ወጪው በተሳካ ሁኔታ በዳታቤዝ ተመዝግቧል!', 'success');
                     closeModal();
                     loadActiveTab();
                 } else {
-                    alert('ስህተት: ' + (data.message || 'ወጪውን መመዝገብ አልተቻለም'));
+                    showToast('ስህተት: ' + (data.message || 'ወጪውን መመዝገብ አልተቻለም'), 'error');
                 }
             } catch (err) {
                 if (window.meashOffline && typeof window.meashOffline.enqueue === 'function') {
                     await window.meashOffline.enqueue('expense', 'create', payload);
-                    alert('Offline ስለሆኑ ወጪው በስልክዎ ላይ ተቀምጧል፤ ኢንተርኔት ሲመጣ Sync ይሆናል::');
+                    showToast('Offline ስለሆኑ ወጪው በስልክዎ ላይ ተቀምጧል፤ ኢንተርኔት ሲመጣ Sync ይሆናል።', 'info');
                     closeModal();
                     loadActiveTab();
                 } else {
-                    alert('የግንኙነት ስህተት: ' + err.message);
+                    showToast('የግንኙነት ስህተት: ' + err.message, 'error');
                 }
             } finally {
                 if (btn) btn.disabled = false;
@@ -5383,7 +5672,8 @@
                             </div>
                             <div>
                                 <label class="block text-slate-300 font-bold mb-1">የይለፍ ቃል (Password) *</label>
-                                <input type="password" id="new-emp-password" required minlength="6" placeholder="ቢያንስ 6 ፊደላት" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
+                                <input type="password" id="new-emp-password" required minlength="12" placeholder="ቢያንስ 12 ፊደላት — ትልቅ+ትንሽ ፊደል፣ ቁጥር እና ምልክት" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white">
+                                <p class="text-[10px] text-slate-500 mt-1">ቢያንስ 12 ፊደላት፣ ትልቅና ትንሽ ፊደል፣ ቁጥር እና ምልክት (ለምሳሌ ! @ #) መያዝ አለበት።</p>
                             </div>
                             <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
                                 <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl">ሰርዝ</button>
@@ -5405,12 +5695,24 @@
             btn.innerText = 'በመመዝገብ ላይ...';
 
             const usernameInput = document.getElementById('new-emp-username').value.trim();
+            const newPassword = document.getElementById('new-emp-password').value;
+            // Same 12-char + complexity rule as change-password (server
+            // enforces it too in TeamController::storeEmployee).
+            const pwOk = newPassword.length >= 12
+                && /[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword)
+                && /[0-9]/.test(newPassword) && /[^A-Za-z0-9]/.test(newPassword);
+            if (!pwOk) {
+                showToast('ይለፍ ቃሉ ቢያንስ 12 ፊደላት መሆን አለበት — ትልቅና ትንሽ ፊደል፣ ቁጥር እና ምልክት መያዝ አለበት።', 'error');
+                btn.disabled = false;
+                btn.innerText = 'መዝግብ';
+                return;
+            }
             const payload = {
                 name: document.getElementById('new-emp-name').value.trim(),
                 username: usernameInput,
                 phone: document.getElementById('new-emp-phone').value.trim(),
                 role: document.getElementById('new-emp-role').value,
-                password: document.getElementById('new-emp-password').value,
+                password: newPassword,
             };
 
             try {
@@ -5420,14 +5722,16 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-          alert(' አዲሱ ሰራተኛ በተሳካ ሁኔታ ተመዝግቧል!');
+                    showToast(' አዲሱ ሰራተኛ በተሳካ ሁኔታ ተመዝግቧል!', 'success');
                     closeModal();
                     loadActiveTab();
                 } else {
-                    alert('ስህተት: ' + (data.message || 'ሰራተኛውን መመዝገብ አልተቻለም'));
+                    let msg = data.message || 'ሰራተኛውን መመዝገብ አልተቻለም';
+                    if (data.errors) msg += ': ' + Object.values(data.errors).flat().join(' ');
+                    showToast('ስህተት: ' + msg, 'error');
                 }
             } catch (err) {
-                alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+                showToast('የሰርቨር ግንኙነት ችግር: ' + err.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'መዝግብ';
@@ -5764,7 +6068,7 @@
                                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                                     <span>${emp.is_active ? 'ንቁ ሰራተኛ' : 'የቦዘነ'}</span>
                                 </div>
-                                <span class="text-[10px] text-slate-400 block">ከ ${emp.created_at || '—'} ጀምሮ</span>
+                                <span class="text-[10px] text-slate-400 block">ከ ${emp.created_at ? formatDisplayDate(emp.created_at) : '—'} ጀምሮ</span>
                             </div>
                         </div>
 
@@ -5890,7 +6194,7 @@
                                     </td>
                                     <td class="p-3 text-slate-300 whitespace-nowrap">${w.subcity || '—'}</td>
                                     <td class="p-3 text-slate-300 text-[11px] max-w-xs truncate">${w.services || 'የፅዳት አገልግሎት'}</td>
-                                    <td class="p-3 font-mono text-slate-400 whitespace-nowrap">${w.appointment_date || '—'}</td>
+                                    <td class="p-3 font-mono text-slate-400 whitespace-nowrap">${w.appointment_date ? formatDisplayDate(w.appointment_date) : '—'}</td>
                                     <td class="p-3 text-center whitespace-nowrap">
                                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusBadges[w.status] || 'bg-slate-800 text-slate-400 border-slate-700'}">
                                             ${w.status === 'completed' ? 'የተጠናቀቀ' : (w.status === 'in_progress' ? 'በሂደት ላይ' : w.status)}
@@ -5999,7 +6303,7 @@
                                                     <h4 class="text-xs font-bold text-white">${escapeHtml(c.customer?.full_name || '')}</h4>
                                                     <span class="text-[9px] px-1.5 py-0.5 rounded-full uppercase font-bold ${c.status === 'resolved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}">${escapeHtml(c.status || '')}</span>
                                                 </div>
-                                                <p class="text-[10px] text-red-300 font-semibold mt-0.5">${escapeHtml(c.category || '')}: ${escapeHtml(c.description || '')}</p>
+                                                <p class="text-[10px] text-red-300 font-semibold mt-0.5">${escapeHtml(complaintCategoryLabel(c.category))}: ${escapeHtml(c.description || '')}</p>
                                             </div>
                                             <div class="flex items-center gap-1 shrink-0">
                         <button data-phone="${escapeHtml(c.customer?.phone || '')}" data-name="${escapeHtml(c.customer?.full_name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold"> SMS</button>
@@ -6142,13 +6446,13 @@
                 const res = await apiFetch('/api/care/followups/generate', { method: 'POST' });
                 const data = await res.json();
                 if (res.ok) {
-                    alert(data.message || 'የክትትል መዝገቦች ተፈጥረዋል።');
+                    showToast(data.message || 'የክትትል መዝገቦች ተፈጥረዋል።', (data.created || 0) > 0 ? 'success' : 'info');
                     loadActiveTab();
                 } else {
-                    alert('ስህተት: ' + (data.message || 'ክትትል መፍጠር አልተቻለም'));
+                    showToast('ስህተት: ' + (data.message || 'ክትትል መፍጠር አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ስህተት: ' + err.message);
+                showToast('የግንኙነት ስህተት: ' + err.message, 'error');
             }
         }
 
@@ -6171,14 +6475,14 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-          alert(' ቅሬታው ተመዝግቧል! ወደ ቅሬታዎች ዝርዝር ታክሏል።');
+          showToast(' ቅሬታው ተመዝግቧል! ወደ ቅሬታዎች ዝርዝር ታክሏል።', 'success');
                     closeModal();
                     loadActiveTab();
                 } else {
-          alert(' ስህተት: ' + (data.message || 'ቅሬታውን መመዝገብ አልተቻለም'));
+          showToast(' ስህተት: ' + (data.message || 'ቅሬታውን መመዝገብ አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ስህተት: ' + err.message);
+                showToast('የግንኙነት ስህተት: ' + err.message, 'error');
             }
         }
 
@@ -6238,6 +6542,7 @@
 
         function switchMarketingTab(tab) {
             currentMarketingTab = tab;
+            try { localStorage.setItem('meash_marketing_tab', tab); } catch (_) {}
             if (smsProgressInterval) {
                 clearInterval(smsProgressInterval);
                 smsProgressInterval = null;
@@ -6269,6 +6574,18 @@
             }
         }
 
+        // Single source of truth for a recipient's tag category — the same
+        // priority the row badge uses, and the same predicates the server
+        // counts in tag_counts. Pill counts, badge labels and filters must
+        // all agree, so they all derive from this function.
+        function recipientTagOf(u) {
+            const tags = (u.tags || '').toLowerCase();
+            if (tags.includes('comment waiting') || u.lifecycle_stage === 'comment_waiting') return 'comment_waiting';
+            if (tags.includes('outdoor') || u.source === 'outdoor_sales') return 'outdoor_sales';
+            if (tags.includes('imported') || u.source === 'imported' || u.source === 'bulk_import' || u.source === 'system_user') return 'imported_contacts';
+            return 'normal_active';
+        }
+
         async function loadAndRenderBroadcastCenter() {
             const subContainer = document.getElementById('marketing-subtab-container');
             if (!subContainer) return;
@@ -6278,7 +6595,12 @@
                 const data = await res.json();
                 broadcastRecipientsList = data.users || [];
 
-                excludedBroadcastIds.clear();
+                // Rebuild exclusions from the server data — never just clear
+                // them: a plain re-render used to silently un-exclude every
+                // friend/family contact.
+                excludedBroadcastIds = new Set(
+                    broadcastRecipientsList.filter(u => u.is_excluded).map(u => String(u.id))
+                );
 
                 renderBroadcastCenterView(subContainer, data);
             } catch (e) {
@@ -6287,12 +6609,22 @@
         }
 
         function renderBroadcastCenterView(container, data) {
-            const totalCount = data.total_count || broadcastRecipientsList.length;
-            const activeCount = data.active_count || totalCount;
-            const withPhoneCount = data.with_phone_count || broadcastRecipientsList.filter(u => u.phone).length;
-            const withTgCount = data.with_telegram_count || broadcastRecipientsList.filter(u => u.telegram_id).length;
-            const eligibleCount = totalCount;
+            // ALL counters derive from the same list that is rendered —
+            // never from separate server aggregates: total_count was global
+            // while the list could be filtered (header said 9 for 8 rows),
+            // and the tag pills overlapped (5 + 4 = 9 for 8 rows) because
+            // each pill counted a different predicate.
+            const totalCount = broadcastRecipientsList.length;
+            const excludedCount = broadcastRecipientsList.filter(u => u.is_excluded).length;
+            const eligibleCount = Math.max(0, totalCount - excludedCount);
+            const withPhoneCount = broadcastRecipientsList.filter(u => u.phone).length;
+            // "Telegram" means what the table displays: a numeric telegram_id
+            // OR a @username handle (username-only contacts were excluded).
+            const withTgCount = broadcastRecipientsList.filter(u => u.telegram_id || u.username).length;
+            const tagCounts = { normal_active: 0, comment_waiting: 0, imported_contacts: 0, outdoor_sales: 0 };
+            broadcastRecipientsList.forEach(u => { tagCounts[recipientTagOf(u)]++; });
             const botUsername = data.bot_username || 'meash_cleaning_solution_bot';
+            const bulkDeleteArmed = !!window._broadcastDeleteArmed['bulk-delete'];
 
             container.innerHTML = `
                 <!-- Statistics Cards: Clean 4 Metrics without Friend Exclusions -->
@@ -6318,7 +6650,7 @@
                     <div class="p-4 rounded-2xl bg-slate-900 border border-blue-500/30 space-y-1 shadow-lg">
                         <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider block">ስልክ ያላቸው (SMS)</span>
                         <div class="flex items-baseline gap-1.5">
-                            <span class="text-2xl font-black text-blue-400 font-mono">${withPhoneCount.toLocaleString()}</span>
+                            <span class="text-2xl font-black text-blue-400 font-mono" id="stat-phone-count">${withPhoneCount.toLocaleString()}</span>
                             <span class="text-[10px] text-slate-500">ስልኮች</span>
                         </div>
                         <p class="text-[10px] text-slate-400 truncate">ለቀጥታ SMS ዝግጁ</p>
@@ -6327,7 +6659,7 @@
                     <div class="p-4 rounded-2xl bg-slate-900 border border-teal-500/30 space-y-1 shadow-lg">
                         <span class="text-[10px] font-bold text-teal-400 uppercase tracking-wider block">ቴሌግራም ያላቸው</span>
                         <div class="flex items-baseline gap-1.5">
-                            <span class="text-2xl font-black text-teal-400 font-mono">${withTgCount.toLocaleString()}</span>
+                            <span class="text-2xl font-black text-teal-400 font-mono" id="stat-tg-count">${withTgCount.toLocaleString()}</span>
                             <span class="text-[10px] text-slate-500">ተጠቃሚዎች</span>
                         </div>
                         <p class="text-[10px] text-slate-400 truncate">ለቦት ስርጭት ዝግጁ</p>
@@ -6417,9 +6749,9 @@
 
                         <!-- Bulk Actions Toolbar -->
                         <div class="flex flex-wrap items-center gap-2 text-xs">
-                            <button type="button" onclick="bulkActionContacts('delete', this)" class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 font-bold flex items-center gap-1 cursor-pointer transition">
+                            <button type="button" onclick="bulkActionContacts('delete', this)" class="px-3 py-1.5 rounded-xl ${bulkDeleteArmed ? 'bg-red-600 text-white' : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300'} border border-rose-500/30 font-bold flex items-center gap-1 cursor-pointer transition">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                <span>በቋሚነት ሰርዝ (Delete)</span>
+                                <span>${bulkDeleteArmed ? 'እርግጠኛ ነህ? እንደገና ጠቅ አድርግ' : 'በቋሚነት ሰርዝ (Delete)'}</span>
                             </button>
                             <button type="button" onclick="exportContactsCsv()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl flex items-center gap-1 cursor-pointer transition border border-slate-700">
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
@@ -6444,10 +6776,10 @@
                     <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/80 text-xs">
                         <span class="text-slate-400 font-bold text-[11px] mr-1">አጣራ (Tags)፦</span>
                         <button type="button" onclick="filterBroadcastTable('all')" id="pill-filter-all" class="px-3 py-1 rounded-xl font-bold bg-cyan-600 text-white transition cursor-pointer">ሁሉም (${totalCount.toLocaleString()})</button>
-                        <button type="button" onclick="filterBroadcastTable('normal_active')" id="pill-filter-normal_active" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Normal Active (${(data.tag_counts?.normal_active || 0).toLocaleString()})</button>
-                        <button type="button" onclick="filterBroadcastTable('comment_waiting')" id="pill-filter-comment_waiting" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Comment Waiting (${(data.tag_counts?.comment_waiting || 0).toLocaleString()})</button>
-                        <button type="button" onclick="filterBroadcastTable('imported_contacts')" id="pill-filter-imported_contacts" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Imported Contacts (${(data.tag_counts?.imported_contacts || 0).toLocaleString()})</button>
-                        <button type="button" onclick="filterBroadcastTable('outdoor_sales')" id="pill-filter-outdoor_sales" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Outdoor Sales (${(data.tag_counts?.outdoor_sales || 0).toLocaleString()})</button>
+                        <button type="button" onclick="filterBroadcastTable('normal_active')" id="pill-filter-normal_active" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Normal Active (${tagCounts.normal_active.toLocaleString()})</button>
+                        <button type="button" onclick="filterBroadcastTable('comment_waiting')" id="pill-filter-comment_waiting" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Comment Waiting (${tagCounts.comment_waiting.toLocaleString()})</button>
+                        <button type="button" onclick="filterBroadcastTable('imported_contacts')" id="pill-filter-imported_contacts" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Imported Contacts (${tagCounts.imported_contacts.toLocaleString()})</button>
+                        <button type="button" onclick="filterBroadcastTable('outdoor_sales')" id="pill-filter-outdoor_sales" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">Outdoor Sales (${tagCounts.outdoor_sales.toLocaleString()})</button>
                         <button type="button" onclick="filterBroadcastTable('with_phone')" id="pill-filter-phone" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">ስልክ (SMS) (${withPhoneCount.toLocaleString()})</button>
                         <button type="button" onclick="filterBroadcastTable('with_tg')" id="pill-filter-tg" class="px-3 py-1 rounded-xl font-semibold bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer">ቴሌግራም (${withTgCount.toLocaleString()})</button>
                     </div>
@@ -6476,6 +6808,13 @@
                 </div>
             `;
             lucide.createIcons();
+            // Keep the header checkbox in sync with the preserved selection
+            // (selection survives re-renders via selectedContactIds).
+            const headerCb = document.getElementById('broadcast-select-all-cb');
+            if (headerCb) {
+                headerCb.checked = broadcastRecipientsList.length > 0
+                    && broadcastRecipientsList.every(u => selectedContactIds.has(Number(u.id)));
+            }
         }
 
         function renderBroadcastTableRowsHtml(usersList) {
@@ -6495,9 +6834,16 @@
                 const tagsStr = (u.tags || '').toLowerCase();
                 const searchTokens = `${u.name || ''} ${u.username || ''} ${u.phone || ''} ${u.telegram_id || ''} ${u.source || ''} ${u.tags || ''}`.toLowerCase();
                 const sourceBadge = formatRecipientSourceBadge(u.source, u.tags, u.lifecycle_stage);
+                // "Telegram" is telegram_id OR @username — the same rule the
+                // count uses (username-only rows show a handle).
+                const hasTg = !!(u.telegram_id || u.username);
+                // Armed delete state survives re-renders: the flag lives in
+                // window._broadcastDeleteArmed, and the re-rendered button
+                // must look armed again, or the confirm tap just re-arms.
+                const isArmed = !!window._broadcastDeleteArmed[u.id];
 
                 return `
-                <tr id="bc-row-${u.id}" data-id="${u.id}" data-tokens="${encodeURIComponent(searchTokens)}" data-tags="${encodeURIComponent(tagsStr)}" data-lifecycle="${u.lifecycle_stage || ''}" data-excluded="${isExcluded ? '1' : '0'}" data-has-phone="${u.phone ? '1' : '0'}" data-has-tg="${u.telegram_id ? '1' : '0'}" class="hover:bg-slate-800/40 transition ${isExcluded ? 'opacity-45 bg-slate-950/40' : ''}">
+                <tr id="bc-row-${u.id}" data-id="${u.id}" data-tokens="${encodeURIComponent(searchTokens)}" data-tags="${encodeURIComponent(tagsStr)}" data-tag="${recipientTagOf(u)}" data-lifecycle="${u.lifecycle_stage || ''}" data-excluded="${isExcluded ? '1' : '0'}" data-has-phone="${u.phone ? '1' : '0'}" data-has-tg="${hasTg ? '1' : '0'}" class="hover:bg-slate-800/40 transition ${isExcluded ? 'opacity-45 bg-slate-950/40' : ''}">
                     <td class="p-3 text-center">
                         <input type="checkbox" id="bc-cb-${u.id}" ${isChecked ? 'checked' : ''} onchange="toggleSelectContactRow(${u.id}, this.checked)" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0 cursor-pointer">
                     </td>
@@ -6524,7 +6870,7 @@
                             <button type="button" onclick="openEditRecipientModal(${u.id})" class="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 transition cursor-pointer" title="አስተካክል (Edit)">
                                 <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                             </button>
-                            <button type="button" onclick="deleteSingleRecipient(${u.id}, '${encodeURIComponent(u.name || '')}', this)" class="p-1 rounded-lg bg-slate-800 hover:bg-rose-900/40 text-rose-400 transition cursor-pointer" title="በቋሚነት ሰርዝ (Delete)">
+                            <button type="button" onclick="deleteSingleRecipient(${u.id}, '${encodeURIComponent(u.name || '')}', this)" class="p-1 rounded-lg ${isArmed ? 'bg-red-600 text-white' : 'bg-slate-800 hover:bg-rose-900/40 text-rose-400'} transition cursor-pointer" title="${isArmed ? 'እርግጠኛ ነህ? እንደገና ጠቅ አድርግ' : 'በቋሚነት ሰርዝ (Delete)'}">
                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                             </button>
                         </div>
@@ -6590,22 +6936,24 @@
             const rows = document.querySelectorAll('#broadcast-table-body tr[data-tokens]');
             rows.forEach(r => {
                 const tokens = decodeURIComponent(r.getAttribute('data-tokens') || '');
-                const tags = decodeURIComponent(r.getAttribute('data-tags') || '');
-                const lifecycle = r.getAttribute('data-lifecycle') || '';
                 const hasPhone = r.getAttribute('data-has-phone') === '1';
                 const hasTg = r.getAttribute('data-has-tg') === '1';
+                // Category comes from the same single tag derivation as the
+                // badge and the pills (data-tag), so the filter, the badge
+                // and the pill counts can never disagree.
+                const rowTag = r.getAttribute('data-tag') || '';
 
                 const matchesSearch = !broadcastSearchQuery || tokens.includes(broadcastSearchQuery);
                 let matchesCategory = true;
 
                 if (currentRecipientFilter === 'normal_active') {
-                    matchesCategory = tags.includes('normal active') || lifecycle === 'normal_active';
+                    matchesCategory = rowTag === 'normal_active';
                 } else if (currentRecipientFilter === 'comment_waiting') {
-                    matchesCategory = tags.includes('comment waiting') || lifecycle === 'comment_waiting';
+                    matchesCategory = rowTag === 'comment_waiting';
                 } else if (currentRecipientFilter === 'imported_contacts') {
-                    matchesCategory = tags.includes('imported') || tokens.includes('imported') || tokens.includes('system_user');
+                    matchesCategory = rowTag === 'imported_contacts';
                 } else if (currentRecipientFilter === 'outdoor_sales') {
-                    matchesCategory = tags.includes('outdoor') || tokens.includes('outdoor_sales');
+                    matchesCategory = rowTag === 'outdoor_sales';
                 } else if (currentRecipientFilter === 'with_phone') {
                     matchesCategory = hasPhone;
                 } else if (currentRecipientFilter === 'with_tg') {
@@ -6685,7 +7033,7 @@
         async function bulkActionContacts(action, btn) {
             const ids = Array.from(selectedContactIds);
             if (ids.length === 0) {
-                alert('እባክዎ መጀመሪያ ከሰንጠረዡ ውስጥ ደንበኞችን በቼክቦክስ ይምረጡ!');
+                showToast('እባክዎ መጀመሪያ ከሰንጠረዡ ውስጥ ደንበኞችን በቼክቦክስ ይምረጡ!', 'error');
                 return;
             }
 
@@ -6717,14 +7065,14 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    alert(' ' + data.message);
+                    showToast(' ' + data.message, 'success');
                     selectedContactIds.clear();
                     await loadAndRenderBroadcastCenter();
                 } else {
-                    alert('ስህተት፡ ' + (data.message || 'እርምጃውን ማጠናቀቅ አልተቻለም'));
+                    showToast('ስህተት፡ ' + (data.message || 'እርምጃውን ማጠናቀቅ አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('የኔትወርክ ስህተት፡ ' + err.message);
+                showToast('የኔትወርክ ስህተት፡ ' + err.message, 'error');
             } finally {
                 if (btn && btn.isConnected) {
                     btn.classList.remove('bg-red-600', 'text-white');
@@ -6766,11 +7114,12 @@
                     selectedContactIds.delete(Number(id));
                     broadcastRecipientsList = broadcastRecipientsList.filter(u => u.id != id);
                     updateBroadcastCountersDom();
+                    showToast(`"${name}" ከዝርዝሩ ተሰርዟል።`, 'success');
                 } else {
-                    alert('ስህተት፡ ' + (data.message || 'መሰረዝ አልተቻለም'));
+                    showToast('ስህተት፡ ' + (data.message || 'መሰረዝ አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('ስህተት፡ ' + err.message);
+                showToast('ስህተት፡ ' + err.message, 'error');
             }
         }
 
@@ -6812,23 +7161,37 @@
             }
         }
 
-        // Update counters without re-rendering page
+        // Update counters without re-rendering the page — recompute
+        // EVERYTHING from broadcastRecipientsList, the same list the
+        // table renders from: stat cards, send/excluded/selected labels
+        // AND the filter pills. (Pills used to keep stale server counts
+        // after a delete/import, e.g. "Normal Active (5)" + "Imported
+        // Contacts (4)" for 8 rows all showing Normal Active.)
         function updateBroadcastCountersDom() {
             const totalCount = broadcastRecipientsList.length;
-            const excludedCount = excludedBroadcastIds.size;
+            const excludedCount = broadcastRecipientsList.filter(u => u.is_excluded).length;
             const eligibleCount = Math.max(0, totalCount - excludedCount);
+            const withPhoneCount = broadcastRecipientsList.filter(u => u.phone).length;
+            const withTgCount = broadcastRecipientsList.filter(u => u.telegram_id || u.username).length;
+            const tagCounts = { normal_active: 0, comment_waiting: 0, imported_contacts: 0, outdoor_sales: 0 };
+            broadcastRecipientsList.forEach(u => { tagCounts[recipientTagOf(u)]++; });
 
-            const elEligible = document.getElementById('stat-eligible-count');
-            const elExcluded = document.getElementById('stat-excluded-count');
-            const elLabelSend = document.getElementById('label-send-count');
-            const elLabelExcluded = document.getElementById('label-excluded-count');
-            const elSelected = document.getElementById('label-selected-count');
-
-            if (elEligible) elEligible.textContent = eligibleCount.toLocaleString();
-            if (elExcluded) elExcluded.textContent = excludedCount.toLocaleString();
-            if (elSelected) elSelected.textContent = selectedContactIds.size.toLocaleString();
-            if (elLabelSend) elLabelSend.textContent = eligibleCount.toLocaleString();
-            if (elLabelExcluded) elLabelExcluded.textContent = excludedCount.toLocaleString();
+            const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+            setText('stat-total-count', totalCount.toLocaleString());
+            setText('stat-eligible-count', eligibleCount.toLocaleString());
+            setText('stat-phone-count', withPhoneCount.toLocaleString());
+            setText('stat-tg-count', withTgCount.toLocaleString());
+            setText('stat-excluded-count', excludedCount.toLocaleString());
+            setText('label-send-count', eligibleCount.toLocaleString());
+            setText('label-excluded-count', excludedCount.toLocaleString());
+            setText('label-selected-count', selectedContactIds.size.toLocaleString());
+            setText('pill-filter-all', `ሁሉም (${totalCount.toLocaleString()})`);
+            setText('pill-filter-normal_active', `Normal Active (${tagCounts.normal_active.toLocaleString()})`);
+            setText('pill-filter-comment_waiting', `Comment Waiting (${tagCounts.comment_waiting.toLocaleString()})`);
+            setText('pill-filter-imported_contacts', `Imported Contacts (${tagCounts.imported_contacts.toLocaleString()})`);
+            setText('pill-filter-outdoor_sales', `Outdoor Sales (${tagCounts.outdoor_sales.toLocaleString()})`);
+            setText('pill-filter-phone', `ስልክ (SMS) (${withPhoneCount.toLocaleString()})`);
+            setText('pill-filter-tg', `ቴሌግራም (${withTgCount.toLocaleString()})`);
         }
 
         // Apply templates into in-page message writer
@@ -6852,14 +7215,16 @@
             }
         }
 
-        // In-page Submit Telegram Broadcast
+        // In-page Submit Telegram Broadcast — two-tap confirm (no native
+        // confirm(): automated browsers auto-dismiss it, so the button
+        // looked like a silent no-op — the confirm tap never happened).
         async function submitInPageBroadcast() {
             const totalCount = broadcastRecipientsList.length;
             const excludedCount = excludedBroadcastIds.size;
             const eligibleCount = Math.max(0, totalCount - excludedCount);
 
             if (eligibleCount === 0) {
-                alert('እባክዎ ቢያንስ አንድ ተቀባይ ይምረጡ (ሁሉም ተጠቃሚዎች ተገልለዋል)!');
+                showToast('እባክዎ ቢያንስ አንድ ተቀባይ ይምረጡ (ሁሉም ተጠቃሚዎች ተገልለዋል)!', 'error');
                 return;
             }
 
@@ -6867,16 +7232,25 @@
             const message = (document.getElementById('inpage-bc-message')?.value || '').trim();
 
             if (!title || !message) {
-                alert('እባክዎ የማስታወቂያውን ርዕስ እና መልእክት ያስገቡ!');
+                showToast('እባክዎ የማስታወቂያውን ርዕስ እና መልእክት ያስገቡ!', 'error');
                 return;
             }
 
-            if (!confirm(`ለመረጧቸው ${eligibleCount} ደንበኞች መልእክቱ አሁን በይፋዊው ቴሌግራም ቦት ይላክ?`)) {
-                return;
-            }
-
+            // First tap arms the button; second tap within 4 seconds sends.
             const btn = document.getElementById('btn-inpage-send');
             const btnText = document.getElementById('btn-inpage-send-text');
+            if (!window._broadcastSendArmed) {
+                window._broadcastSendArmed = true;
+                if (btnText) btnText.innerHTML = `እርግጠኛ ነህ? ለ ${eligibleCount} ደንበኞች ላክ — እንደገና ጠቅ አድርግ`;
+                showToast(`ለ ${eligibleCount} ደንበኞች ለመላክ እንደገና ጠቅ ያድርጉ።`, 'info');
+                setTimeout(() => {
+                    window._broadcastSendArmed = false;
+                    if (btnText && btnText.isConnected) btnText.innerHTML = `በቴሌግራም ቦት ላክ`;
+                }, 4000);
+                return;
+            }
+            window._broadcastSendArmed = false;
+
             if (btn) btn.disabled = true;
             if (btnText) btnText.innerHTML = `<span class="animate-spin mr-1"></span> በመላክ ላይ...`;
 
@@ -6891,12 +7265,13 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    alert(' ' + data.message);
+                    showToast(' ' + data.message, 'success');
+                    loadAndRenderBroadcastCenter();
                 } else {
-                    alert('ስህተት፡ ' + (data.message || 'መላክ አልተቻለም'));
+                    showToast('ስህተት፡ ' + (data.message || 'መላክ አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('የኔትወርክ ስህተት፡ ' + err.message);
+                showToast('የኔትወርክ ስህተት፡ ' + err.message, 'error');
             } finally {
                 if (btn) btn.disabled = false;
                 if (btnText) btnText.innerHTML = `በቴሌግራም ቦት ላክ`;
@@ -7692,7 +8067,7 @@
         async function saveOwnerPhone() {
             const input = document.getElementById('setting-owner-phone');
             const phone = (input?.value || '').trim();
-            if (!phone) { alert('እባክዎ የባለቤቱን ስልክ ቁጥር ያስገቡ።'); return; }
+            if (!phone) { showToast('እባክዎ የባለቤቱን ስልክ ቁጥር ያስገቡ።', 'error'); return; }
             const btn = document.getElementById('btn-save-owner-phone');
             if (btn) btn.disabled = true;
             try {
@@ -7703,12 +8078,12 @@
                 });
                 const d = await res.json();
                 if (res.ok) {
-                    alert('የባለቤቱ ስልክ ቁጥር ተቀምጧል!');
+                    showToast('የባለቤቱ ስልክ ቁጥር ተቀምጧል!', 'success');
                 } else {
-                    alert('ስህተት: ' + (d.message || 'ማስቀመጥ አልተቻለም'));
+                    showToast('ስህተት: ' + (d.message || 'ማስቀመጥ አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ስህተት: ' + err.message);
+                showToast('የግንኙነት ስህተት: ' + err.message, 'error');
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -7718,8 +8093,8 @@
             const current = document.getElementById('setting-current-password')?.value || '';
             const next = document.getElementById('setting-new-password')?.value || '';
             const confirmPw = document.getElementById('setting-new-password-confirm')?.value || '';
-            if (!current || !next) { alert('እባክዎ የአሁኑን እና አዲሱን ይለፍ ቃል ያስገቡ።'); return; }
-            if (next !== confirmPw) { alert('አዲሱ ይለፍ ቃል እና ማረጋገጫው አይዛመዱም።'); return; }
+            if (!current || !next) { showToast('እባክዎ የአሁኑን እና አዲሱን ይለፍ ቃል ያስገቡ።', 'error'); return; }
+            if (next !== confirmPw) { showToast('አዲሱ ይለፍ ቃል እና ማረጋገጫው አይዛመዱም።', 'error'); }
             const btn = document.getElementById('btn-change-password');
             if (btn) btn.disabled = true;
             try {
@@ -7736,14 +8111,14 @@
                     document.getElementById('setting-current-password').value = '';
                     document.getElementById('setting-new-password').value = '';
                     document.getElementById('setting-new-password-confirm').value = '';
-                    alert(d.message || 'የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል!');
+                    showToast(d.message || 'የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል!', 'success');
                 } else {
                     let msg = d.message || 'ይለፍ ቃል መቀየር አልተቻለም';
                     if (d.errors) msg += ': ' + Object.values(d.errors).flat().join(' ');
-                    alert(msg);
+                    showToast(msg, 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ስህተት: ' + err.message);
+                showToast('የግንኙነት ስህተት: ' + err.message, 'error');
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -7861,12 +8236,12 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert(' ' + data.message);
+                    showToast(' ' + data.message, 'success');
                 } else {
-                    alert(' ' + (data.message || 'መልእክት መላክ አልተቻለም'));
+                    showToast(' ' + (data.message || 'መልእክት መላክ አልተቻለም'), 'error');
                 }
             } catch (e) {
-                alert('የኔትወርክ ስህተት፡ ' + e.message);
+                showToast('የኔትወርክ ስህተት፡ ' + e.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5 text-sky-400"></i><span>የሙከራ መልእክት ላክ</span>';
@@ -7931,7 +8306,15 @@
         // ==========================================
         // 10c. WEBSITE & CMS CONTENT MANAGER (NEW)
         // ==========================================
-        let currentCmsSubTab = 'services';
+        // CMS sub-tab persists across re-renders / session bounces, like
+        // the Marketing sub-tab: a bounce must not dump the admin back on
+        // the dashboard (or the services tab) mid-work.
+        let currentCmsSubTab = (() => {
+            try {
+                const t = localStorage.getItem('meash_cms_tab');
+                return ['services', 'contact', 'reviews', 'about', 'photos'].includes(t) ? t : 'services';
+            } catch (_) { return 'services'; }
+        })();
         let cmsServicesData = [];
         let cmsSettingsData = {};
         let cmsFeedbacksData = [];
@@ -7999,6 +8382,7 @@
 
         async function switchCmsTab(tab) {
             currentCmsSubTab = tab;
+            try { localStorage.setItem('meash_cms_tab', tab); } catch (_) {}
             ['services', 'contact', 'reviews', 'about', 'photos'].forEach(t => {
                 const btn = document.getElementById(`btn-cms-${t}`);
                 if (btn) {
@@ -8019,7 +8403,7 @@
             if (currentCmsSubTab === 'services') {
                 container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">አገልግሎቶችን በመጫን ላይ...</div>`;
                 try {
-                    const res = await apiFetch('/api/services/all');
+                    const res = await apiFetch('/api/services/all', { noStaleCache: true });
                     cmsServicesData = await res.json();
                     renderCmsServicesTab(container);
                 } catch (e) {
@@ -8028,7 +8412,7 @@
             } else if (currentCmsSubTab === 'contact') {
                 container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">ቅንብሮችን በመጫን ላይ...</div>`;
                 try {
-                    const res = await apiFetch('/api/admin/website/settings');
+                    const res = await apiFetch('/api/admin/website/settings', { noStaleCache: true });
                     const d = await res.json();
                     cmsSettingsData = d.settings || {};
                     renderCmsContactTab(container);
@@ -8144,7 +8528,7 @@
             if (!input) return;
             const newPrice = parseFloat(input.value);
             if (isNaN(newPrice) || newPrice < 0) {
-                alert('እባክዎ ትክክለኛ የዋጋ መጠን ያስገቡ።');
+                showToast('እባክዎ ትክክለኛ የዋጋ መጠን ያስገቡ።', 'error');
                 return;
             }
 
@@ -8156,13 +8540,13 @@
                 });
                 const d = await res.json();
                 if (res.ok) {
-                    alert('የአገልግሎት ዋጋው በተሳካ ሁኔታ ተዘምኗል!');
+                    showToast('የአገልግሎት ዋጋው በተሳካ ሁኔታ ተዘምኗል!', 'success');
                     loadCmsTabData();
                 } else {
-                    alert('ስህተት፡ ' + (d.message || 'ዋጋ ማስተካከል አልተቻለም'));
+                    showToast('ስህተት፡ ' + (d.message || 'ዋጋ ማስተካከል አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ችግር፡ ' + err.message);
+                showToast('የግንኙነት ችግር፡ ' + err.message, 'error');
             }
         }
 
@@ -8608,13 +8992,13 @@
                 });
                 const d = await res.json();
                 if (res.ok) {
-                    alert('ሁሉም የስርዓቱ እና የድረ-ገጹ ቅንብሮች በተሳካ ሁኔታ ተመዝግበዋል!');
+                    showToast('ሁሉም የስርዓቱ እና የድረ-ገጹ ቅንብሮች በተሳካ ሁኔታ ተመዝግበዋል!', 'success');
                     cmsSettingsData = d.settings || payload;
                 } else {
-                    alert('ስህተት፡ ' + (d.message || 'ማስቀመጥ አልተቻለም'));
+                    showToast('ስህተት፡ ' + (d.message || 'ማስቀመጥ አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ችግር፡ ' + err.message);
+                showToast('የግንኙነት ችግር፡ ' + err.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'ቅንብሮችን መዝግብ (Save All Settings)';
@@ -8657,7 +9041,7 @@
                                         </td>
                                         <td class="p-3.5">
                                             <div class="flex text-amber-400">
-                        ${''.repeat(f.rating || 5)}${''.repeat(5 - (f.rating || 5))}
+                                                ${'⭐'.repeat(Math.max(0, Math.min(5, f.rating || 5)))}${'☆'.repeat(Math.max(0, 5 - (f.rating || 5)))}
                                             </div>
                                         </td>
                                         <td class="p-3.5 max-w-xs truncate text-slate-300" title="${f.comment || ''}">
@@ -8766,16 +9150,16 @@
                     body: JSON.stringify(payload)
                 });
                 if (res.ok) {
-                    alert('አስተያየቱ በተሳካ ሁኔታ ተመዝግቦ በድረ-ገጹ እንዲታይ ተደርጓል!');
+                    showToast('አስተያየቱ በተሳካ ሁኔታ ተመዝግቦ በድረ-ገጹ እንዲታይ ተደርጓል!', 'success');
                     document.getElementById('cms-add-review-modal')?.remove();
                     loadCmsTabData();
                 } else {
                     let msg = 'ስህተት ተፈጥሯል';
                     try { const d = await res.json(); msg = d.message || msg; } catch (_) {}
-                    alert(msg);
+                    showToast(msg, 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ችግር፡ ' + err.message);
+                showToast('የግንኙነት ችግር፡ ' + err.message, 'error');
             }
         }
 
@@ -8830,10 +9214,10 @@
                     body: JSON.stringify(payload)
                 });
                 if (res.ok) {
-                    alert('የድርጅቱ መግለጫ ጽሁፎች በተሳካ ሁኔታ ተዘምነዋል!');
+                    showToast('የድርጅቱ መግለጫ ጽሁፎች በተሳካ ሁኔታ ተዘምነዋል!', 'success');
                 }
             } catch (err) {
-                alert('የግንኙነት ችግር፡ ' + err.message);
+                showToast('የግንኙነት ችግር፡ ' + err.message, 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'መግለጫውን መዝግብ (Save About Text)';
@@ -9196,7 +9580,7 @@
                                         <div>
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <span class="text-xs font-bold text-cyan-400">${a.eth_date || EC.formatEth(a.appointment_date)}</span>
-                                                <span class="text-[10px] text-slate-400 font-normal">(${a.appointment_date || '—'})</span>
+                                                <span class="text-[10px] text-slate-400 font-normal">(${a.appointment_date ? formatDisplayDate(a.appointment_date) : '—'})</span>
                                                 <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-700/80 text-cyan-300 font-bold">${formatTimeSlot(a.appointment_time_slot || a.order?.appointment_time_slot)}</span>
                                                 ${a.order?.order_number ? `<span class="text-xs font-bold text-white font-mono">${escapeHtml(a.order.order_number)}</span>` : ''}
                                                 ${getChannelBadge(a.order?.source)}
@@ -9208,7 +9592,7 @@
                                         <div class="flex items-center gap-2 self-end sm:self-auto">
                                             <span class="px-3 py-1 rounded-full text-xs font-bold uppercase ${a.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-500/20 text-cyan-400'}">${a.status}</span>
                                             ${a.order?.id ? `
-                                                <button onclick="openOrderDetailsModal(${a.order.id})" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded-lg transition cursor-pointer">ዝርዝር</button>
+                                                <button onclick="openOrderDetailsModal(${a.order.id}, this)" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded-lg transition cursor-pointer">ዝርዝር</button>
                                             ` : ''}
                                         </div>
                                     </div>
@@ -9375,7 +9759,8 @@
             }
         }
 
-        async function openOrderDetailsModal(orderId) {
+        async function openOrderDetailsModal(orderId, btn) {
+            setOrderRowBusy(orderId, true);
             const container = document.getElementById('generic-modal-container');
             container.innerHTML = '<div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center text-white"><i data-lucide="loader-2" class="w-8 h-8 animate-spin text-cyan-400"></i></div>';
             lucide.createIcons();
@@ -9408,7 +9793,7 @@
                                     </div>
                                     <div>
                                         <span class="text-slate-400 block text-[11px]">Schedule & መገኛ</span>
-                                        <strong class="text-white">${o.eth_appointment_date || o.appointment_date} (${formatTimeSlot(o.appointment_time_slot)})</strong>
+                                        <strong class="text-white">${o.eth_appointment_date || (o.appointment_date ? formatDisplayDate(o.appointment_date) : '—')} (${formatTimeSlot(o.appointment_time_slot)})</strong>
                                         <p class="text-slate-400 text-[11px]">${o.address || o.customer?.address}</p>
                                         ${(o.latitude && o.longitude) ? `
                                             <div class="mt-2 text-xs text-cyan-400 font-semibold flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i><span>አድራሻ: ${o.address || o.customer?.address || 'አዲስ አበባ'}</span></div>
@@ -9444,6 +9829,27 @@
                                     </div>
                                     <span>የተመደበ ሰራተኛ/ቡድን: <strong class="text-cyan-300">${o.assigned_team?.team_name || 'አልተመደበም'}</strong></span>
                                 </div>
+
+                                <!-- Payment history (net of refunds) -->
+                                <div>
+                                    <h4 class="font-bold text-slate-300 mb-2">የክፍያ ታሪክ (Payment History):</h4>
+                                    ${(o.payments || []).length === 0 ? `
+                                        <p class="p-3 rounded-xl bg-slate-800/60 text-slate-500 italic">እስካሁን የተመዘገበ ክፍያ የለም።</p>
+                                    ` : `
+                                        <div class="space-y-1.5">
+                                            ${(o.payments || []).map(p => `
+                                                <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/60 text-slate-200">
+                                                    <span>${escapeHtml(p.payment_method || p.method || 'ክፍያ')} <span class="text-slate-400 text-[11px]">· ${p.eth_date || formatDisplayDate(p.payment_date || p.created_at)}</span></span>
+                                                    <span class="font-bold text-emerald-400">${parseFloat(p.amount || 0).toLocaleString()} ETB</span>
+                                                </div>
+                                            `).join('')}
+                                            <div class="flex justify-between p-2.5 rounded-lg bg-slate-800 text-white font-extrabold">
+                                                <span>ጠቅላላ የተከፈለ (Net):</span>
+                                                <span class="text-cyan-400">${netPaidOf(o).toLocaleString()} ETB</span>
+                                            </div>
+                                        </div>
+                                    `}
+                                </div>
                             </div>
 
                             <div class="flex flex-wrap justify-end gap-2 pt-4 border-t border-slate-800 mt-4">
@@ -9454,13 +9860,13 @@
                                     </button>
                                 ` : ''}
                                 ${o.payment_status !== 'paid' ? `
-                                    <button onclick="closeModal(); openRecordOrderPaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, ${parseFloat(o.payments?.reduce((acc, p) => acc + parseFloat(p.amount), 0) || 0)});" class="px-4 py-2 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
+                                    <button onclick="closeModal(); openRecordOrderPaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, ${netPaidOf(o)});" class="px-4 py-2 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
                                         <i data-lucide="credit-card" class="w-4 h-4 text-emerald-400"></i>
                                         <span>ክፍያ መዝግብ</span>
                                     </button>
                                 ` : ''}
                                 ${(o.payment_status === 'paid' || o.payment_status === 'partially_paid') && (currentUser.role === 'owner' || currentUser.role === 'finance') ? `
-                                    <button onclick="closeModal(); openRecordRefundModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.payments?.reduce((acc, p) => acc + parseFloat(p.amount), 0) || 0)});" class="px-4 py-2 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
+                                    <button onclick="closeModal(); openRecordRefundModal(${o.id}, '${escapeHtml(o.order_number)}', ${netPaidOf(o)});" class="px-4 py-2 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
                                         <i data-lucide="undo-2" class="w-4 h-4 text-rose-400"></i>
                                         <span>ተመላሽ ክፍያ (Refund)</span>
                                     </button>
@@ -9481,7 +9887,9 @@
                     </div>
                 `;
                 lucide.createIcons();
+                setOrderRowBusy(orderId, false);
             } catch (e) {
+                setOrderRowBusy(orderId, false);
                 alert('Failed to load order: ' + e.message);
                 closeModal();
             }
@@ -9604,8 +10012,10 @@
             return R * c;
         }
 
-        async function refreshInAppMapGps(orderId) {
-            const spinner = document.getElementById('btn-refresh-spin');
+        async function refreshInAppMapGps(orderId, btn) {
+            // The old code spun a never-rendered global id (btn-refresh-spin);
+            // spin the clicked button itself instead.
+            const spinner = btn ? btn.querySelector('i, svg') : null;
             if (spinner) spinner.classList.add('animate-spin');
 
             if (navigator.geolocation) {
@@ -10230,18 +10640,30 @@
                 const customVal = document.getElementById('org-sector-other-input')?.value.trim();
                 finalIndustry = customVal || 'ሌላ';
             }
-            await apiFetch('/api/sales/organizations', {
-                method: 'POST',
-                body: JSON.stringify({
-                    name: document.getElementById('org-name').value,
-                    industry: finalIndustry,
-                    contact_person: document.getElementById('org-contact').value,
-                    phone: document.getElementById('org-phone').value,
-                    address: document.getElementById('org-subcity').value,
-                })
-            });
-            closeModal();
-            loadActiveTab();
+            try {
+                const res = await apiFetch('/api/sales/organizations', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name: document.getElementById('org-name').value,
+                        industry: finalIndustry,
+                        contact_person: document.getElementById('org-contact').value,
+                        phone: document.getElementById('org-phone').value,
+                        address: document.getElementById('org-subcity').value,
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('ድርጅቱ በተሳካ ሁኔታ ተመዝግቧል!', 'success');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    let msg = data.message || 'ድርጅቱን መመዝገብ አልተቻለም';
+                    if (data.errors) msg += ': ' + Object.values(data.errors).flat().join(' ');
+                    showToast('ስህተት: ' + msg, 'error');
+                }
+            } catch (err) {
+                showToast('የኔትወርክ ስህተት: ' + err.message, 'error');
+            }
         }
 
         function handleSalesVisitOrgChange(orgId) {
@@ -10363,7 +10785,7 @@
                 }
 
                 if (!orgId) {
-                    alert('ስህተት፡ እባክዎን ድርጅት ይምረጡ ወይም ስሙን ያስገቡ።');
+                    showToast('ስህተት፡ እባክዎን ድርጅት ይምረጡ ወይም ስሙን ያስገቡ።', 'error');
                     return;
                 }
 
@@ -10395,15 +10817,15 @@
                 });
 
                 if (visitRes.ok) {
-                    alert('የመስክ ሽያጭ የስራ እንቅስቃሴው በተሳካ ሁኔታ በሰንጠረዡ ላይ ተመዝግቧል!');
+                    showToast('የመስክ ሽያጭ የስራ እንቅስቃሴው በተሳካ ሁኔታ በሰንጠረዡ ላይ ተመዝግቧል!', 'success');
                     closeModal();
                     loadActiveTab();
                 } else {
                     const errData = await visitRes.json();
-                    alert('ምዝገባው አልተሳካም፡ ' + (errData.message || JSON.stringify(errData.errors || '')));
+                    showToast('ምዝገባው አልተሳካም፡ ' + (errData.message || JSON.stringify(errData.errors || '')), 'error');
                 }
             } catch (err) {
-                alert('የኔትወርክ ስህተት፡ ' + err.message);
+                showToast('የኔትወርክ ስህተት፡ ' + err.message, 'error');
             }
         }
 
@@ -10487,13 +10909,13 @@
                                         <option value="">— ለመዝገብ ድርጅት ይምረጡ —</option>
                                         ${profOrgOptions}
                                     </select>
-                                    <input type="text" id="prof-org-name" oninput="updateProformaSmsQr()" value="${profSelectedOrg ? escapeHtml(profSelectedOrg.name) : (defaultOrg || 'አቢሲንያ ሆቴል')}" placeholder="የድርጅቱ ስም" class="w-full font-bold text-sm bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 mb-1.5">
-                                    <input type="text" id="prof-contact" value="${defaultContact || 'አቶ ብርሃኑ አሰፋ (ማናጀር)'}" placeholder="ያነጋገሩት ኃላፊ" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 mb-1.5 text-xs">
+                                    <input type="text" id="prof-org-name" oninput="updateProformaSmsQr()" value="${profSelectedOrg ? escapeHtml(profSelectedOrg.name) : (defaultOrg || '')}" placeholder="የድርጅቱ ስም" class="w-full font-bold text-sm bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 mb-1.5">
+                                    <input type="text" id="prof-contact" value="${defaultContact || ''}" placeholder="ያነጋገሩት ኃላፊ" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 mb-1.5 text-xs">
                                 </div>
                                 <div>
                                     <span class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">አድራሻ እና ስልክ፦</span>
-                                    <input type="tel" id="prof-phone" oninput="updateProformaSmsQr()" value="${defaultPhone || '0912121212'}" placeholder="ስልክ ቁጥር" class="w-full font-mono bg-white border border-slate-300 rounded-lg px-2.5 py-1 mb-1.5 text-xs">
-                                    <input type="text" id="prof-address" value="${defaultAddress || 'አዲስ አበባ፣ ሃያት'}" placeholder="አድራሻ / ቦታ" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs">
+                                    <input type="tel" id="prof-phone" oninput="updateProformaSmsQr()" value="${defaultPhone || ''}" placeholder="ስልክ ቁጥር" class="w-full font-mono bg-white border border-slate-300 rounded-lg px-2.5 py-1 mb-1.5 text-xs">
+                                    <input type="text" id="prof-address" value="${defaultAddress || ''}" placeholder="አድራሻ / ቦታ" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs">
                                 </div>
                             </div>
 
@@ -10720,7 +11142,7 @@
         async function submitProforma() {
             const orgId = document.getElementById('prof-org-select')?.value || '';
             if (!orgId) {
-                alert('እባክዎ መጀመሪያ ድርጅቱን ከዝርዝሩ ይምረጡ (Choose an organization to save this proforma). ድርጅት ካልተመዘገበ መጀመሪያ «+ ድርጅት መዝግብ» ይጠቀሙ።');
+                showToast('እባክዎ መጀመሪያ ድርጅቱን ከዝርዝሩ ይምረጡ። ድርጅት ካልተመዘገበ መጀመሪያ «+ ድርጅት መዝግብ» ይጠቀሙ።', 'error');
                 return;
             }
             const rows = document.querySelectorAll('#prof-items-body tr');
@@ -10732,7 +11154,7 @@
                 if (desc) items.push({ description: desc, quantity: qty, unit_price: price });
             });
             if (items.length === 0) {
-                alert('እባክዎ ቢያንስ አንድ የአገልግሎት መስመር ያስገቡ።');
+                showToast('እባክዎ ቢያንስ አንድ የአገልግሎት መስመር ያስገቡ።', 'error');
                 return;
             }
             const subtotal = items.reduce((a, it) => a + it.quantity * it.unit_price, 0);
@@ -10751,17 +11173,64 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.proforma) {
-                    alert('ፕሮፎርማ በተሳካ ሁኔታ ተመዝግቧል! ቁጥር: ' + (data.proforma.proforma_number || ''));
+                    showToast('ፕሮፎርማ በተሳካ ሁኔታ ተመዝግቧል! ቁጥር: ' + (data.proforma.proforma_number || ''), 'success');
                     closeModal();
                     loadActiveTab();
                 } else {
-                    alert('ስህተት: ' + (data.message || 'ፕሮፎርማ መመዝገብ አልተቻለም'));
+                    showToast('ስህተት: ' + (data.message || 'ፕሮፎርማ መመዝገብ አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ስህተት: ' + err.message);
+                showToast('የግንኙነት ስህተት: ' + err.message, 'error');
             } finally {
                 if (btn) btn.disabled = false;
             }
+        }
+
+        // Re-open a SAVED proforma (from the Proformas list) in the same
+        // modal, filled with its saved org + items — a saved proforma
+        // used to be nowhere retrievable (reopening showed only the blank
+        // template). The list payload already includes items + org.
+        async function openSavedProforma(proformaId) {
+            const p = (window._salesProformasCache || []).find(x => String(x.id) === String(proformaId));
+            if (!p) { showToast('ፕሮፎርማው አልተገኘም። ዝርዝሩን እንደገና ይጫኑ።', 'error'); return; }
+            // The modal's org <select> needs the orgs cache; fetch it when
+            // this list was opened without visiting the visits page first.
+            if (!(window._salesOrgsCache || []).length && !(window._salesOrgsData || []).length) {
+                try {
+                    const res = await apiFetch('/api/sales/organizations?per_page=100');
+                    const d = await res.json();
+                    window._salesOrgsCache = d.data || (Array.isArray(d) ? d : []);
+                } catch (_) {}
+            }
+            const org = p.organization || {};
+            openCreateProformaModal(org.name || '', p.notes || '', org.phone || '', org.address || '');
+            // Replace the template example rows with the saved items.
+            const items = p.items || [];
+            if (items.length > 0) {
+                const body = document.getElementById('prof-items-body');
+                if (body) {
+                    body.innerHTML = items.map((it, idx) => `
+                        <tr class="prof-row">
+                            <td class="border border-slate-300 p-1.5 text-center font-bold text-slate-500 row-idx">${idx + 1}</td>
+                            <td class="border border-slate-300 p-1">
+                                <input type="text" value="${escapeHtml(it.description || it.service?.name_en || '')}" class="w-full bg-transparent font-medium border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-desc">
+                            </td>
+                            <td class="border border-slate-300 p-1">
+                                <input type="text" value="${parseFloat(it.quantity || 1)}" oninput="recalcProforma()" class="w-full bg-transparent text-center font-mono border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-qty">
+                            </td>
+                            <td class="border border-slate-300 p-1">
+                                <input type="number" value="${parseFloat(it.unit_price || 0)}" oninput="recalcProforma()" class="w-full bg-transparent text-right font-mono border-0 focus:ring-1 focus:ring-blue-500 rounded p-1 text-xs item-price">
+                            </td>
+                            <td class="border border-slate-300 p-1.5 text-right font-mono font-bold text-slate-800 item-total"></td>
+                            <td class="border border-slate-300 p-1 text-center print:hidden">
+                                <button type="button" onclick="removeProformaRow(this)" class="text-red-500 hover:text-red-700 font-bold px-1">&times;</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    recalcProforma();
+                }
+            }
+            showToast(`ፕሮፎርማ ${p.proforma_number || ''} ተከፍቷል — ማተም ወይም ማርትዕ ይችላሉ።`, 'info');
         }
 
         function updateProformaSmsQr() {
@@ -10985,8 +11454,9 @@
                 if (res.ok) {
                     closeModal();
           alert(' ' + data.message);
-                    // Refresh current view
-                    switchRole(currentUser.role);
+                    // Refresh current view — keep the open tab (a bare
+                    // switchRole() would reset the owner to the dashboard).
+                    switchRole(currentUser.role, activeTab);
                 } else {
           alert(' ስህተት: ' + (data.message || 'ቀጠሮውን ማስተላለፍ አልተቻለም::'));
                 }
@@ -11139,7 +11609,8 @@
         }
         window.downloadFinanceCsv = downloadFinanceCsv;
 
-        async function printOrderInvoice(orderId) {
+        async function printOrderInvoice(orderId, btn) {
+            setOrderRowBusy(orderId, true);
             const container = document.getElementById('generic-modal-container');
             container.innerHTML = '<div class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center text-white"><i data-lucide="loader-2" class="w-8 h-8 animate-spin text-cyan-400"></i></div>';
             lucide.createIcons();
@@ -11153,10 +11624,17 @@
                 const customerPhone = o.customer?.phone || o.customer_phone || '—';
                 const customerAddress = o.address || o.customer?.address || 'አዲስ አበባ';
                 const orderNum = o.order_number || ('ORD-' + o.id);
-                const apptDate = o.eth_appointment_date || o.appointment_date || '—';
+                const apptDate = o.eth_appointment_date || (o.appointment_date ? formatDisplayDate(o.appointment_date) : '—');
                 const items = o.items || [];
                 const total = parseFloat(o.total || 0);
-                const paymentStatus = o.payment_status === 'paid' ? 'የተከፈለ (PAID)' : (o.payment_status === 'pending_approval' ? 'ለመጽደቅ የቀረበ' : 'ያልተከፈለ (UNPAID)');
+                // Payment status derived from the actual payments, not from
+                // the stored payment_status alone: a PARTIAL order with 1
+                // ETB paid used to print as "UNPAID" with no paid amount.
+                const netPaid = netPaidOf(o);
+                const remaining = Math.max(0, total - netPaid);
+                const paidStatus = netPaid >= total && total > 0 ? 'paid' : (netPaid > 0 ? 'partial' : 'unpaid');
+                const paymentStatus = paidStatus === 'paid' ? 'የተከፈለ (PAID)' : (paidStatus === 'partial' ? 'በከፊል የተከፈለ (PARTIAL)' : (o.payment_status === 'pending_approval' ? 'ለመጽደቅ የቀረበ' : 'ያልተከፈለ (UNPAID)'));
+                const paymentsList = o.payments || [];
 
                 container.innerHTML = `
                     <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
@@ -11208,7 +11686,7 @@
                                     </div>
                                     <div class="text-right">
                                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">የክፍያ ሁኔታ (Status):</span>
-                                        <span class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-black ${o.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                                        <span class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-black ${paidStatus === 'paid' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (paidStatus === 'partial' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-rose-100 text-rose-800 border border-rose-300')}">
                                             ${paymentStatus}
                                         </span>
                                         <span class="text-[11px] text-slate-500 block mt-1.5">ቡድን፡ ${escapeHtml(o.assigned_team?.team_name || o.assignedTeam?.team_name || 'መደበኛ')}</span>
@@ -11251,6 +11729,37 @@
                                     </table>
                                 </div>
 
+                                <!-- Payment summary & history (net of refunds) -->
+                                <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                                    <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-200 text-xs font-black text-slate-700">የክፍያ ማጠቃለያ (Payment Summary)</div>
+                                    <div class="grid grid-cols-3 divide-x divide-slate-200 text-center text-xs">
+                                        <div class="p-3">
+                                            <span class="block text-[10px] font-bold text-slate-400 uppercase">የተከፈለ (Paid)</span>
+                                            <span class="block font-black text-emerald-700 text-sm font-mono mt-0.5">${netPaid.toLocaleString()} ETB</span>
+                                        </div>
+                                        <div class="p-3">
+                                            <span class="block text-[10px] font-bold text-slate-400 uppercase">የቀረ (Remaining)</span>
+                                            <span class="block font-black text-rose-700 text-sm font-mono mt-0.5">${remaining.toLocaleString()} ETB</span>
+                                        </div>
+                                        <div class="p-3">
+                                            <span class="block text-[10px] font-bold text-slate-400 uppercase">ጠቅላላ (Total)</span>
+                                            <span class="block font-black text-slate-900 text-sm font-mono mt-0.5">${total.toLocaleString()} ETB</span>
+                                        </div>
+                                    </div>
+                                    ${paymentsList.length === 0 ? `
+                                        <p class="px-4 py-3 text-[11px] text-slate-400 italic border-t border-slate-200">እስካሁን የተመዘገበ ክፍያ የለም።</p>
+                                    ` : `
+                                        <div class="divide-y divide-slate-100 border-t border-slate-200">
+                                            ${paymentsList.map(p => `
+                                                <div class="flex items-center justify-between px-4 py-2 text-xs">
+                                                    <span class="font-bold text-slate-700">${escapeHtml(p.payment_method || p.method || 'ክፍያ')} <span class="text-slate-400 font-normal">· ${p.eth_date || formatDisplayDate(p.payment_date || p.created_at)}</span></span>
+                                                    <span class="font-black text-slate-900 font-mono">${parseFloat(p.amount || 0).toLocaleString()} ETB</span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    `}
+                                </div>
+
                                 <!-- Footer Signatures -->
                                 <div class="pt-6 border-t border-slate-200 flex justify-between items-end text-xs text-slate-500">
                                     <div>
@@ -11267,7 +11776,9 @@
                     </div>
                 `;
                 lucide.createIcons();
+                setOrderRowBusy(orderId, false);
             } catch (e) {
+                setOrderRowBusy(orderId, false);
                 alert('ደረሰኝ መክፈት አልተቻለም: ' + e.message);
                 closeModal();
             }

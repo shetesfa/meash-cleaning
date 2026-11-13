@@ -2115,7 +2115,7 @@
         <span data-lang-block="am">ደንበኞቻችን ስለ እኛ ምን ይላሉ?</span><span data-lang-block="en">What our clients say</span>
       </h2>
     </div>
-    <div class="mt-4 sm:mt-0 flex items-center gap-2 text-amber-500 text-sm font-bold">
+    <div class="mt-4 sm:mt-0 flex items-center gap-2 text-amber-500 text-sm font-bold" id="reviews-aggregate-block">
       <div class="flex">
         <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
         <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
@@ -2123,7 +2123,7 @@
         <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
         <i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
       </div>
-      <span class="text-navy dark:text-white font-serif">4.9 / 5.0 (300+ Reviews)</span>
+      <span class="text-navy dark:text-white font-serif" id="reviews-aggregate-text">4.9 / 5.0 (300+ Reviews)</span>
     </div>
   </div>
 
@@ -3340,7 +3340,16 @@
       if (!res.ok) return;
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.data || []);
+      // Honest aggregate: the hardcoded "4.9 / 5.0 (300+ Reviews)" was
+      // never real data. With approved reviews, show their real average
+      // and count; with none, hide the aggregate entirely (the 3 sample
+      // cards below stay as fallback content).
+      const aggBlock = document.getElementById('reviews-aggregate-block');
+      const aggText = document.getElementById('reviews-aggregate-text');
       if (list && list.length > 0) {
+        const avg = list.reduce((a, r) => a + (parseFloat(r.rating) || 0), 0) / list.length;
+        if (aggText) aggText.textContent = avg.toFixed(1) + ' / 5.0 (' + list.length + (list.length === 1 ? ' Review)' : ' Reviews)');
+        if (aggBlock) aggBlock.classList.remove('hidden');
         const grid = document.getElementById('dynamic-reviews-grid');
         if (grid) {
           grid.innerHTML = list.slice(0, 6).map(r => `
@@ -3354,6 +3363,10 @@
           `).join('');
           if (window.lucide) lucide.createIcons();
         }
+      } else {
+        // No approved reviews yet: do not show the fake "300+ Reviews"
+        // aggregate as if it were real.
+        if (aggBlock) aggBlock.classList.add('hidden');
       }
     } catch (e) {
       console.warn('Could not load dynamic reviews:', e);

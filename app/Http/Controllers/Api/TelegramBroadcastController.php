@@ -147,7 +147,13 @@ class TelegramBroadcastController extends Controller
         $excludedCount = TelegramUser::where('is_excluded', true)->count();
         $activeNonExcluded = TelegramUser::where('is_excluded', false)->where('is_active', true)->count();
         $withPhoneCount = TelegramUser::whereNotNull('phone_number')->where('phone_number', '!=', '')->count();
-        $withTelegramCount = TelegramUser::whereNotNull('telegram_id')->where('telegram_id', '!=', '')->count();
+        // Count what the directory displays as "Telegram": a numeric
+        // telegram_id OR a @username handle. Username-only contacts show
+        // a handle in the table but were excluded from this count.
+        $withTelegramCount = TelegramUser::where(function ($q) {
+            $q->whereNotNull('telegram_id')->where('telegram_id', '!=', '')
+              ->orWhereNotNull('username')->where('username', '!=', '');
+        })->count();
 
         $normalActiveCount = TelegramUser::where(function($q) {
             $q->where('tags', 'like', '%Normal Active Customers%')
@@ -1098,6 +1104,23 @@ class TelegramBroadcastController extends Controller
     // =========================================================================
 
     /**
+     * Base URL for SMS Bridge links (QR code, launch page, pull/report).
+     * Behind Render's proxy the request scheme reads http (no trusted-proxy
+     * config), so force https for every non-local host — the phone must
+     * reach the launch page over https. Local dev (localhost/127.0.0.1)
+     * keeps its real scheme.
+     */
+    private function bridgeBaseUrl(Request $request): string
+    {
+        $host = $request->getHttpHost();
+        $hostname = strtolower(preg_replace('/:\d+$/', '', $host));
+        if (in_array($hostname, ['localhost', '127.0.0.1', '[::1]'], true)) {
+            return rtrim($request->getSchemeAndHttpHost(), '/');
+        }
+        return 'https://' . $host;
+    }
+
+    /**
      * Step 1: Create an SMS Session and prepare pending recipients batch
      */
     public function createSmsSession(Request $request): JsonResponse
@@ -1193,7 +1216,9 @@ class TelegramBroadcastController extends Controller
         // Build URLs from the host actually serving the admin (not APP_URL):
         // with two Render services on different databases, APP_URL could
         // point at the other host, whose DB has no such campaign/token.
-        $baseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
+        // Scheme is forced to https (see bridgeBaseUrl) — the phone scans
+        // the QR and must reach the launch page over https.
+        $baseUrl = $this->bridgeBaseUrl($request);
         $launchUrl = "{$baseUrl}/api/sms-bridge/launch/{$campaign->id}?token={$sessionToken}";
         $pullUrl = "{$baseUrl}/api/sms-bridge/pull-queue?campaign_id={$campaign->id}&token={$sessionToken}";
         $reportUrl = "{$baseUrl}/api/sms-bridge/report-status";
@@ -1349,7 +1374,8 @@ class TelegramBroadcastController extends Controller
             return response('<h3>የኤስኤምኤስ ክፍለ-ጊዜው አልቋል ወይም ልክ ያልሆነ ቶከን ነው (Session Expired)!</h3><p>እባክዎ ወደ አድሚን ገጽ ተመልሰው አዲስ የኤስኤምኤስ ክፍለ-ጊዜ ይፍጠሩ (Create a new SMS session from the admin panel)።</p>', 403);
         }
 
-        $baseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
+        // Same https-forced base URL as createSmsSession (see bridgeBaseUrl).
+        $baseUrl = $this->bridgeBaseUrl($request);
         $pullUrl = "{$baseUrl}/api/sms-bridge/pull-queue?campaign_id={$campaign->id}&token={$token}";
         $reportUrl = "{$baseUrl}/api/sms-bridge/report-status";
         $shortcutDirectUrl = "shortcuts://run-shortcut?name=Meash%20Auto%20SMS&input=" . urlencode($pullUrl);

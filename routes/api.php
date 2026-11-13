@@ -132,6 +132,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/visits', [OutdoorSalesController::class, 'visits']);
         Route::post('/visits', [OutdoorSalesController::class, 'storeVisit']);
         Route::post('/visits/{visit}/stage', [OutdoorSalesController::class, 'updateVisitStage']);
+        Route::delete('/visits/{visit}', [OutdoorSalesController::class, 'destroyVisit']);
         Route::get('/pipeline', [OutdoorSalesController::class, 'pipeline']);
         Route::get('/proformas', [OutdoorSalesController::class, 'proformas']);
         Route::post('/proformas', [OutdoorSalesController::class, 'storeProforma']);

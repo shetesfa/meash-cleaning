@@ -254,6 +254,34 @@ class OutdoorSalesController extends Controller
         ]);
     }
 
+    // Delete a sales visit log entry. Linked proformas keep working —
+    // their sales_visit_id is nullOnDelete() (see the CRM migration).
+    public function destroyVisit(Request $request, SalesVisit $visit): JsonResponse
+    {
+        $user = $request->user();
+        if ($user && $user->isSales() && $visit->salesperson_user_id !== $user->id) {
+            return response()->json([
+                'message' => 'Unauthorized. Sales reps can only delete their own visits.',
+            ], 403);
+        }
+
+        AuditLog::logAction(
+            $request->user()->id,
+            'sales_visit_deleted',
+            SalesVisit::class,
+            $visit->id,
+            ['organization_id' => $visit->organization_id, 'stage' => $visit->stage, 'visit_date' => $visit->visit_date],
+            null
+        );
+
+        $visit->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'የጉብኝት መዝገቡ ተሰርዟል።',
+        ]);
+    }
+
     public function pipeline(Request $request): JsonResponse
     {
         $stages = [

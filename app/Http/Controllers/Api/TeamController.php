@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rules\Password;
 
 class TeamController extends Controller
 {
@@ -434,7 +435,10 @@ class TeamController extends Controller
             'email' => 'nullable|email|max:255|unique:users,email',
             'phone' => 'nullable|string|max:32',
             'role' => 'required|string|in:owner,reception,cleaner,sales,finance',
-            'password' => 'required|string|min:6',
+            // Same strength as the change-password rule: 12+ chars with
+            // upper + lower case, a number and a symbol. New staff must
+            // not start life with a weak 6-character password.
+            'password' => ['required', 'string', Password::min(12)->letters()->mixedCase()->numbers()->symbols()],
         ]);
 
         $username = trim($validated['username'] ?? \Illuminate\Support\Str::slug($validated['name'], '_'));
