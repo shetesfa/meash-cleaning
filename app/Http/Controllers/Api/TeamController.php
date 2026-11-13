@@ -46,8 +46,11 @@ class TeamController extends Controller
             $completed = Order::where('assigned_team_id', $team->id)->where('order_status', 'completed')->count();
             $team->total_jobs_count = $totalAssigned;
             $team->completed_jobs_count = $completed;
-            $team->completion_rate = $totalAssigned > 0 ? round(($completed / $totalAssigned) * 100) : 100;
-            $team->avg_rating = round((float) Feedback::whereHas('order', fn($q) => $q->where('assigned_team_id', $team->id))->avg('rating') ?: 5.0, 1);
+            // No jobs assigned yet => null, never a fake 100%.
+            $team->completion_rate = $totalAssigned > 0 ? round(($completed / $totalAssigned) * 100) : null;
+            // No team feedback yet => null, never a fake 5.0.
+            $teamAvg = Feedback::whereHas('order', fn($q) => $q->where('assigned_team_id', $team->id))->avg('rating');
+            $team->avg_rating = $teamAvg !== null ? round((float) $teamAvg, 1) : null;
             return $team;
         });
 
@@ -161,8 +164,9 @@ class TeamController extends Controller
 
         $totalCompleted = $teamId ? Order::where('assigned_team_id', $teamId)->where('order_status', 'completed')->count() : 0;
         $totalAssigned = $teamId ? Order::where('assigned_team_id', $teamId)->count() : 0;
-        $completionRate = $totalAssigned > 0 ? round(($totalCompleted / $totalAssigned) * 100) : 100;
-        $teamAvgRating = $teamId ? round((float) Feedback::whereHas('order', fn($q) => $q->where('assigned_team_id', $teamId))->avg('rating') ?: 5.0, 1) : 5.0;
+        $completionRate = $totalAssigned > 0 ? round(($totalCompleted / $totalAssigned) * 100) : null;
+        $teamAvgRaw = $teamId ? Feedback::whereHas('order', fn($q) => $q->where('assigned_team_id', $teamId))->avg('rating') : null;
+        $teamAvgRating = $teamAvgRaw !== null ? round((float) $teamAvgRaw, 1) : null;
 
         $teamStats = [
             'total_completed' => $totalCompleted,

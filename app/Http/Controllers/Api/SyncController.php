@@ -602,6 +602,16 @@ class SyncController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        // Resolution only applies to orders. For any other entity type,
+        // do NOT mark the conflict resolved — that would be a false
+        // success with nothing applied. Return an honest 422 instead.
+        if ($conflict->entity_type !== 'order') {
+            return response()->json([
+                'message' => 'ይህ ግጭት የትዕዛዝ (order) ግጭት አይደለም — ከዚህ ማስተካከል አይቻልም። (Only order conflicts can be resolved here; entity type: ' . $conflict->entity_type . ')',
+                'entity_type' => $conflict->entity_type,
+            ], 422);
+        }
+
         if ($conflict->entity_type === 'order') {
             $order = Order::find($conflict->entity_id);
             if ($order) {

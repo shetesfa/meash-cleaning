@@ -232,8 +232,8 @@ class FinanceController extends Controller
             ->groupBy('category')
             ->get();
 
-        // Rating average
-        $avgRating = (float) Feedback::avg('rating') ?: 5.0;
+        // Rating average — no reviews yet => null, never a fake 5.0.
+        $avgRating = Feedback::count() > 0 ? (float) Feedback::avg('rating') : null;
         $complaintsCount = Complaint::where('status', '!=', 'closed')->count();
 
         // Outdoor sales conversion metrics
@@ -310,7 +310,7 @@ class FinanceController extends Controller
             'total_jobs' => $totalJobs,
             'new_customers' => $newCustomers,
             'repeat_customers' => $repeatCustomers,
-            'avg_rating' => round($avgRating, 1),
+            'avg_rating' => $avgRating !== null ? round($avgRating, 1) : null,
             'open_complaints' => $complaintsCount,
             'sales_metrics' => [
                 'total_leads' => $totalVisits,

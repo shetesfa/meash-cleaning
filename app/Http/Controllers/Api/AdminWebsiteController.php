@@ -87,6 +87,13 @@ class AdminWebsiteController extends Controller
             if ($val === null) {
                 continue;
             }
+            if ($key === 'pricing_rules' && is_array($val)) {
+                // The Contact tab only sends the 4 discount/surcharge keys.
+                // MERGE them into the stored rules instead of replacing the
+                // whole JSON — otherwise every Contact save silently wipes
+                // the service multipliers (sofa/carpet/window/deep).
+                $val = array_merge(WebsiteSetting::getJson('pricing_rules', []), $val);
+            }
             if (is_array($val)) {
                 WebsiteSetting::setJson($key, $val, 'custom');
             } else {
@@ -122,6 +129,7 @@ class AdminWebsiteController extends Controller
     public function storeFeedback(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'customer_id' => 'nullable|integer|exists:customers,id',
             'customer_name' => 'required|string|max:255',
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'required|string|max:1000',
@@ -129,16 +137,20 @@ class AdminWebsiteController extends Controller
             'is_approved' => 'nullable|boolean',
         ]);
 
-        // Find or create customer by name
-        $customer = Customer::firstOrCreate(
-            ['full_name' => $validated['customer_name']],
-            [
-                'customer_code' => Customer::generateNextCode(),
-                'phone' => '09' . rand(10000000, 99999999),
-                'address' => 'Addis Ababa',
-                'subcity' => 'Bole',
-            ]
-        );
+        // Link the review to a REAL registered customer only.
+        // Never invent a Customer row (the old code firstOrCreate'd on the
+        // name with a random 09… phone, polluting the customer list).
+        $customer = !empty($validated['customer_id'])
+            ? Customer::find($validated['customer_id'])
+            : null;
+        if (!$customer) {
+            $customer = Customer::whereRaw('LOWER(full_name) = ?', [mb_strtolower(trim($validated['customer_name']))])->first();
+        }
+        if (!$customer) {
+            return response()->json([
+                'message' => 'በዚህ ስም የተመዘገበ ደንበኛ አልተገኘም። እባክዎ መጀመሪያ ደንበኛውን ይመዝግቡ (Customers → Register) ወይም የተመዘገበ ደንበኛ ይምረጡ። (No registered customer with this name — register the customer first.)',
+            ], 422);
+        }
 
         $feedback = Feedback::create([
             'customer_id' => $customer->id,

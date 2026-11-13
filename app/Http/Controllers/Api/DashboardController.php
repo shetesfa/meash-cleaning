@@ -127,7 +127,8 @@ class DashboardController extends Controller
 
         // 1. Rating & Customer Satisfaction Stats
         $totalFeedbacks = Feedback::count();
-        $avgRating = (float) Feedback::avg('rating') ?: 5.0;
+        // No reviews yet => null, never a fake 5.0.
+        $avgRating = $totalFeedbacks > 0 ? (float) Feedback::avg('rating') : null;
         $starCounts = Feedback::select('rating', DB::raw('count(*) as count'))
             ->groupBy('rating')
             ->pluck('count', 'rating');
@@ -147,7 +148,7 @@ class DashboardController extends Controller
         $teamPerformance = $teams->map(function ($t) {
             $totalAssigned = Order::where('assigned_team_id', $t->id)->count();
             $completed = Order::where('assigned_team_id', $t->id)->where('order_status', 'completed')->count();
-            $rate = $totalAssigned > 0 ? round(($completed / $totalAssigned) * 100) : 100;
+            $rate = $totalAssigned > 0 ? round(($completed / $totalAssigned) * 100) : null;
             return [
                 'id' => $t->id,
                 'name' => $t->team_name,
@@ -210,7 +211,7 @@ class DashboardController extends Controller
                 'net_profit' => $monthNet,
             ],
             'satisfaction' => [
-                'avg_rating' => round($avgRating, 1),
+                'avg_rating' => $avgRating !== null ? round($avgRating, 1) : null,
                 'total_feedbacks' => $totalFeedbacks,
                 'rating_distribution' => $ratingDistribution,
             ],
