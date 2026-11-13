@@ -927,7 +927,6 @@
   .ms-dots { display: flex; gap: 8px; }
   .ms-dot { width: 9px; height: 9px; min-height: 0; border-radius: 99px; border: 0; padding: 0; background: rgba(255,255,255,.35); transition: width .3s, background .3s; cursor: pointer; }
   .ms-dot.on { width: 28px; background: #0FB5A5; }
-  .ms-slide-count { position: absolute; top: 12px; right: 12px; z-index: 5; font-weight: 800; font-size: .85rem; color: #CFE7F5; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); padding: 6px 12px; border-radius: 999px; }
   @media (max-width: 900px) { .ms-stage { height: 470px; } }
 
   /* Photo service cards */
@@ -1287,7 +1286,6 @@
     <div class="relative">
       <div class="ms-hero-panel">
         <div class="ms-stage" id="ms-stage" role="region" aria-roledescription="carousel" aria-label="Meash cleaning work photos" tabindex="0">
-          <span class="ms-slide-count" id="ms-slide-count">1 / {{ count($galleryPhotos) }}</span>
           @foreach($galleryPhotos as $gi => $p)
             @php $slideSvc = $activeServices->firstWhere('code', $p['code']); @endphp
             <figure class="ms-slide" role="group" aria-label="{{ $gi + 1 }} of {{ count($galleryPhotos) }}" data-ms-slide="{{ $gi }}">
@@ -4398,7 +4396,6 @@
     if (stage) {
       var slides = Array.prototype.slice.call(stage.querySelectorAll('.ms-slide'));
       var dotsBox = document.getElementById('ms-dots');
-      var countEl = document.getElementById('ms-slide-count');
       var dots = [], active = 0, timer = null;
 
       slides.forEach(function (fig, i) {
@@ -4422,7 +4419,6 @@
           if (fc) fc.style.opacity = ao >= 2 ? '0' : '1';
         });
         dots.forEach(function (d, i) { d.classList.toggle('on', i === active); });
-        if (countEl) countEl.textContent = (active + 1) + ' / ' + slides.length;
       }
       function goTo(i) { active = (i + slides.length) % slides.length; layout(); }
       function next() { goTo(active + 1); }
