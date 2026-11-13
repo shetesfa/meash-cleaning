@@ -215,34 +215,47 @@ class PhotoController extends Controller
 
     /**
      * Test-mode storage: save an uploaded image on this server under
-     * public/images/gallery (the same folder as the seeded photos),
-     * and return its root-relative URL. Used only while Cloudinary
-     * is not configured. On Render the file is wiped on the next
-     * deploy/restart; on Plesk (real domain, later) it persists.
+     * storage/app/public/gallery (served as /storage/gallery/... via
+     * the public/storage symlink the entrypoint creates on every
+     * start), and return its root-relative URL. Used only while
+     * Cloudinary is not configured.
+     *
+     * Why storage, not public/images/gallery: the container runs PHP
+     * as www-data and only storage/ + bootstrap/cache are chowned to
+     * www-data (see docker/entrypoint.sh) — public/ stays root-owned,
+     * so moving an upload there throws and the API returns a 500.
+     * On Render the file is wiped on the next deploy/restart; on
+     * Plesk (real domain, later) it persists.
      * The file is already validated as an image (jpg/png/webp, max
      * 5 MB) by the request rules, and gets a unique name so an
      * upload can never overwrite a seeded photo.
      */
     protected function storeLocally(UploadedFile $file): string
     {
+        $dir = storage_path('app/public/gallery');
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
         $extension = strtolower($file->getClientOriginalExtension());
         $name = 'upload-' . time() . '-' . Str::random(8) . '.' . $extension;
-        $file->move(public_path('images/gallery'), $name);
+        $file->move($dir, $name);
 
-        return '/images/gallery/' . $name;
+        return '/storage/gallery/' . $name;
     }
 
     /**
-     * Best-effort delete of a locally stored gallery file. Only
-     * touches paths under /images/gallery; never throws.
+     * Best-effort delete of a locally stored upload. Only touches
+     * paths under /storage/gallery (files this system saved); the
+     * seeded repo photos under /images/gallery are never deleted
+     * from disk. Never throws.
      */
     protected function deleteLocalFile(?string $url): void
     {
         try {
-            if (empty($url) || !str_starts_with($url, '/images/gallery/')) {
+            if (empty($url) || !str_starts_with($url, '/storage/gallery/')) {
                 return;
             }
-            $path = public_path(ltrim($url, '/'));
+            $path = storage_path('app/public/gallery/' . basename($url));
             if (is_file($path)) {
                 @unlink($path);
             }
