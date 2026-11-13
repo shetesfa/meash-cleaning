@@ -57,6 +57,9 @@
       <p class="text-[11px] text-center text-slate-400">
         አይፎንዎ መልእክቶቹን ከሲም ካርድዎ በጀርባ (background) በራሱ ይልካል::
       </p>
+      <p class="text-[11px] text-center text-amber-400/90">
+        ምንም ካልተከፈተ "Meash Auto SMS" Shortcut ገና አልተጫነም — ከታች ያለውን ማዘጋጃ ይከተሉ። (Android ላይ Shortcut አይሰራም — SMS በ Messages App እጅዎ ይላኩ።)
+      </p>
     </div>
 
     <!-- 1-Minute Shortcut Setup Instructions -->
@@ -68,10 +71,12 @@
       <ol class="space-y-2 list-decimal list-inside text-[11px] leading-relaxed">
         <li>በ <strong>Shortcuts</strong> አፕ አዲስ Shortcut ፈጥረው ስሙን <code>Meash Auto SMS</code> ይበሉት::</li>
         <li>ድርጊት 1: <strong>Get Contents of URL</strong> አስገብተው የ URL ቦታውን <code>Shortcut Input</code> ያድርጉት::</li>
-        <li>ድርጊት 2: <strong>Repeat with Each</strong> ያክሉ::</li>
-        <li>ድርጊት 3: በ Repeat ውስጥ <strong>Send Message</strong> ያክሉ፤ ተቀባዩን <code>Repeat Item -> phone</code>፣ መልእክቱን <code>Repeat Item -> message</code> ያድርጉ::</li>
+        <li>ድርጊት 2: <strong>Get Dictionary Value</strong> ያክሉ፤ Key <code>items</code> ያድርጉት (ከ Contents of URL)።</li>
+        <li>ድርጊት 3: <strong>Repeat with Each</strong> ያክሉ (በ items ላይ)።</li>
+        <li>ድርጊት 4: በ Repeat <strong>ውስጥ</strong> <strong>Send Message</strong> ያክሉ፤ ተቀባዩን <code>Repeat Item -&gt; phone</code>፣ መልእክቱን <code>Repeat Item -&gt; message</code> ያድርጉ::</li>
         <li><strong>እጅግ ወሳኝ፦</strong> በ Send Message ውስጥ <strong>"Show When Run"</strong> የሚለውን አጥፉ (<strong>OFF</strong> ያድርጉት)፤ ይህም እርስዎ Send ሳይነኩ በራሱ እንዲልክ ያደርገዋል!</li>
-        <li>ድርጊት 4: <strong>Get Contents of URL</strong> (Method: POST ወደ <code>{{ $reportUrl }}</code>, Body: <code>campaign_id={{ $campaign->id }}&token={{ $token }}&recipient_id=Repeat Item.recipient_id</code>) ያክሉ::</li>
+        <li>ድርጊት 5: <strong>በ Repeat ውስጥ</strong>፣ ከ Send Message በኋላ፣ <strong>Get Contents of URL</strong> ያክሉ፤ Method <strong>POST</strong>፣ URL <code>{{ $reportUrl }}</code>፣ Header <code>Content-Type: application/json</code>፣ Body (JSON)፦ <code>{"campaign_id": {{ $campaign->id }}, "token": "{{ $token }}", "recipient_id": Repeat Item.recipient_id, "status": "sent"}</code>።</li>
+        <li>አንድ ጊዜ እስከ 500 ተቀባዮች ብቻ ይላካሉ፤ እድገቱ 100% ካልደረሰ Shortcut እንደገና ያሂዱት — ቀሪዎቹ ብቻ ይላካሉ።</li>
       </ol>
     </div>
   </div>
@@ -81,18 +86,14 @@
   </div>
 
   <script>
-    // Automatically attempt to trigger Shortcut after 1 second if on iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    if (isIOS) {
-      setTimeout(() => {
-        window.location.href = "{{ $shortcutDirectUrl }}";
-      }, 1000);
-    }
-
-    // Live progress polling
+    // NOTE: no auto-redirect — if the Shortcut is not installed, Safari
+    // shows a "cannot open page" error and the user is stuck. The manual
+    // button above is the only launch path.
+    // Live progress polling (public token-checked route — the phone has
+    // no admin token, so the auth:sanctum route would 401 forever).
     setInterval(async () => {
       try {
-        const res = await fetch('/api/telegram-broadcast/campaign-status/{{ $campaign->id }}');
+        const res = await fetch('/api/sms-bridge/campaign-status/{{ $campaign->id }}?token={{ $token }}');
         const data = await res.json();
         if (data) {
           const sent = data.sent_count || 0;

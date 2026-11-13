@@ -19,6 +19,7 @@
     <script src="/vendor/lucide.min.js"></script>
     <script src="/vendor/chart.umd.js"></script>
     <script src="/vendor/leaflet/leaflet.js"></script>
+    <script src="/vendor/qrcode-generator.min.js"></script>
     <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
 
     <!-- Safety Fallbacks -->
@@ -3232,6 +3233,23 @@
         }
 
         let _smsQrDebounceTimer = null;
+        // Local QR generation — no third-party call, no data leaves the
+        // browser (the old api.qrserver.com calls sent phone numbers and
+        // message text, and the bridge token, to an external service).
+        function setLocalQr(imgEl, text) {
+            if (!imgEl) return;
+            if (typeof qrcode === 'undefined') {
+                imgEl.alt = 'QR አልተጫነም — ገጹን እንደገና ይክፈቱ (QR library not loaded)';
+                return;
+            }
+            try {
+                const qr = qrcode(0, 'M');   // 0 = auto version, M = 15% error correction
+                qr.addData(text);
+                qr.make();
+                imgEl.src = qr.createDataURL(4, 4);
+            } catch (e) { console.error('QR generation failed', e); }
+        }
+
         function updateDirectSmsSimLink() {
             const rawPhone = document.getElementById('direct-sms-phone')?.value || '0970075509';
             const msg = document.getElementById('direct-sms-message')?.value || '';
@@ -3248,13 +3266,14 @@
                 link.href = `sms:${intlPhone}?&body=${encodeURIComponent(msg)}`;
             }
 
-            // Debounce QR regeneration so typing remains silky smooth without network lag
+            // Debounce QR regeneration so typing remains silky smooth (local
+            // generation — no network call, no data leaves the browser).
             if (_smsQrDebounceTimer) clearTimeout(_smsQrDebounceTimer);
             _smsQrDebounceTimer = setTimeout(() => {
                 const qr = document.getElementById('direct-sms-qr');
                 if (qr) {
                     const payload = `sms:${intlPhone}?&body=${encodeURIComponent(msg)}`;
-                    qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}`;
+                    setLocalQr(qr, payload);
                 }
             }, 300);
         }
@@ -6529,8 +6548,6 @@
                     return;
                 }
 
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(data.launch_url)}`;
-
                 modalContainer.innerHTML = `
                     <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
                         <div class="bg-slate-900 border border-emerald-500/50 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-auto">
@@ -6549,10 +6566,10 @@
                                     በእርስዎ <strong>ስልክ ካሜራ</strong> ይህንን QR ኮድ ስካን ያድርጉ፦
                                 </p>
                                 <div class="bg-white p-3 rounded-2xl inline-block shadow-xl border-2 border-emerald-500">
-                                    <img src="${qrUrl}" alt="SMS QR Code" class="w-48 h-48 sm:w-56 sm:h-56 mx-auto object-contain">
+                                    <img id="sms-bridge-qr" src="" alt="SMS QR Code" class="w-48 h-48 sm:w-56 sm:h-56 mx-auto object-contain">
                                 </div>
                                 <div class="space-y-1">
-                                    <p class="text-[11px] text-slate-400">ካሜራዎ ሲያነበው በ Safari ከፍቶ የ <strong>Shortcuts</strong> አፕ ወዲያውኑ ያስነሳል</p>
+                                    <p class="text-[11px] text-slate-400">ካሜራዎ ሲያነበው በ Safari ይከፍታል — ከዚያ <strong>በአይፎን ላክ (Launch Shortcut)</strong> የሚለውን ይንኩ</p>
                                     <a href="${data.launch_url}" target="_blank" class="text-xs font-bold text-cyan-400 hover:underline block pt-1">
                                         ወይም እዚህ ጠቅ በማድረግ በስልክዎ ይክፈቱ (Direct Link)
                                     </a>
@@ -6582,10 +6599,12 @@
                                 <ol class="space-y-2 mt-3 list-decimal list-inside text-[11px] leading-relaxed text-slate-300">
                                     <li>በእርስዎ iPhone ውስጥ <strong>Shortcuts</strong> አፕ ከፍተው አዲስ ፈጥረው ስሙን <code>Meash Auto SMS</code> ይበሉት::</li>
                                     <li>ድርጊት 1: <strong>Get Contents of URL</strong> አስገብተው URL ላይ <code>Shortcut Input</code> ያድርጉ::</li>
-                                    <li>ድርጊት 2: <strong>Repeat with Each</strong> ያክሉ::</li>
-                                    <li>ድርጊት 3: በ Repeat ውስጥ <strong>Send Message</strong> ያክሉ፤ ተቀባይ: <code>Repeat Item -> phone</code>፣ መልእክት: <code>Repeat Item -> message</code>::</li>
+                                    <li>ድርጊት 2: <strong>Get Dictionary Value</strong> ያክሉ፤ Key <code>items</code> ያድርጉት።</li>
+                                    <li>ድርጊት 3: <strong>Repeat with Each</strong> ያክሉ (በ items ላይ)።</li>
+                                    <li>ድርጊት 4: በ Repeat <strong>ውስጥ</strong> <strong>Send Message</strong> ያክሉ፤ ተቀባይ: <code>Repeat Item -> phone</code>፣ መልእክት: <code>Repeat Item -> message</code>::</li>
                                     <li><strong>እጅግ ወሳኝ፦</strong> በ Send Message ውስጥ <strong>"Show When Run"</strong> የሚለውን አጥፉ (<strong>OFF</strong> ያድርጉት)፤ ይህም Send ሳይነኩ በራሱ በጀርባ ይልካል!</li>
-                                    <li>ድርጊት 4: <strong>Get Contents of URL</strong> (POST ወደ report-status) ያክሉ::</li>
+                                    <li>ድርጊት 5: <strong>በ Repeat ውስጥ</strong>፣ ከ Send Message በኋላ፣ <strong>Get Contents of URL</strong> ያክሉ፤ Method <strong>POST</strong>፣ URL <code>${data.report_url || ''}</code>፣ Header <code>Content-Type: application/json</code>፣ Body (JSON)፦ <code>{"campaign_id": ${data.campaign_id}, "token": "${data.session_token}", "recipient_id": Repeat Item.recipient_id, "status": "sent"}</code>።</li>
+                                    <li>አንድ ጊዜ እስከ 500 ተቀባዮች ብቻ ይላካሉ፤ እድገቱ 100% ካልደረሰ Shortcut እንደገና ያሂዱት — ቀሪዎቹ ብቻ ይላካሉ።</li>
                                 </ol>
                             </details>
 
@@ -6598,6 +6617,9 @@
                     </div>
                 `;
                 lucide.createIcons();
+                // Local QR — generated in the browser, the launch URL (with
+                // its session token) never goes to a third-party QR service.
+                setLocalQr(document.getElementById('sms-bridge-qr'), data.launch_url);
 
                 // Start polling campaign status every 2 seconds
                 if (smsProgressInterval) clearInterval(smsProgressInterval);
@@ -7401,7 +7423,7 @@
             if (qr) {
                 // iPhone Camera natively opens Messages app with RFC 5724 standard sms:phone?&body=
                 const payload = `sms:${joinedPhones}?&body=${encodeURIComponent(msg)}`;
-                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payload)}`;
+                setLocalQr(qr, payload);
             }
         }
         // ==========================================
@@ -10155,7 +10177,7 @@
             if (qr) {
                 // iPhone Camera natively opens Messages app with RFC 5724 standard sms:phone?&body=
                 const payload = `sms:${intlPhone}?&body=${encodeURIComponent(msg)}`;
-                qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`;
+                setLocalQr(qr, payload);
             }
             const link = document.getElementById('prof-sms-link');
             if (link) {

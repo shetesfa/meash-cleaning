@@ -1190,9 +1190,13 @@ class TelegramBroadcastController extends Controller
         // Cache session token for fast public verification
         Cache::put("sms_bridge_{$campaign->id}", $sessionToken, now()->addHours(24));
 
-        $baseUrl = rtrim(config('app.url') ?: env('APP_URL', $request->getSchemeAndHttpHost()), '/');
+        // Build URLs from the host actually serving the admin (not APP_URL):
+        // with two Render services on different databases, APP_URL could
+        // point at the other host, whose DB has no such campaign/token.
+        $baseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
         $launchUrl = "{$baseUrl}/api/sms-bridge/launch/{$campaign->id}?token={$sessionToken}";
         $pullUrl = "{$baseUrl}/api/sms-bridge/pull-queue?campaign_id={$campaign->id}&token={$sessionToken}";
+        $reportUrl = "{$baseUrl}/api/sms-bridge/report-status";
         $shortcutDirectUrl = "shortcuts://run-shortcut?name=Meash%20Auto%20SMS&input=" . urlencode($pullUrl);
 
         return response()->json([
@@ -1202,6 +1206,7 @@ class TelegramBroadcastController extends Controller
             'total_targets' => $recipients->count(),
             'launch_url' => $launchUrl,
             'pull_url' => $pullUrl,
+            'report_url' => $reportUrl,
             'shortcut_url' => $shortcutDirectUrl,
             'message' => "የኤስኤምኤስ ክፍለ-ጊዜ ተፈጥሯል! አሁን የአይፎን ካሜራዎን በመጠቀም QR ኮዱን ስካን ያድርጉ::",
         ]);
@@ -1219,11 +1224,27 @@ class TelegramBroadcastController extends Controller
             return response()->json(['error' => 'Invalid or expired session token'], 403);
         }
 
+        $offset = max(0, (int)$request->query('offset', 0));
+
+        // Claim rows on pull: a second pull (retry, double-tap) must not
+        // return the same recipients again, or they get the SMS twice.
+        // Claims abandoned >15 min ago (phone died / Shortcut crashed) are
+        // reclaimed so they are not lost forever.
         $pending = CampaignRecipient::where('campaign_id', $campaign->id)
-            ->where('status', 'pending')
+            ->where(function ($q) {
+                $q->where('status', 'pending')
+                  ->orWhere(function ($q2) {
+                      $q2->where('status', 'claimed')->where('updated_at', '<', now()->subMinutes(15));
+                  });
+            })
             ->orderBy('id', 'asc')
-            ->limit(3500)
+            ->offset($offset)
+            ->limit(500)
             ->get();
+
+        if ($pending->isNotEmpty()) {
+            CampaignRecipient::whereIn('id', $pending->pluck('id'))->update(['status' => 'claimed']);
+        }
 
         $items = $pending->map(function ($p) {
             return [
@@ -1234,7 +1255,11 @@ class TelegramBroadcastController extends Controller
             ];
         });
 
-        return response()->json($items);
+        return response()->json([
+            'items' => $items,
+            'total_pending' => CampaignRecipient::where('campaign_id', $campaign->id)->where('status', 'pending')->count(),
+            'offset' => $offset,
+        ]);
     }
 
     /**
@@ -1242,6 +1267,13 @@ class TelegramBroadcastController extends Controller
      */
     public function reportSmsStatus(Request $request): JsonResponse
     {
+        // Defensive: Shortcuts may POST a raw url-encoded body as text/plain,
+        // which Laravel does not parse into input(). Parse it ourselves.
+        if (empty($request->input('token')) && str_contains($request->getContent(), 'campaign_id=')) {
+            parse_str($request->getContent(), $rawBody);
+            $request->merge($rawBody);
+        }
+
         $campaignId = $request->input('campaign_id');
         $token = $request->input('token');
 
@@ -1257,17 +1289,22 @@ class TelegramBroadcastController extends Controller
 
         if (empty($recipientIds) && $request->filled('phone')) {
             $phone = trim($request->input('phone'));
+            // Exact match on the normalised +251… form only: a LIKE
+            // substring match can mark the WRONG recipients as sent.
+            $normalised = \App\Services\SmsService::normalizeEthiopianPhone($phone);
             $matchedIds = CampaignRecipient::where('campaign_id', $campaign->id)
-                ->where(function($q) use ($phone) {
-                    $q->where('phone', $phone)
-                      ->orWhere('phone', 'like', "%{$phone}%");
-                })
+                ->where('phone', $normalised)
                 ->pluck('id')
                 ->all();
             $recipientIds = array_merge($recipientIds, $matchedIds);
         }
 
-        $status = $request->input('status', 'sent') === 'failed' ? 'failed' : 'sent';
+        // Any status other than sent/failed is a client error — never count
+        // a typo or empty value as delivered.
+        $status = $request->input('status', 'sent');
+        if (!in_array($status, ['sent', 'failed'], true)) {
+            return response()->json(['error' => 'Invalid status; expected sent or failed'], 422);
+        }
         $errMsg = $request->input('error_message');
 
         if (!empty($recipientIds)) {
@@ -1309,10 +1346,10 @@ class TelegramBroadcastController extends Controller
     {
         $token = $request->query('token');
         if (!$this->verifySmsBridgeToken($campaign_id, $token, $campaign)) {
-            return response('<h3>የኤስኤምኤስ ክፍለ-ጊዜው አልቋል ወይም ልክ ያልሆነ ቶከን ነው (Session Expired)!</h3>', 403);
+            return response('<h3>የኤስኤምኤስ ክፍለ-ጊዜው አልቋል ወይም ልክ ያልሆነ ቶከን ነው (Session Expired)!</h3><p>እባክዎ ወደ አድሚን ገጽ ተመልሰው አዲስ የኤስኤምኤስ ክፍለ-ጊዜ ይፍጠሩ (Create a new SMS session from the admin panel)።</p>', 403);
         }
 
-        $baseUrl = rtrim(config('app.url') ?: env('APP_URL', $request->getSchemeAndHttpHost()), '/');
+        $baseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
         $pullUrl = "{$baseUrl}/api/sms-bridge/pull-queue?campaign_id={$campaign->id}&token={$token}";
         $reportUrl = "{$baseUrl}/api/sms-bridge/report-status";
         $shortcutDirectUrl = "shortcuts://run-shortcut?name=Meash%20Auto%20SMS&input=" . urlencode($pullUrl);
@@ -1354,6 +1391,20 @@ class TelegramBroadcastController extends Controller
     }
 
     /**
+     * Public, token-checked campaign status for the phone launch page.
+     * The phone has no admin token, so it cannot use the auth:sanctum
+     * /api/telegram-broadcast/campaign-status route (it 401s forever).
+     */
+    public function bridgeCampaignStatus(Request $request, $campaign_id): JsonResponse
+    {
+        $token = $request->query('token');
+        if (!$this->verifySmsBridgeToken($campaign_id, $token, $campaign)) {
+            return response()->json(['error' => 'Invalid or expired session token'], 403);
+        }
+        return $this->getCampaignStatus($request, $campaign->id);
+    }
+
+    /**
      * Verify SMS session token against Cache and DB
      */
     protected function verifySmsBridgeToken($campaignId, $token, &$campaign): bool
@@ -1369,7 +1420,12 @@ class TelegramBroadcastController extends Controller
         }
 
         if (!empty($campaign->session_token) && hash_equals($campaign->session_token, $token)) {
-            return true;
+            // Token is valid for 24h from session creation, even though it
+            // stays in the DB (the cache entry expires, the DB row does not).
+            $created = $campaign->sent_at ?? $campaign->created_at;
+            if ($created && $created->copy()->addHours(24)->isFuture()) {
+                return true;
+            }
         }
 
         return false;

@@ -485,9 +485,22 @@ class FullEndToEndSystemFlowTest extends TestCase
         $pullRes = $this->getJson("/api/sms-bridge/pull-queue?token={$token}&campaign_id={$campaignId}");
         $pullRes->assertStatus(200);
         $queueData = $pullRes->json();
-        $queue = isset($queueData['queue']) ? $queueData['queue'] : $queueData;
+        // pull-queue returns an object: {items, total_pending, offset}
+        $queue = $queueData['items'] ?? (isset($queueData['queue']) ? $queueData['queue'] : $queueData);
         $this->assertIsArray($queue);
         $this->assertNotEmpty($queue);
+        $this->assertArrayHasKey('total_pending', $queueData);
+
+        // 6b. A second pull must NOT return the same recipients again
+        // (rows are claimed on pull — no double SMS).
+        $pullAgain = $this->getJson("/api/sms-bridge/pull-queue?token={$token}&campaign_id={$campaignId}");
+        $pullAgain->assertStatus(200);
+        $this->assertEmpty($pullAgain->json('items'));
+
+        // 6c. Public token-checked campaign status (phone launch page path)
+        $bridgeStatus = $this->getJson("/api/sms-bridge/campaign-status/{$campaignId}?token={$token}");
+        $bridgeStatus->assertStatus(200);
+        $this->assertEquals($campaignId, (int)$bridgeStatus->json('campaign_id'));
 
         // 7. iPhone Shortcut Reports Dispatch Status back to server
         $firstItem = $queue[0];

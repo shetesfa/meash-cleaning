@@ -232,8 +232,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // M. Public Token-Authenticated iPhone / Android SMS Bridge Endpoints
 Route::prefix('sms-bridge')->group(function () {
-    Route::get('/pull-queue', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'pullSmsQueue']);
-    Route::post('/report-status', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'reportSmsStatus']);
-    Route::get('/launch/{campaign_id}', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'launchSmsBridge']);
+    Route::get('/pull-queue', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'pullSmsQueue'])->middleware('throttle:120,1');
+    Route::post('/report-status', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'reportSmsStatus'])->middleware('throttle:120,1');
+    Route::get('/launch/{campaign_id}', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'launchSmsBridge'])->middleware('throttle:120,1');
+    // Public token-checked campaign status for the phone launch page
+    // (the phone has no admin token for the auth:sanctum route).
+    Route::get('/campaign-status/{campaign_id}', [\App\Http\Controllers\Api\TelegramBroadcastController::class, 'bridgeCampaignStatus'])->middleware('throttle:120,1');
 });
 
