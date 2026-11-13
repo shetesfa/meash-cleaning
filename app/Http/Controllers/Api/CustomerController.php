@@ -210,6 +210,22 @@ class CustomerController extends Controller
             $validated['consent_timestamp'] = now();
         }
 
+        // Normalise the phone so the same number in different formats
+        // (+251911..., 0911..., 911...) maps to one stored form, and
+        // reject a second customer with the same number instead of
+        // silently creating a duplicate.
+        $validated['phone'] = Customer::normalizePhone($validated['phone']) ?? $validated['phone'];
+        if (!empty($validated['alt_phone'])) {
+            $validated['alt_phone'] = Customer::normalizePhone($validated['alt_phone']) ?? $validated['alt_phone'];
+        }
+        $existing = Customer::where('phone', $validated['phone'])->first();
+        if ($existing) {
+            return response()->json([
+                'message' => 'በዚህ ስልክ ቁጥር የተመዘገበ ደንበኛ አለ (A customer with this phone number already exists).',
+                'customer' => $existing,
+            ], 422);
+        }
+
         $customer = Customer::create($validated);
         OrderLifecycleService::syncCustomerToTelegramUsers($customer);
 

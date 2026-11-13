@@ -153,6 +153,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // I. Customer Care (Follow-ups, Feedback, Complaints, 1-to-1 Messaging)
     Route::prefix('care')->middleware('role:owner,reception')->group(function () {
         Route::get('/followups', [CustomerCareController::class, 'followups']);
+        Route::post('/followups/generate', [CustomerCareController::class, 'generateFollowups']);
         Route::put('/followups/{followup}', [CustomerCareController::class, 'updateFollowup']);
         Route::match(['post', 'put', 'patch'], '/followups/{followup}/complete', [CustomerCareController::class, 'completeFollowup']);
         Route::get('/feedbacks', [CustomerCareController::class, 'feedbacks']);

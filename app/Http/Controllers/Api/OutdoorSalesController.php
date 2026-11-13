@@ -67,7 +67,7 @@ class OutdoorSalesController extends Controller
         ]);
 
         if ($user && $user->isSales()) {
-            $query->where('user_id', $user->id);
+            $query->where('salesperson_user_id', $user->id);
         }
 
         if ($stage = $request->input('stage')) {
@@ -121,10 +121,10 @@ class OutdoorSalesController extends Controller
             $request->merge(['address' => $org->address ?: 'Addis Ababa']);
         }
         if (!$request->filled('phone') && $org) {
-            $request->merge(['phone' => $org->phone ?: '0911000000']);
+            $request->merge(['phone' => $org->phone]);
         }
         if (!$request->filled('contact_person') && $org) {
-            $request->merge(['contact_person' => $org->contact_person ?: 'ኃላፊ']);
+            $request->merge(['contact_person' => $org->contact_person]);
         }
         if (!$request->has('interest_level')) {
             $request->merge(['interest_level' => 'medium']);
@@ -146,10 +146,10 @@ class OutdoorSalesController extends Controller
         ]);
 
         if (empty($validated['contact_person'])) {
-            $validated['contact_person'] = ($org && $org->contact_person) ? $org->contact_person : 'ኃላፊ';
+            $validated['contact_person'] = ($org && $org->contact_person) ? $org->contact_person : null;
         }
         if (empty($validated['phone'])) {
-            $validated['phone'] = ($org && $org->phone) ? $org->phone : '0911000000';
+            $validated['phone'] = ($org && $org->phone) ? $org->phone : null;
         }
         if (empty($validated['address'])) {
             $validated['address'] = ($org && $org->address) ? $org->address : 'Addis Ababa';
@@ -167,6 +167,9 @@ class OutdoorSalesController extends Controller
             try {
                 $cleanPhone = Customer::normalizePhone($validated['phone']);
                 if ($cleanPhone) {
+                    // Tag an EXISTING broadcast recipient only. A sales lead
+                    // has not consented to marketing, so never create a
+                    // TelegramUser row or set marketing_consent for them.
                     $tgLead = \App\Models\TelegramUser::where('phone_number', $cleanPhone)->first();
                     if ($tgLead) {
                         $existingTags = array_filter(array_map('trim', explode(',', $tgLead->tags ?? '')));
@@ -175,17 +178,6 @@ class OutdoorSalesController extends Controller
                             $tgLead->tags = implode(', ', $existingTags);
                             $tgLead->save();
                         }
-                    } else {
-                        \App\Models\TelegramUser::create([
-                            'first_name' => $validated['contact_person'] ?: ($org?->name ?: 'የውጭ ሽያጭ ደንበኛ'),
-                            'phone_number' => $cleanPhone,
-                            'is_active' => true,
-                            'is_excluded' => false,
-                            'source' => 'outdoor_sales',
-                            'tags' => 'Outdoor Sales Leads',
-                            'marketing_consent' => true,
-                            'last_interaction_at' => now(),
-                        ]);
                     }
                 }
             } catch (\Throwable $th) {
@@ -211,7 +203,7 @@ class OutdoorSalesController extends Controller
     public function updateVisitStage(Request $request, SalesVisit $visit): JsonResponse
     {
         $user = $request->user();
-        if ($user && $user->isSales() && $visit->user_id !== $user->id) {
+        if ($user && $user->isSales() && $visit->salesperson_user_id !== $user->id) {
             return response()->json([
                 'message' => 'Unauthorized. Sales reps can only update stages of their own visits.',
             ], 403);
@@ -280,7 +272,7 @@ class OutdoorSalesController extends Controller
         $query = SalesVisit::with(['organization', 'salesperson:id,name']);
         $user = $request->user();
         if ($user && $user->isSales()) {
-            $query->where('user_id', $user->id);
+            $query->where('salesperson_user_id', $user->id);
         }
         $allVisits = $query->get();
 
@@ -340,16 +332,26 @@ class OutdoorSalesController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
+            $subtotal = 0;
             foreach ($validated['items'] as $item) {
+                $lineSubtotal = (float)$item['quantity'] * (float)$item['unit_price'];
+                $subtotal += $lineSubtotal;
                 ProformaItem::create([
                     'proforma_id' => $proforma->id,
                     'service_id' => $item['service_id'] ?? null,
                     'description' => $item['description'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
-                    'subtotal' => (float)$item['quantity'] * (float)$item['unit_price'],
+                    'subtotal' => $lineSubtotal,
                 ]);
             }
+
+            // Totals were saved as 0 above — compute them from the lines:
+            // total = subtotal − discount + tax.
+            $proforma->update([
+                'subtotal' => $subtotal,
+                'total' => max(0, $subtotal - (float)$proforma->discount + (float)$proforma->tax),
+            ]);
 
             // Update visit stage if applicable
             if ($proforma->sales_visit_id) {

@@ -21,23 +21,10 @@ class CustomerCareController extends Controller
 {
     public function followups(Request $request): JsonResponse
     {
-        // Auto-create pending followups for completed or paid orders that don't have one yet
-        $completedOrdersWithoutFollowup = \App\Models\Order::where(function ($q) {
-                $q->where('order_status', 'completed')
-                  ->orWhere('payment_status', 'paid');
-            })
-            ->whereDoesntHave('followups')
-            ->get();
-        
-        foreach ($completedOrdersWithoutFollowup as $cOrder) {
-            Followup::create([
-                'order_id' => $cOrder->id,
-                'customer_id' => $cOrder->customer_id,
-                'type' => 'review',
-                'due_date' => Carbon::today(),
-                'status' => 'pending',
-                'notes' => 'Post-service follow-up call',
-            ]);
+        // Follow-up generation is EXPLICIT only (POST /followups/generate):
+        // a GET list must never create rows.
+        if ($request->boolean('generate')) {
+            $this->generateMissingFollowups();
         }
 
         $query = Followup::with([
@@ -84,6 +71,46 @@ class CustomerCareController extends Controller
             'last_page' => $followups->lastPage(),
             'total' => $followups->total(),
         ]);
+    }
+
+    /**
+     * Explicitly generate pending follow-ups for completed/paid orders
+     * that don't have one yet. Called from POST /followups/generate
+     * (button in the Care tab) — never from the GET list.
+     */
+    public function generateFollowups(Request $request): JsonResponse
+    {
+        $created = $this->generateMissingFollowups();
+        return response()->json([
+            'success' => true,
+            'created' => $created,
+            'message' => $created > 0
+                ? "{$created} አዲስ የክትትል (follow-up) መዝገቦች ተፈጥረዋል።"
+                : 'አዲስ የሚፈጠር የክትትል መዝገብ አልተገኘም — ሁሉም የተጠናቀቁ ትዕዛዞች የክትትል መዝገብ አላቸው።',
+        ]);
+    }
+
+    protected function generateMissingFollowups(): int
+    {
+        $completedOrdersWithoutFollowup = \App\Models\Order::where(function ($q) {
+                $q->where('order_status', 'completed')
+                  ->orWhere('payment_status', 'paid');
+            })
+            ->whereDoesntHave('followups')
+            ->get();
+
+        foreach ($completedOrdersWithoutFollowup as $cOrder) {
+            Followup::create([
+                'order_id' => $cOrder->id,
+                'customer_id' => $cOrder->customer_id,
+                'type' => 'review',
+                'due_date' => Carbon::today(),
+                'status' => 'pending',
+                'notes' => 'Post-service follow-up call',
+            ]);
+        }
+
+        return $completedOrdersWithoutFollowup->count();
     }
 
     public function updateFollowup(Request $request, Followup $followup): JsonResponse

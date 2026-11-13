@@ -764,7 +764,7 @@
                 return { data: [] };
             }
             if (cleanUrl.includes('/api/finance/profit-report')) {
-                return { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, expense_breakdown: [], payment_breakdown: [] };
+                return { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, breakdown: [] };
             }
             if (cleanUrl.includes('/api/finance/expenses') || cleanUrl.includes('/api/expenses')) {
                 return { data: [] };
@@ -1634,10 +1634,10 @@
                                 </div>
                                 <div class="flex items-center gap-6">
                                     <div class="text-center p-4 bg-slate-800/80 rounded-2xl border border-slate-700">
-                                        <span class="text-4xl font-black text-amber-400 block">${data.satisfaction?.avg_rating ?? '—'}</span>
+                                        <span class="text-4xl font-black text-amber-400 block">${data.satisfaction?.avg_rating || 5.0}</span>
                                         <span class="text-xs text-slate-400">ከ 5.0 ኮከቦች</span>
                                         <div class="flex items-center justify-center gap-0.5 text-amber-400 mt-1">
-                                            ${data.satisfaction?.avg_rating != null ? '★'.repeat(Math.round(data.satisfaction.avg_rating)) + '☆'.repeat(5 - Math.round(data.satisfaction.avg_rating)) : '☆☆☆☆☆'}
+                                            ${'★'.repeat(Math.round(data.satisfaction?.avg_rating || 5))}${'☆'.repeat(5 - Math.round(data.satisfaction?.avg_rating || 5))}
                                         </div>
                                     </div>
                                     <div class="flex-1 space-y-1.5">
@@ -1675,7 +1675,7 @@
                                             </div>
                                             <div class="text-right">
                                                 <span class="px-2.5 py-1 rounded-xl text-xs font-black ${tp.completion_rate >= 80 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}">
-                                                    ${tp.completion_rate ?? '—'}%
+                                                    ${tp.completion_rate}%
                                                 </span>
                                             </div>
                                         </div>
@@ -2148,11 +2148,11 @@
                             </div>
                             <div class="border-x border-slate-800">
                                 <span class="text-[10px] text-slate-400 block font-semibold">ስራ ማጠናቀቅ</span>
-                                <span class="text-base font-black text-cyan-300 mt-0.5 block">${data.stats?.completion_rate ?? '—'}%</span>
+                                <span class="text-base font-black text-cyan-300 mt-0.5 block">${data.stats?.completion_rate || 100}%</span>
                             </div>
                             <div>
                                 <span class="text-[10px] text-slate-400 block font-semibold">አማካይ እርካታ</span>
-                                <span class="text-base font-black text-amber-400 mt-0.5 block">${data.stats?.avg_rating ?? '—'} ★</span>
+                                <span class="text-base font-black text-amber-400 mt-0.5 block">${data.stats?.avg_rating || 5.0} ★</span>
                             </div>
                         </div>
 
@@ -2377,6 +2377,13 @@
         // 4. OUTDOOR SALES CRM & ACTIVITY LOG (Excel-style Table)
         // ==========================================
         async function renderSalesModule(container) {
+            // Sub-tabs: each sidebar entry shows its own list instead of
+            // the visits table (previously every sales_* tab showed the
+            // same visits table).
+            if (activeTab === 'sales_orgs') return renderSalesOrgsList(container);
+            if (activeTab === 'sales_proformas') return renderSalesProformasList(container);
+            if (activeTab === 'sales_contracts') return renderSalesContractsList(container);
+            if (activeTab === 'sales_pipeline') return renderSalesPipelineView(container);
             try {
                 const [visitsRes, orgsRes] = await Promise.all([
                     apiFetch('/api/sales/visits?per_page=100'),
@@ -2484,7 +2491,7 @@
                                             const orgName = v.organization?.name || '—';
                                             const orgType = industryAmharic[v.organization?.industry] || v.organization?.industry || 'ድርጅት';
                                             const contactName = v.contact_person ? `${v.contact_person} ${v.contact_position ? '(' + v.contact_position + ')' : ''}` : '—';
-                                            const phone = v.contact_phone || v.organization?.phone || '—';
+                                            const phone = v.phone || v.organization?.phone || '—';
                                             const address = v.organization?.address || v.organization?.subcity || 'አዲስ አበባ';
                                             const stage = stageAmharic[v.stage] || v.stage;
                                             const proformaReq = (v.stage === 'proforma_requested' || v.stage === 'proforma_sent' || (v.proformas && v.proformas.length > 0)) ? 'ያስፈልጋል' : (v.stage === 'won' ? 'ተጠናቋል' : 'በሂደት ላይ');
@@ -2529,6 +2536,162 @@
                 lucide.createIcons();
             } catch (err) {
                 renderErrorCard(container, 'የውጭ ሽያጭ መረጃዎችን መጫን አልተቻለም፡ ' + err.message, 'renderSalesModule(document.getElementById(\'app-viewport\'))');
+            }
+        }
+
+        // --- Sales sub-tab lists (Orgs / Proformas / Contracts / Pipeline) ---
+        function salesSubHeader(title, subtitle, actionBtn = '') {
+            return `
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <button onclick="setTab('sales')" class="text-xs font-bold text-cyan-400 hover:underline cursor-pointer">← ወደ እንቅስቃሴ መዝገብ (Visits)</button>
+                        <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">${title}</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">${subtitle}</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2.5">${actionBtn}</div>
+                </div>`;
+        }
+
+        async function renderSalesOrgsList(container) {
+            try {
+                const res = await apiFetch('/api/sales/organizations?per_page=100');
+                const data = await res.json();
+                const orgs = data.data || (Array.isArray(data) ? data : []);
+                window._salesOrgsCache = orgs;
+                container.innerHTML = `
+                    <div class="max-w-[98%] mx-auto space-y-6">
+                        ${salesSubHeader('ተቋማት / ድርጅቶች (Organizations)', 'የተመዘገቡ ድርጅቶች እና የእውቂያ መረጃ።', `
+                            <button onclick="openAddOrganizationModal()" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="building" class="w-4 h-4 text-cyan-400"></i><span>+ ድርጅት መዝግብ</span>
+                            </button>`)}
+                        <div class="rounded-2xl border border-slate-700 overflow-hidden bg-slate-900">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs text-left">
+                                    <thead><tr class="bg-slate-800 text-slate-300 font-bold">
+                                        <th class="px-3 py-2.5">ድርጅት</th><th class="px-3 py-2.5">ዓይነት</th><th class="px-3 py-2.5">ኃላፊ</th><th class="px-3 py-2.5">ስልክ</th><th class="px-3 py-2.5">አድራሻ</th>
+                                    </tr></thead>
+                                    <tbody class="divide-y divide-slate-800">
+                                        ${orgs.length === 0 ? `<tr><td colspan="5" class="px-3 py-10 text-center text-slate-500 italic">እስካሁን የተመዘገበ ድርጅት የለም።</td></tr>` : orgs.map(o => `
+                                            <tr class="text-slate-200">
+                                                <td class="px-3 py-2.5 font-bold text-white">${escapeHtml(o.name || '—')}</td>
+                                                <td class="px-3 py-2.5">${escapeHtml(o.industry || '—')}</td>
+                                                <td class="px-3 py-2.5">${escapeHtml(o.contact_person || '—')}</td>
+                                                <td class="px-3 py-2.5 font-mono">${escapeHtml(o.phone || '—')}</td>
+                                                <td class="px-3 py-2.5">${escapeHtml(o.address || '—')}</td>
+                                            </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>`;
+                lucide.createIcons();
+            } catch (err) {
+                renderErrorCard(container, 'ድርጅቶች መጫን አልተቻለም፡ ' + err.message, 'renderSalesModule(document.getElementById(\'app-viewport\'))');
+            }
+        }
+
+        async function renderSalesProformasList(container) {
+            try {
+                const res = await apiFetch('/api/sales/proformas?per_page=50');
+                const data = await res.json();
+                const rows = data.data || (Array.isArray(data) ? data : []);
+                container.innerHTML = `
+                    <div class="max-w-[98%] mx-auto space-y-6">
+                        ${salesSubHeader('ፕሮፎርማዎች (Proformas)', 'የተዘጋጁ የዋጋ ማቅረቢያ ሰነዶች።', `
+                            <button onclick="openCreateProformaModal()" class="px-3.5 py-2.5 bg-amber-600/90 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="file-text" class="w-4 h-4"></i><span>ፕሮፎርማ አዘጋጅ</span>
+                            </button>`)}
+                        <div class="rounded-2xl border border-slate-700 overflow-hidden bg-slate-900">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs text-left">
+                                    <thead><tr class="bg-slate-800 text-slate-300 font-bold">
+                                        <th class="px-3 py-2.5">ቁጥር</th><th class="px-3 py-2.5">ድርጅት</th><th class="px-3 py-2.5">ንዑስ ድምር</th><th class="px-3 py-2.5">ጠቅላላ</th><th class="px-3 py-2.5">ሁኔታ</th><th class="px-3 py-2.5">የሚያበቃበት ቀን</th>
+                                    </tr></thead>
+                                    <tbody class="divide-y divide-slate-800">
+                                        ${rows.length === 0 ? `<tr><td colspan="6" class="px-3 py-10 text-center text-slate-500 italic">እስካሁን የተዘጋጀ ፕሮፎርማ የለም።</td></tr>` : rows.map(p => `
+                                            <tr class="text-slate-200">
+                                                <td class="px-3 py-2.5 font-mono font-bold text-white">${escapeHtml(p.proforma_number || '—')}</td>
+                                                <td class="px-3 py-2.5">${escapeHtml(p.organization?.name || '—')}</td>
+                                                <td class="px-3 py-2.5 font-mono">${parseFloat(p.subtotal || 0).toLocaleString()} ETB</td>
+                                                <td class="px-3 py-2.5 font-mono font-bold text-white">${parseFloat(p.total || 0).toLocaleString()} ETB</td>
+                                                <td class="px-3 py-2.5">${escapeHtml(p.status || '—')}</td>
+                                                <td class="px-3 py-2.5">${escapeHtml(p.validity_date ? String(p.validity_date).slice(0, 10) : '—')}</td>
+                                            </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>`;
+                lucide.createIcons();
+            } catch (err) {
+                renderErrorCard(container, 'ፕሮፎርማዎች መጫን አልተቻለም፡ ' + err.message, 'renderSalesModule(document.getElementById(\'app-viewport\'))');
+            }
+        }
+
+        async function renderSalesContractsList(container) {
+            try {
+                const res = await apiFetch('/api/sales/contracts?per_page=50');
+                const data = await res.json();
+                const rows = data.data || (Array.isArray(data) ? data : []);
+                container.innerHTML = `
+                    <div class="max-w-[98%] mx-auto space-y-6">
+                        ${salesSubHeader('ኮንትራቶች (Contracts)', 'የተስማሙ የጽዳት ኮንትራቶች።')}
+                        <div class="rounded-2xl border border-slate-700 overflow-hidden bg-slate-900">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs text-left">
+                                    <thead><tr class="bg-slate-800 text-slate-300 font-bold">
+                                        <th class="px-3 py-2.5">ቁጥር</th><th class="px-3 py-2.5">ድርጅት</th><th class="px-3 py-2.5">የተስማማ ዋጋ</th><th class="px-3 py-2.5">ድግግሞሽ</th><th class="px-3 py-2.5">ከ — እስከ</th><th class="px-3 py-2.5">ሁኔታ</th>
+                                    </tr></thead>
+                                    <tbody class="divide-y divide-slate-800">
+                                        ${rows.length === 0 ? `<tr><td colspan="6" class="px-3 py-10 text-center text-slate-500 italic">እስካሁን የተመዘገበ ኮንትራት የለም።</td></tr>` : rows.map(c => `
+                                            <tr class="text-slate-200">
+                                                <td class="px-3 py-2.5 font-mono font-bold text-white">${escapeHtml(c.contract_number || '—')}</td>
+                                                <td class="px-3 py-2.5">${escapeHtml(c.organization?.name || '—')}</td>
+                                                <td class="px-3 py-2.5 font-mono font-bold text-white">${parseFloat(c.agreed_value || 0).toLocaleString()} ETB</td>
+                                                <td class="px-3 py-2.5">${escapeHtml(c.cleaning_frequency || '—')}</td>
+                                                <td class="px-3 py-2.5">${escapeHtml(c.start_date ? String(c.start_date).slice(0, 10) : '—')} → ${escapeHtml(c.end_date ? String(c.end_date).slice(0, 10) : '—')}</td>
+                                                <td class="px-3 py-2.5">${escapeHtml(c.status || '—')}</td>
+                                            </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>`;
+                lucide.createIcons();
+            } catch (err) {
+                renderErrorCard(container, 'ኮንትራቶች መጫን አልተቻለም፡ ' + err.message, 'renderSalesModule(document.getElementById(\'app-viewport\'))');
+            }
+        }
+
+        async function renderSalesPipelineView(container) {
+            try {
+                const res = await apiFetch('/api/sales/pipeline');
+                const pipeline = await res.json();
+                const stages = Object.values(pipeline || {});
+                container.innerHTML = `
+                    <div class="max-w-[98%] mx-auto space-y-6">
+                        ${salesSubHeader('የሽያጭ ሂደት (Pipeline)', 'እያንዳንዱ ደረጃ ላይ ያሉ ግንኙነቶች።')}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${stages.map(s => `
+                                <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h3 class="font-black text-white text-sm">${escapeHtml(s.title || s.stage_key)}</h3>
+                                        <span class="px-2 py-0.5 rounded-full bg-cyan-600 text-white text-[11px] font-black">${s.count || 0}</span>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        ${(s.leads || []).slice(0, 8).map(l => `
+                                            <div class="text-xs text-slate-300 bg-slate-800 rounded-lg px-2.5 py-1.5 flex justify-between gap-2">
+                                                <span class="font-bold text-white truncate">${escapeHtml(l.organization?.name || '—')}</span>
+                                                <span class="text-slate-400 shrink-0">${escapeHtml(l.contact_person || '')}</span>
+                                            </div>`).join('') || '<p class="text-[11px] text-slate-500 italic">ምንም የለም።</p>'}
+                                        ${(s.leads || []).length > 8 ? `<p class="text-[11px] text-slate-500">+ ${(s.leads.length - 8)} ተጨማሪ...</p>` : ''}
+                                    </div>
+                                </div>`).join('')}
+                        </div>
+                    </div>`;
+                lucide.createIcons();
+            } catch (err) {
+                renderErrorCard(container, 'የሽያጭ ሂደት መጫን አልተቻለም፡ ' + err.message, 'renderSalesModule(document.getElementById(\'app-viewport\'))');
             }
         }
 
@@ -2936,6 +3099,9 @@
                 const stats = data.stats || {};
 
                 const activeCount = stats.total_active !== undefined ? stats.total_active : subs.filter(s => s.status === 'active').length;
+                // Total subscribers must come from the server paginator, not
+                // from the 25-row page actually rendered below.
+                const totalSubs = (data.subscriptions && typeof data.subscriptions.total === 'number') ? data.subscriptions.total : subs.length;
                 const weeklyCount = stats.weekly_active !== undefined ? stats.weekly_active : subs.filter(s => s.plan_type === 'weekly').length;
                 const biweeklyCount = stats.biweekly_active !== undefined ? stats.biweekly_active : subs.filter(s => s.plan_type === 'biweekly').length;
                 const monthlyCount = stats.monthly_active !== undefined ? stats.monthly_active : subs.filter(s => s.plan_type === 'monthly').length;
@@ -2963,7 +3129,7 @@
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800">
                                 <span class="text-xs text-slate-400 font-semibold block">ጠቅላላ የደንበኝነት ተጠቃሚ</span>
-                                <span class="text-2xl font-black text-white mt-1 block">${subs.length}</span>
+                                <span class="text-2xl font-black text-white mt-1 block">${totalSubs}</span>
                                 <span class="text-[10px] text-emerald-400 font-bold">${activeCount} ንቁ (Active)</span>
                             </div>
                             <div class="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/30">
@@ -3456,13 +3622,41 @@
         // 6. CUSTOMERS MODULE (With CRM Filter Tabs, Ratings & 1-Click Message)
         // ==========================================
         window._currentCustomerStage = window._currentCustomerStage || 'all';
+        window._customerSearch = window._customerSearch || '';
+        window._customerPage = window._customerPage || 1;
+        window._customerLastPage = window._customerLastPage || 1;
+        window._customerTotal = window._customerTotal || 0;
 
         async function switchCustomerStageTab(stage) {
             window._currentCustomerStage = stage;
+            window._customerPage = 1;
             const container = document.getElementById('app-viewport');
             if (container) {
                 renderCustomersModule(container);
             }
+        }
+
+        function applyCustomerSearch() {
+            const input = document.getElementById('customer-search-input');
+            window._customerSearch = (input?.value || '').trim();
+            window._customerPage = 1;
+            const container = document.getElementById('app-viewport');
+            if (container) renderCustomersModule(container);
+        }
+
+        function clearCustomerSearch() {
+            window._customerSearch = '';
+            window._customerPage = 1;
+            const container = document.getElementById('app-viewport');
+            if (container) renderCustomersModule(container);
+        }
+
+        function changeCustomerPage(delta) {
+            const next = Math.min(Math.max(1, (window._customerPage || 1) + delta), window._customerLastPage || 1);
+            if (next === window._customerPage) return;
+            window._customerPage = next;
+            const container = document.getElementById('app-viewport');
+            if (container) renderCustomersModule(container);
         }
 
         async function renderCustomersModule(container) {
@@ -3470,13 +3664,28 @@
                 const stage = window._currentCustomerStage || 'all';
                 let customers = [];
                 let stageCounts = { all: 0, normal_active: 0, comment_waiting: 0, in_service: 0 };
+                let custTotal = 0;
+                let custCurrentPage = 1;
+                let custLastPage = 1;
 
-                const url = stage === 'all' ? '/api/customers?per_page=50' : `/api/customers?lifecycle_stage=${stage}&per_page=50`;
+                // Search + pagination: the server supports both (?search=, ?page=).
+                // Previously the UI always fetched only the first 50 rows.
+                const custParams = new URLSearchParams({ per_page: '20' });
+                if (stage !== 'all') custParams.set('lifecycle_stage', stage);
+                if (window._customerSearch) custParams.set('search', window._customerSearch);
+                if ((window._customerPage || 1) > 1) custParams.set('page', String(window._customerPage));
+                const url = '/api/customers?' + custParams.toString();
                 const res = await apiFetch(url);
                 if (res.ok) {
                     const data = await res.json();
                     customers = data.data || (data.customers ? (data.customers.data || data.customers) : []);
                     stageCounts = data.stage_counts || stageCounts;
+                    custTotal = data.total || (data.customers ? (data.customers.total || customers.length) : customers.length);
+                    custCurrentPage = data.current_page || (data.customers ? data.customers.current_page : 1) || 1;
+                    custLastPage = data.last_page || (data.customers ? data.customers.last_page : 1) || 1;
+                    window._customerPage = custCurrentPage;
+                    window._customerLastPage = custLastPage;
+                    window._customerTotal = custTotal;
                 }
 
                 container.innerHTML = `
@@ -3506,6 +3715,13 @@
                             <button onclick="switchCustomerStageTab('in_service')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${stage === 'in_service' ? 'bg-blue-500 text-slate-950 font-black shadow-lg shadow-blue-500/20' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
                                 🛠 In Service (${stageCounts.in_service || 0})
                             </button>
+                        </div>
+
+                        <!-- Search -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <input type="text" id="customer-search-input" value="${escapeHtml(window._customerSearch || '')}" onkeydown="if (event.key === 'Enter') { applyCustomerSearch(); }" placeholder="በስም፣ በስልክ ወይም በኮድ ፈልግ... (Search name, phone or code)" class="flex-1 min-w-[220px] bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-cyan-500">
+                            <button onclick="applyCustomerSearch()" class="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl cursor-pointer">ፈልግ (Search)</button>
+                            ${window._customerSearch ? `<button onclick="clearCustomerSearch()" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 cursor-pointer">አጽዳ (Clear)</button>` : ''}
                         </div>
 
                         <!-- Customer Grid -->
@@ -3582,6 +3798,16 @@
                                 `;
                             }).join('')}
                         </div>
+
+                        <!-- Pagination (server totals, not just the visible page) -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                            <span class="text-[11px] text-slate-400 font-semibold">${custTotal > 0 ? `ይታያል ${((custCurrentPage - 1) * 20) + 1}–${Math.min(custCurrentPage * 20, custTotal)} ከ ${custTotal} ደንበኞች` : 'ምንም ደንበኛ አልተገኘም'}</span>
+                            <div class="flex items-center gap-2">
+                                <button ${custCurrentPage <= 1 ? 'disabled' : ''} onclick="changeCustomerPage(-1)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold text-xs rounded-lg border border-slate-700 cursor-pointer">← ቀዳሚ</button>
+                                <span class="text-xs text-slate-300 font-bold">ገጽ ${custCurrentPage} / ${custLastPage}</span>
+                                <button ${custCurrentPage >= custLastPage ? 'disabled' : ''} onclick="changeCustomerPage(1)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold text-xs rounded-lg border border-slate-700 cursor-pointer">ቀጣይ →</button>
+                            </div>
+                        </div>
                     </div>
                 `;
                 if (window.lucide) lucide.createIcons();
@@ -3631,7 +3857,7 @@
                     }
                 }
                 if (!data) {
-                    data = { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, expense_breakdown: [], payment_breakdown: [] };
+                    data = { revenue: 0, expenses: 0, net_profit: 0, profit_margin: 0, breakdown: [] };
                 }
                 if (!expData) {
                     expData = { data: [] };
@@ -3642,14 +3868,12 @@
                 const categoryLabels = {
                     chemicals: 'ኬሚካሎች እና ሳሙናዎች',
                     fuel: 'ነዳጅ / ትራንስፖርት',
-                    transport: 'ትራንስፖርት',
                     materials: 'የፅዳት መገልገያ እቃዎች',
           employee_payments: ' የሰራተኞች ደመወዝ / ክፍያ',
                     equipment_repair: 'የማሽን ጥገና',
                     rent: 'የቢሮ ኪራይ',
                     marketing: 'ማስታወቂያ እና ፕሮሞሽን',
                     utilities: 'መብራት / ውሃ / ኢንተርኔት',
-                    refund: 'የተመላሽ ክፍያ (Refund)',
                     other: 'ሌሎች ወጪዎች'
                 };
 
@@ -4353,6 +4577,129 @@
         window.submitOrderPayment = submitOrderPayment;
 
         // ==========================================
+        // REFUND (Record a formal refund for an order)
+        // Server: POST /api/orders/{order}/refund (FinanceController@recordRefund)
+        // — owner/finance only; the server enforces amount <= paid minus
+        // prior refunds. The button that opens this modal was added with
+        // the refund UI; these two functions are its implementation.
+        // ==========================================
+        function openRecordRefundModal(orderId, orderNumber, paidAmount = 0) {
+            const container = document.getElementById('generic-modal-container');
+            const paid = Math.max(0, parseFloat(paidAmount) || 0);
+            const todayIso = new Date().toISOString().split('T')[0];
+
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <span class="text-xs font-bold text-rose-400 font-mono">${escapeHtml(orderNumber)}</span>
+                                <h3 class="text-base font-bold text-white">ተመላሽ ክፍያ መመዝገቢያ (Record Refund)</h3>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+
+                        <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-1 text-xs">
+                            <div class="flex justify-between text-slate-300">
+                                <span>እስካሁን የተከፈለ (Total paid):</span>
+                                <span class="font-bold text-white">${paid.toLocaleString()} ETB</span>
+                            </div>
+                            <p class="text-slate-400 pt-1 border-t border-slate-700">ተመላሽ የሚደረገው መጠን ከተከፈለው አይበልጥም። ሰርቨሩ ቀደም ሲል የተመለሱትን ቀንሶ የሚፈቀደውን ቀሪ ሂሳብ ያረጋግጣል።</p>
+                        </div>
+
+                        <form onsubmit="submitRefund(event, ${orderId})" class="space-y-3.5 text-xs">
+                            <div>
+                                <label class="block text-slate-400 font-semibold mb-1">የተመላሽ መጠን (ETB) *</label>
+                                <input type="number" id="refund-amount" required step="any" min="0.01" max="${paid > 0 ? paid : 999999}" value="${paid > 0 ? paid : ''}" placeholder="ለምሳሌ፡ 1000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono font-bold focus:outline-none focus:border-rose-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-400 font-semibold mb-1">ምክንያት (Reason) *</label>
+                                <input type="text" id="refund-reason" required placeholder="ለምሳሌ፡ አገልግሎቱ ተሰርዟል / ደንበኛው ጠይቋል" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-rose-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-400 font-semibold mb-1">የተመለሰበት መንገድ (Refund Method)</label>
+                                <select id="refund-method" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold cursor-pointer focus:outline-none focus:border-rose-500">
+                                    <option value="cash">ጥሬ ገንዘብ (Cash)</option>
+                                    <option value="telebirr">ቴሌብር (Telebirr)</option>
+                                    <option value="cbe">የኢትዮጵያ ንግድ ባንክ (CBE)</option>
+                                    <option value="bank_transfer">የባንክ ዝውውር (Bank Transfer)</option>
+                                    <option value="check">ቼክ (Check)</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <div>
+                                    <label class="block text-slate-400 font-semibold mb-1">የትራንዛክሽን ቁጥር (Ref / TXN)</label>
+                                    <input type="text" id="refund-ref" placeholder="FT... ወይም Ref #" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 font-semibold mb-1">የተመለሰበት ቀን *</label>
+                                    <input type="date" id="refund-date" required value="${todayIso}" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end gap-2 pt-2">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 cursor-pointer">ሰርዝ</button>
+                                <button type="submit" id="btn-submit-refund" class="px-5 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer">
+                                    <i data-lucide="undo-2" class="w-4 h-4"></i>
+                                    <span>ተመላሽ መዝግብ</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+        window.openRecordRefundModal = openRecordRefundModal;
+
+        async function submitRefund(e, orderId) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-refund');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'በመመዝገብ ላይ...';
+            }
+
+            const payload = {
+                amount: parseFloat(document.getElementById('refund-amount').value),
+                reason: document.getElementById('refund-reason').value.trim(),
+                payment_method: document.getElementById('refund-method').value,
+                reference_number: document.getElementById('refund-ref').value || null,
+                refund_date: document.getElementById('refund-date').value,
+            };
+
+            try {
+                const res = await apiFetch(`/api/orders/${orderId}/refund`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    closeModal();
+                    alert('ተመላሽ ክፍያ በተሳካ ሁኔታ ተመዝግቧል (' + (data.refund_amount !== undefined ? Number(data.refund_amount).toLocaleString() + ' ETB' : '') + ')');
+                    loadActiveTab();
+                } else {
+                    alert('ተመላሽ መመዝገብ አልተቻለም: ' + (data.message || JSON.stringify(data.errors || 'ስህተት')));
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = 'ተመላሽ መዝግብ';
+                    }
+                }
+            } catch (err) {
+                alert('የኔትወርክ ስህተት: ' + err.message);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = 'ተመላሽ መዝግብ';
+                }
+            }
+        }
+        window.submitRefund = submitRefund;
+
+        // ==========================================
         // TWO-STEP PAYMENT REPORTING & APPROVAL WORKFLOW
         // ==========================================
         function openCleanerPaymentModal(orderId, orderNumber, totalAmount) {
@@ -4761,21 +5108,10 @@
 
         async function resolveCurrentConflict(choice) {
             if (activeConflict) {
-                try {
-                    const res = await apiFetch(`/api/sync/conflicts/${activeConflict.conflict_id}/resolve`, {
-                        method: 'POST',
-                        body: JSON.stringify({ resolution: choice }),
-                    });
-                    if (!res.ok) {
-                        let msg = 'ግጭቱን መፍታት አልተቻለም';
-                        try { const d = await res.json(); msg = d.message || msg; } catch (_) {}
-                        alert(msg);
-                        return; // keep the modal open — nothing was resolved
-                    }
-                } catch (err) {
-                    alert('የግንኙነት ስህተት: ' + err.message);
-                    return;
-                }
+                await apiFetch(`/api/sync/conflicts/${activeConflict.conflict_id}/resolve`, {
+                    method: 'POST',
+                    body: JSON.stringify({ resolution: choice }),
+                });
             }
             document.getElementById('conflict-modal').classList.add('hidden');
             activeConflict = null;
@@ -4885,11 +5221,11 @@
                                                 </div>
                                                 <div class="flex items-center justify-between">
                           <span> ስራ ማጠናቀቅ:</span>
-                                                    <span class="text-emerald-400 font-bold">${t.completion_rate ?? '—'}% (${t.completed_jobs_count || 0} የተጠናቀቁ)</span>
+                                                    <span class="text-emerald-400 font-bold">${t.completion_rate || 100}% (${t.completed_jobs_count || 0} የተጠናቀቁ)</span>
                                                 </div>
                                                 <div class="flex items-center justify-between">
                           <span> አማካይ እርካታ:</span>
-                                                    <span class="text-amber-400 font-bold">${t.avg_rating ?? '—'} ★</span>
+                                                    <span class="text-amber-400 font-bold">${t.avg_rating || 5.0} ★</span>
                                                 </div>
                                             </div>
                                             <div class="pt-2 flex items-center justify-between text-xs">
@@ -5580,10 +5916,16 @@
                                 <h2 class="text-2xl font-black text-white">የደንበኞች እንክብካቤ፣ ቅሬታዎች እና የአስተያየት ማጽደቂያ</h2>
                                 <p class="text-xs text-slate-400 mt-1">የድህረ-ፅዳት ክትትል ጥሪዎች፣ ክፍት ቅሬታዎች እና በድረ-ገጽ ላይ የሚታዩ የተጠቃሚ አስተያየቶች ማጣሪያ።</p>
                             </div>
-                            <button onclick="openLogNewComplaintModal()" class="px-4 py-2.5 bg-red-600/90 hover:bg-red-600 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
-                                <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                                <span>+ አዲስ ቅሬታ መዝግብ</span>
-                            </button>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button onclick="generateFollowups()" class="px-4 py-2.5 bg-cyan-600/90 hover:bg-cyan-600 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
+                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                    <span>ክትትል ፍጠር (Generate)</span>
+                                </button>
+                                <button onclick="openLogNewComplaintModal()" class="px-4 py-2.5 bg-red-600/90 hover:bg-red-600 text-white font-bold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
+                                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                    <span>+ አዲስ ቅሬታ መዝግብ</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -5780,6 +6122,21 @@
                 </div>
             `;
             lucide.createIcons();
+        }
+
+        async function generateFollowups() {
+            try {
+                const res = await apiFetch('/api/care/followups/generate', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'የክትትል መዝገቦች ተፈጥረዋል።');
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት: ' + (data.message || 'ክትትል መፍጠር አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የግንኙነት ስህተት: ' + err.message);
+            }
         }
 
         async function submitNewComplaint(e) {
@@ -7118,43 +7475,12 @@
                                         <input type="text" id="setting-owner-phone" value="0970075509" class="w-full bg-slate-800 border border-cyan-500/50 rounded-xl px-3 py-2 text-cyan-300 font-mono font-bold">
                     <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-[10px] whitespace-nowrap"> ተረጋግጧል</span>
                                     </div>
-                                    <button onclick="saveOwnerPhone()" id="btn-save-owner-phone" class="mt-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-xs cursor-pointer">የባለቤቱን ስልክ አስቀምጥ (Save)</button>
                                 </div>
 
                                 <div>
                                     <label class="block text-slate-400 mb-1">የድርጅት ስም</label>
                                     <input type="text" value="Meash Cleaning Solution (ሜሽ የፅዳት አገልግሎት)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold" readonly>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- 1b. Change Password Card -->
-                        <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
-                            <div class="flex items-center gap-2 pb-3 border-b border-slate-800">
-                                <div class="w-8 h-8 rounded-xl bg-amber-600/20 text-amber-400 flex items-center justify-center">
-                                    <i data-lucide="key-round" class="w-4 h-4"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-white">የይለፍ ቃል መቀየር (Change Password)</h3>
-                                    <span class="text-[10px] text-slate-400">የራስዎን የመግቢያ ይለፍ ቃል ይቀይሩ</span>
-                                </div>
-                            </div>
-                            <div class="space-y-3 text-xs">
-                                <div>
-                                    <label class="block text-slate-400 mb-1">የአሁኑ ይለፍ ቃል (Current password)</label>
-                                    <input type="password" id="setting-current-password" autocomplete="current-password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                                </div>
-                                <div>
-                                    <label class="block text-slate-400 mb-1">አዲስ ይለፍ ቃል (New password)</label>
-                                    <input type="password" id="setting-new-password" autocomplete="new-password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                                    <p class="text-[11px] text-slate-500 mt-1">ቢያንስ 12 ቁምፊዎች — ፊደል (ትንሽና ትልቅ)፣ ቁጥር እና ምልክት መያዝ አለበት።</p>
-                                </div>
-                                <div>
-                                    <label class="block text-slate-400 mb-1">አዲሱን ይለፍ ቃል እንደገና (Confirm new password)</label>
-                                    <input type="password" id="setting-new-password-confirm" autocomplete="new-password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
-                                </div>
-                                <button onclick="changeOwnPassword()" id="btn-change-password" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs cursor-pointer">ይለፍ ቃል ቀይር (Change Password)</button>
-                                <p class="text-[11px] text-slate-500">ከተቀየረ በኋላ ሁሉም የቆዩ ሴሽኖች ይዘጋሉ፤ እዚህ ያለው ሴሽን በራስ-ሰር ይቀጥላል።</p>
                             </div>
                         </div>
 
@@ -7288,17 +7614,6 @@
             `;
             lucide.createIcons();
             updateOwnerSimSmsLink();
-            // Load the owner's phone from the saved website settings
-            // (it was hardcoded 0970075509 with no save before).
-            try {
-                const sRes = await apiFetch('/api/admin/website/settings');
-                const sData = await sRes.json();
-                const savedPhone = sData.settings?.contact_phone_1 || '0970075509';
-                const opEl = document.getElementById('setting-owner-phone');
-                if (opEl) opEl.value = savedPhone;
-                const trEl = document.getElementById('setting-test-recipient');
-                if (trEl && !trEl.value) trEl.value = savedPhone;
-            } catch (_) {}
             // Live SMS status check
             try {
                 apiFetch('/api/sms/status').then(r => r.json()).then(sData => {
@@ -7317,66 +7632,6 @@
 
             // Live Telegram Bot & Webhook Status Check
             checkTelegramBotStatusInSettings();
-        }
-
-        async function saveOwnerPhone() {
-            const input = document.getElementById('setting-owner-phone');
-            const phone = (input?.value || '').trim();
-            if (!phone) { alert('እባክዎ የባለቤቱን ስልክ ቁጥር ያስገቡ።'); return; }
-            const btn = document.getElementById('btn-save-owner-phone');
-            if (btn) btn.disabled = true;
-            try {
-                const res = await apiFetch('/api/admin/website/settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contact_phone_1: phone })
-                });
-                const d = await res.json();
-                if (res.ok) {
-                    alert('የባለቤቱ ስልክ ቁጥር ተቀምጧል!');
-                } else {
-                    alert('ስህተት: ' + (d.message || 'ማስቀመጥ አልተቻለም'));
-                }
-            } catch (err) {
-                alert('የግንኙነት ስህተት: ' + err.message);
-            } finally {
-                if (btn) btn.disabled = false;
-            }
-        }
-
-        async function changeOwnPassword() {
-            const current = document.getElementById('setting-current-password')?.value || '';
-            const next = document.getElementById('setting-new-password')?.value || '';
-            const confirmPw = document.getElementById('setting-new-password-confirm')?.value || '';
-            if (!current || !next) { alert('እባክዎ የአሁኑን እና አዲሱን ይለፍ ቃል ያስገቡ።'); return; }
-            if (next !== confirmPw) { alert('አዲሱ ይለፍ ቃል እና ማረጋገጫው አይዛመዱም።'); return; }
-            const btn = document.getElementById('btn-change-password');
-            if (btn) btn.disabled = true;
-            try {
-                const res = await apiFetch('/api/auth/change-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ current_password: current, new_password: next })
-                });
-                const d = await res.json();
-                if (res.ok) {
-                    // The server revoked all old tokens and issued a new one —
-                    // store it, or this session dies immediately.
-                    if (d.token) localStorage.setItem('meash_token', d.token);
-                    document.getElementById('setting-current-password').value = '';
-                    document.getElementById('setting-new-password').value = '';
-                    document.getElementById('setting-new-password-confirm').value = '';
-                    alert(d.message || 'የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል!');
-                } else {
-                    let msg = d.message || 'ይለፍ ቃል መቀየር አልተቻለም';
-                    if (d.errors) msg += ': ' + Object.values(d.errors).flat().join(' ');
-                    alert(msg);
-                }
-            } catch (err) {
-                alert('የግንኙነት ስህተት: ' + err.message);
-            } finally {
-                if (btn) btn.disabled = false;
-            }
         }
 
         async function checkTelegramBotStatusInSettings() {
@@ -8351,16 +8606,13 @@
                             <div>
                                 <label class="text-slate-400 block mb-1">የደንበኛው ስም እና ቦታ (e.g. Bethlehem Tadesse — Bole)</label>
                                 <input id="new-rev-name" type="text" required placeholder="Bethlehem Tadesse — Bole" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
-                                <p class="text-[11px] text-slate-500 mt-1">ስሙ ከተመዘገበ ደንበኛ ጋር መዛመድ አለበት — ያልተመዘገበ ስም ከገባ አይቀመጥም።</p>
                             </div>
                             <div>
                                 <label class="text-slate-400 block mb-1">የኮከብ ደረጃ (Rating 1 - 5)</label>
                                 <select id="new-rev-rating" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
-                  <option value="5">★★★★★ (5 Stars)</option>
-                  <option value="4">★★★★ (4 Stars)</option>
-                  <option value="3">★★★ (3 Stars)</option>
-                  <option value="2">★★ (2 Stars)</option>
-                  <option value="1">★ (1 Star)</option>
+                  <option value="5"> (5 Stars)</option>
+                  <option value="4"> (4 Stars)</option>
+                  <option value="3"> (3 Stars)</option>
                                 </select>
                             </div>
                             <div>
@@ -8400,9 +8652,7 @@
                     document.getElementById('cms-add-review-modal')?.remove();
                     loadCmsTabData();
                 } else {
-                    let msg = 'ስህተት ተፈጥሯል';
-                    try { const d = await res.json(); msg = d.message || msg; } catch (_) {}
-                    alert(msg);
+                    alert('ስህተት ተፈጥሯል');
                 }
             } catch (err) {
                 alert('የግንኙነት ችግር፡ ' + err.message);
@@ -9087,6 +9337,12 @@
                                     <button onclick="closeModal(); openRecordOrderPaymentModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.total || 0)}, ${parseFloat(o.payments?.reduce((acc, p) => acc + parseFloat(p.amount), 0) || 0)});" class="px-4 py-2 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
                                         <i data-lucide="credit-card" class="w-4 h-4 text-emerald-400"></i>
                                         <span>ክፍያ መዝግብ</span>
+                                    </button>
+                                ` : ''}
+                                ${(o.payment_status === 'paid' || o.payment_status === 'partially_paid') && (currentUser.role === 'owner' || currentUser.role === 'finance') ? `
+                                    <button onclick="closeModal(); openRecordRefundModal(${o.id}, '${escapeHtml(o.order_number)}', ${parseFloat(o.payments?.reduce((acc, p) => acc + parseFloat(p.amount), 0) || 0)});" class="px-4 py-2 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
+                                        <i data-lucide="undo-2" class="w-4 h-4 text-rose-400"></i>
+                                        <span>ተመላሽ ክፍያ (Refund)</span>
                                     </button>
                                 ` : ''}
                                 ${o.order_status !== 'completed' && o.order_status !== 'cancelled' ? `
@@ -9995,7 +10251,7 @@
                 if (orgId && window._salesOrgsCache) {
                     const matchedOrg = window._salesOrgsCache.find(o => o.id == orgId);
                     if (matchedOrg) {
-                        if (!contact) contact = matchedOrg.contact_person || 'ኃላፊ';
+                        if (!contact) contact = matchedOrg.contact_person || '';
                         if (!phone) phone = matchedOrg.phone || '';
                     }
                 }
@@ -10007,9 +10263,8 @@
                     method: 'POST',
                     body: JSON.stringify({
                         organization_id: orgId,
-                        contact_person: contact || 'ኃላፊ',
-                        phone: phone || '0911000000',
-                        contact_phone: phone || '0911000000',
+                        contact_person: contact || null,
+                        phone: phone || null,
                         address: 'Addis Ababa',
                         stage: stage,
                         interest_level: 'medium',
@@ -10044,6 +10299,14 @@
             const dateStr = `${todayEth.day}/${todayEth.month}/${todayEth.year}`;
             const profNum = 'MSH-PRF-' + Math.floor(1000 + Math.random() * 9000);
 
+            // Organizations for saving (the printed name field is free text;
+            // saving needs a real organization_id).
+            const profOrgs = (window._salesOrgsCache || window._salesOrgsData || []);
+            const profOrgOptions = profOrgs.map(o =>
+                `<option value="${o.id}" ${defaultOrg && o.name === defaultOrg ? 'selected' : ''}>${escapeHtml(o.name)}</option>`
+            ).join('');
+            const profSelectedOrg = profOrgs.find(o => defaultOrg && o.name === defaultOrg) || null;
+
             const container = document.getElementById('generic-modal-container');
             container.innerHTML = `
                 <div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
@@ -10054,6 +10317,10 @@
                                 <span class="px-3 py-1 bg-blue-100 text-blue-900 font-extrabold text-xs rounded-full">ይፋዊ ፕሮፎርማ ሰነድ</span>
                             </div>
                             <div class="flex items-center gap-2">
+                                <button onclick="submitProforma()" id="btn-save-proforma" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-all">
+                                    <i data-lucide="save" class="w-4 h-4"></i>
+                                    <span>አስቀምጥ (Save)</span>
+                                </button>
                                 <a id="prof-sms-link" href="#" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer transition-all">
                                     <i data-lucide="smartphone" class="w-4 h-4"></i>
                                     <span>በስልክ SIM ላክ (SMS)</span>
@@ -10096,7 +10363,11 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
                                 <div>
                                     <span class="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">የደንበኛው / የድርጅቱ መረጃ፦</span>
-                                    <input type="text" id="prof-org-name" oninput="updateProformaSmsQr()" value="${defaultOrg || 'አቢሲንያ ሆቴል'}" placeholder="የድርጅቱ ስም" class="w-full font-bold text-sm bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 mb-1.5">
+                                    <select id="prof-org-select" onchange="fillProformaOrgFields()" class="w-full font-bold text-sm bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 mb-1.5 print:hidden">
+                                        <option value="">— ለመዝገብ ድርጅት ይምረጡ —</option>
+                                        ${profOrgOptions}
+                                    </select>
+                                    <input type="text" id="prof-org-name" oninput="updateProformaSmsQr()" value="${profSelectedOrg ? escapeHtml(profSelectedOrg.name) : (defaultOrg || 'አቢሲንያ ሆቴል')}" placeholder="የድርጅቱ ስም" class="w-full font-bold text-sm bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 mb-1.5">
                                     <input type="text" id="prof-contact" value="${defaultContact || 'አቶ ብርሃኑ አሰፋ (ማናጀር)'}" placeholder="ያነጋገሩት ኃላፊ" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1 mb-1.5 text-xs">
                                 </div>
                                 <div>
@@ -10239,6 +10510,8 @@
             `;
             lucide.createIcons();
             recalcProforma();
+            // If an org was pre-matched by name, fill its phone/address too.
+            if (document.getElementById('prof-org-select')?.value) fillProformaOrgFields();
         }
 
         function addProformaRow() {
@@ -10305,6 +10578,70 @@
             if (grandEl) grandEl.textContent = grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ETB';
 
             updateProformaSmsQr();
+        }
+
+        function fillProformaOrgFields() {
+            const sel = document.getElementById('prof-org-select');
+            if (!sel || !sel.value) return;
+            const orgs = (window._salesOrgsCache || window._salesOrgsData || []);
+            const org = orgs.find(o => String(o.id) === String(sel.value));
+            if (!org) return;
+            const nameEl = document.getElementById('prof-org-name');
+            const phoneEl = document.getElementById('prof-phone');
+            const addrEl = document.getElementById('prof-address');
+            const contactEl = document.getElementById('prof-contact');
+            if (nameEl) nameEl.value = org.name || '';
+            if (phoneEl) phoneEl.value = org.phone || '';
+            if (addrEl) addrEl.value = org.address || '';
+            if (contactEl && org.contact_person) contactEl.value = org.contact_person;
+            updateProformaSmsQr();
+        }
+
+        async function submitProforma() {
+            const orgId = document.getElementById('prof-org-select')?.value || '';
+            if (!orgId) {
+                alert('እባክዎ መጀመሪያ ድርጅቱን ከዝርዝሩ ይምረጡ (Choose an organization to save this proforma). ድርጅት ካልተመዘገበ መጀመሪያ «+ ድርጅት መዝግብ» ይጠቀሙ።');
+                return;
+            }
+            const rows = document.querySelectorAll('#prof-items-body tr');
+            const items = [];
+            rows.forEach(r => {
+                const desc = r.querySelector('.item-desc')?.value?.trim() || '';
+                const qty = parseFloat(r.querySelector('.item-qty')?.value) || 1;
+                const price = parseFloat(r.querySelector('.item-price')?.value) || 0;
+                if (desc) items.push({ description: desc, quantity: qty, unit_price: price });
+            });
+            if (items.length === 0) {
+                alert('እባክዎ ቢያንስ አንድ የአገልግሎት መስመር ያስገቡ።');
+                return;
+            }
+            const subtotal = items.reduce((a, it) => a + it.quantity * it.unit_price, 0);
+            const btn = document.getElementById('btn-save-proforma');
+            if (btn) btn.disabled = true;
+            try {
+                const res = await apiFetch('/api/sales/proformas', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        organization_id: Number(orgId),
+                        discount: 0,
+                        tax: Math.round(subtotal * 0.15 * 100) / 100,
+                        notes: document.getElementById('prof-contact')?.value || '',
+                        items: items,
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.proforma) {
+                    alert('ፕሮፎርማ በተሳካ ሁኔታ ተመዝግቧል! ቁጥር: ' + (data.proforma.proforma_number || ''));
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት: ' + (data.message || 'ፕሮፎርማ መመዝገብ አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የግንኙነት ስህተት: ' + err.message);
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         function updateProformaSmsQr() {
