@@ -2023,7 +2023,7 @@
                                                 ` : ''}
                                                 <span class="text-xs font-bold ${s.order_status === 'completed' ? 'text-emerald-400' : 'text-cyan-400'} uppercase">${s.order_status}</span>
                                                 ${s.order_status === 'completed' ? `
-                                                    <button onclick="triggerSendReviewRequest(${s.id}, '${escapeHtml(s.order_number)}')" class="px-2 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 text-[10px] font-bold cursor-pointer" title="የ 5-ኮከብ ደረጃ ጥየቃ ላክ">⭐ ጥየቃ ላክ</button>
+                                                    <button onclick="triggerSendReviewRequest(${s.id}, '${escapeHtml(s.order_number)}', this)" class="px-2 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 text-[10px] font-bold cursor-pointer" title="የ 5-ኮከብ ደረጃ ጥየቃ ላክ">⭐ ጥየቃ ላክ</button>
                                                 ` : ''}
                                                 ${s.order_status !== 'completed' ? `
                                                     <button onclick="openPostponeOrderModal(${s.id}, '${s.order_number}', '${s.customer?.full_name}')" class="px-2 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/60 text-amber-300 border border-amber-500/30 text-[10px] font-bold">አስተላልፍ</button>
@@ -3402,12 +3402,12 @@
                                                 <td class="p-4 text-right space-x-1.5">
                           <button data-phone="${escapeHtml(s.customer?.phone || '')}" data-name="${escapeHtml(s.customer?.full_name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30"> SMS</button>
                                                     ${s.status === 'active' ? `
-                                                        <button onclick="updateSubscriptionStatus(${s.id}, 'paused')" class="px-2.5 py-1 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-500/30">አቁም (Pause)</button>
+                                                        <button onclick="updateSubscriptionStatus(${s.id}, 'paused', this)" class="px-2.5 py-1 bg-amber-950/70 hover:bg-amber-900 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-500/30">አቁም (Pause)</button>
                                                     ` : (s.status === 'paused' ? `
-                                                        <button onclick="updateSubscriptionStatus(${s.id}, 'active')" class="px-2.5 py-1 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold text-[11px] rounded-lg border border-emerald-500/30">ቀጥል (Activate)</button>
+                                                        <button onclick="updateSubscriptionStatus(${s.id}, 'active', this)" class="px-2.5 py-1 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 font-bold text-[11px] rounded-lg border border-emerald-500/30">ቀጥል (Activate)</button>
                                                     ` : '')}
                                                     ${s.status !== 'cancelled' ? `
-                                                        <button onclick="updateSubscriptionStatus(${s.id}, 'cancelled')" class="px-2.5 py-1 bg-red-950/60 hover:bg-red-900 text-red-300 font-bold text-[11px] rounded-lg border border-red-500/30">ሰርዝ</button>
+                                                        <button onclick="updateSubscriptionStatus(${s.id}, 'cancelled', this)" class="px-2.5 py-1 bg-red-950/60 hover:bg-red-900 text-red-300 font-bold text-[11px] rounded-lg border border-red-500/30">ሰርዝ</button>
                                                     ` : ''}
                                                 </td>
                                             </tr>
@@ -3424,10 +3424,32 @@
             }
         }
 
-        async function updateSubscriptionStatus(subId, newStatus) {
+        async function updateSubscriptionStatus(subId, newStatus, btn) {
             const confirmMsg = newStatus === 'paused' ? 'ይህንን የደንበኝነት እቅድ ለጊዜው ማቆም ይፈልጋሉ?' : (newStatus === 'cancelled' ? 'ይህንን የደንበኝነት እቅድ ሙሉ ለሙሉ መሰረዝ ይፈልጋሉ?' : 'ይህንን የደንበኝነት እቅድ መልሰው ማግበር ይፈልጋሉ?');
-            if (!confirm(confirmMsg)) return;
-
+            // Two-tap confirm (same pattern as the Telegram delete):
+            // first tap arms the button with the confirm message as its
+            // label, second tap within 4 seconds executes. No native
+            // confirm() — automated browsers auto-dismiss those, so the
+            // action never ran.
+            const armKey = 'sub-status-' + subId + '-' + newStatus;
+            if (!window._broadcastDeleteArmed) window._broadcastDeleteArmed = {};
+            const origHtml = btn ? btn.innerHTML : '';
+            if (!window._broadcastDeleteArmed[armKey]) {
+                window._broadcastDeleteArmed[armKey] = true;
+                if (btn) {
+                    btn.classList.add('bg-red-600', 'text-white');
+                    btn.innerText = confirmMsg;
+                }
+                setTimeout(() => {
+                    window._broadcastDeleteArmed[armKey] = false;
+                    if (btn && btn.isConnected) {
+                        btn.classList.remove('bg-red-600', 'text-white');
+                        btn.innerHTML = origHtml;
+                    }
+                }, 4000);
+                return;
+            }
+            window._broadcastDeleteArmed[armKey] = false;
             try {
                 const res = await apiFetch(`/api/subscriptions/${subId}/status`, {
                     method: 'PATCH',
@@ -3435,13 +3457,18 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-          alert(' ' + (data.message || 'የደንበኝነት እቅድ ሁኔታ ተዘምኗል!'));
+                    showToast(' ' + (data.message || 'የደንበኝነት እቅድ ሁኔታ ተዘምኗል!'), 'success');
                     loadActiveTab();
                 } else {
-          alert(' ስህተት: ' + (data.message || 'ሁኔታውን ማዘመን አልተቻለም'));
+                    showToast(' ስህተት: ' + (data.message || 'ሁኔታውን ማዘመን አልተቻለም'), 'error');
                 }
             } catch (e) {
-                alert('የግንኙነት ስህተት: ' + e.message);
+                showToast('የግንኙነት ስህተት: ' + e.message, 'error');
+            } finally {
+                if (btn && btn.isConnected) {
+                    btn.classList.remove('bg-red-600', 'text-white');
+                    btn.innerHTML = origHtml;
+                }
             }
         }
 
@@ -9057,7 +9084,7 @@
                                             <button type="button" onclick="toggleReviewApprovalState(${f.id})" class="px-2 py-1 text-[11px] font-bold rounded-lg border transition ${f.is_approved ? 'border-amber-500/30 text-amber-400 hover:bg-amber-950' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-950'} cursor-pointer">
                                                 ${f.is_approved ? 'ደብቅ' : 'አጽድቅ (Publish)'}
                                             </button>
-                                            <button type="button" onclick="deleteCmsReview(${f.id})" class="px-2 py-1 text-[11px] font-bold rounded-lg border border-red-500/30 text-red-400 hover:bg-red-950 transition cursor-pointer">
+                                            <button type="button" onclick="deleteCmsReview(${f.id}, this)" class="px-2 py-1 text-[11px] font-bold rounded-lg border border-red-500/30 text-red-400 hover:bg-red-950 transition cursor-pointer">
                                                 አጥፋ
                                             </button>
                                         </td>
@@ -9080,13 +9107,45 @@
             }
         }
 
-        async function deleteCmsReview(id) {
-            if (!confirm('ይህንን አስተያየት መሰረዝ ይፈልጋሉ?')) return;
+        // Delete a CMS review — two-tap confirm (same pattern as the
+        // Telegram delete). No native confirm() — automated browsers
+        // auto-dismiss those, so the delete never ran.
+        async function deleteCmsReview(id, btn) {
+            const armKey = 'delete-review-' + id;
+            if (!window._broadcastDeleteArmed) window._broadcastDeleteArmed = {};
+            const origHtml = btn ? btn.innerHTML : '';
+            if (!window._broadcastDeleteArmed[armKey]) {
+                window._broadcastDeleteArmed[armKey] = true;
+                if (btn) {
+                    btn.classList.add('bg-red-600', 'text-white');
+                    btn.innerText = 'እርግጠኛ ነህ? እንደገና ጠቅ አድርግ';
+                }
+                setTimeout(() => {
+                    window._broadcastDeleteArmed[armKey] = false;
+                    if (btn && btn.isConnected) {
+                        btn.classList.remove('bg-red-600', 'text-white');
+                        btn.innerHTML = origHtml;
+                    }
+                }, 4000);
+                return;
+            }
+            window._broadcastDeleteArmed[armKey] = false;
             try {
                 const res = await apiFetch(`/api/admin/website/feedbacks/${id}`, { method: 'DELETE' });
-                if (res.ok) loadCmsTabData();
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    showToast('አስተያየቱ ተሰርዟል።', 'success');
+                    loadCmsTabData();
+                } else {
+                    showToast('ስህተት: ' + (data.message || 'መሰረዝ አልተቻለም'), 'error');
+                }
             } catch (err) {
-                alert('ስህተት፡ ' + err.message);
+                showToast('ስህተት: ' + err.message, 'error');
+            } finally {
+                if (btn && btn.isConnected) {
+                    btn.classList.remove('bg-red-600', 'text-white');
+                    btn.innerHTML = origHtml;
+                }
             }
         }
 
@@ -9854,7 +9913,7 @@
 
                             <div class="flex flex-wrap justify-end gap-2 pt-4 border-t border-slate-800 mt-4">
                                 ${o.order_status === 'completed' ? `
-                                    <button onclick="triggerSendReviewRequest(${o.id}, '${escapeHtml(o.order_number)}')" class="px-4 py-2 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
+                                    <button onclick="triggerSendReviewRequest(${o.id}, '${escapeHtml(o.order_number)}', this)" class="px-4 py-2 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
                                         <i data-lucide="star" class="w-4 h-4 text-amber-400"></i>
                                         <span>የደረጃ ጥየቃ ላክ (Review Request)</span>
                                     </button>
@@ -9895,10 +9954,32 @@
             }
         }
 
-        async function triggerSendReviewRequest(orderId, orderNumber) {
-            if (!confirm(`የትዕዛዝ ቁጥር ${orderNumber} ደንበኛ የ 5-ኮከብ ደረጃ እንዲሰጡ ጥያቄ በቴሌግራም/ኤስኤምኤስ ይላክ?`)) {
+        async function triggerSendReviewRequest(orderId, orderNumber, btn) {
+            const confirmMsg = `የትዕዛዝ ቁጥር ${orderNumber} ደንበኛ የ 5-ኮከብ ደረጃ እንዲሰጡ ጥያቄ በቴሌግራም/ኤስኤምኤስ ይላክ?`;
+            // Two-tap confirm (same pattern as the Telegram delete):
+            // first tap arms the button with the confirm message as its
+            // label, second tap within 4 seconds sends. No native
+            // confirm() — automated browsers auto-dismiss those, so the
+            // request never ran.
+            const armKey = 'send-review-req-' + orderId;
+            if (!window._broadcastDeleteArmed) window._broadcastDeleteArmed = {};
+            const origHtml = btn ? btn.innerHTML : '';
+            if (!window._broadcastDeleteArmed[armKey]) {
+                window._broadcastDeleteArmed[armKey] = true;
+                if (btn) {
+                    btn.classList.add('bg-red-600', 'text-white');
+                    btn.innerText = confirmMsg;
+                }
+                setTimeout(() => {
+                    window._broadcastDeleteArmed[armKey] = false;
+                    if (btn && btn.isConnected) {
+                        btn.classList.remove('bg-red-600', 'text-white');
+                        btn.innerHTML = origHtml;
+                    }
+                }, 4000);
                 return;
             }
+            window._broadcastDeleteArmed[armKey] = false;
             try {
                 showToast('የደረጃ መስጫ ጥያቄ በመላክ ላይ...', 'info');
                 const res = await apiFetch(`/api/orders/${orderId}/send-review-request`, {
@@ -9912,6 +9993,11 @@
                 }
             } catch (err) {
                 showToast('የኔትወርክ ስህተት አጋጥሟል', 'error');
+            } finally {
+                if (btn && btn.isConnected) {
+                    btn.classList.remove('bg-red-600', 'text-white');
+                    btn.innerHTML = origHtml;
+                }
             }
         }
         window.triggerSendReviewRequest = triggerSendReviewRequest;
