@@ -127,16 +127,18 @@ class TelegramController extends Controller
   public function getTelegramChannelUrl(): string
   {
     try {
-      // Batch 11a: a stale stored telegram_channel value pointed at a
-      // non-existent username (dead channel button). Only trust a stored
-      // value that is the real channel; otherwise use the canonical URL.
-      $val = trim((string)WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashcleaningsolution'));
-      if ($val !== '' && str_contains($val, 'meashcleaningsolution')) {
-        return $val;
+      // Batch 13: the real channel is @meashdeepcleanning (verified on
+      // t.me). The Nov 11 change to @meashcleaningsolution was wrong —
+      // that username does not exist. A stored meashcleaningsolution
+      // value is stale and must not be trusted; only trust a stored
+      // value that is the real channel, otherwise use the canonical URL.
+      $val = trim((string)WebsiteSetting::getVal('telegram_channel', 'https://t.me/meashdeepcleanning'));
+      if ($val !== '' && str_contains($val, 'meashdeepcleanning')) {
+        return str_starts_with($val, 'http') ? $val : 'https://t.me/' . ltrim($val, '@');
       }
-      return 'https://t.me/meashcleaningsolution';
+      return 'https://t.me/meashdeepcleanning';
     } catch (\Throwable $e) {
-      return 'https://t.me/meashcleaningsolution';
+      return 'https://t.me/meashdeepcleanning';
     }
   }
 
@@ -927,7 +929,7 @@ class TelegramController extends Controller
             ['text' => 'አስተያየት ይስጡ | Feedback', 'callback_data' => 'menu_feedback'],
           ],
           [
-            ['text' => 'ቴሌግራም ቻናል', 'url' => 'https://t.me/meashcleaningsolution'],
+            ['text' => 'ቴሌግራም ቻናል', 'url' => $this->getTelegramChannelUrl()],
             ['text' => 'ቀጥታ ለማነጋገር (Contact)', 'url' => 'https://t.me/meashcleaning'],
           ],
           [

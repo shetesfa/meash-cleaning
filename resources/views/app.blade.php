@@ -3028,7 +3028,7 @@
                                 <div style="font-size:22pt; font-weight:900; letter-spacing:1.5px; color:#ffffff;">MEASH CLEANING SOLUTION</div>
                                 <div style="font-size:13pt; font-weight:bold; color:#38bdf8; margin-top:3px;">ሜሽ የፅዳት እና የህንፃ አያያዝ አገልግሎት</div>
                                 <div style="font-size:10pt; font-style:italic; color:#cbd5e1; margin-top:4px;">«የአካባቢዎ ንጽህና፣ የኛ ኃላፊነት! | Your Environment, Our Responsibility»</div>
-                                <div style="font-size:9.5pt; color:#93c5fd; margin-top:6px;">ስልክ፡ 0970075509 / 0998142190 | ቴሌግራም ቻናል፡ @meashcleaningsolution | ቀጥታ ለማነጋገር (Direct Contact)፡ @meashcleaning | አዲስ አበባ፣ ኢትዮጵያ</div>
+                                <div style="font-size:9.5pt; color:#93c5fd; margin-top:6px;">ስልክ፡ 0970075509 / 0998142190 | ቴሌግራም ቻናል፡ @meashdeepcleanning | ቀጥታ ለማነጋገር (Direct Contact)፡ @meashcleaning | አዲስ አበባ፣ ኢትዮጵያ</div>
                             </td>
                         </tr>
                         <tr style="border:none;">
@@ -8810,7 +8810,7 @@
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቻናል (Channel Link)</label>
-                                    <input type="text" id="set-tg-chan" value="${escapeHtml(s.telegram_channel || 'https://t.me/meashcleaningsolution')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" placeholder="https://t.me/meashcleaningsolution">
+                                    <input type="text" id="set-tg-chan" value="${escapeHtml(s.telegram_channel || 'https://t.me/meashdeepcleanning')}" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" placeholder="https://t.me/meashdeepcleanning">
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቀጥታ ለማነጋገር (Direct Contact)</label>
@@ -11023,7 +11023,7 @@
                                     <div class="text-[11px] text-slate-600 mt-2 space-y-0.5">
                                         <p>አድራሻ፡ <strong>አያት ተስፉ ሞል ፊት ለፊት፣ አዲስ አበባ</strong></p>
                                         <p>ስልክ፡ <strong>0970075509 / 0998142190</strong></p>
-                                        <p>ቴሌግራም ቻናል፡ <a href="https://t.me/meashcleaningsolution" target="_blank" class="text-blue-700 font-bold hover:underline">@meashcleaningsolution</a> | ቀጥታ ለማነጋገር (Direct Contact)፡ <a href="https://t.me/meashcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashcleaning</a></p>
+                                        <p>ቴሌግራም ቻናል፡ <a href="https://t.me/meashdeepcleanning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashdeepcleanning</a> | ቀጥታ ለማነጋገር (Direct Contact)፡ <a href="https://t.me/meashcleaning" target="_blank" class="text-blue-700 font-bold hover:underline">@meashcleaning</a></p>
                                     </div>
                                 </div>
                                 <div class="text-right">

@@ -89,7 +89,7 @@ class WebsiteSetting extends Model
             'social_handle' => '@meashcleaningsolution',
             'working_hours_am' => 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)',
             'working_hours_en' => 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday & Night Shift by Appointment)',
-            'telegram_channel' => 'https://t.me/meashcleaningsolution',
+            'telegram_channel' => 'https://t.me/meashdeepcleanning',
             'telegram_support' => '@meashcleaning',
             'telegram_bot' => 'https://t.me/meash_cleaning_solution_bot',
             'tiktok' => 'https://www.tiktok.com/@meashcleaningsolution',

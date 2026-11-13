@@ -39,12 +39,12 @@
   $tiktokUrl = $websiteSettings['tiktok'] ?? 'https://www.tiktok.com/@meashcleaningsolution';
   $instagramUrl = $websiteSettings['instagram'] ?? 'https://instagram.com/meashcleaningsolution';
   $facebookUrl = $websiteSettings['facebook'] ?? 'https://facebook.com/meashcleaningsolution';
-  // Batch 11a: only trust a stored channel value that is the real channel
-  // @meashcleaningsolution — a stale stored value pointed at a username
-  // that does not exist (dead channel button in the bot test).
-  $telegramChannelUrl = $websiteSettings['telegram_channel'] ?? 'https://t.me/meashcleaningsolution';
-  if (!str_contains((string)$telegramChannelUrl, 'meashcleaningsolution')) {
-    $telegramChannelUrl = 'https://t.me/meashcleaningsolution';
+  // Batch 13: the real channel is @meashdeepcleanning (verified on t.me).
+  // Only trust a stored channel value that is the real channel — a stored
+  // meashcleaningsolution value is stale (that username does not exist).
+  $telegramChannelUrl = $websiteSettings['telegram_channel'] ?? 'https://t.me/meashdeepcleanning';
+  if (!str_contains((string)$telegramChannelUrl, 'meashdeepcleanning')) {
+    $telegramChannelUrl = 'https://t.me/meashdeepcleanning';
   }
   // Batch 11a: same guard for the 2nd phone + English address — stale
   // stored values printed phone 1 twice and the old address.
@@ -2927,7 +2927,7 @@
     <div>
       <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ማህበራዊ ትስስር ({{ $socialHandle }})</p>
       <ul class="space-y-2 text-xs">
-        <li><a href="{{ $telegramChannelUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashcleaningsolution)</a></li>
+        <li><a href="{{ $telegramChannelUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashdeepcleanning)</a></li>
         <li><a href="{{ $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="message-circle" class="w-3.5 h-3.5 text-teal"></i> Direct Telegram (@meashcleaning)</a></li>
         <li><a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="bot" class="w-3.5 h-3.5 text-teal"></i> Telegram Bot</a></li>
         <li><a href="{{ $tiktokUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="video" class="w-3.5 h-3.5 text-teal"></i> TikTok</a></li>
