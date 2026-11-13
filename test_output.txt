@@ -1,0 +1,181 @@
+
+   PASS  Tests\Unit\EthiopianCalendarServiceTest
+  ✓ ethiopian leap year detection                                        0.07s  
+  ✓ new year and pagume transitions around leap year                     0.01s  
+  ✓ gregorian leap year transition in february                           0.01s  
+  ✓ to gregorian conversion roundtrip                                    0.01s  
+  ✓ amharic formatting                                                   0.01s  
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true                                                    0.07s  
+
+   PASS  Tests\Feature\AuthTest
+  ✓ login works by email                                                 4.70s  
+  ✓ login works by phone                                                 0.02s  
+  ✓ login rejects bad password                                           0.02s  
+  ✓ login throttles after five failed attempts                           0.10s  
+
+   PASS  Tests\Feature\AuthorizationTest
+  ✓ cleaners cannot see other teams orders                               0.04s  
+  ✓ cleaners cannot see customers list                                   0.01s  
+  ✓ active users across all roles access authorized endpoints            0.05s  
+  ✓ inactive suspended users are rejected with 403                       0.02s  
+  ✓ role boundary isolation enforced                                     0.01s  
+
+   PASS  Tests\Feature\CustomerReviewAndRatingTest
+  ✓ public website review submission with high rating auto approves      0.27s  
+  ✓ public website review submission with low rating stays unapproved    0.27s  
+  ✓ public website review without phone is rejected                      0.26s  
+  ✓ telegram webhook rate order callback creates feedback                0.30s  
+  ✓ manual send review request from reception or owner                   0.29s  
+  ✓ order completion triggers review notification                        0.27s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                        0.03s  
+
+   PASS  Tests\Feature\FinalBlockerRepairTest
+  ✓ offline sync concurrency lock never returns already processed and r… 0.02s  
+  ✓ failed first sync can retry successfully and cannot process twice    0.04s  
+  ✓ owner reception sales finance cleaner role sync matrix               0.07s  
+  ✓ clean demo data preserves legitimate organizations named cbe hyatt…  0.07s  
+  ✓ clean demo data works when demo user list is empty and no empty nes… 0.02s  
+  ✓ finance role cannot view staff and leader phone numbers in order sh… 0.03s  
+  ✓ notification anti idor and per user read state                       0.03s  
+  ✓ provision owner command enforces amha and strong password            0.02s  
+  ✓ offline sync prevents cross account uuid hijacking                   0.02s  
+  ✓ offline sync recovers safely from stale in progress records          0.05s  
+  ✓ atomic rollback on transaction failure prevents false completed ide… 0.02s  
+  ✓ clean demo data purges child records through provenance and parent…  0.07s  
+  ✓ order status conflict creation and idempotency are atomic            0.04s  
+  ✓ stale recovery atomic claim prevents simultaneous processing         0.02s  
+  ✓ genuine concurrent requests for same client uuid creates exactly on… 0.04s  
+  ✓ quarantine export and recovery strictly forbidden for non owner      0.02s  
+  ✓ quarantine export and recovery authorized for owner with audit trai… 0.03s  
+
+   PASS  Tests\Feature\FinalReleaseAuditTest
+  ✓ provision owner command creates amha and supports username login     0.03s  
+  ✓ telegram token is never returned in admin settings get or post       0.03s  
+  ✓ reception cannot access or change telegram bot credentials           0.01s  
+  ✓ role based read and write access across all roles                    0.06s  
+  ✓ sync batch strict positive authorization and price tampering preven… 0.08s  
+  ✓ miniapp replay and concurrency atomic protection                     0.39s  
+  ✓ clean demo data command purges all seeder sample entities and prese… 0.06s  
+
+   PASS  Tests\Feature\FullEndToEndSystemFlowTest
+  ✓ flow 1 orders from all four channels and auto sync to broadcast lis… 0.43s  
+  ✓ flow 2 cleaner payment reporting and approval workflow               0.29s  
+  ✓ flow 3 completed order 5 star review and feedback                    0.31s  
+  ✓ flow 4 official brochure and customizable settings live              0.28s  
+  ✓ flow 5 broadcast management telegram dispatch and iphone sms bridge  9.42s  
+
+   PASS  Tests\Feature\MeashChannelAndPaymentTest
+  ✓ order filtering by channel source                                    0.05s  
+  ✓ payment methods normalization and order payment                      0.04s  
+  ✓ dashboard channel and payment breakdown                              0.03s  
+
+   PASS  Tests\Feature\MeashFinanceTest
+  ✓ payment updates order payment status automatically                   0.28s  
+  ✓ profit report calculates real net profit                             0.38s  
+
+   PASS  Tests\Feature\MeashOfflineSyncTest
+  ✓ offline sync batch creates order idempotently                        0.28s  
+  ✓ sync detects conflict when server version diverges                   0.27s  
+  ✓ sync ignores client forged prices and uses catalog prices            0.28s  
+  ✓ sync enforces unpaid status even if client claims paid               0.28s  
+  ✓ sync without token returns 401                                       0.26s  
+  ✓ sync prevents uuid hijacking across different users                  0.28s  
+
+   PASS  Tests\Feature\MeashOrderTest
+  ✓ multi item order calculates totals accurately                        0.29s  
+  ✓ cleaner can complete job and schedule followup                       0.27s  
+
+   PASS  Tests\Feature\MeashTelegramTest
+  ✓ telegram inline query generates rich cards                           0.26s  
+  ✓ telegram mini app booking creates central order                      0.57s  
+
+   PASS  Tests\Feature\PaymentApprovalWorkflowTest
+  ✓ cleaner submitting cash payment sets pending approval and never dir… 0.03s  
+  ✓ cleaner submitting transfer payment sets pending approval with refe… 0.03s  
+  ✓ owner approves payment creates payment record and updates revenue    0.07s  
+  ✓ reception rejects pending payment                                    0.03s  
+  ✓ cleaner cannot approve payment or record direct payment              0.03s  
+  ✓ scenario a partial payment marks order as partially paid             0.05s  
+  ✓ scenario b multiple payments reaching total marks order as paid      0.05s  
+  ✓ scenario c rejected payment does not create revenue                  0.06s  
+  ✓ scenario d pending payment does not count as revenue                 0.04s  
+  ✓ scenario e duplicate approval does not create duplicate payment      0.16s  
+  ✓ scenario f consecutive approvals calculate correct final balance     0.06s  
+  ✓ scenario g sales and cleaners cannot approve payments                0.02s  
+  ✓ order refund records expense and adjusts status                      0.03s  
+  ✓ cleaner cannot submit payment for order assigned to another team     0.02s  
+
+   PASS  Tests\Feature\PhoneOrderAndFilterTest
+  ✓ phone order creation auto creates customer and links appointment     0.04s  
+  ✓ phone order reuses existing customer by phone                        0.03s  
+  ✓ order index filters by team and status aliases                       0.03s  
+  ✓ order index supports large pagination and all flag                   0.02s  
+  ✓ order update accepts team id and status                              0.03s  
+
+   PASS  Tests\Feature\ProductionHardeningSecurityTest
+  ✓ public settings never exposes bot token or secrets                   0.02s  
+  ✓ unauthorized role cannot update order status                         0.02s  
+  ✓ cleaner cannot submit payment for unassigned team order              0.02s  
+  ✓ sales role cannot submit or approve payments                         0.02s  
+  ✓ finance role can approve and record payments and view profit report  0.05s  
+  ✓ telegram init data with expired auth date is rejected                0.01s  
+  ✓ telegram webhook clears dedup cache on processing failure            0.01s  
+
+   PASS  Tests\Feature\RealDashboardMetricsAndActionsTest
+  ✓ owner dashboard returns real satisfaction metrics and time series    0.04s  
+  ✓ finance profit report returns daily and monthly time series          0.03s  
+  ✓ cleaner my jobs returns real team stats and persists checklist       0.04s  
+  ✓ reception and owner can create draft order and reassign team         0.04s  
+  ✓ subscription creation with inline customer and mrr calculation       0.03s  
+
+   PASS  Tests\Feature\RealDataEndToEndTest
+  ✓ website booking with real data                                       0.38s  
+  ✓ telegram mini app booking with real data                             0.37s  
+  ✓ telegram bot webhook booking flow                                    0.28s  
+  ✓ orders immediately visible to admin and reception                    0.30s  
+  ✓ website order is visible and reconciles through payment              0.33s  
+  ✓ telegram bot interactive chat wizard booking flow                    0.29s  
+
+   PASS  Tests\Feature\RouteIntegrityTest
+  ✓ all api routes point to valid controller methods                     0.01s  
+
+   PASS  Tests\Feature\SecurityAuditTest
+  ✓ suspended user cannot access api with existing token                 0.01s  
+  ✓ unauthenticated requests are rejected                                0.01s  
+  ✓ cleaners cannot access restricted endpoints                          0.01s  
+  ✓ cleaner cross team access is rejected                                0.02s  
+  ✓ server side order price recalculation                                0.03s  
+  ✓ public tracking privacy and token protection                         0.02s  
+  ✓ public rescheduling requires signed token                            0.02s  
+  ✓ token revocation on logout and password change                       0.03s  
+  ✓ production api sanitizes errors                                      0.01s  
+
+   PASS  Tests\Feature\SyncTest
+  ✓ batch sync returns errors for failed items                           0.02s  
+
+   PASS  Tests\Feature\TelegramBroadcastImportTest
+  ✓ csv text lines import successfully                                   0.27s  
+  ✓ malformed json is rejected                                           0.25s  
+
+   PASS  Tests\Feature\TelegramOptimizationAndChapaRemovalTest
+  ✓ chapa is rejected in order payment and website booking               0.02s  
+  ✓ telegram webhook deduplication via cache                             0.31s  
+  ✓ sms service handles gateway outage safely without throwing           0.02s  
+  ✓ telegram broadcast chunks and dispatches cleanly                     0.27s  
+
+   PASS  Tests\Feature\TelegramSecurityAndInitDataTest
+  ✓ telegram init data verification algorithm                            0.01s  
+  ✓ set webhook requires sanctum auth and role                           0.32s  
+  ✓ miniapp booking verifies init data and sets trusted user id          0.32s  
+
+   PASS  Tests\Feature\TelegramWebhookTest
+  ✓ telegram webhook returns 401 when secret is missing                  0.01s  
+  ✓ telegram webhook returns 401 when secret is wrong                    0.01s  
+
+  Tests:    125 passed (785 assertions)
+  Duration: 27.85s
+
