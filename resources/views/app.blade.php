@@ -2560,7 +2560,11 @@
                         body: JSON.stringify(payload)
                     });
                     if (res && res.ok) {
-            alert(action === 'on_the_way' ? ' ጉዞ ጀምረዋል! (Sent)' : ' የስራ ሁኔታ ተቀይሮ ተልኳል (Sent)');
+                        // Batch 16: was a native alert() — invisible in
+                        // automation and inconsistent with every other
+                        // save. The list refresh below (loadActiveTab)
+                        // already ran; only the toast was missing.
+                        showToast(action === 'on_the_way' ? 'ጉዞ ጀምረዋል! (Sent)' : 'የስራ ሁኔታ ተቀይሮ ተልኳል (Sent)', 'success');
                     } else {
                         // Server rejected it (e.g. wrong state) — say so
                         // honestly; do NOT queue it offline as if it worked.

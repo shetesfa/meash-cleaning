@@ -149,9 +149,14 @@ class TeamController extends Controller
             ->get();
 
         // 4. Upcoming future appointments for this team
+        // Batch 16: 'on_the_way' and 'cleaning' are active in-transit /
+        // in-progress jobs, not finished ones — an order whose cleaner
+        // already started the journey must still show under Upcoming
+        // (before this it vanished from every tab: Today requires
+        // appointment_date <= today, and Upcoming did not list it).
         $upcomingJobs = (clone $jobsQuery)
             ->whereDate('appointment_date', '>', $today)
-            ->whereIn('order_status', ['confirmed', 'assigned', 'new'])
+            ->whereIn('order_status', ['confirmed', 'assigned', 'new', 'on_the_way', 'cleaning'])
             ->orderBy('appointment_date')
             ->limit(20)
             ->get();

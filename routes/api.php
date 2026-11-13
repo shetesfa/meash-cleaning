@@ -161,11 +161,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/feedbacks', [CustomerCareController::class, 'storeFeedback']);
         Route::post('/feedbacks/{feedback}/approve', [CustomerCareController::class, 'approveFeedback']);
         Route::get('/complaints', [CustomerCareController::class, 'complaints']);
-        Route::post('/complaints', [CustomerCareController::class, 'storeComplaint']);
         Route::post('/complaints/{complaint}/resolve', [CustomerCareController::class, 'resolveComplaint']);
         Route::post('/send-sms', [CustomerCareController::class, 'sendSms']);
         Route::post('/send-telegram', [CustomerCareController::class, 'sendTelegram']);
     });
+
+    // Batch 16: the cleaner problem-report button (submitProblemReport)
+    // posts here — cleaners may FILE a complaint, but nothing else in the
+    // care group above is open to them (followups, feedbacks, resolve,
+    // send-sms/telegram stay owner/reception only). storeComplaint derives
+    // the customer from the order, so no other cleaner check is needed.
+    Route::post('/care/complaints', [CustomerCareController::class, 'storeComplaint'])->middleware('role:owner,reception,cleaner');
 
     Route::prefix('customer-care')->middleware('role:owner,reception')->group(function () {
         Route::post('/send-sms', [CustomerCareController::class, 'sendSms']);
