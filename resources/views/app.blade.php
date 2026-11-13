@@ -511,7 +511,12 @@
         let deferredPwaPrompt = null;
         let activeConflict = null;
         let activeCleaningTeamId = localStorage.getItem('meash_active_team_id') || 1;
-        let activeCleaningTeamName = localStorage.getItem('meash_active_team_name') || 'Team Alpha (Upholstery & Carpet)';
+        // Batch 14: never default to a fake seeded team name. The real name
+        // comes from the my-jobs response (renderCleanerView); until then the
+        // header falls back to the neutral 'የጽዳት ቡድን'. A stale stored fake
+        // name from an older build is treated as empty.
+        let activeCleaningTeamName = localStorage.getItem('meash_active_team_name') || '';
+        if (activeCleaningTeamName === 'Team Alpha (Upholstery & Carpet)' || activeCleaningTeamName === 'Team Alpha') activeCleaningTeamName = '';
 
         function togglePasswordVisibility(id) {
             const input = document.getElementById(id);
@@ -1322,7 +1327,7 @@
                 currentUser.name = 'ቤተልሔም ታደሰ (ሪሴፕሽን)';
                 activeTab = 'reception_desk';
             } else if (role === 'cleaner') {
-                currentUser.name = activeCleaningTeamName || 'Team Alpha (Upholstery & Carpet)';
+                currentUser.name = activeCleaningTeamName || 'የጽዳት ቡድን';
                 activeTab = 'cleaner_jobs';
             } else if (role === 'sales') {
                 currentUser.name = 'ዳንኤል ግርማ (የውጭ ሽያጭ)';
@@ -2196,6 +2201,11 @@
                 let todayList = [];
                 let upcomingList = [];
                 let completedList = [];
+                // Batch 14: the stats strip below the fetch reads these. They must
+                // live at function scope — the fetch response `data` is block-scoped
+                // to the else branch and referencing it in the template threw
+                // "ReferenceError: data is not defined" on every render.
+                let teamStats = null;
 
                 // Check offline cached jobs first if available
                 let cached = [];
@@ -2217,6 +2227,7 @@
                         return; // Redirected to login screen cleanly
                     }
                     const data = await res.json();
+                    teamStats = data.stats || null;
                     todayList = data.today_jobs || [];
                     upcomingList = data.upcoming_jobs || [];
                     completedList = (data.completed_jobs && data.completed_jobs.length > 0)
@@ -2229,6 +2240,22 @@
                     if (currentTeam && currentTeam.team_name) {
                         activeCleaningTeamName = currentTeam.team_name;
                         activeCleaningTeamId = currentTeam.id;
+                        // Batch 14: the header showed a neutral label at login
+                        // (before this response arrived). Now the real team name
+                        // is known — show it in the header and remember it for
+                        // the next login. Never a fake seeded team name.
+                        try {
+                            localStorage.setItem('meash_active_team_id', currentTeam.id);
+                            localStorage.setItem('meash_active_team_name', currentTeam.team_name);
+                        } catch (e) { /* storage unavailable — header still updates below */ }
+                        if (currentUser.role === 'cleaner') {
+                            currentUser.name = currentTeam.team_name;
+                            const cleanerNameEl = document.getElementById('user-display-name');
+                            if (cleanerNameEl) cleanerNameEl.innerText = currentTeam.team_name;
+                            const cleanerBadge = document.getElementById('header-role-badge');
+                            if (cleanerBadge) cleanerBadge.innerText = ' ' + currentTeam.team_name.split('(')[0].trim();
+                            renderProfileDropdown();
+                        }
                     }
 
                     // Cache into IndexedDB for offline access
@@ -2277,7 +2304,7 @@
                             <div>
                                 <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">የመስክ አጽጂ ቡድን መከታተያ</span>
                                 <h2 class="text-xl font-black text-white">${tabTitle}</h2>
-                                <p class="text-xs text-cyan-300 font-semibold mt-0.5">${EC.formatEth(new Date())} • ${currentTeam?.team_name || activeCleaningTeamName}</p>
+                                <p class="text-xs text-cyan-300 font-semibold mt-0.5">${EC.formatEth(new Date())} • ${currentTeam?.team_name || activeCleaningTeamName || 'የጽዳት ቡድን'}</p>
                             </div>
                             <div class="flex items-center gap-2 self-start sm:self-auto">
                                 <div class="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-2xl border border-cyan-500/50 shadow">
@@ -2296,15 +2323,15 @@
                         <div class="grid grid-cols-3 gap-2 p-3 bg-slate-900 border border-slate-800 rounded-2xl text-center shadow-lg">
                             <div>
                                 <span class="text-[10px] text-slate-400 block font-semibold">የተጠናቀቁ ስራዎች</span>
-                                <span class="text-base font-black text-emerald-400 mt-0.5 block">${data.stats?.total_completed || 0}</span>
+                                <span class="text-base font-black text-emerald-400 mt-0.5 block">${teamStats?.total_completed || 0}</span>
                             </div>
                             <div class="border-x border-slate-800">
                                 <span class="text-[10px] text-slate-400 block font-semibold">ስራ ማጠናቀቅ</span>
-                                <span class="text-base font-black text-cyan-300 mt-0.5 block">${data.stats?.completion_rate ?? '—'}%</span>
+                                <span class="text-base font-black text-cyan-300 mt-0.5 block">${teamStats?.completion_rate ?? '—'}%</span>
                             </div>
                             <div>
                                 <span class="text-[10px] text-slate-400 block font-semibold">አማካይ እርካታ</span>
-                                <span class="text-base font-black text-amber-400 mt-0.5 block">${data.stats?.avg_rating ?? '—'} ★</span>
+                                <span class="text-base font-black text-amber-400 mt-0.5 block">${teamStats?.avg_rating ?? '—'} ★</span>
                             </div>
                         </div>
 
@@ -10047,19 +10074,19 @@
                 custName = param2;
                 custPhone = param3;
                 orderId = null;
-                teamName = param5 || activeCleaningTeamName || 'Team Alpha';
+                teamName = param5 || activeCleaningTeamName || 'የጽዳት ቡድን';
             } else if (arguments.length >= 4) {
                 orderId = param1;
                 custName = param2;
                 custPhone = param3;
                 address = param4;
-                teamName = param5 || activeCleaningTeamName || 'Team Alpha';
+                teamName = param5 || activeCleaningTeamName || 'የጽዳት ቡድን';
             } else {
                 orderId = param1;
                 custName = param2;
                 custPhone = param3;
                 address = param4;
-                teamName = param5 || activeCleaningTeamName || 'Team Alpha';
+                teamName = param5 || activeCleaningTeamName || 'የጽዳት ቡድን';
             }
 
             if (!custName || custName === 'undefined' || custName === 'null') {
