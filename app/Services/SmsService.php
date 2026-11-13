@@ -149,7 +149,7 @@ class SmsService
     }
 
     /**
-     * Sends a direct test SMS to verify carrier delivery
+     * Logs a test SMS locally (no carrier delivery — no SMS gateway exists)
      */
     public static function sendTestSms(string $phone, ?string $customMessage = null): array
     {
@@ -167,9 +167,12 @@ class SmsService
      */
     public static function sendDirectSms(string $phone, string $message, array $metadata = []): array
     {
-        $deliveryStatus = 'delivered';
-        $providerResponse = 'Direct normal phone SMS: Dispatched to phone carrier for ' . $phone;
-        $isLiveCarrier = true;
+        // NO SMS gateway is connected: this only logs. Report honestly so
+        // every caller (and every toast) stops claiming delivery. The real
+        // send path is the phone SMS Bridge or the sms: link returned below.
+        $deliveryStatus = 'logged_locally';
+        $providerResponse = 'No SMS gateway configured: message logged locally only, NOT sent to the phone carrier for ' . $phone;
+        $isLiveCarrier = false;
 
         // Direct device click-to-SMS URI for phone integration
         $smsUri = 'sms:' . $phone . '?body=' . rawurlencode($message);
@@ -253,15 +256,15 @@ class SmsService
     }
 
     /**
-     * Get live SMS status (direct normal phone SMS & iPhone Auto-SMS bridge)
+     * Get live SMS status (no gateway connected — log only + Phone SMS Bridge)
      */
     public static function getGatewayStatus(): array
     {
         return [
-            'is_live' => true,
-            'status' => 'ACTIVE',
-            'provider' => 'direct_phone_sms',
-            'mode' => 'Direct Phone SMS & iPhone Auto-SMS Bridge',
+            'is_live' => false,
+            'status' => 'NOT_CONNECTED',
+            'provider' => 'none',
+            'mode' => 'Logged locally only — no SMS gateway connected (Phone SMS Bridge is the only real SMS path)',
         ];
     }
 

@@ -41,6 +41,10 @@ return [
         'webhook_url' => env('TELEGRAM_WEBHOOK_URL', env('APP_URL') ? rtrim(env('APP_URL'), '/') . '/api/telegram/webhook' : null),
         'miniapp_url' => env('TELEGRAM_MINIAPP_URL', env('APP_URL') ? rtrim(env('APP_URL'), '/') . '/telegram-miniapp' : null),
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
+        // Admin's own Telegram chat id (for "Send test" — set in Render
+        // dashboard as TELEGRAM_ADMIN_CHAT_ID; get it by messaging the
+        // bot once and reading chat.id). Never fall back to a customer.
+        'admin_chat_id' => env('TELEGRAM_ADMIN_CHAT_ID'),
     ],
 
     // Cloudinary image uploads for the admin Photos page. Credentials

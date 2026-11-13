@@ -152,51 +152,62 @@ class NotificationMarketingController extends Controller
         $campaign->save();
 
         $sent = 0;
+        $failed = 0;
         $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
 
         if ($campaign->channel === 'telegram') {
-            // Dispatch via Telegram Bot
+            // Dispatch via Telegram Bot — count ONLY a confirmed Telegram ok.
             $telegramUsers = TelegramUser::all();
             foreach ($telegramUsers as $tgUser) {
                 if (!empty($tgUser->telegram_id)) {
                     try {
-                        \Illuminate\Support\Facades\Http::timeout(5)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                        $response = \Illuminate\Support\Facades\Http::timeout(5)->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                             'chat_id' => $tgUser->telegram_id,
                             'text' => " " . $campaign->title . "\n\n" . $campaign->message_text,
                         ]);
-                        $sent++;
+                        if ($response->successful() && ($response->json('ok') ?? false)) {
+                            $sent++;
+                        } else {
+                            $failed++;
+                        }
                     } catch (\Throwable $e) {
+                        $failed++;
                         \Illuminate\Support\Facades\Log::warning("Campaign Telegram dispatch error: " . $e->getMessage());
                     }
                 }
             }
-            if ($sent === 0) {
-                $sent = $campaign->total_targets ?: 1;
-            }
+            // No substitution: 0 sent means 0 sent.
         } else {
             // Dispatch via SMS
             $customers = Customer::all();
             foreach ($customers as $cust) {
                 if (!empty($cust->phone)) {
                     try {
-                        \App\Services\SmsService::sendDirectSms($cust->phone, $campaign->message_text, [
+                        $smsResult = \App\Services\SmsService::sendDirectSms($cust->phone, $campaign->message_text, [
                             'sent_by_user_id' => $request->user()->id,
                             'customer_id' => $cust->id,
                         ]);
-                        $sent++;
+                        // Count ONLY a real live send. Until SmsService reports
+                        // honestly, is_live is false for logged SMS and
+                        // nothing is counted as sent.
+                        if (!empty($smsResult['is_live'])) {
+                            $sent++;
+                        } else {
+                            $failed++;
+                        }
                     } catch (\Throwable $e) {
+                        $failed++;
                         \Illuminate\Support\Facades\Log::warning("Campaign SMS dispatch error: " . $e->getMessage());
                     }
                 }
             }
-            if ($sent === 0) {
-                $sent = $campaign->total_targets ?: 1;
-            }
+            // No substitution: 0 sent means 0 sent.
         }
 
         $campaign->update([
             'status' => 'completed',
             'sent_count' => $sent,
+            'failed_count' => $failed,
             'sent_at' => now(),
         ]);
 
@@ -209,8 +220,12 @@ class NotificationMarketingController extends Controller
             ['total_sent' => $sent]
         );
 
+        $dispatchMessage = $campaign->channel === 'sms' && $sent === 0
+            ? "Campaign logged for {$failed} recipients (SMS gateway not connected — nothing was delivered)."
+            : "Campaign successfully dispatched to {$sent} recipients.";
+
         return response()->json([
-            'message' => "Campaign successfully dispatched to {$sent} recipients.",
+            'message' => $dispatchMessage,
             'campaign' => $campaign,
         ]);
     }
@@ -241,7 +256,12 @@ class NotificationMarketingController extends Controller
         $isLive = !empty($res['is_live']);
 
         if ($status === 'logged_locally') {
-            $message = 'NOT delivered - SMS gateway is not set. Logged locally in simulation mode.';
+            // Honest success: the request succeeded (it was logged), but
+            // nothing was delivered — there is no SMS gateway. Return
+            // success:true so the UI does not treat a log as an error, with
+            // a message that says exactly what happened.
+            $message = 'ተመዝግቧል (logged) — SMS gateway የለም፤ መልእክቱ አልተላከም። በስልክ SMS Bridge ወይም በ Messages App ይላኩት።';
+            return response()->json(['success' => true, 'status' => $status, 'message' => $message, 'result' => $res]);
         } elseif ($status === 'delivered') {
             $message = 'SMS sent successfully to live mobile carrier.';
         } elseif ($status === 'gateway_failed') {

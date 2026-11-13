@@ -351,7 +351,7 @@ class CustomerCareController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'የኤስኤምኤስ (SMS) መልእክቱ ለደንበኛው በተሳካ ሁኔታ ተልኳል!',
+            'message' => 'መልእክቱ በሲስተም መዝገብ ተቀምጧል — ለደንበኛው አልተላከም (no SMS gateway)። በስልክዎ Messages App ይላኩት።',
             'phone' => $cleanPhone,
             'details' => $result,
         ]);
@@ -441,8 +441,8 @@ class CustomerCareController extends Controller
 
             return response()->json([
                 'success' => true,
-                'channel' => 'sms_fallback',
-                'message' => 'ደንበኛው የቴሌግራም መለያ ስለሌለው መልእክቱ በቀጥታ በ SMS (ኤስኤምኤስ) ተልኳል!',
+                'channel' => 'sms_fallback_logged',
+                'message' => 'ደንበኛው የቴሌግራም መለያ የለውም፤ መልእክቱ በ SMS አልተላከም — በሲስተም መዝገብ ብቻ ተቀምጧል። በስልክዎ ይላኩት።',
                 'phone' => $cleanPhone,
             ]);
         }

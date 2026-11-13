@@ -3184,7 +3184,7 @@
                                 ` : ''}
                                 <button type="button" id="btn-send-sms" onclick="submitDirectSms(event)" class="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-1.5 cursor-pointer text-xs">
                                     <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                                    <span>በሰርቨር ላክ (Send via Server)</span>
+                                    <span>በሲስተም መዝገብ ብቻ አስቀምጥ (Log only — not sent)</span>
                                 </button>
                                 <div class="flex items-center gap-2 ml-auto">
                                     <button type="button" onclick="closeModal()" class="px-5 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 cursor-pointer">ዝጋ</button>
@@ -3296,7 +3296,7 @@
                 const data = await res.json();
                 if (res.ok && data.success) {
                     closeModal();
-          alert(' ' + (data.message || 'ኤስኤምኤሱ በተሳካ ሁኔታ ተልኳል!'));
+          alert(' ' + (data.message || 'ተመዝግቧል — SMS አልተላከም (logged only, no gateway)'));
                 } else {
           alert(' ስህተት: ' + (data.message || 'ኤስኤምኤስ መላክ አልተቻለም።'));
                 }
@@ -6006,6 +6006,10 @@
                                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                                 <span>Export (.csv)</span>
                             </button>
+                            <button type="button" onclick="syncBroadcastRecipients()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl flex items-center gap-1 cursor-pointer transition border border-slate-700">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                <span>ዝርዝሩን አድስ (Sync)</span>
+                            </button>
                             <button type="button" onclick="openBulkImportTelegramModal()" class="px-3 py-1.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow flex items-center gap-1 cursor-pointer transition">
                                 <i data-lucide="upload" class="w-3.5 h-3.5"></i>
                                 <span>+ በጅምላ ጫን (JSON / CSV)</span>
@@ -6375,6 +6379,20 @@
             setTimeout(() => URL.revokeObjectURL(url), 5000);
         }
 
+        // Explicit recipient sync (GET /recipients no longer auto-syncs —
+        // a plain load must never write). Press once after deploy.
+        async function syncBroadcastRecipients() {
+            const res = await apiFetch('/api/telegram-broadcast/recipients?sync=1');
+            const data = await res.json();
+            if (res.ok) {
+                broadcastRecipientsList = data.users || [];
+                renderBroadcastCenterView(document.getElementById('marketing-subtab-container'), data);
+                alert('የደንበኞች ዝርዝር ከሲስተሙ ተመዝግቧል / ተዘምኗል!');
+            } else {
+                alert('ስህተት፡ ' + (data.message || 'Sync አልተቻለም'));
+            }
+        }
+
         // Update counters without re-rendering page
         function updateBroadcastCountersDom() {
             const totalCount = broadcastRecipientsList.length;
@@ -6389,9 +6407,9 @@
 
             if (elEligible) elEligible.textContent = eligibleCount.toLocaleString();
             if (elExcluded) elExcluded.textContent = excludedCount.toLocaleString();
+            if (elSelected) elSelected.textContent = selectedContactIds.size.toLocaleString();
             if (elLabelSend) elLabelSend.textContent = eligibleCount.toLocaleString();
             if (elLabelExcluded) elLabelExcluded.textContent = excludedCount.toLocaleString();
-            if (elSelected) elSelected.textContent = selectedContactIds.size.toLocaleString();
         }
 
         // Apply templates into in-page message writer
@@ -7085,7 +7103,7 @@
                                 <div class="grid grid-cols-2 gap-2 pt-1">
                                     <button onclick="sendTestSmsFromSettings()" id="btn-settings-test-sms" class="py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs">
                                         <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                                        <span>በሲስተም SMS ላክ</span>
+                                        <span>በሲስተም መዝገብ አስቀምጥ (Log only)</span>
                                     </button>
                                     <a id="btn-owner-direct-sim-sms" href="#" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-1.5 cursor-pointer text-xs text-center">
                                         <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
@@ -7344,7 +7362,7 @@
             if (phoneList.length === 0) {
                 alert('እባክዎ ቢያንስ አንድ ትክክለኛ ስልክ ቁጥር ያስገቡ።');
                 btn.disabled = false;
-                btn.innerText = 'በሲስተም SMS ላክ';
+                btn.innerText = 'በሲስተም መዝገብ አስቀምጥ (Log only)';
                 return;
             }
 
@@ -7360,12 +7378,12 @@
                         successCount++;
                     }
                 }
-        alert(` የሙከራ ኤስኤምኤስ ለ ${successCount}/${phoneList.length} ቁጥሮች በሲስተም መዝገብ ላይ ተልኳል!`);
+        alert(` የሙከራ ኤስኤምኤስ ለ ${successCount}/${phoneList.length} ቁጥሮች በሲስተም መዝገብ ላይ ተመዝግቧል (logged — not delivered)!`);
             } catch (e) {
                 alert('የግንኙነት ስህተት: ' + e.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'በሲስተም SMS ላክ';
+                btn.innerText = 'በሲስተም መዝገብ አስቀምጥ (Log only)';
             }
         }
 
@@ -9266,14 +9284,14 @@
                                         <input type="radio" name="direct-msg-channel" value="telegram" ${hasTg ? 'checked' : ''} class="text-teal-500">
                                         <div>
                                             <span class="font-bold text-white block">Telegram Bot</span>
-                                            <span class="text-[10px] text-teal-400">${hasTg ? 'መለያ ተገኝቷል' : 'ካልተገኘ ወደ SMS ይዞራል'}</span>
+                                            <span class="text-[10px] text-teal-400">${hasTg ? 'መለያ ተገኝቷል' : 'ካልተገኘ ወደ መዝገብ ይዞራል (falls back to log only)'}</span>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-700 bg-slate-800/40 cursor-pointer">
                                         <input type="radio" name="direct-msg-channel" value="sms" ${!hasTg ? 'checked' : ''} class="text-cyan-500">
                                         <div>
-                                            <span class="font-bold text-white block">ቀጥታ SMS</span>
-                                            <span class="text-[10px] text-slate-400">በሲስተም SMS API</span>
+                                            <span class="font-bold text-white block">ቀጥታ SMS (መዝገብ ብቻ)</span>
+                                            <span class="text-[10px] text-slate-400">SMS API የለም — ይመዘገባል ብቻ</span>
                                         </div>
                                     </label>
                                 </div>

@@ -50,7 +50,8 @@ Route::prefix('public')->group(function () {
 Route::prefix('telegram')->group(function () {
     Route::post('/webhook', [TelegramController::class, 'webhook'])->middleware('throttle:120,1');
     Route::post('/miniapp/book', [TelegramController::class, 'miniAppBooking'])->middleware('throttle:15,1');
-    Route::get('/status', [TelegramController::class, 'getWebhookStatus']);
+    // NOTE: GET /telegram/status was public (it leaks bot identity +
+    // webhook info) — it now lives in the owner-only group below (L).
 });
 
 // 3. AUTHENTICATION
@@ -223,6 +224,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // L. Telegram Administrative Operations (Strictly Owner Only)
     Route::prefix('telegram')->middleware('role:owner')->group(function () {
+        Route::get('/status', [TelegramController::class, 'getWebhookStatus']);
         Route::post('/set-webhook', [TelegramController::class, 'setRenderWebhook']);
         Route::post('/send-test', [TelegramController::class, 'sendTestMessage']);
     });

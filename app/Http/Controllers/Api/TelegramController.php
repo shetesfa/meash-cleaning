@@ -3108,15 +3108,12 @@ class TelegramController extends Controller
 
     $targetChatId = $request->input('chat_id') ?: (config('services.telegram.admin_chat_id') ?: env('TELEGRAM_ADMIN_CHAT_ID'));
     if (empty($targetChatId)) {
-      $latestUser = TelegramUser::latest()->first();
-      $targetChatId = $latestUser?->telegram_id;
-    }
-
-    if (empty($targetChatId)) {
+      // NEVER fall back to a TelegramUser: the most recent row is usually
+      // a real customer, and a test message must not go to a customer.
       return response()->json([
         'success' => false,
-        'message' => 'እስካሁን ቦቱን ያናገረ ደንበኛ ወይም የ Admin Chat ID አልተገኘም። እባክዎ መጀመሪያ በቴሌግራም @' . $this->botUsername . ' ላይ /start ብለው ያናግሩት።',
-      ], 400);
+        'message' => 'የ Admin Chat ID አልተዋቀረም። እባክዎ TELEGRAM_ADMIN_CHAT_ID ያዋቅሩ (ወይም chat_id ይላኩ) — የሙከራ መልእክት ወደ ደንበኛ እንዳይሄድ ራስ-ሰር መምረጫ ተወግዷል።',
+      ], 422);
     }
 
     $resp = $this->telegramApi('sendMessage', [

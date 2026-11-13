@@ -29,38 +29,42 @@ class TelegramBroadcastController extends Controller
         $statusFilter = $request->query('status', ''); // 'all', 'excluded', 'non_excluded'
         $tagFilter = trim($request->query('tag') ?: $request->query('tags') ?: '');
 
-        // Auto-sync all Customers and System Users into TelegramUser table so contacts are 100% unified
-        try {
-            $unsyncedCustomers = Customer::whereNotNull('phone')
-                ->where('phone', '!=', '')
-                ->limit(5000)
-                ->get();
-            foreach ($unsyncedCustomers as $c) {
-                Customer::syncToBroadcastList($c);
-            }
-
-            // Also auto-sync internal system users / staff if they have phone
-            $systemUsers = \App\Models\User::whereNotNull('phone')
-                ->where('phone', '!=', '')
-                ->get();
-            foreach ($systemUsers as $u) {
-                $cleanPhone = Customer::normalizePhone($u->phone);
-                if ($cleanPhone) {
-                    TelegramUser::firstOrCreate(
-                        ['phone_number' => $cleanPhone],
-                        [
-                            'first_name' => $u->name,
-                            'is_active' => true,
-                            'is_excluded' => false,
-                            'source' => 'system_user',
-                            'tags' => 'Imported Contacts',
-                            'marketing_consent' => true,
-                        ]
-                    );
+        // Sync is EXPLICIT only: a GET must never write. The admin triggers
+        // it with ?sync=1 (Sync button in the broadcast directory).
+        // Plain loads just read telegram_users.
+        if ($request->boolean('sync')) {
+            try {
+                $customers = Customer::whereNotNull('phone')
+                    ->where('phone', '!=', '')
+                    ->limit(5000)
+                    ->get();
+                foreach ($customers as $c) {
+                    Customer::syncToBroadcastList($c);
                 }
+
+                // Also auto-sync internal system users / staff if they have phone
+                $systemUsers = \App\Models\User::whereNotNull('phone')
+                    ->where('phone', '!=', '')
+                    ->get();
+                foreach ($systemUsers as $u) {
+                    $cleanPhone = Customer::normalizePhone($u->phone);
+                    if ($cleanPhone) {
+                        TelegramUser::firstOrCreate(
+                            ['phone_number' => $cleanPhone],
+                            [
+                                'first_name' => $u->name,
+                                'is_active' => true,
+                                'is_excluded' => false,
+                                'source' => 'system_user',
+                                'tags' => 'Imported Contacts',
+                                'marketing_consent' => true,
+                            ]
+                        );
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Recipient sync error: ' . $e->getMessage());
             }
-        } catch (\Throwable $e) {
-            Log::warning('Recipient auto-sync non-critical error: ' . $e->getMessage());
         }
 
         $query = TelegramUser::query();
@@ -546,13 +550,21 @@ class TelegramBroadcastController extends Controller
     protected function processTelegramDesktopJson(array $data): JsonResponse
     {
         $realTgMap = [];
+        // Normalize display names for matching: lowercase, collapse inner
+        // whitespace, strip punctuation — applied on BOTH sides, so
+        // "Abebe  Kebede" matches "Abebe Kebede".
+        $normName = static fn (string $n): string => trim((string) preg_replace(
+            ['/\s+/u', '/[^\p{L}\p{N} ]+/u'],
+            [' ', ''],
+            mb_strtolower(trim($n))
+        ));
         $frequentList = $data['frequent_contacts']['list'] ?? [];
         foreach ($frequentList as $fc) {
             $type = $fc['type'] ?? '';
             $rawId = $fc['id'] ?? null;
             $name = trim($fc['name'] ?? '');
             if ($type === 'user' && !empty($rawId) && is_numeric($rawId)) {
-                if (!empty($name)) $realTgMap[mb_strtolower($name)] = (int)$rawId;
+                if (!empty($name)) $realTgMap[$normName($name)] = (int)$rawId;
             }
         }
 
@@ -564,8 +576,22 @@ class TelegramBroadcastController extends Controller
             if ($chatType === 'personal_chat' && !empty($rawId)) {
                 $numericId = preg_replace('/\D+/', '', (string)$rawId);
                 if (!empty($numericId) && is_numeric($numericId) && strlen($numericId) >= 5) {
-                    if (!empty($name)) $realTgMap[mb_strtolower($name)] = (int)$numericId;
+                    if (!empty($name)) $realTgMap[$normName($name)] = (int)$numericId;
                 }
+            }
+        }
+
+        // First-name-only fallback map, built ONLY from unambiguous names:
+        // if one first name maps to two different chat ids it is nulled out
+        // and never guessed.
+        $firstNameMap = [];
+        foreach ($realTgMap as $normFull => $id) {
+            $first = strtok($normFull, ' ');
+            if ($first === '' || $first === $normFull) continue;
+            if (isset($firstNameMap[$first]) && $firstNameMap[$first] !== $id) {
+                $firstNameMap[$first] = null; // ambiguous — never guess
+            } elseif (!isset($firstNameMap[$first])) {
+                $firstNameMap[$first] = $id;
             }
         }
 
@@ -588,7 +614,13 @@ class TelegramBroadcastController extends Controller
                         $fullName = $cleanPhone ? "ደንበኛ ({$cleanPhone})" : "ቴሌግራም ደንበኛ";
                     }
 
-                    $matchedTgId = $realTgMap[mb_strtolower($fullName)] ?? null;
+                    $matchedTgId = $realTgMap[$normName($fullName)] ?? null;
+                    if (!$matchedTgId) {
+                        $first = strtok($normName($fullName), ' ');
+                        $matchedTgId = ($first !== '' && ($firstNameMap[$first] ?? null))
+                            ? $firstNameMap[$first]
+                            : null;
+                    }
 
                     if (!empty($cleanPhone)) {
                         Customer::updateOrCreate(
@@ -994,11 +1026,14 @@ class TelegramBroadcastController extends Controller
             }
 
             // 2. Process Phone-only targets (routed to SMS safely without throwing errors)
+            // NOTE: there is no SMS gateway — SmsService only LOGS. Count a
+            // phone target as sent ONLY if a real live send happened
+            // (is_live); logged-only rows count as failed so counts stay honest.
             if ($routePhoneToSms && !empty($phoneOnlyTargets)) {
                 foreach ($phoneOnlyTargets as $pTarget) {
                     try {
                         $smsResult = SmsService::sendDirectSms($pTarget['phone'], $body);
-                        if (!empty($smsResult['success'])) {
+                        if (!empty($smsResult['is_live'])) {
                             $sentSuccess++;
                         } else {
                             $failedCount++;
@@ -1030,13 +1065,18 @@ class TelegramBroadcastController extends Controller
 
         $msgParts = [];
         if ($totalTelegram > 0) $msgParts[] = "{$totalTelegram} በቴሌግራም";
-        if ($routePhoneToSms && $totalPhoneOnly > 0) $msgParts[] = "{$totalPhoneOnly} በ SMS";
 
         $destStr = implode(' እና ', $msgParts);
+        $message = $destStr !== ''
+            ? "መልእክቱ ለ {$destStr} በጀርባ (background) በመላክ ላይ ነው!"
+            : "ምንም የቴሌግራም ተቀባይ አልተገኘም!";
+        if ($routePhoneToSms && $totalPhoneOnly > 0) {
+            $message .= " {$totalPhoneOnly} የስልክ ቁጥሮች SMS gateway ስላልተገናኘ አልተላኩም — በመዝገብ ላይ ብቻ ተመዝግበዋል (logged — not delivered)። በስልክ SMS Bridge ይላኩ።";
+        }
 
         return response()->json([
             'success' => true,
-            'message' => "መልእክቱ ለ {$destStr} በጀርባ (background) በመላክ ላይ ነው!",
+            'message' => $message,
             'campaign_id' => $campaign->id,
             'telegram_targets' => $totalTelegram,
             'sms_targets' => $routePhoneToSms ? $totalPhoneOnly : 0,

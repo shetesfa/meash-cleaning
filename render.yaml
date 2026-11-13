@@ -44,6 +44,8 @@ services:
         value: "https://meash-cleaning.onrender.com/api/telegram/webhook"
       - key: TELEGRAM_WEBHOOK_SECRET
         generateValue: true
+      - key: TELEGRAM_ADMIN_CHAT_ID
+        sync: false
       - key: TELEGRAM_MINIAPP_URL
         value: "https://shetesfa.github.io/meash-mini-app/"
       - key: MEASH_OWNER_NAME
