@@ -912,6 +912,68 @@
       transition-duration: .01ms !important;
     }
   }
+
+  /* ============ MEASH MODERN (approved sample) — hero 3D slider, photo service cards, 3-step, gallery ============ */
+  .ms-hero-panel { background: linear-gradient(160deg, #0A2A4A 0%, #061A30 78%); border-radius: 1.25rem; overflow: hidden; position: relative; box-shadow: 0 25px 50px rgba(6,26,48,.35); }
+  .ms-stage { position: relative; height: 520px; perspective: 1400px; outline: none; }
+  .ms-slide { position: absolute; top: 50%; left: 50%; width: min(302px, 64vw); aspect-ratio: 3/4; border-radius: 22px; overflow: hidden; background: #0d2c49; box-shadow: 0 30px 60px rgba(0,0,0,.45); transition: transform .65s cubic-bezier(.22,.9,.28,1), opacity .65s ease, filter .65s ease; will-change: transform; cursor: pointer; border: 1px solid rgba(255,255,255,.14); margin: 0; }
+  .ms-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ms-slide figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 34px 16px 13px; color: #fff; background: linear-gradient(transparent, rgba(4,20,36,.85)); font-weight: 700; font-size: .92rem; }
+  .ms-slide figcaption .ms-cap-name { display: block; }
+  .ms-slide figcaption .ms-cap-price { display: block; font-size: .82rem; color: #7dd3fc; font-weight: 800; margin-top: 2px; }
+  .ms-stage-nav { position: absolute; left: 50%; transform: translateX(-50%); bottom: 10px; display: flex; align-items: center; gap: 14px; z-index: 5; }
+  .ms-arrow { width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.35); background: rgba(255,255,255,.10); color: #fff; display: grid; place-items: center; backdrop-filter: blur(6px); cursor: pointer; }
+  .ms-arrow:hover { background: #1E9BD7; border-color: #1E9BD7; }
+  .ms-dots { display: flex; gap: 8px; }
+  .ms-dot { width: 9px; height: 9px; min-height: 0; border-radius: 99px; border: 0; padding: 0; background: rgba(255,255,255,.35); transition: width .3s, background .3s; cursor: pointer; }
+  .ms-dot.on { width: 28px; background: #0FB5A5; }
+  .ms-slide-count { position: absolute; top: 12px; right: 12px; z-index: 5; font-weight: 800; font-size: .85rem; color: #CFE7F5; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); padding: 6px 12px; border-radius: 999px; }
+  @media (max-width: 900px) { .ms-stage { height: 470px; } }
+
+  /* Photo service cards */
+  .ms-svc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .ms-svc { border-radius: 20px; overflow: hidden; box-shadow: 0 8px 22px rgba(8,42,74,.10); transition: transform .22s ease, box-shadow .22s ease; display: flex; flex-direction: column; }
+  .ms-svc:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(8,42,74,.14); }
+  .ms-svc .ms-ph { aspect-ratio: 4/3; overflow: hidden; }
+  .ms-svc .ms-ph img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+  .ms-svc:hover .ms-ph img { transform: scale(1.07); }
+  .ms-svc .ms-bd { padding: 20px 20px 22px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .ms-svc .ms-tag { align-self: flex-start; font-size: .74rem; font-weight: 800; letter-spacing: .06em; color: #0E7C7B; background: rgba(15,181,165,.12); padding: 5px 11px; border-radius: 999px; text-transform: uppercase; }
+  .ms-svc-cta { background: linear-gradient(150deg, #0A2A4A, #061A30); color: #fff; justify-content: center; }
+  .ms-svc-cta .ms-bd { justify-content: center; gap: 12px; }
+  .ms-svc-cta p { color: #BCD6E8; }
+  @media (max-width: 900px) { .ms-svc-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .ms-svc-grid { grid-template-columns: 1fr; } }
+
+  /* 3-step section */
+  .ms-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+  .ms-step { border-top: 3px solid rgba(11,18,32,.1); padding-top: 20px; }
+  .ms-step .ms-num { font-size: 2.1rem; font-weight: 800; color: #0FB5A5; }
+  .ms-step .ms-ph { margin-top: 16px; border-radius: 16px; overflow: hidden; aspect-ratio: 16/10; }
+  .ms-step .ms-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (max-width: 820px) { .ms-steps { grid-template-columns: 1fr; } }
+
+  /* Gallery mosaic + lightbox */
+  .ms-gal-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+  .ms-gcard { position: relative; border-radius: 20px; overflow: hidden; cursor: zoom-in; border: 0; padding: 0; background: #0d2c49; box-shadow: 0 8px 22px rgba(8,42,74,.10); transform-style: preserve-3d; text-align: left; width: 100%; }
+  .ms-gcard img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+  .ms-gcard:hover img { transform: scale(1.05); }
+  .ms-gcard .ms-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 16px 13px; color: #fff; font-weight: 700; font-size: .93rem; background: linear-gradient(transparent, rgba(4,20,36,.85)); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .ms-gcard .ms-zoom { width: 34px; height: 34px; flex: none; border-radius: 50%; background: rgba(255,255,255,.16); display: grid; place-items: center; }
+  .ms-g-a { grid-column: span 7; aspect-ratio: 16/10.4; }
+  .ms-g-b { grid-column: span 5; aspect-ratio: 4/3.55; }
+  .ms-g-c { grid-column: span 4; aspect-ratio: 3/3.4; }
+  .ms-g-d { grid-column: span 4; aspect-ratio: 3/3.4; }
+  .ms-g-e { grid-column: span 4; aspect-ratio: 3/3.4; }
+  @media (max-width: 820px) { .ms-g-a, .ms-g-b, .ms-g-c, .ms-g-d, .ms-g-e { grid-column: span 12; aspect-ratio: 4/3; } }
+  .ms-lb { position: fixed; inset: 0; z-index: 100; background: rgba(3,14,25,.93); display: none; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
+  .ms-lb.open { display: flex; }
+  .ms-lb img { max-width: min(920px, 94vw); max-height: 76vh; border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.6); object-fit: contain; }
+  .ms-lb .ms-lb-cap { color: #E4F2FA; font-weight: 700; margin-top: 16px; text-align: center; }
+  .ms-lb .ms-lb-row { display: flex; gap: 12px; margin-top: 14px; align-items: center; }
+  .ms-lb button { width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.35); background: rgba(255,255,255,.1); color: #fff; display: grid; place-items: center; cursor: pointer; }
+  .ms-lb .ms-lb-close { position: absolute; top: 16px; right: 16px; }
+  @media (prefers-reduced-motion: reduce) { .ms-slide, .ms-svc .ms-ph img, .ms-gcard img { transition: none; } }
 </style>
 </head>
 <body id="top" class="antialiased">
@@ -1113,6 +1175,33 @@
   </div>
 </div>
 
+@php
+  // Real Meash work photos (public/images/gallery/) — used by the hero 3D
+  // slider, the service cards and the gallery. Captions are bilingual; the
+  // price on each slider slide comes from the live $services data (never
+  // hardcoded) via the service `code` below.
+  $galleryPhotos = [
+    ['file' => 'office-cleaning.jpg', 'code' => 'floor_ceramic', 'am' => 'የወለል ማሽን ጽዳት', 'en' => 'Floor machine cleaning'],
+    ['file' => 'sofa-steam.jpg', 'code' => 'upholstery_carpet', 'am' => 'የሶፋ በእንፋሎት ጽዳት', 'en' => 'Sofa steam cleaning'],
+    ['file' => 'villa-carpet.jpg', 'code' => 'facilities_general', 'am' => 'የሆቴል ላውንጅ ጥልቅ ጽዳት', 'en' => 'Hotel lounge deep clean'],
+    ['file' => 'rope-access.jpg', 'code' => 'glass', 'am' => 'የረጃጅም ሕንፃ መስታወት ጽዳት', 'en' => 'High-rise glass cleaning'],
+    ['file' => 'facade-scaffold.jpg', 'code' => 'post_construction', 'am' => 'የሕንፃ የፊት ገጽ ጽዳት', 'en' => 'Facade cleaning'],
+  ];
+  // Service code -> gallery photo (kitchen reuses the hotel-lounge photo;
+  // there is no kitchen photo yet — add one to the gallery to give it its own).
+  $servicePhoto = [
+    'floor_ceramic' => 'office-cleaning.jpg',
+    'facilities_general' => 'villa-carpet.jpg',
+    'kitchen_dining' => 'villa-carpet.jpg',
+    'post_construction' => 'facade-scaffold.jpg',
+    'glass' => 'rope-access.jpg',
+    'upholstery_carpet' => 'sofa-steam.jpg',
+  ];
+  // Gallery mosaic order (matches the approved sample): office, villa, sofa, rope, facade.
+  $galleryOrder = ['office-cleaning.jpg', 'villa-carpet.jpg', 'sofa-steam.jpg', 'rope-access.jpg', 'facade-scaffold.jpg'];
+  $galleryByFile = collect($galleryPhotos)->keyBy('file');
+@endphp
+
 <main id="main-content">
 
 <!-- ================= HERO ================= -->
@@ -1194,35 +1283,32 @@
       </div>
     </div>
 
-    <!-- Hero Visual / Feature Card -->
-    <div class="relative hidden md:block">
-      <div class="duo grain rounded-2xl overflow-hidden p-8 text-white shadow-2xl relative min-h-[440px] flex flex-col justify-between">
-        <div class="space-y-4">
-          <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold">
-            <i data-lucide="award" class="w-3.5 h-3.5 text-amber-300"></i>
-            <span>Addis Ababa Trusted Cleaner</span>
+    <!-- Hero Visual — 3D coverflow slider with real Meash work photos -->
+    <div class="relative">
+      <div class="ms-hero-panel">
+        <div class="ms-stage" id="ms-stage" role="region" aria-roledescription="carousel" aria-label="Meash cleaning work photos" tabindex="0">
+          <span class="ms-slide-count" id="ms-slide-count">1 / {{ count($galleryPhotos) }}</span>
+          @foreach($galleryPhotos as $gi => $p)
+            @php $slideSvc = $activeServices->firstWhere('code', $p['code']); @endphp
+            <figure class="ms-slide" role="group" aria-label="{{ $gi + 1 }} of {{ count($galleryPhotos) }}" data-ms-slide="{{ $gi }}">
+              <img src="/images/gallery/{{ $p['file'] }}" alt="{{ $p['en'] }}" @if($gi > 0) loading="lazy" @endif>
+              <figcaption>
+                <span class="ms-cap-name"><span data-lang-block="am">{{ $p['am'] }}</span><span data-lang-block="en">{{ $p['en'] }}</span></span>
+                @if($slideSvc)
+                  <span class="ms-cap-price svc-price" data-svc-price="{{ $slideSvc->id }}" data-svc-unit="{{ $slideSvc->unit ?: 'service' }}">{{ number_format($slideSvc->base_price) }} ETB{{ ($slideSvc->unit && $slideSvc->unit !== 'service') ? ' / ' . $slideSvc->unit : '' }}</span>
+                @endif
+              </figcaption>
+            </figure>
+          @endforeach
+          <div class="ms-stage-nav">
+            <button class="ms-arrow" id="ms-prev-btn" type="button" aria-label="Previous photo">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 5.5-6 6.5 6 6.5"/></svg>
+            </button>
+            <div class="ms-dots" id="ms-dots" role="tablist" aria-label="Choose photo"></div>
+            <button class="ms-arrow" id="ms-next-btn" type="button" aria-label="Next photo">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 5.5 6 6.5-6 6.5"/></svg>
+            </button>
           </div>
-          <h3 class="font-serif font-semibold text-2xl leading-snug">
-            የላቀ የንፅህና ጥራት፣<br>ለቤትዎ እና ለተቋምዎ።
-          </h3>
-          <p class="text-xs text-white/80 leading-relaxed max-w-xs">
-            ከፍተኛ ሙቀት ያለው ስቲም ማሽን ጀርሞችንና አልጋ ቁንጫዎችን 100% ያጠፋል፤ እቃዎትን ሳይጎዳ በጥንቃቄ ያጥባል።
-          </p>
-        </div>
-
-
-
-        <div class="bg-white/95 text-navy backdrop-blur rounded-xl p-4 shadow-xl border border-white/20">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <span class="text-xs font-bold text-teal-dark flex items-center gap-1.5 min-w-0">
-              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 shrink-0"></i> በቅርቡ የተጠናቀቀ አገልግሎት
-            </span>
-            <span class="text-[11px] text-navy/50 shrink-0 whitespace-nowrap">ቦሌ፣ አዲስ አበባ</span>
-          </div>
-          <p class="text-xs text-navy/80 font-medium">
-            የቢሮ እና የመኖሪያ ቤት ጥልቅ የጽዳት ስራ<br>
-            <span class="text-emerald-700 font-bold">ሙሉ በሙሉ የጸዳ እና ደህንነቱ የተረጋገጠ</span>
-          </p>
         </div>
       </div>
     </div>
@@ -1628,11 +1714,12 @@
     </p>
   </div>
 
-  <div id="services-list" class="divide-y divide-navy/10 border-t border-b border-navy/10">
+  <div id="services-list" class="ms-svc-grid">
     @forelse($activeServices as $idx => $svc)
       @php
         $svcNum = $idx + 1;
         $unitLabel = ($svc->unit && $svc->unit !== 'service') ? ' / ' . $svc->unit : '';
+        $svcPhoto = $servicePhoto[$svc->code] ?? null;
         $iconName = $svc->icon ?: match($svc->code) {
           'floor_ceramic' => 'sparkles',
           'facilities_general' => 'building-2',
@@ -1643,49 +1730,97 @@
           default => 'sparkles'
         };
       @endphp
-      <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="{{ $svcNum }}">
-        <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center shrink-0">
-          <i data-lucide="{{ $iconName }}" class="w-6 h-6"></i>
-        </div>
-        <div>
-          <h3 class="font-serif font-bold text-xl text-navy">
-            <span data-lang-block="am">{{ $svcNum }}. {{ $svc->name_am ?: $svc->name_en }}</span>
-            <span data-lang-block="en">{{ $svcNum }}. {{ $svc->name_en ?: $svc->name_am }}</span>
+      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+        @if($svcPhoto)
+          <div class="ms-ph"><img src="/images/gallery/{{ $svcPhoto }}" alt="{{ $svc->name_en ?: $svc->name_am }}" loading="lazy"></div>
+        @else
+          <div class="ms-ph flex items-center justify-center bg-teal/10 text-teal-dark"><i data-lucide="{{ $iconName }}" class="w-14 h-14"></i></div>
+        @endif
+        <div class="ms-bd">
+          <span class="ms-tag"><span data-lang-block="am">አገልግሎት {{ $svcNum }}</span><span data-lang-block="en">Service {{ $svcNum }}</span></span>
+          <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
+            <span data-lang-block="am">{{ $svc->name_am ?: $svc->name_en }}</span>
+            <span data-lang-block="en">{{ $svc->name_en ?: $svc->name_am }}</span>
           </h3>
-          <p class="text-navy/65 text-sm mt-1">
+          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1">
             <span data-lang-block="am">{{ $svc->description_am ?: $svc->description_en }}</span>
             <span data-lang-block="en">{{ $svc->description_en ?: $svc->description_am }}</span>
           </p>
+          <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" data-svc-price="{{ $svc->id }}" data-svc-unit="{{ $svc->unit ?: 'service' }}">{{ number_format($svc->base_price) }} ETB{{ $unitLabel }}</div>
+            <a href="#book" onclick="preselectService('{{ $svc->code }}')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+          </div>
         </div>
-        <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price" data-svc-price="{{ $svc->id }}" data-svc-unit="{{ $svc->unit ?: 'service' }}">
-          {{ number_format($svc->base_price) }} ETB{{ $unitLabel }}
-        </div>
-        <a href="#book" onclick="preselectService('{{ $svc->code }}')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
-          <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
-        </a>
-      </div>
+      </article>
     @empty
-      <!-- Fallback when database is empty -->
-      <div class="grid md:grid-cols-[auto_1fr_auto_auto] gap-4 md:gap-8 items-center py-7 group" data-svc-row="1">
-        <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center shrink-0">
-          <i data-lucide="sparkles" class="w-6 h-6"></i>
-        </div>
-        <div>
-          <h3 class="font-serif font-bold text-xl text-navy">
+      <!-- Fallback when database is empty (price is filled live by renderPrices(); no hardcoded price) -->
+      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+        <div class="ms-ph flex items-center justify-center bg-teal/10 text-teal-dark"><i data-lucide="sparkles" class="w-14 h-14"></i></div>
+        <div class="ms-bd">
+          <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
             <span data-lang-block="am">1. የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት</span>
             <span data-lang-block="en">1. Ceramic &amp; Hardwood Floor Cleaning</span>
           </h3>
-          <p class="text-navy/65 text-sm mt-1">
-            <span data-lang-block="am">የሴራሚክ፣ የግራናይት እና የእንጨት ወለሎች ጥልቅ የማሽን እጥበት፣ ነጠብጣብ ማስወገድ እና የወለል ማደስ (Deep tile &amp; grout restoration)።</span>
+          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1">
+            <span data-lang-block="am">የሴራሚክ፣ የግራናይት እና የእንጨት ወለሎች ጥልቅ የማሽን እጥበት፣ ነጠብጣብ ማስወገድ እና የወለል ማደስ።</span>
             <span data-lang-block="en">Deep tile &amp; grout restoration, single-disc rotary scrub, and hardwood revitalization.</span>
           </p>
+          <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" data-svc-price="1" data-svc-unit="sqm">&mdash;</div>
+            <a href="#book" onclick="preselectService('floor_ceramic')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+          </div>
         </div>
-        <div class="text-right font-serif font-bold text-lg text-teal-dark svc-price" data-svc-price="1" data-svc-unit="sqm">60 ETB / sqm</div>
-        <a href="#book" onclick="preselectService('floor_ceramic')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
-          <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
-        </a>
-      </div>
+      </article>
     @endforelse
+    <!-- Contract CTA card (from the approved sample) -->
+    <article class="ms-svc ms-svc-cta">
+      <div class="ms-bd">
+        <h3 class="font-serif font-bold text-xl"><span data-lang-block="am">በየሳምንቱ ጽዳት ይፈልጋሉ?</span><span data-lang-block="en">Need cleaning every week?</span></h3>
+        <p class="text-sm"><span data-lang-block="am">ለቢሮዎች፣ ሆቴሎች፣ ግቢዎች እና ሕንፃዎች የሚደገም የጽዳት እቅዶች — ተመሳሳይ ቡድን በመደበኛ መርሃ ግብር።</span><span data-lang-block="en">Recurring cleaning plans for offices, hotels, compounds and buildings — the same crew on a regular schedule.</span></p>
+        <a href="#commercial" class="inline-flex items-center justify-center gap-2 bg-teal hover:bg-teal-dark text-white font-bold text-sm px-5 py-3 rounded-lg transition w-fit"><span data-lang-block="am">ኮንትራት ያግኙ</span><span data-lang-block="en">Get a Contract</span></a>
+      </div>
+    </article>
+  </div>
+</section>
+
+
+<!-- ================= HOW WE DELIVER (3-STEP, from approved modern sample) ================= -->
+<section id="how" class="py-20 bg-white dark:bg-slate-900 border-b border-navy/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="max-w-2xl mb-10">
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
+        <i data-lucide="workflow" class="w-3.5 h-3.5"></i>
+        <span data-lang-block="am">ቀላል ሂደት</span><span data-lang-block="en">SIMPLE PROCESS</span>
+      </div>
+      <h2 class="font-serif font-bold text-3xl md:text-4xl text-navy dark:text-white leading-tight">
+        <span data-lang-block="am">ፍጹም ጽዳት እንዴት እናደርሳለን</span>
+        <span data-lang-block="en">How we deliver a perfect clean</span>
+      </h2>
+    </div>
+    <div class="ms-steps">
+      <div class="ms-step">
+        <span class="ms-num font-serif">01.</span>
+        <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">አገልግሎትዎን ይዘዙ</span><span data-lang-block="en">Book your service</span></h3>
+        <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">አገልግሎቱን፣ ቀኑን እና ቦታውን ይምረጡ። መጠኑን ይንገሩን — በካሬ ሜትር፣ በወንበር ወይም በስራ።</span><span data-lang-block="en">Choose the service, date and place. Tell us the size — per square metre, per seat or per job.</span></p>
+        <div class="ms-ph"><img src="/images/gallery/facade-scaffold.jpg" alt="Meash cleaner preparing glass-cleaning solution" loading="lazy"></div>
+      </div>
+      <div class="ms-step">
+        <span class="ms-num font-serif">02.</span>
+        <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">ቡድናችን ይደርሳል</span><span data-lang-block="en">Our team arrives</span></h3>
+        <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">ዩኒፎርም የለበሰ ቡድን ከሙያዊ ማሽኖች እና ደህንነቱ የተጠበቀ ሳሙናዎች ጋር ይደርሳል።</span><span data-lang-block="en">A uniformed crew arrives with professional machines and safe detergents.</span></p>
+        <div class="ms-ph"><img src="/images/gallery/office-cleaning.jpg" alt="Meash team at work in an office" loading="lazy"></div>
+      </div>
+      <div class="ms-step">
+        <span class="ms-num font-serif">03.</span>
+        <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">በትኩስነቱ ይደሰቱ</span><span data-lang-block="en">Enjoy the freshness</span></h3>
+        <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">እንጨርሳለን፣ እርስዎ ይፈትሹ። ንጹህ ወለሎች፣ የሚያብረቀርቅ መስታወት እና እንደ አዲስ የሚሸት ቦታ።</span><span data-lang-block="en">We finish, you inspect. Spotless floors, shining glass and a space that smells new again.</span></p>
+        <div class="ms-ph"><img src="/images/gallery/villa-carpet.jpg" alt="Freshly shampooed carpet in a bright hotel lounge" loading="lazy"></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1838,12 +1973,12 @@
           <span data-lang-block="am">የስራ ውጤቶች ጋለሪ</span><span data-lang-block="en">PROJECTS &amp; RESULTS</span>
         </div>
         <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
-          <span data-lang-block="am">ከጽዳት በፊት እና በኋላ (Before &amp; After)</span>
-          <span data-lang-block="en">Real Cleaning Transformations</span>
+          <span data-lang-block="am">ቡድናችን በስራ ላይ</span>
+          <span data-lang-block="en">Our team, on the job</span>
         </h2>
         <p class="text-navy/65 dark:text-slate-300 text-sm sm:text-base mt-2 max-w-xl">
-          <span data-lang-block="am">በሰለጠኑ ባለሙያዎቻችን የተከናወኑ እውነተኛ የጽዳት ውጤቶች። በዘመናዊ ስቲም ማሽን ያረጁ ቆሻሻዎችን ሙሉ በሙሉ አስወግደን አዲስ እናደርጋለን።</span>
-          <span data-lang-block="en">Witness the difference of industrial hot-water extraction and steam decontamination across real Addis homes and workspaces.</span>
+          <span data-lang-block="am">ሙሉ ማያ ለማየት ማንኛውንም ፎቶ ይንኩ። ከታች ያሉት ፎቶዎች ሁሉም እውነተኛ የሜሽ ስራዎች ናቸው።</span>
+          <span data-lang-block="en">Tap any photo to view it full-screen. Every picture below is a real Meash job.</span>
         </p>
       </div>
       <div class="mt-6 md:mt-0 flex items-center gap-3">
@@ -1854,79 +1989,34 @@
       </div>
     </div>
 
-    <!-- Gallery Grid of Before/After Showcases -->
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-      <!-- 1. Sofa Restoration -->
-      <div class="rounded-2xl border border-navy/10 bg-fog dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition">
-        <div class="relative rounded-xl overflow-hidden mb-4 bg-slate-200 aspect-[4/3] flex flex-col justify-between p-4 bg-gradient-to-br from-amber-900/40 to-slate-900 text-white">
-          <div class="flex justify-between items-center text-[11px] font-bold">
-            <span class="bg-red-500/80 backdrop-blur px-2.5 py-1 rounded">BEFORE: ያረጀ ቆሻሻ</span>
-            <span class="bg-emerald-600/90 backdrop-blur px-2.5 py-1 rounded">AFTER: 100% ንጹህ</span>
-          </div>
-          <div class="flex-1 flex items-center justify-center">
-            <span class="text-[11px] font-bold bg-black/50 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> ፎቶ በቅርቡ • Photo coming soon</span>
-          </div>
-          <div>
-            <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">Ayat — Villa</span>
-          </div>
-        </div>
-        <h4 class="font-serif font-bold text-lg text-navy dark:text-white">
-          <span data-lang-block="am">የሳሎን ሶፋ ጥልቅ እጥበት</span><span data-lang-block="en">Luxury Fabric Sofa Restoration</span>
-        </h4>
-        <p class="text-xs text-navy/60 dark:text-slate-400 mt-1">
-          <span data-lang-block="am">የቡና እና የቀለም ጠባሳዎች በስቲም ማሽን ሙሉ በሙሉ ተወግደው ፈጣን ማድረቂያ ተደርጎለታል።</span>
-          <span data-lang-block="en">Deep coffee &amp; oil stains completely extracted with rapid dry steam conditioning.</span>
-        </p>
-      </div>
-
-      <!-- 2. Carpet & Rug Scrub -->
-      <div class="rounded-2xl border border-navy/10 bg-fog dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition">
-        <div class="relative rounded-xl overflow-hidden mb-4 bg-slate-200 aspect-[4/3] flex flex-col justify-between p-4 bg-gradient-to-br from-teal-900/60 to-slate-900 text-white">
-          <div class="flex justify-between items-center text-[11px] font-bold">
-            <span class="bg-red-500/80 backdrop-blur px-2.5 py-1 rounded">BEFORE: አቧራና ጠረን</span>
-            <span class="bg-emerald-600/90 backdrop-blur px-2.5 py-1 rounded">AFTER: ደማቅ ቀለም</span>
-          </div>
-          <div class="flex-1 flex items-center justify-center">
-            <span class="text-[11px] font-bold bg-black/50 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> ፎቶ በቅርቡ • Photo coming soon</span>
-          </div>
-          <div>
-            <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">Kazanchis — Corporate Office</span>
-          </div>
-        </div>
-        <h4 class="font-serif font-bold text-lg text-navy dark:text-white">
-          <span data-lang-block="am">የቢሮ ሙሉ ምንጣፍ እጥበት</span><span data-lang-block="en">High-Traffic Office Carpet</span>
-        </h4>
-        <p class="text-xs text-navy/60 dark:text-slate-400 mt-1">
-          <span data-lang-block="am">በሮተሪ ማሽን ታጥቦ የነበረው ቆሻሻ ወጥቶ ዋናው ደማቅ ቀለሙ ተመልሷል።</span>
-          <span data-lang-block="en">Industrial rotary extraction returned faded carpet fibers back to vivid tone.</span>
-        </p>
-      </div>
-
-      <!-- 3. Ceramic Tile Grout -->
-      <div class="rounded-2xl border border-navy/10 bg-fog dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition">
-        <div class="relative rounded-xl overflow-hidden mb-4 bg-slate-200 aspect-[4/3] flex flex-col justify-between p-4 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white">
-          <div class="flex justify-between items-center text-[11px] font-bold">
-            <span class="bg-red-500/80 backdrop-blur px-2.5 py-1 rounded">BEFORE: ጥቁር መገጣጠሚያ</span>
-            <span class="bg-emerald-600/90 backdrop-blur px-2.5 py-1 rounded">AFTER: የሚያብረቀርቅ</span>
-          </div>
-          <div class="flex-1 flex items-center justify-center">
-            <span class="text-[11px] font-bold bg-black/50 backdrop-blur px-3 py-1.5 rounded-full flex items-center gap-1.5"><i data-lucide="image" class="w-3.5 h-3.5"></i> ፎቶ በቅርቡ • Photo coming soon</span>
-          </div>
-          <div>
-            <span class="text-xs font-semibold bg-black/40 px-2 py-0.5 rounded">CMC — Commercial Restaurant</span>
-          </div>
-        </div>
-        <h4 class="font-serif font-bold text-lg text-navy dark:text-white">
-          <span data-lang-block="am">የወለል ሴራሚክ ማሽን እጥበት</span><span data-lang-block="en">Tile Grout &amp; Ceramic Scrub</span>
-        </h4>
-        <p class="text-xs text-navy/60 dark:text-slate-400 mt-1">
-          <span data-lang-block="am">በመገጣጠሚያዎች ውስጥ የጠቆሩ ቆሻሻዎች በከፍተኛ ኃይል ማሽን ተነስተዋል።</span>
-          <span data-lang-block="en">Blackened grout lines sanitized and restored to pristine clean shine.</span>
-        </p>
-      </div>
+    <!-- Gallery Grid — real Meash work photos (click to enlarge) -->
+    <div class="ms-gal-grid" id="ms-gal-grid">
+      @foreach($galleryOrder as $gidx => $gfile)
+        @php $gp = $galleryByFile[$gfile]; $gcls = ['ms-g-a', 'ms-g-b', 'ms-g-c', 'ms-g-d', 'ms-g-e'][$gidx]; @endphp
+        <button type="button" class="ms-gcard {{ $gcls }}" data-ms-gal="{{ $gidx }}" data-ms-full="/images/gallery/{{ $gfile }}" data-ms-cap-am="{{ $gp['am'] }}" data-ms-cap-en="{{ $gp['en'] }}" aria-label="{{ $gp['en'] }}">
+          <img src="/images/gallery/{{ $gfile }}" alt="{{ $gp['en'] }}" loading="lazy">
+          <span class="ms-cap">
+            <span><span data-lang-block="am">{{ $gp['am'] }}</span><span data-lang-block="en">{{ $gp['en'] }}</span></span>
+            <span class="ms-zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+          </span>
+        </button>
+      @endforeach
     </div>
   </div>
 </section>
+
+<!-- Lightbox for the gallery (Meash modern) -->
+<div class="ms-lb" id="ms-lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button class="ms-lb-close" id="ms-lb-close" type="button" aria-label="Close viewer">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
+  <img id="ms-lb-img" src="/images/gallery/office-cleaning.jpg" alt="Meash cleaning team at work">
+  <div class="ms-lb-cap"><span data-lang-block="am" id="ms-lb-cap-am"></span><span data-lang-block="en" id="ms-lb-cap-en"></span></div>
+  <div class="ms-lb-row">
+    <button id="ms-lb-prev" type="button" aria-label="Previous photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 5.5-6 6.5 6 6.5"/></svg></button>
+    <button id="ms-lb-next" type="button" aria-label="Next photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 5.5 6 6.5-6 6.5"/></svg></button>
+  </div>
+</div>
 
 <!-- ================= REVIEWS / TESTIMONIALS ================= -->
 <section id="reviews" class="max-w-7xl mx-auto px-4 sm:px-6 py-24 border-b border-navy/10">
@@ -4292,6 +4382,115 @@
       document.body.scrollTop = 0;
     }
   });
+</script>
+
+
+<script>
+  // MEASH MODERN — hero 3D coverflow slider + gallery lightbox (vanilla JS only).
+  // All content is server-rendered above; this script only positions slides,
+  // handles navigation/autoplay/swipe, and opens the gallery lightbox.
+  (function () {
+    'use strict';
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ---------- 3D coverflow slider ---------- */
+    var stage = document.getElementById('ms-stage');
+    if (stage) {
+      var slides = Array.prototype.slice.call(stage.querySelectorAll('.ms-slide'));
+      var dotsBox = document.getElementById('ms-dots');
+      var countEl = document.getElementById('ms-slide-count');
+      var dots = [], active = 0, timer = null;
+
+      slides.forEach(function (fig, i) {
+        var d = document.createElement('button');
+        d.type = 'button'; d.className = 'ms-dot'; d.setAttribute('aria-label', 'Photo ' + (i + 1));
+        d.addEventListener('click', function () { goTo(i); restart(); });
+        dotsBox.appendChild(d); dots.push(d);
+        fig.addEventListener('click', function () { goTo(i); restart(); });
+      });
+
+      function layout() {
+        slides.forEach(function (s, i) {
+          var off = i - active, ao = Math.abs(off);
+          var x = off * 56, z = -ao * 190, r = off === 0 ? 0 : (off > 0 ? -34 : 34);
+          s.style.transform = 'translate(-50%,-50%) translateX(' + x + '%) translateZ(' + z + 'px) rotateY(' + r + 'deg)';
+          s.style.zIndex = String(20 - ao);
+          s.style.opacity = ao > 2 ? '0' : (ao === 2 ? '.45' : '1');
+          s.style.filter = ao === 0 ? 'none' : 'brightness(.72) saturate(.85)';
+          s.style.pointerEvents = ao > 2 ? 'none' : 'auto';
+          var fc = s.querySelector('figcaption');
+          if (fc) fc.style.opacity = ao >= 2 ? '0' : '1';
+        });
+        dots.forEach(function (d, i) { d.classList.toggle('on', i === active); });
+        if (countEl) countEl.textContent = (active + 1) + ' / ' + slides.length;
+      }
+      function goTo(i) { active = (i + slides.length) % slides.length; layout(); }
+      function next() { goTo(active + 1); }
+      function prev() { goTo(active - 1); }
+      function restart() {
+        if (timer) clearInterval(timer);
+        if (!reduceMotion) timer = setInterval(next, 4200);
+      }
+      document.getElementById('ms-next-btn').addEventListener('click', function () { next(); restart(); });
+      document.getElementById('ms-prev-btn').addEventListener('click', function () { prev(); restart(); });
+      stage.addEventListener('mouseenter', function () { if (timer) clearInterval(timer); });
+      stage.addEventListener('mouseleave', restart);
+      stage.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') { next(); restart(); }
+        if (e.key === 'ArrowLeft') { prev(); restart(); }
+      });
+      var sx = null;
+      stage.addEventListener('pointerdown', function (e) { sx = e.clientX; });
+      stage.addEventListener('pointerup', function (e) {
+        if (sx === null) return;
+        var dx = e.clientX - sx; sx = null;
+        if (Math.abs(dx) > 42) { if (dx < 0) next(); else prev(); restart(); }
+      });
+      layout(); restart();
+    }
+
+    /* ---------- Gallery: 3D tilt + lightbox ---------- */
+    var gal = document.getElementById('ms-gal-grid');
+    if (gal) {
+      var cards = Array.prototype.slice.call(gal.querySelectorAll('.ms-gcard'));
+      if (!reduceMotion && window.matchMedia('(pointer: fine)').matches) {
+        cards.forEach(function (card) {
+          card.addEventListener('mousemove', function (e) {
+            var r = card.getBoundingClientRect();
+            var px = (e.clientX - r.left) / r.width - .5;
+            var py = (e.clientY - r.top) / r.height - .5;
+            card.style.transform = 'perspective(900px) rotateY(' + (px * 9) + 'deg) rotateX(' + (-py * 9) + 'deg)';
+          });
+          card.addEventListener('mouseleave', function () { card.style.transform = ''; });
+        });
+      }
+      var lb = document.getElementById('ms-lightbox');
+      var lbImg = document.getElementById('ms-lb-img');
+      var lbCapAm = document.getElementById('ms-lb-cap-am');
+      var lbCapEn = document.getElementById('ms-lb-cap-en');
+      var lbPos = 0;
+      function showLb() {
+        var c = cards[lbPos];
+        lbImg.src = c.getAttribute('data-ms-full');
+        lbImg.alt = c.getAttribute('data-ms-cap-en');
+        lbCapAm.textContent = c.getAttribute('data-ms-cap-am');
+        lbCapEn.textContent = c.getAttribute('data-ms-cap-en');
+      }
+      function openLb(i) { lbPos = i; showLb(); lb.classList.add('open'); document.body.style.overflow = 'hidden'; }
+      function closeLb() { lb.classList.remove('open'); document.body.style.overflow = ''; }
+      cards.forEach(function (c, i) { c.addEventListener('click', function () { openLb(i); }); });
+      document.getElementById('ms-lb-close').addEventListener('click', closeLb);
+      document.getElementById('ms-lb-next').addEventListener('click', function () { lbPos = (lbPos + 1) % cards.length; showLb(); });
+      document.getElementById('ms-lb-prev').addEventListener('click', function () { lbPos = (lbPos - 1 + cards.length) % cards.length; showLb(); });
+      lb.addEventListener('click', function (e) { if (e.target === lb) closeLb(); });
+      document.addEventListener('keydown', function (e) {
+        if (!lb.classList.contains('open')) return;
+        if (e.key === 'Escape') closeLb();
+        if (e.key === 'ArrowRight') { lbPos = (lbPos + 1) % cards.length; showLb(); }
+        if (e.key === 'ArrowLeft') { lbPos = (lbPos - 1 + cards.length) % cards.length; showLb(); }
+      });
+    }
+  })();
 </script>
 
 <script>
