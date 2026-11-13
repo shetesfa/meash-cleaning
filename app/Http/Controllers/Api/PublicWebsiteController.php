@@ -479,7 +479,7 @@ class PublicWebsiteController extends Controller
                 'found' => true,
                 'customer_stage' => $customerStage,
                 'has_review' => $hasReview,
-                'customer_summary' => $customerSummary,
+                'customer_summary' => $hasValidToken ? $customerSummary : null,
                 'order' => $orderData,
             ]);
         } catch (\Throwable $e) {
