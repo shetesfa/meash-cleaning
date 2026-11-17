@@ -960,7 +960,7 @@
   .ms-arrow:hover { background: #1E9BD7; border-color: #1E9BD7; }
   .ms-dots { display: flex; gap: 8px; }
   .ms-dot { width: 9px; height: 9px; min-height: 0; border-radius: 99px; border: 0; padding: 0; background: rgba(255,255,255,.35); transition: width .3s, background .3s; cursor: pointer; }
-  .ms-dot.on { width: 28px; background: #0FB5A5; }
+  .ms-dot.on { width: 28px; background: #3E8ECC; }
   @media (max-width: 900px) { .ms-stage { height: 470px; } }
 
   /* Photo service cards */
@@ -981,7 +981,7 @@
   /* 3-step section */
   .ms-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
   .ms-step { border-top: 3px solid rgba(11,18,32,.1); padding-top: 20px; }
-  .ms-step .ms-num { font-size: 2.1rem; font-weight: 800; color: #0FB5A5; }
+  .ms-step .ms-num { font-size: 2.1rem; font-weight: 800; color: #3E8ECC; }
   .ms-step .ms-ph { margin-top: 16px; border-radius: 16px; overflow: hidden; aspect-ratio: 16/10; }
   .ms-step .ms-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
   @media (max-width: 820px) { .ms-steps { grid-template-columns: 1fr; } }
