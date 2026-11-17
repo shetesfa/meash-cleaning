@@ -201,7 +201,7 @@
     --text-faint: #64748B;
 
     --brand: #3E8ECC;
-    --brand-bright: #2DD4BF;
+    --brand-bright: #5FA9DD;
 
     --radius-sm: 10px;
     --radius-md: 14px;
@@ -210,7 +210,7 @@
     --ease: cubic-bezier(.22, .61, .36, 1);
     --shadow-card: 0 1px 2px rgba(0,0,0,.35), 0 12px 32px -12px rgba(0,0,0,.55);
     --shadow-lift: 0 2px 4px rgba(0,0,0,.4), 0 24px 48px -16px rgba(0,0,0,.65);
-    --ring: 0 0 0 3px rgba(45, 212, 191, .35);
+    --ring: 0 0 0 3px rgba(95, 169, 221, .35);
   }
 
   /* ---------- Base ---------- */
@@ -242,7 +242,7 @@
   h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; }
   p { text-wrap: pretty; }
 
-  ::selection { background: rgba(45, 212, 191, .35); color: #fff; }
+  ::selection { background: rgba(95, 169, 221, .35); color: #fff; }
 
   img { max-width: 100%; height: auto; }
 
@@ -282,7 +282,7 @@
     background-color: #08111F !important;
     background-image:
       radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
-      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
+      radial-gradient(120% 80% at 100% 0%, rgba(95, 169, 221, .28) 0%, transparent 55%),
       linear-gradient(160deg, #2F6FA8 0%, #08111F 100%) !important;
     background-size: 14px 14px, auto, auto !important;
     color: #FFFFFF !important;
@@ -295,7 +295,7 @@
     background-color: #08111F !important;
     background-image:
       radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
-      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
+      radial-gradient(120% 80% at 100% 0%, rgba(95, 169, 221, .28) 0%, transparent 55%),
       linear-gradient(160deg, #2F6FA8 0%, #08111F 100%) !important;
     background-size: 14px 14px, auto, auto !important;
     color: #FFFFFF !important;
@@ -343,7 +343,7 @@
     background: linear-gradient(135deg, #3E8ECC 0%, #2F6FA8 100%) !important;
     background-color: #3E8ECC !important;
     color: #FFFFFF !important;
-    border: 1px solid rgba(45, 212, 191, .35) !important;
+    border: 1px solid rgba(95, 169, 221, .35) !important;
     box-shadow: 0 4px 14px -2px rgba(62, 142, 204, .45) !important;
   }
   header a[href="#book"]:hover,
@@ -553,7 +553,7 @@
     color: #FFFFFF !important;
   }
   html.light .bg-navy-800 a:hover {
-    color: #2DD4BF !important;
+    color: #5FA9DD !important;
   }
 
   /* ================= LIGHT MODE HEADER CTA [ቀጠሮ ያዙ / BOOK NOW] ================= */
@@ -767,7 +767,7 @@
     background-color: #08111F !important;
     background-image:
       radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
-      radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
+      radial-gradient(120% 80% at 100% 0%, rgba(95, 169, 221, .28) 0%, transparent 55%),
       linear-gradient(160deg, #2F6FA8 0%, #08111F 100%) !important;
     background-size: 14px 14px, auto, auto !important;
     color: #FFFFFF !important;
@@ -802,7 +802,7 @@
   }
   html.light #process .text-teal,
   html.light #process .text-teal-dark {
-    color: #2DD4BF !important;
+    color: #5FA9DD !important;
   }
 
   /* 3. About Section Company Badge Box */
@@ -811,7 +811,7 @@
     background: linear-gradient(135deg, #0B1220 0%, #0F172A 100%) !important;
     background-color: #0B1220 !important;
     color: #FFFFFF !important;
-    border-color: rgba(45, 212, 191, .3) !important;
+    border-color: rgba(95, 169, 221, .3) !important;
     box-shadow: 0 15px 35px -10px rgba(11, 18, 32, .5) !important;
   }
   html.light .from-slate-900.to-navy h3,
@@ -829,7 +829,7 @@
   }
   html.light .from-slate-900.to-navy .text-teal-light,
   html.light .from-navy.to-slate-900 .text-teal-light {
-    color: #5EEAD4 !important;
+    color: #8CC8EC !important;
   }
 
   /* 4. Full-Width CTA Section */
@@ -865,11 +865,11 @@
     color: rgba(255, 255, 255, .72) !important;
   }
   html.light footer a:hover {
-    color: #2DD4BF !important;
+    color: #5FA9DD !important;
   }
   html.light footer .text-teal,
   html.light footer .text-teal-dark {
-    color: #2DD4BF !important;
+    color: #5FA9DD !important;
   }
 
   /* 6. Solid Navy Buttons & Badges */
@@ -1027,8 +1027,8 @@
         <i data-lucide="map-pin" class="w-3.5 h-3.5 text-teal-400"></i>
         <span>አዲስ አበባ (አያት አደባባይ) • Addis Ababa, Ayat Square</span>
       </span>
-      <span class="hidden lg:flex items-center gap-1.5 text-emerald-400 font-semibold">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="hidden lg:flex items-center gap-1.5 text-teal-400 font-semibold">
+        <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
         <span>24/7 ፈጣን አገልግሎት • Active Service</span>
       </span>
     </div>
@@ -1044,8 +1044,8 @@
         <span>{{ $phone2 }}</span>
       </a>
       <span class="text-slate-600">|</span>
-      <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition flex items-center gap-1 text-cyan-300 font-semibold">
-        <i data-lucide="send" class="w-3 h-3 text-cyan-400"></i>
+      <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" rel="noopener noreferrer" class="hover:text-teal-400 transition flex items-center gap-1 text-teal-300 font-semibold">
+        <i data-lucide="send" class="w-3 h-3 text-teal-400"></i>
         <span>Telegram Bot</span>
       </a>
       <span class="text-slate-600">|</span>
@@ -1065,7 +1065,7 @@
     <a href="#top" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
       <div class="relative">
         <img src="{{ $logoSrc }}" alt="Meash Cleaning Logo" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-300 border border-teal/20">
-        <span class="absolute -bottom-0.5 -right-0.5 w-2.5 sm:w-3 h-2.5 sm:h-3 bg-emerald-500 border-2 border-white dark:border-[#0B1220] rounded-full"></span>
+        <span class="absolute -bottom-0.5 -right-0.5 w-2.5 sm:w-3 h-2.5 sm:h-3 bg-teal-500 border-2 border-white dark:border-[#0B1220] rounded-full"></span>
       </div>
       <div class="leading-tight">
         <div class="flex items-center gap-1.5">
@@ -1095,11 +1095,11 @@
     <!-- Header Action Controls -->
     <div class="flex items-center gap-1.5 sm:gap-2">
       <!-- Direct Call Button (Desktop / Mobile Icon) -->
-      <a href="tel:{{ $phone1 }}" class="hidden sm:flex xl:hidden items-center gap-1.5 text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-1.5 rounded-full transition shadow-sm" title="Call Now">
-        <i data-lucide="phone" class="w-3.5 h-3.5 text-emerald-500"></i>
+      <a href="tel:{{ $phone1 }}" class="hidden sm:flex xl:hidden items-center gap-1.5 text-xs font-bold bg-teal-500/10 hover:bg-teal-500/20 text-teal-600 dark:text-teal-400 border border-teal-500/20 px-2.5 py-1.5 rounded-full transition shadow-sm" title="Call Now">
+        <i data-lucide="phone" class="w-3.5 h-3.5 text-teal-500"></i>
         <span class="hidden md:inline font-mono">{{ $phone1 }}</span>
       </a>
-      <a href="tel:{{ $phone1 }}" class="flex sm:hidden p-2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition items-center justify-center shrink-0" title="Call Meash">
+      <a href="tel:{{ $phone1 }}" class="flex sm:hidden p-2 rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30 hover:bg-teal-500/25 transition items-center justify-center shrink-0" title="Call Meash">
         <i data-lucide="phone" class="w-4 h-4"></i>
       </a>
 
@@ -1179,7 +1179,7 @@
           <span><span data-lang-block="am">የደንበኞች አስተያየት</span><span data-lang-block="en">Customer Reviews</span></span>
         </a>
         <a href="#track" onclick="closeMobileNav()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
-          <i data-lucide="search" class="w-4 h-4 text-cyan-400"></i>
+          <i data-lucide="search" class="w-4 h-4 text-teal-400"></i>
           <span><span data-lang-block="am">የትዕዛዝ መከታተያ</span><span data-lang-block="en">Track Your Order</span></span>
         </a>
         <a href="#contact" onclick="closeMobileNav()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
@@ -1190,7 +1190,7 @@
 
       <!-- Quick Action Cards in Mobile Menu -->
       <div class="pt-2 space-y-2 border-t border-slate-200 dark:border-slate-800">
-        <a href="tel:{{ $phone1 }}" class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+        <a href="tel:{{ $phone1 }}" class="w-full py-3 px-4 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-teal-600/20">
           <i data-lucide="phone-call" class="w-4 h-4"></i>
           <span>ቀጥታ ይደውሉ፡ {{ $phone1 }}</span>
         </a>
@@ -1597,7 +1597,7 @@
       <!-- 2. Eco-Friendly & Safe -->
       <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-md flex flex-col justify-between">
         <div>
-          <div class="w-11 h-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-4">
+          <div class="w-11 h-11 rounded-xl bg-teal-500/10 text-teal-600 flex items-center justify-center mb-4">
             <i data-lucide="leaf" class="w-6 h-6"></i>
           </div>
           <h3 class="font-serif font-bold text-base text-navy dark:text-white mb-2">
@@ -2064,7 +2064,7 @@
       </p>
     </div>
     <div class="flex flex-col sm:flex-row items-center justify-end gap-3.5">
-      <a href="tel:{{ $phone1 }}" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30">
+      <a href="tel:{{ $phone1 }}" class="w-full sm:w-auto bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-teal-600/30">
         <i data-lucide="phone-call" class="w-4 h-4"></i>
         <span>{{ $phone1 }} / {{ $phone2 }}</span>
       </a>
@@ -2553,7 +2553,7 @@
                 <input type="radio" name="time_slot_radio" value="weekend" onchange="setTimeSlot(this.value)" class="sr-only peer">
                 <div class="p-3.5 rounded-xl border-2 border-navy/15 peer-checked:border-teal peer-checked:bg-teal-light/40 transition text-center shadow-sm hover:border-teal/50 bg-white h-full flex flex-col justify-between">
                   <div>
-                    <div class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-1">
+                    <div class="w-8 h-8 rounded-full bg-teal-500/10 text-teal-600 flex items-center justify-center mx-auto mb-1">
                       <i data-lucide="calendar" class="w-4 h-4"></i>
                     </div>
                     <p class="font-extrabold text-xs text-navy peer-checked:text-teal-dark">ቅዳሜና እሁድ (Weekend)</p>
@@ -3983,7 +3983,7 @@
         </div>
 
         <!-- Loyalty & Rewards Card -->
-        <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-teal-50 via-cyan-50 to-emerald-50 border border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-teal-50 via-teal-100 to-teal-50 border border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div class="flex items-center gap-3.5">
             <div class="w-12 h-12 rounded-2xl bg-teal text-white flex items-center justify-center shrink-0 shadow-md">
               <i data-lucide="gift" class="w-6 h-6"></i>
@@ -4092,7 +4092,7 @@
               ስምዎ፣ ስልክዎ እና አድራሻዎ እንዲሁም የ ${loyalty.discount_percent}% የታማኝነት ቅናሽዎ በቅጹ ውስጥ Sync ሆነው ይጠብቁዎታል::
             </p>
           </div>
-          <button type="button" onclick="bookNextCleaningWithCustomerData()" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-teal to-emerald-500 hover:from-teal-dark hover:to-emerald-600 text-white rounded-xl font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:scale-105">
+          <button type="button" onclick="bookNextCleaningWithCustomerData()" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-teal to-teal-500 hover:from-teal-dark hover:to-teal-600 text-white rounded-xl font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:scale-105">
             <i data-lucide="calendar-plus" class="w-4 h-4"></i>
             <span>ቀጣይ ጽዳት ያዙ (Book Next Cleaning)</span>
           </button>
