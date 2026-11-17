@@ -70,6 +70,16 @@ Route::get('/health', function () {
     ]);
 });
 
+// Sitemap for Google Search Console (single-page site: homepage only).
+// URLs are built from APP_URL, so it is correct on every host.
+Route::get('/sitemap.xml', function () {
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+        . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n"
+        . '  <url><loc>' . e(url('/')) . '</loc><lastmod>' . now()->toDateString() . '</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>' . "\n"
+        . '</urlset>';
+    return response($xml, 200)->header('Content-Type', 'application/xml');
+});
+
 // 5. SPA fallback — direct visits, refreshes and bookmarks of website
 //    sections (e.g. /services, /booking) serve the single-page site
 //    instead of HTTP 404. Registered last so it never shadows /app/*,
