@@ -26,9 +26,9 @@ export default {
           700: '#1B2A45',
         },
         teal: {
-          DEFAULT: '#0E7C7B',
-          dark: '#0A5F5E',
-          light: '#E3F3F2',
+          DEFAULT: '#3E8ECC',
+          dark: '#2F6FA8',
+          light: '#E8F2FA',
         },
         gold: {
           DEFAULT: '#B8912F',

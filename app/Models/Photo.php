@@ -9,13 +9,14 @@ class Photo extends Model
 {
     use HasFactory;
 
-    public const SECTIONS = ['hero', 'service', 'gallery', 'feature'];
+    public const SECTIONS = ['hero', 'service', 'gallery', 'feature', 'logo'];
 
     public const SECTION_LABELS = [
         'hero' => 'Hero slider',
         'service' => 'Service cards',
         'gallery' => 'Gallery',
         'feature' => 'Feature strip',
+        'logo' => 'Website logo',
     ];
 
     public const STATUS_ADDED = 'added';

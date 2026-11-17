@@ -55,6 +55,20 @@
     $addressEn = 'Ayat Square, Addis Ababa, Ethiopia';
   }
   $socialHandle = $websiteSettings['social_handle'] ?? '@meashcleaningsolution';
+  // Batch 19: website logo — admin-managed via the `photos` table
+  // (section 'logo'); falls back to the fixed /logo.jpg file when the
+  // row is missing, so the header/footer can never break.
+  $logoSrc = '/logo.jpg';
+  try {
+    if (\Illuminate\Support\Facades\Schema::hasTable('photos')) {
+      $logoRow = \App\Models\Photo::where('section', 'logo')->where('status', 'added')->orderBy('sort_order')->orderBy('id')->first();
+      if ($logoRow && !empty($logoRow->url)) {
+        $logoSrc = \App\Models\Photo::resolveUrl($logoRow->url);
+      }
+    }
+  } catch (\Throwable $e) {
+    // Fallback /logo.jpg stays.
+  }
 @endphp
 <html lang="am" data-lang="am" class="dark">
 <head>
@@ -98,14 +112,14 @@
 <meta name="theme-color" content="#0B1220">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/assets/icon-192.png">
-<link rel="icon" type="image/jpeg" href="/logo.jpg">
+<link rel="icon" type="image/jpeg" href="{{ $logoSrc }}">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Meash">
 
 <!-- Open Graph & Social SEO -->
 <meta property="og:title" content="{{ $companyName }} | {{ $sloganEn }}">
 <meta property="og:description" content="{{ $subtitleEn }} — {{ $sloganEn }} Call {{ $phone1 }} / {{ $phone2 }}.">
-<meta property="og:image" content="/logo.jpg">
+<meta property="og:image" content="{{ $logoSrc }}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url('/') }}">
 
@@ -116,7 +130,7 @@
   '@type' => 'HomeAndConstructionBusiness',
   'name' => $companyName,
   'alternateName' => $companyNameAm,
-  'image' => url('/logo.jpg'),
+  'image' => url($logoSrc),
   'slogan' => $sloganEn,
   'url' => url('/'),
   'telephone' => '+251' . ltrim($phone1, '0+'),
@@ -186,7 +200,7 @@
     --text-muted: #94A3B8;
     --text-faint: #64748B;
 
-    --brand: #0E7C7B;
+    --brand: #3E8ECC;
     --brand-bright: #2DD4BF;
 
     --radius-sm: 10px;
@@ -269,7 +283,7 @@
     background-image:
       radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
       radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
-      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
+      linear-gradient(160deg, #2F6FA8 0%, #08111F 100%) !important;
     background-size: 14px 14px, auto, auto !important;
     color: #FFFFFF !important;
   }
@@ -282,7 +296,7 @@
     background-image:
       radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
       radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
-      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
+      linear-gradient(160deg, #2F6FA8 0%, #08111F 100%) !important;
     background-size: 14px 14px, auto, auto !important;
     color: #FFFFFF !important;
   }
@@ -297,25 +311,25 @@
 
   /* Missing gradient utilities fallback */
   .from-teal {
-    --tw-gradient-from: #0E7C7B var(--tw-gradient-from-position);
-    --tw-gradient-to: rgba(14, 124, 123, 0) var(--tw-gradient-to-position);
+    --tw-gradient-from: #3E8ECC var(--tw-gradient-from-position);
+    --tw-gradient-to: rgba(62, 142, 204, 0) var(--tw-gradient-to-position);
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
   }
   .to-teal-dark {
-    --tw-gradient-to: #0A5F5E var(--tw-gradient-to-position);
+    --tw-gradient-to: #2F6FA8 var(--tw-gradient-to-position);
   }
   .hover\:from-teal-dark:hover {
-    --tw-gradient-from: #0A5F5E var(--tw-gradient-from-position);
-    --tw-gradient-to: rgba(10, 95, 94, 0) var(--tw-gradient-to-position);
+    --tw-gradient-from: #2F6FA8 var(--tw-gradient-from-position);
+    --tw-gradient-to: rgba(47, 111, 168, 0) var(--tw-gradient-to-position);
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
   }
   .hover\:to-teal:hover {
-    --tw-gradient-to: #0E7C7B var(--tw-gradient-to-position);
+    --tw-gradient-to: #3E8ECC var(--tw-gradient-to-position);
   }
   .bg-gradient-to-r.from-teal.to-teal-dark,
   [class*="from-teal"][class*="to-teal-dark"] {
-    background-color: #0E7C7B !important;
-    background-image: linear-gradient(to right, #0E7C7B, #0A5F5E) !important;
+    background-color: #3E8ECC !important;
+    background-image: linear-gradient(to right, #3E8ECC, #2F6FA8) !important;
     color: #FFFFFF !important;
   }
   .bg-gradient-to-r.from-teal.to-teal-dark *,
@@ -326,18 +340,18 @@
   /* Header CTA Booking Button — Default & Dark Mode */
   header a[href="#book"],
   #mobile-nav-drawer a[href="#book"] {
-    background: linear-gradient(135deg, #0E7C7B 0%, #0A5F5E 100%) !important;
-    background-color: #0E7C7B !important;
+    background: linear-gradient(135deg, #3E8ECC 0%, #2F6FA8 100%) !important;
+    background-color: #3E8ECC !important;
     color: #FFFFFF !important;
     border: 1px solid rgba(45, 212, 191, .35) !important;
-    box-shadow: 0 4px 14px -2px rgba(14, 124, 123, .45) !important;
+    box-shadow: 0 4px 14px -2px rgba(62, 142, 204, .45) !important;
   }
   header a[href="#book"]:hover,
   #mobile-nav-drawer a[href="#book"]:hover {
-    background: linear-gradient(135deg, #0A5F5E 0%, #08111F 100%) !important;
-    background-color: #0A5F5E !important;
+    background: linear-gradient(135deg, #2F6FA8 0%, #08111F 100%) !important;
+    background-color: #2F6FA8 !important;
     color: #FFFFFF !important;
-    box-shadow: 0 6px 18px -2px rgba(10, 95, 94, .55) !important;
+    box-shadow: 0 6px 18px -2px rgba(47, 111, 168, .55) !important;
   }
   header a[href="#book"] *,
   #mobile-nav-drawer a[href="#book"] * {
@@ -405,7 +419,7 @@
   }
   html.dark .bg-teal-light\/20, html.dark .bg-teal-light\/30, html.dark .bg-teal-light\/40,
   html:not(.light) .bg-teal-light\/20, html:not(.light) .bg-teal-light\/30, html:not(.light) .bg-teal-light\/40 {
-    background-color: rgba(14, 124, 123, .18) !important;
+    background-color: rgba(62, 142, 204, .18) !important;
   }
 
   /* Typography contrast */
@@ -471,7 +485,7 @@
   .lang-btn.active-lang, .lang-btn.bg-teal, .lang-btn.bg-navy {
     background-color: var(--brand) !important;
     color: #FFFFFF !important;
-    box-shadow: 0 4px 12px -2px rgba(14, 124, 123, .55);
+    box-shadow: 0 4px 12px -2px rgba(62, 142, 204, .55);
   }
   html.dark .lang-btn.active-lang, html.dark .lang-btn.bg-teal, html.dark .lang-btn.bg-navy,
   html:not(.light) .lang-btn.active-lang, html:not(.light) .lang-btn.bg-teal, html:not(.light) .lang-btn.bg-navy {
@@ -497,12 +511,12 @@
     --text-muted: #334155;
     --text-faint: #64748B;
 
-    --brand: #0E7C7B;
-    --brand-bright: #0A5F5E;
+    --brand: #3E8ECC;
+    --brand-bright: #2F6FA8;
 
     --shadow-card: 0 1px 3px rgba(15, 23, 42, .06), 0 10px 24px -4px rgba(15, 23, 42, .08);
     --shadow-lift: 0 4px 6px -1px rgba(15, 23, 42, .08), 0 20px 25px -5px rgba(15, 23, 42, .12);
-    --ring: 0 0 0 3px rgba(14, 124, 123, .22);
+    --ring: 0 0 0 3px rgba(62, 142, 204, .22);
 
     background-color: var(--bg);
   }
@@ -528,7 +542,7 @@
     font-weight: 700 !important;
   }
   html.light nav a:hover {
-    color: #0E7C7B !important;
+    color: #3E8ECC !important;
     background-color: #F1F5F9 !important;
   }
   html.light .bg-navy-800 {
@@ -546,18 +560,18 @@
   /* Ultra high-contrast luxury Navy/Teal button with crisp pure white typography */
   html.light header a[href="#book"],
   html.light #mobile-nav-drawer a[href="#book"] {
-    background: linear-gradient(135deg, #0B1220 0%, #0A5F5E 100%) !important;
+    background: linear-gradient(135deg, #0B1220 0%, #2F6FA8 100%) !important;
     background-color: #0B1220 !important;
     color: #FFFFFF !important;
-    border: 1px solid rgba(14, 124, 123, .45) !important;
-    box-shadow: 0 4px 14px -1px rgba(11, 18, 32, .25), 0 2px 6px -1px rgba(14, 124, 123, .35) !important;
+    border: 1px solid rgba(62, 142, 204, .45) !important;
+    box-shadow: 0 4px 14px -1px rgba(11, 18, 32, .25), 0 2px 6px -1px rgba(62, 142, 204, .35) !important;
   }
   html.light header a[href="#book"]:hover,
   html.light #mobile-nav-drawer a[href="#book"]:hover {
-    background: linear-gradient(135deg, #0E7C7B 0%, #0A5F5E 100%) !important;
-    background-color: #0E7C7B !important;
+    background: linear-gradient(135deg, #3E8ECC 0%, #2F6FA8 100%) !important;
+    background-color: #3E8ECC !important;
     color: #FFFFFF !important;
-    box-shadow: 0 6px 20px -2px rgba(14, 124, 123, .55) !important;
+    box-shadow: 0 6px 20px -2px rgba(62, 142, 204, .55) !important;
   }
   html.light header a[href="#book"] *,
   html.light #mobile-nav-drawer a[href="#book"] * {
@@ -593,10 +607,10 @@
   html.light .bg-teal-light\/20,
   html.light .bg-teal-light\/30,
   html.light .bg-teal-light\/40 {
-    background-color: rgba(14, 124, 123, .09) !important;
+    background-color: rgba(62, 142, 204, .09) !important;
   }
   html.light .bg-teal-light {
-    background-color: #E3F3F2 !important;
+    background-color: #E8F2FA !important;
   }
 
   /* ================= LIGHT MODE TYPOGRAPHY CONTRAST (Fixes all washed-out / invisible letters) ================= */
@@ -638,10 +652,10 @@
     color: #334155 !important;
   }
   html.light .text-teal-dark {
-    color: #0A5F5E !important;
+    color: #2F6FA8 !important;
   }
   html.light .text-teal {
-    color: #0E7C7B !important;
+    color: #3E8ECC !important;
   }
 
   /* Light mode borders */
@@ -679,7 +693,7 @@
   html.light select:focus,
   html.light textarea:focus {
     border-color: var(--brand) !important;
-    box-shadow: 0 0 0 3px rgba(14, 124, 123, .22);
+    box-shadow: 0 0 0 3px rgba(62, 142, 204, .22);
     outline: none;
   }
   html.light select option {
@@ -711,13 +725,13 @@
   }
   html.light #theme-toggle-btn:hover {
     background-color: #E2E8F0 !important;
-    color: #0E7C7B !important;
+    color: #3E8ECC !important;
   }
 
   /* Booking wizard step indicators & cards in light mode */
   html.light .step-dot.text-teal-dark {
-    color: #0A5F5E !important;
-    background-color: rgba(14, 124, 123, .12) !important;
+    color: #2F6FA8 !important;
+    background-color: rgba(62, 142, 204, .12) !important;
   }
   html.light .step-dot:not(.text-teal-dark) {
     color: #475569 !important;
@@ -730,19 +744,19 @@
     border-color: #E2E8F0 !important;
   }
   html.light .svc-btn:hover {
-    border-color: #0E7C7B !important;
+    border-color: #3E8ECC !important;
   }
   html.light .svc-btn.border-navy {
-    border-color: #0E7C7B !important;
-    background-color: rgba(14, 124, 123, .05) !important;
-    box-shadow: 0 0 0 1px #0E7C7B;
+    border-color: #3E8ECC !important;
+    background-color: rgba(62, 142, 204, .05) !important;
+    box-shadow: 0 0 0 1px #3E8ECC;
   }
 
   /* Reviews & test cards in light mode */
   html.light #dynamic-reviews-grid > div,
   html.light #reviews .border-l-2 {
     background-color: #FFFFFF !important;
-    border-color: #0E7C7B !important;
+    border-color: #3E8ECC !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
   }
 
@@ -754,10 +768,10 @@
     background-image:
       radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px),
       radial-gradient(120% 80% at 100% 0%, rgba(45, 212, 191, .28) 0%, transparent 55%),
-      linear-gradient(160deg, #0A6B6A 0%, #08111F 100%) !important;
+      linear-gradient(160deg, #2F6FA8 0%, #08111F 100%) !important;
     background-size: 14px 14px, auto, auto !important;
     color: #FFFFFF !important;
-    box-shadow: 0 10px 30px -10px rgba(10, 107, 106, .45), 0 20px 40px -15px rgba(8, 17, 31, .6) !important;
+    box-shadow: 0 10px 30px -10px rgba(47, 111, 168, .45), 0 20px 40px -15px rgba(8, 17, 31, .6) !important;
   }
   html.light .duo h3,
   html.light .duo h2,
@@ -872,11 +886,11 @@
   }
   html.light a.bg-navy:hover,
   html.light button.bg-navy:hover {
-    background-color: #0E7C7B !important;
+    background-color: #3E8ECC !important;
     color: #FFFFFF !important;
   }
 
-  html.light ::selection { background: rgba(14, 124, 123, .25); color: #0B1220; }
+  html.light ::selection { background: rgba(62, 142, 204, .25); color: #0B1220; }
   html.light { scrollbar-color: #CBD5E1 #fff; }
   html.light ::-webkit-scrollbar-track { background: #fff; }
   html.light ::-webkit-scrollbar-thumb { background: #CBD5E1; border-color: #fff; }
@@ -957,7 +971,7 @@
   .ms-svc .ms-ph img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
   .ms-svc:hover .ms-ph img { transform: scale(1.07); }
   .ms-svc .ms-bd { padding: 20px 20px 22px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-  .ms-svc .ms-tag { align-self: flex-start; font-size: .74rem; font-weight: 800; letter-spacing: .06em; color: #0E7C7B; background: rgba(15,181,165,.12); padding: 5px 11px; border-radius: 999px; text-transform: uppercase; }
+  .ms-svc .ms-tag { align-self: flex-start; font-size: .74rem; font-weight: 800; letter-spacing: .06em; color: #3E8ECC; background: rgba(62,142,204,.12); padding: 5px 11px; border-radius: 999px; text-transform: uppercase; }
   .ms-svc-cta { background: linear-gradient(150deg, #0A2A4A, #061A30); color: #fff; justify-content: center; }
   .ms-svc-cta .ms-bd { justify-content: center; gap: 12px; }
   .ms-svc-cta p { color: #BCD6E8; }
@@ -972,19 +986,26 @@
   .ms-step .ms-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
   @media (max-width: 820px) { .ms-steps { grid-template-columns: 1fr; } }
 
-  /* Gallery mosaic + lightbox */
-  .ms-gal-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
-  .ms-gcard { position: relative; border-radius: 20px; overflow: hidden; cursor: zoom-in; border: 0; padding: 0; background: #0d2c49; box-shadow: 0 8px 22px rgba(8,42,74,.10); transform-style: preserve-3d; text-align: left; width: 100%; }
-  .ms-gcard img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
-  .ms-gcard:hover img { transform: scale(1.05); }
-  .ms-gcard .ms-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 16px 13px; color: #fff; font-weight: 700; font-size: .93rem; background: linear-gradient(transparent, rgba(4,20,36,.85)); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .ms-gcard .ms-zoom { width: 34px; height: 34px; flex: none; border-radius: 50%; background: rgba(255,255,255,.16); display: grid; place-items: center; }
-  .ms-g-a { grid-column: span 7; aspect-ratio: 16/10.4; }
-  .ms-g-b { grid-column: span 5; aspect-ratio: 4/3.55; }
-  .ms-g-c { grid-column: span 4; aspect-ratio: 3/3.4; }
-  .ms-g-d { grid-column: span 4; aspect-ratio: 3/3.4; }
-  .ms-g-e { grid-column: span 4; aspect-ratio: 3/3.4; }
-  @media (max-width: 820px) { .ms-g-a, .ms-g-b, .ms-g-c, .ms-g-d, .ms-g-e { grid-column: span 12; aspect-ratio: 4/3; } }
+  /* Gallery full-size slider (batch 19) — one large photo at a time */
+  .ms-gal-slider { position: relative; }
+  .ms-gal-stage { position: relative; border-radius: 20px; overflow: hidden; background: #0d2c49; box-shadow: 0 8px 22px rgba(8,42,74,.10); aspect-ratio: 16/10; touch-action: pan-y; cursor: grab; }
+  .ms-gal-stage.ms-dragging { cursor: grabbing; }
+  .ms-gal-slide { position: absolute; inset: 0; opacity: 0; transition: opacity .45s ease; pointer-events: none; margin: 0; }
+  .ms-gal-slide.on { opacity: 1; pointer-events: auto; }
+  .ms-gal-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ms-gal-slide .ms-gal-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 16px 13px; color: #fff; font-weight: 700; font-size: .93rem; background: linear-gradient(transparent, rgba(4,20,36,.85)); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .ms-gal-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.4); background: rgba(3,14,25,.45); color: #fff; display: grid; place-items: center; cursor: pointer; z-index: 3; }
+  .ms-gal-prev { left: 12px; }
+  .ms-gal-next { right: 12px; }
+  .ms-gal-count { position: absolute; top: 12px; right: 12px; background: rgba(3,14,25,.55); color: #fff; font-size: .75rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; z-index: 3; }
+  .ms-gal-dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .ms-gal-dot { width: 10px; height: 10px; border-radius: 50%; border: 0; background: #CBD5E1; cursor: pointer; padding: 0; }
+  .ms-gal-dot.on { background: #3E8ECC; transform: scale(1.25); }
+  .ms-gal-thumbs { display: flex; gap: 10px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px; }
+  .ms-gal-thumb { flex: none; width: 84px; aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; border: 2px solid transparent; padding: 0; cursor: pointer; background: #0d2c49; }
+  .ms-gal-thumb.on { border-color: #3E8ECC; }
+  .ms-gal-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (max-width: 820px) { .ms-gal-stage { aspect-ratio: 4/3; } }
   .ms-lb { position: fixed; inset: 0; z-index: 100; background: rgba(3,14,25,.93); display: none; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
   .ms-lb.open { display: flex; }
   .ms-lb img { max-width: min(920px, 94vw); max-height: 76vh; border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.6); object-fit: contain; }
@@ -992,7 +1013,7 @@
   .ms-lb .ms-lb-row { display: flex; gap: 12px; margin-top: 14px; align-items: center; }
   .ms-lb button { width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.35); background: rgba(255,255,255,.1); color: #fff; display: grid; place-items: center; cursor: pointer; }
   .ms-lb .ms-lb-close { position: absolute; top: 16px; right: 16px; }
-  @media (prefers-reduced-motion: reduce) { .ms-slide, .ms-svc .ms-ph img, .ms-gcard img { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .ms-slide, .ms-svc .ms-ph img, .ms-gal-slide img { transition: none; } }
 </style>
 </head>
 <body id="top" class="antialiased">
@@ -1043,7 +1064,7 @@
     <!-- Brand Logo & Name -->
     <a href="#top" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
       <div class="relative">
-        <img src="/logo.jpg" alt="Meash Cleaning Logo" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-300 border border-teal/20">
+        <img src="{{ $logoSrc }}" alt="Meash Cleaning Logo" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform duration-300 border border-teal/20">
         <span class="absolute -bottom-0.5 -right-0.5 w-2.5 sm:w-3 h-2.5 sm:h-3 bg-emerald-500 border-2 border-white dark:border-[#0B1220] rounded-full"></span>
       </div>
       <div class="leading-tight">
@@ -1094,7 +1115,7 @@
       </div>
 
       <!-- Main CTA: Quote / Book -->
-      <a href="#book" class="header-book-btn bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-[12px] sm:text-[13px] font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5" style="background-color: #0E7C7B; color: #FFFFFF;">
+      <a href="#book" class="header-book-btn bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-[12px] sm:text-[13px] font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5" style="background-color: #3E8ECC; color: #FFFFFF;">
         <i data-lucide="calendar" class="w-4 h-4 hidden sm:inline text-white"></i>
         <span data-lang-block="am" class="text-white font-black">ቀጠሮ ያዙ</span><span data-lang-block="en" class="text-white font-black">Book Now</span>
       </a>
@@ -1113,7 +1134,7 @@
     <!-- Drawer Top Header -->
     <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
       <div class="flex items-center gap-2.5">
-        <img src="/logo.jpg" alt="Meash Logo" class="w-9 h-9 rounded-xl object-cover border border-teal/20">
+        <img src="{{ $logoSrc }}" alt="Meash Logo" class="w-9 h-9 rounded-xl object-cover border border-teal/20">
         <div>
           <span class="font-serif font-black text-base text-navy dark:text-white">MEASH</span>
           <span class="text-[9px] font-bold text-teal block">CLEANING SOLUTION</span>
@@ -1182,7 +1203,7 @@
 
     <!-- Drawer Footer -->
     <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 space-y-2">
-      <a href="#book" onclick="closeMobileNav()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-dark text-white font-black text-xs flex items-center justify-center gap-2 shadow-md" style="background-color: #0E7C7B; color: #FFFFFF;">
+      <a href="#book" onclick="closeMobileNav()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-dark text-white font-black text-xs flex items-center justify-center gap-2 shadow-md" style="background-color: #3E8ECC; color: #FFFFFF;">
         <i data-lucide="calendar" class="w-4 h-4 text-white"></i>
         <span class="text-white font-black">ዋጋ አስላ / ቀጠሮ ያዝ (Book Now)</span>
       </a>
@@ -1230,8 +1251,7 @@
     'glass' => 'rope-access.jpg',
     'upholstery_carpet' => 'sofa-steam.jpg',
   ];
-  // Gallery mosaic order: the 5 real photos first, then the 9 new ones.
-  // The mosaic shapes (ms-g-a..e) cycle with $gidx % 5 below.
+  // Gallery slider order: the 5 real photos first, then the 9 new ones.
   $fallbackGalleryOrder = ['office-cleaning.jpg', 'villa-carpet.jpg', 'sofa-steam.jpg', 'rope-access.jpg', 'facade-scaffold.jpg', 'living-room.jpg', 'hotel-restaurant.jpg', 'office-polisher.jpg', 'bedroom.jpg', 'bathroom.jpg', 'sofa-carpet-steam.jpg', 'windows-ladder.jpg', 'post-construction.jpg', 'kitchen.jpg'];
   // Feature strip (3-step "How we deliver") fallback photos.
   $fallbackFeaturePhotos = [
@@ -1289,7 +1309,7 @@
       }
       // Gallery lookup must also include gallery-section rows: a photo
       // can be in the gallery without being in the hero slider, and the
-      // mosaic below looks every gallery file up in this map.
+      // slider below looks every gallery file up in this map.
       $galleryByFile = collect($galleryPhotos)->keyBy('file');
       foreach ($galRows as $row) {
         $galleryByFile[$row->url] = ['file' => $row->url, 'code' => $row->service_code, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
@@ -1300,7 +1320,7 @@
   }
   // Safety net: sections fall back independently, so a gallery file
   // must always resolve in the lookup even if it is not in the hero
-  // slider rows (otherwise the mosaic below errors).
+  // slider rows (otherwise the slider below errors).
   $fallbackByFile = collect($fallbackPhotos)->keyBy('file');
   foreach ($galleryOrder as $gfile) {
     if (!isset($galleryByFile[$gfile])) {
@@ -1478,7 +1498,7 @@
     <div class="bg-gradient-to-br from-slate-900 to-navy text-white rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden">
       <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-teal/20 rounded-full blur-3xl pointer-events-none"></div>
       <div class="flex items-center gap-3 mb-6">
-        <img src="/logo.jpg" alt="Logo" class="w-12 h-12 rounded-xl object-cover border border-white/20">
+        <img src="{{ $logoSrc }}" alt="Logo" class="w-12 h-12 rounded-xl object-cover border border-white/20">
         <div>
           <h3 class="font-serif font-bold text-xl">MEASH CLEANING SOLUTION</h3>
           <p class="text-xs text-teal-light font-bold tracking-wider">"Your Environment, Our Responsibility."</p>
@@ -2082,18 +2102,32 @@
       </div>
     </div>
 
-    <!-- Gallery Grid — real Meash work photos (click to enlarge) -->
-    <div class="ms-gal-grid" id="ms-gal-grid">
-      @foreach($galleryOrder as $gidx => $gfile)
-        @php $gp = $galleryByFile[$gfile]; $gcls = ['ms-g-a', 'ms-g-b', 'ms-g-c', 'ms-g-d', 'ms-g-e'][$gidx % 5]; @endphp
-        <button type="button" class="ms-gcard {{ $gcls }}" data-ms-gal="{{ $gidx }}" data-ms-full="{{ $photoSrc($gfile) }}" data-ms-cap-am="{{ $gp['am'] }}" data-ms-cap-en="{{ $gp['en'] }}" aria-label="{{ $gp['en'] }}">
-          <img src="{{ $photoSrc($gfile) }}" alt="{{ $gp['en'] }}" loading="lazy">
-          <span class="ms-cap">
-            <span><span data-lang-block="am">{{ $gp['am'] }}</span><span data-lang-block="en">{{ $gp['en'] }}</span></span>
-            <span class="ms-zoom" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
-          </span>
-        </button>
-      @endforeach
+    <!-- Gallery full-size slider — one large photo at a time (batch 19).
+         Same admin-managed data as before ($galleryOrder, $galleryByFile,
+         $photoSrc); tap a photo to open the lightbox. -->
+    <div class="ms-gal-slider" id="ms-gal-slider">
+      <div class="ms-gal-stage" id="ms-gal-stage" tabindex="0" role="region" aria-label="Work gallery slider">
+        @foreach($galleryOrder as $gidx => $gfile)
+          @php $gp = $galleryByFile[$gfile]; @endphp
+          <figure class="ms-gal-slide{{ $gidx === 0 ? ' on' : '' }}" data-ms-gal="{{ $gidx }}" data-ms-full="{{ $photoSrc($gfile) }}" data-ms-cap-am="{{ $gp['am'] }}" data-ms-cap-en="{{ $gp['en'] }}" aria-label="{{ $gp['en'] }}">
+            <img src="{{ $photoSrc($gfile) }}" alt="{{ $gp['en'] }}" @if($gidx !== 0) loading="lazy" @endif>
+            <figcaption class="ms-gal-cap">
+              <span><span data-lang-block="am">{{ $gp['am'] }}</span><span data-lang-block="en">{{ $gp['en'] }}</span></span>
+            </figcaption>
+          </figure>
+        @endforeach
+        <button type="button" class="ms-gal-nav ms-gal-prev" id="ms-gal-prev" aria-label="Previous photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 5.5-6 6.5 6 6.5"/></svg></button>
+        <button type="button" class="ms-gal-nav ms-gal-next" id="ms-gal-next" aria-label="Next photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 5.5 6 6.5-6 6.5"/></svg></button>
+        <span class="ms-gal-count" id="ms-gal-count">1 / {{ count($galleryOrder) }}</span>
+      </div>
+      <div class="ms-gal-dots" id="ms-gal-dots"></div>
+      <div class="ms-gal-thumbs" id="ms-gal-thumbs">
+        @foreach($galleryOrder as $gidx => $gfile)
+          <button type="button" class="ms-gal-thumb{{ $gidx === 0 ? ' on' : '' }}" data-ms-thumb="{{ $gidx }}" aria-label="{{ $galleryByFile[$gfile]['en'] }}">
+            <img src="{{ $photoSrc($gfile) }}" alt="" loading="lazy">
+          </button>
+        @endforeach
+      </div>
     </div>
   </div>
 </section>
@@ -2884,7 +2918,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-4 gap-10 text-sm">
     <div>
       <div class="flex items-center gap-2.5 mb-3">
-        <img src="/logo.jpg" class="w-9 h-9 rounded-lg object-cover shadow-sm">
+        <img src="{{ $logoSrc }}" class="w-9 h-9 rounded-lg object-cover shadow-sm">
         <span class="font-serif font-bold text-lg text-white">MEASH CLEANING SOLUTION</span>
       </div>
       <p class="text-xs text-teal-light font-semibold mb-3">"Your Environment, Our Responsibility."</p>
@@ -4733,28 +4767,95 @@
       layout(); restart();
     }
 
-    /* ---------- Gallery: 3D tilt + lightbox ---------- */
-    var gal = document.getElementById('ms-gal-grid');
-    if (gal) {
-      var cards = Array.prototype.slice.call(gal.querySelectorAll('.ms-gcard'));
-      if (!reduceMotion && window.matchMedia('(pointer: fine)').matches) {
-        cards.forEach(function (card) {
-          card.addEventListener('mousemove', function (e) {
-            var r = card.getBoundingClientRect();
-            var px = (e.clientX - r.left) / r.width - .5;
-            var py = (e.clientY - r.top) / r.height - .5;
-            card.style.transform = 'perspective(900px) rotateY(' + (px * 9) + 'deg) rotateX(' + (-py * 9) + 'deg)';
-          });
-          card.addEventListener('mouseleave', function () { card.style.transform = ''; });
-        });
+    /* ---------- Gallery: full-size slider + lightbox (batch 19) ----------
+       One large photo at a time: arrows, dots, counter, thumbnails,
+       keyboard, and the same hand-drag pattern as the hero slider
+       (slide follows the finger/mouse, snaps to the nearest photo).
+       Tapping a photo (not a drag) opens the lightbox. */
+    var galStage = document.getElementById('ms-gal-stage');
+    if (galStage) {
+      var gSlides = Array.prototype.slice.call(galStage.querySelectorAll('.ms-gal-slide'));
+      var gDotsBox = document.getElementById('ms-gal-dots');
+      var gThumbs = Array.prototype.slice.call(document.querySelectorAll('.ms-gal-thumb'));
+      var gCount = document.getElementById('ms-gal-count');
+      var gDots = [], gActive = 0, gTimer = null;
+      var gDragging = false, gDragged = false, gStartX = 0, gLastX = 0, gLastT = 0;
+
+      gSlides.forEach(function (fig, i) {
+        var d = document.createElement('button');
+        d.type = 'button'; d.className = 'ms-gal-dot'; d.setAttribute('aria-label', 'Photo ' + (i + 1));
+        d.addEventListener('click', function () { gGoTo(i); gRestart(); });
+        gDotsBox.appendChild(d); gDots.push(d);
+        fig.addEventListener('click', function () { if (gDragged) { gDragged = false; return; } openLb(i); });
+      });
+
+      function gLayout() {
+        gSlides.forEach(function (s, i) { s.classList.toggle('on', i === gActive); });
+        gDots.forEach(function (d, i) { d.classList.toggle('on', i === gActive); });
+        gThumbs.forEach(function (t, i) { t.classList.toggle('on', i === gActive); });
+        if (gCount) gCount.textContent = (gActive + 1) + ' / ' + gSlides.length;
       }
+      function gGoTo(i) { gActive = (i + gSlides.length) % gSlides.length; gLayout(); }
+      function gNext() { gGoTo(gActive + 1); }
+      function gPrev() { gGoTo(gActive - 1); }
+      function gRestart() {
+        if (gTimer) clearInterval(gTimer);
+        if (!reduceMotion) gTimer = setInterval(gNext, 5000);
+      }
+      document.getElementById('ms-gal-next').addEventListener('click', function () { gNext(); gRestart(); });
+      document.getElementById('ms-gal-prev').addEventListener('click', function () { gPrev(); gRestart(); });
+      gThumbs.forEach(function (t, i) { t.addEventListener('click', function () { gGoTo(i); gRestart(); }); });
+      galStage.addEventListener('mouseenter', function () { if (gTimer) clearInterval(gTimer); });
+      galStage.addEventListener('mouseleave', function () { if (!gDragging) gRestart(); });
+      galStage.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') { gNext(); gRestart(); }
+        if (e.key === 'ArrowLeft') { gPrev(); gRestart(); }
+      });
+      galStage.addEventListener('pointerdown', function (e) {
+        if (e.target && e.target.closest && e.target.closest('button')) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        gDragging = true; gDragged = false;
+        gStartX = e.clientX; gLastX = e.clientX; gLastT = Date.now();
+        if (gTimer) clearInterval(gTimer);
+        galStage.classList.add('ms-dragging');
+        try { galStage.setPointerCapture(e.pointerId); } catch (err) {}
+        if (e.pointerType === 'mouse') e.preventDefault();
+      });
+      galStage.addEventListener('pointermove', function (e) {
+        if (!gDragging) return;
+        if (Math.abs(e.clientX - gStartX) > 8) gDragged = true;
+        gLastX = e.clientX; gLastT = Date.now();
+      });
+      function gDragEnd(e, allowTap) {
+        if (!gDragging) return;
+        gDragging = false;
+        galStage.classList.remove('ms-dragging');
+        var dx = e.clientX - gStartX;
+        var now = Date.now(), dt = now - gLastT;
+        var vel = dt > 0 ? (e.clientX - gLastX) / dt : 0;
+        if (Math.abs(dx) > 40 || (Math.abs(vel) > 0.45 && Math.abs(dx) > 25)) {
+          if (dx < 0) gNext(); else gPrev();
+        } else if (!gDragged && allowTap) {
+          // Tap (no drag): open the lightbox. This must live here and
+          // not only on the slide's click handler, because
+          // setPointerCapture above retargets the click to the stage,
+          // so the figure's click listener may never fire. A cancelled
+          // pointer (e.g. a vertical page scroll) must not open it.
+          openLb(gActive);
+        }
+        gLayout(); gRestart();
+      }
+      galStage.addEventListener('pointerup', function (e) { gDragEnd(e, true); });
+      galStage.addEventListener('pointercancel', function (e) { gDragEnd(e, false); });
+
+      /* Lightbox — same as before, now fed by the slider slides. */
       var lb = document.getElementById('ms-lightbox');
       var lbImg = document.getElementById('ms-lb-img');
       var lbCapAm = document.getElementById('ms-lb-cap-am');
       var lbCapEn = document.getElementById('ms-lb-cap-en');
       var lbPos = 0;
       function showLb() {
-        var c = cards[lbPos];
+        var c = gSlides[lbPos];
         lbImg.src = c.getAttribute('data-ms-full');
         lbImg.alt = c.getAttribute('data-ms-cap-en');
         lbCapAm.textContent = c.getAttribute('data-ms-cap-am');
@@ -4762,17 +4863,17 @@
       }
       function openLb(i) { lbPos = i; showLb(); lb.classList.add('open'); document.body.style.overflow = 'hidden'; }
       function closeLb() { lb.classList.remove('open'); document.body.style.overflow = ''; }
-      cards.forEach(function (c, i) { c.addEventListener('click', function () { openLb(i); }); });
       document.getElementById('ms-lb-close').addEventListener('click', closeLb);
-      document.getElementById('ms-lb-next').addEventListener('click', function () { lbPos = (lbPos + 1) % cards.length; showLb(); });
-      document.getElementById('ms-lb-prev').addEventListener('click', function () { lbPos = (lbPos - 1 + cards.length) % cards.length; showLb(); });
+      document.getElementById('ms-lb-next').addEventListener('click', function () { lbPos = (lbPos + 1) % gSlides.length; showLb(); });
+      document.getElementById('ms-lb-prev').addEventListener('click', function () { lbPos = (lbPos - 1 + gSlides.length) % gSlides.length; showLb(); });
       lb.addEventListener('click', function (e) { if (e.target === lb) closeLb(); });
       document.addEventListener('keydown', function (e) {
         if (!lb.classList.contains('open')) return;
         if (e.key === 'Escape') closeLb();
-        if (e.key === 'ArrowRight') { lbPos = (lbPos + 1) % cards.length; showLb(); }
-        if (e.key === 'ArrowLeft') { lbPos = (lbPos - 1 + cards.length) % cards.length; showLb(); }
+        if (e.key === 'ArrowRight') { lbPos = (lbPos + 1) % gSlides.length; showLb(); }
+        if (e.key === 'ArrowLeft') { lbPos = (lbPos - 1 + gSlides.length) % gSlides.length; showLb(); }
       });
+      gLayout(); gRestart();
     }
   })();
 </script>

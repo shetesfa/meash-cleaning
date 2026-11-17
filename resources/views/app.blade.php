@@ -9481,7 +9481,8 @@
             { id: 'hero', label_en: 'Hero slider', label_am: 'ዋና ስላይደር' },
             { id: 'service', label_en: 'Service cards', label_am: 'የአገልግሎት ካርዶች' },
             { id: 'gallery', label_en: 'Gallery', label_am: 'ጋለሪ' },
-            { id: 'feature', label_en: 'Feature strip', label_am: 'የሂደት ክፍል' },
+            { id: 'feature', label_en: 'How we deliver', label_am: 'ፍጹም ጽዳት እንዴት እናደርሳለን' },
+            { id: 'logo', label_en: 'Website logo', label_am: 'የድረ-ገጽ ሎጎ' },
         ];
 
         function photoSectionLabel(section) {
@@ -9514,18 +9515,25 @@
             const filterBtn = (key, label) => '<button type="button" onclick="setPhotosFilter(\'' + key + '\')" class="px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ' + (window._photosFilter === key ? 'bg-cyan-600 text-white shadow' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800') + '">' + label + '</button>';
 
             let sectionsHtml = '';
+            const filterActive = (window._photosFilter && window._photosFilter !== 'all') || ((window._photosSearch || '').trim() !== '');
             PHOTO_SECTIONS.forEach(sec => {
                 const secAll = cmsPhotosData.filter(p => p.section === sec.id);
                 const secAdded = secAll.filter(p => p.status === 'added').length;
                 const secList = list.filter(p => p.section === sec.id);
                 if (!secList.length && secAll.length) return; // hidden by current filter
+                // Batch 19: when a search/filter is active the heading
+                // shows the FILTERED count ("3 shown of 14"), not the
+                // unfiltered totals.
+                const secCountLabel = filterActive
+                    ? secList.length + ' shown of ' + secAll.length
+                    : secAdded + ' Added / ' + secAll.length + ' total';
                 sectionsHtml += '<div class="space-y-3">'
                     + '<div class="flex items-center justify-between"><h4 class="text-sm font-bold text-white">' + sec.label_en + ' <span class="text-slate-400 font-semibold">(' + sec.label_am + ')</span></h4>'
-                    + '<span class="text-[11px] font-bold text-slate-400">' + secAdded + ' Added / ' + secAll.length + ' total</span></div>';
+                    + '<span class="text-[11px] font-bold text-slate-400">' + secCountLabel + '</span></div>';
                 if (!secList.length) {
                     sectionsHtml += '<p class="text-xs text-slate-500 bg-slate-900 border border-dashed border-slate-800 rounded-2xl px-4 py-6 text-center">በዚህ ክፍል ገና ፎቶ የለም — ከላይ ካለው upload control ጨምር።</p>';
                 } else {
-                    sectionsHtml += '<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">' + secList.map(renderPhotoCard).join('') + '</div>';
+                    sectionsHtml += '<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">' + secList.map(p => renderPhotoCard(p, secAll.indexOf(p))).join('') + '</div>';
                 }
                 sectionsHtml += '</div>';
             });
@@ -9535,7 +9543,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
                             <h3 class="text-lg font-bold text-white">የድረ-ገጽ ፎቶዎች (Website Photos)</h3>
-                            <p class="text-xs text-slate-400">የጣቢያውን ሁሉም ፎቶዎች እዚህ ይቆጣጠራሉ — slider፣ service cards፣ gallery እና feature strip። “Added” ማለት በጣቢያ ላይ ይታያል፤ “Not added” ማለት ተደብቋል።</p>
+                            <p class="text-xs text-slate-400">የጣቢያውን ሁሉም ፎቶዎች እዚህ ይቆጣጠራሉ — slider፣ service cards፣ gallery፣ feature strip እና ሎጎ። “Added” ማለት በጣቢያ ላይ ይታያል፤ “Not added” ማለት ተደብቋል። አንድ ፎቶ በብዙ ቦታ የሚታይ ከሆነ፣ አንድ ጊዜ መቀየር በሁሉም ቦታ ይቀይረዋል።</p>
                         </div>
                         <div class="flex items-center gap-2 text-xs font-bold">
                             <span class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300">${total} photos</span>
@@ -9575,6 +9583,7 @@
                                     <option value="gallery">Gallery</option>
                                     <option value="service">Service card</option>
                                     <option value="feature">Feature strip</option>
+                                    <option value="logo">Website logo</option>
                                 </select>
                             </div>
                             <div id="ph-new-service-wrap" style="display:none">
@@ -9609,11 +9618,16 @@
             lucide.createIcons();
         }
 
-        function renderPhotoCard(p) {
+        function renderPhotoCard(p, idxInSection) {
             const added = p.status === 'added';
             const badge = added
                 ? '<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[11px] font-black">✓ Added</span>'
                 : '<span class="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[11px] font-black">● Not added</span>';
+            // Batch 19: feature cards get the same "• category" line the
+            // other cards have — their step in the "How we deliver" strip.
+            const categoryLine = photoSectionLabel(p.section)
+                + (p.service_code ? ' • ' + escapeHtml(p.service_code)
+                    : (p.section === 'feature' && typeof idxInSection === 'number' ? ' • Step ' + (idxInSection + 1) + ' (ደረጃ ' + (idxInSection + 1) + ')' : ''));
             return '<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">'
                 + '<div class="relative"><img src="' + escapeHtml(p.src) + '" alt="' + escapeHtml(p.title_en || p.title_am || 'Photo') + '" class="w-full h-40 object-cover" loading="lazy">'
                 + '<span class="absolute top-2 left-2">' + badge + '</span></div>'
@@ -9622,13 +9636,14 @@
                 + '<input type="text" id="ph-cap-en-' + p.id + '" value="' + escapeHtml(p.title_en || '') + '" maxlength="255" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:border-cyan-400"></div>'
                 + '<div><label class="text-[10px] font-bold text-slate-400 block mb-0.5">Caption አማርኛ</label>'
                 + '<input type="text" id="ph-cap-am-' + p.id + '" value="' + escapeHtml(p.title_am || '') + '" maxlength="255" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:border-cyan-400"></div>'
-                + '<p class="text-[11px] text-slate-500 font-semibold">' + photoSectionLabel(p.section) + (p.service_code ? ' • ' + escapeHtml(p.service_code) : '') + '</p>'
+                + '<p class="text-[11px] text-slate-500 font-semibold">' + categoryLine + '</p>'
                 + '<div class="flex flex-wrap gap-1.5 pt-1">'
                 + '<button type="button" onclick="savePhotoCaptions(' + p.id + ')" class="px-2.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[11px] rounded-lg cursor-pointer">Caption አስቀምጥ</button>'
-                + '<button type="button" onclick="togglePhotoStatus(' + p.id + ')" class="px-2.5 py-1.5 ' + (added ? 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700' : 'bg-emerald-600 hover:bg-emerald-500 text-white') + ' font-bold text-[11px] rounded-lg cursor-pointer">' + (added ? 'Remove' : 'Add to site') + '</button>'
+                + '<button type="button" onclick="togglePhotoStatus(' + p.id + ')" class="px-2.5 py-1.5 ' + (added ? 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700' : 'bg-emerald-600 hover:bg-emerald-500 text-white') + ' font-bold text-[11px] rounded-lg cursor-pointer">' + (added ? 'Hide from site' : 'Add to site') + '</button>'
                 + '<button type="button" onclick="document.getElementById(\'ph-change-' + p.id + '\').click()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] rounded-lg border border-slate-700 cursor-pointer">Change photo</button>'
                 + '<button type="button" onclick="deletePhoto(' + p.id + ', this)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-red-900/60 text-red-300 font-bold text-[11px] rounded-lg border border-slate-700 cursor-pointer">Delete</button>'
                 + '</div>'
+                + '<p class="text-[11px] text-slate-500">Hide = ከጣቢያ ይደበቃል, ፎቶው አይሰረዝም • Delete = ሙሉ ለሙሉ ይሰረዛል (Hide hides it from the site without deleting it; Delete removes it permanently)</p>'
                 + '<input type="file" id="ph-change-' + p.id + '" accept="image/*" class="hidden" onchange="changePhotoFile(' + p.id + ', this)">'
                 + '</div></div>';
         }
@@ -9755,7 +9770,7 @@
                 });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.message || ('Change failed (' + res.status + ')'));
-                alert('ፎቶ ተቀይሯል!');
+                alert(d.message || 'ፎቶ ተቀይሯል!');
                 refreshPhotosTab();
             } catch (err) {
                 alert(err.message);

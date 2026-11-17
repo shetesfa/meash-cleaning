@@ -18,7 +18,11 @@ class PhotoSeeder extends Seeder
 {
     public function run(): void
     {
-        if (Photo::count() > 0) {
+        // Skip only when real photo rows exist. The admin-managed logo
+        // row (section 'logo', batch 19) must NOT block seeding on a
+        // fresh database: migrations run before db:seed on deploy, so
+        // the logo row is already there when this runs.
+        if (Photo::where('section', '!=', 'logo')->count() > 0) {
             $this->command->info('Photos table already has rows. Skipping PhotoSeeder.');
 
             return;

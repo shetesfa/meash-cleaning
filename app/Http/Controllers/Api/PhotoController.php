@@ -168,16 +168,34 @@ class PhotoController extends Controller
         $oldUrl = $photo->url;
         $photo->update($data);
 
-        // If the image was replaced, remove the old file best-effort
-        // (Cloudinary and/or local gallery file).
+        // Batch 19: one change updates all places. The same image file
+        // is stored as separate rows per section (hero + gallery +
+        // service card), so when the image is replaced every other row
+        // showing the old file follows the new one.
+        $propagated = 0;
         if (!empty($data['url']) && $data['url'] !== $oldUrl) {
-            $cloudinary->deleteByUrl($oldUrl);
-            $this->deleteLocalFile($oldUrl);
+            $siblings = Photo::where('url', $oldUrl)->where('id', '!=', $photo->id)->get();
+            foreach ($siblings as $sibling) {
+                $sibling->update(['url' => $data['url']]);
+                $propagated++;
+            }
+
+            // Only remove the old file when no row references it
+            // anymore (Cloudinary and/or local gallery file).
+            if (!Photo::where('url', $oldUrl)->exists()) {
+                $cloudinary->deleteByUrl($oldUrl);
+                $this->deleteLocalFile($oldUrl);
+            }
         }
+
+        $places = $propagated + 1;
+        $message = $propagated > 0
+            ? 'Photo updated in ' . $places . ' places / ፎቶው በ' . $places . ' ቦታዎች ተቀይሯል'
+            : 'Photo updated.';
 
         return response()->json([
             'success' => true,
-            'message' => 'Photo updated.',
+            'message' => $message,
             'photo' => $this->present($photo->fresh()),
         ]);
     }
