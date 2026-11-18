@@ -153,6 +153,21 @@ class RedesignTest extends TestCase
         return substr($html, $start, $end - $start);
     }
 
+    // The 6 essential services, as seeded live (DatabaseSeeder).
+    private function seedEssentialServices(): void
+    {
+        foreach ([
+            ['code' => 'floor_ceramic', 'name_en' => 'Ceramic & Hardwood Floor Cleaning', 'name_am' => 'የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት', 'base_price' => 60, 'unit' => 'sqm', 'sort_order' => 1],
+            ['code' => 'facilities_general', 'name_en' => 'Deep & General Facilities Cleaning (Corporate spaces & offices)', 'name_am' => 'የተቋማት አጠቃላይ እና ጥልቅ ጽዳት (ለቢሮዎች እና ለድርጅቶች)', 'base_price' => 3500, 'unit' => 'service', 'sort_order' => 2],
+            ['code' => 'kitchen_dining', 'name_en' => 'Kitchen & Dining Sanitation (Hotels, Cafés & Restaurants)', 'name_am' => 'የወጥ ቤት እና የምግብ ማስተናገጃ ቦታዎች ጽዳት (ለሆቴል፣ ካፌ እና ሬስቶራንት)', 'base_price' => 3000, 'unit' => 'service', 'sort_order' => 3],
+            ['code' => 'post_construction', 'name_en' => 'Post-Construction Handover Cleaning (For new developments)', 'name_am' => 'ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት', 'base_price' => 4500, 'unit' => 'service', 'sort_order' => 4],
+            ['code' => 'glass', 'name_en' => 'High-Rise Window & Glass Cleaning', 'name_am' => 'የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት', 'base_price' => 70, 'unit' => 'sqm', 'sort_order' => 5],
+            ['code' => 'upholstery_carpet', 'name_en' => 'Upholstery & Carpet Deep Care', 'name_am' => 'የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ (ቴክኖሎጂን ሳይጎዱ ማፅዳት)', 'base_price' => 350, 'unit' => 'seat', 'sort_order' => 6],
+        ] as $svc) {
+            \App\Models\Service::create($svc + ['is_active' => true, 'description_en' => 'x', 'description_am' => 'x']);
+        }
+    }
+
     // R4: About + Five Pillars merged into ONE "Why Meash" section, 4 cards.
     public function test_r4_why_meash_merged(): void
     {
@@ -186,17 +201,7 @@ class RedesignTest extends TestCase
     // R4: Commercial + Core Services merged into ONE tabbed services section.
     public function test_r4_services_tabs(): void
     {
-        // The 6 essential services, as seeded live (DatabaseSeeder).
-        foreach ([
-            ['code' => 'floor_ceramic', 'name_en' => 'Ceramic & Hardwood Floor Cleaning', 'name_am' => 'የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት', 'base_price' => 60, 'unit' => 'sqm', 'sort_order' => 1],
-            ['code' => 'facilities_general', 'name_en' => 'Deep & General Facilities Cleaning (Corporate spaces & offices)', 'name_am' => 'የተቋማት አጠቃላይ እና ጥልቅ ጽዳት (ለቢሮዎች እና ለድርጅቶች)', 'base_price' => 3500, 'unit' => 'service', 'sort_order' => 2],
-            ['code' => 'kitchen_dining', 'name_en' => 'Kitchen & Dining Sanitation (Hotels, Cafés & Restaurants)', 'name_am' => 'የወጥ ቤት እና የምግብ ማስተናገጃ ቦታዎች ጽዳት (ለሆቴል፣ ካፌ እና ሬስቶራንት)', 'base_price' => 3000, 'unit' => 'service', 'sort_order' => 3],
-            ['code' => 'post_construction', 'name_en' => 'Post-Construction Handover Cleaning (For new developments)', 'name_am' => 'ከግንባታ ማጠናቀቅ በኋላ የሚደረግ የርክክብ ጽዳት', 'base_price' => 4500, 'unit' => 'service', 'sort_order' => 4],
-            ['code' => 'glass', 'name_en' => 'High-Rise Window & Glass Cleaning', 'name_am' => 'የመስታወት እና የፎቅ ውጫዊ ገጽታ ጽዳት', 'base_price' => 70, 'unit' => 'sqm', 'sort_order' => 5],
-            ['code' => 'upholstery_carpet', 'name_en' => 'Upholstery & Carpet Deep Care', 'name_am' => 'የሶፋ እና ምንጣፍ ጥልቅ እንክብካቤ (ቴክኖሎጂን ሳይጎዱ ማፅዳት)', 'base_price' => 350, 'unit' => 'seat', 'sort_order' => 6],
-        ] as $svc) {
-            \App\Models\Service::create($svc + ['is_active' => true, 'description_en' => 'x', 'description_am' => 'x']);
-        }
+        $this->seedEssentialServices();
 
         $res = $this->get('/');
         $res->assertStatus(200);
@@ -347,5 +352,56 @@ class RedesignTest extends TestCase
         // Phone gap fix: tighter bottom padding under the thumbnails.
         $this->assertStringContainsString('.ms-gal-sec { padding-bottom: 2.5rem; }', $html);
         $this->assertStringContainsString('ms-gal-sec', $html);
+    }
+
+    // R7: booking form on phones — one-column service cards, no price
+    // until a service is chosen, property chips, progress bar, sticky bar.
+    public function test_r7_booking_form_on_phones(): void
+    {
+        $this->seedEssentialServices();
+
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+        $bookStart = strpos($html, 'id="book"');
+        $bookEnd = strpos($html, 'id="track"');
+        $book = substr($html, $bookStart, $bookEnd - $bookStart);
+
+        // One-column service cards on phones (2 columns on desktop).
+        $this->assertStringContainsString('grid grid-cols-1 md:grid-cols-2 gap-2.5', $book);
+        // No service is preselected: every card is the unselected style.
+        $step1 = substr($book, strpos($book, 'id="step-1"'), strpos($book, 'id="step-2"') - strpos($book, 'id="step-1"'));
+        $this->assertStringContainsString('svc-btn border-2 border-navy/10', $step1);
+        $this->assertStringNotContainsString('svc-btn border-2 border-navy ', $step1);
+        // Service names clamp to two lines; the price sits on the right.
+        $this->assertStringContainsString('ms-clamp2', $step1);
+        // The total shows "Choose a service to see the price" — no 60 ETB
+        // in the totals — until a service is chosen.
+        $this->assertStringContainsString('id="wiz-total"', $book);
+        $this->assertStringContainsString('Choose a service to see the price', $book);
+        $this->assertStringContainsString('id="wiz-total-sticky"', $book);
+        $this->assertStringNotContainsString('id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">60 ETB', $book);
+        // JS state starts with nothing selected.
+        $this->assertStringContainsString('let selectedSvcId = null;', $html);
+        $this->assertStringNotContainsString('FIRST_WIZARD_SVC', $html);
+        // Property Type is 3 big chips now, not a dropdown; the hidden
+        // input keeps the id the submit logic reads (Home = residential).
+        $this->assertStringNotContainsString('<select id="book-property-type"', $book);
+        $this->assertStringContainsString('<input type="hidden" id="book-property-type" value="residential">', $book);
+        $this->assertSame(3, substr_count($book, 'data-property-type="'));
+        $this->assertStringContainsString('ms-prop-chip', $book);
+        // Clear progress bar: Step 1 of 4, driven by showWizardStep.
+        $this->assertStringContainsString('id="wiz-progress-fill"', $book);
+        $this->assertStringContainsString('Step <b class="wiz-step-num">1</b> of 4', $book);
+        $this->assertStringContainsString('wizStickyNext()', $html);
+        // Sticky bottom bar inside the form: total + Next always visible.
+        $this->assertStringContainsString('sticky bottom-0 z-10 -mx-6', $book);
+        $this->assertStringContainsString('id="wiz-sticky-next"', $book);
+        // No error message is visible before the user has typed anything.
+        $this->assertStringContainsString('id="step2-error" class="hidden', $book);
+        $this->assertStringContainsString('id="step1-hint" class="hidden', $book);
+        // The Ethiopian calendar logic in step 3 is untouched.
+        $this->assertStringContainsString('id="book-date"', $book);
+        $this->assertStringContainsString('EC.toEth', $html);
     }
 }

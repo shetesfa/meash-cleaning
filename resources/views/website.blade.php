@@ -1114,6 +1114,11 @@
     .ms-gal-sec { padding-bottom: 2.5rem; }
     .ms-gal-thumbs { margin-top: 10px; padding-bottom: 0; }
   }
+  /* R7: property-type chips (big, selectable, 48px tall). */
+  .ms-prop-chip { min-height: 48px; border: 2px solid rgba(15,23,42,.12); background: #fff; border-radius: 12px; font-weight: 700; font-size: .875rem; color: rgba(15,23,42,.7); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: .5rem .25rem; cursor: pointer; transition: border-color .2s ease, background .2s ease, color .2s ease; }
+  .ms-prop-chip[aria-checked="true"] { border-color: #0F172A; background: #E8F2FA; color: #0F172A; box-shadow: 0 2px 8px rgba(15,23,42,.08); }
+  .ms-prop-chip[aria-checked="true"] svg, .ms-prop-chip[aria-checked="true"] i { color: #2F6FA8; }
+
   /* R6: before/after comparison slider. */
   .ms-ba { position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 22px rgba(8,42,74,.10); aspect-ratio: 16/10; background: #0d2c49; }
   .ms-ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -2465,32 +2470,46 @@
         <span class="step-dot whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer py-1.5 px-2.5 rounded-lg transition" data-step="4">04 <span data-lang-block="am">ማረጋገጫ</span><span data-lang-block="en">Confirm</span></span>
       </div>
 
+      <!-- R7: clear progress bar (Step 1 of 4) -->
+      <div class="mb-2">
+        <div class="flex items-center justify-between text-[11px] font-bold text-navy/50 mb-1.5">
+          <span id="wiz-progress-label"><span data-lang-block="am">ደረጃ <b class="wiz-step-num">1</b> ከ 4</span><span data-lang-block="en">Step <b class="wiz-step-num">1</b> of 4</span></span>
+          <span id="wiz-progress-pct">25%</span>
+        </div>
+        <div class="h-2 rounded-full bg-navy/10 overflow-hidden"><div id="wiz-progress-fill" class="h-full rounded-full bg-[#3E8ECC] transition-all duration-300" style="width: 25%"></div></div>
+      </div>
+
       <form id="booking-form" onsubmit="submitBooking(event)">
         <!-- STEP 1 -->
         <div id="step-1" class="wizard-step">
-          <!-- Property Type Selector (NEW for Residential & Commercial) -->
+          <!-- Property Type: 3 big chips (R7). The hidden input keeps the
+               id the submit logic reads; Home = residential, the old default. -->
           <div class="mb-5 bg-teal-light/30 border border-teal/20 p-3.5 rounded-xl">
-            <label for="book-property-type" class="text-xs font-bold text-teal-dark uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
+            <p class="text-xs font-bold text-teal-dark uppercase tracking-wider flex items-center gap-1.5">
               <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
               <span data-lang-block="am">የቦታው / የንብረቱ አይነት</span><span data-lang-block="en">Property Type</span>
-            </label>
-            <select id="book-property-type" class="w-full rounded-lg border border-navy/15 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-navy font-semibold focus:border-teal cursor-pointer">
-              <option value="residential">Residential Property (የመኖሪያ ቤት ወይም ቪላ)</option>
-              <option value="office">Corporate & Commercial Office (የድርጅትና ቢሮ ህንፃ)</option>
-              <option value="hotel">Hospitality, Hotel & Guest House (ሆቴልና የእንግዳ ማረፊያ)</option>
-              <option value="restaurant">Restaurant, Café & Dining Lounge (ሬስቶራንትና ካፌ)</option>
-              <option value="hall">Auditorium, Event Hall & Center (አዳራሽና መሰብሰቢያ)</option>
-              <option value="commercial_store">Commercial Store & Retail Mall (የንግድ ማዕከል)</option>
-              <option value="other">Institutional & Other Facility (ሌሎች ተቋማት)</option>
-            </select>
+            </p>
+            <input type="hidden" id="book-property-type" value="residential">
+            <div class="grid grid-cols-3 gap-2 mt-2.5" role="radiogroup" aria-label="Property type">
+              <button type="button" role="radio" aria-checked="true" data-property-type="residential" onclick="selectPropertyType('residential', this)" class="ms-prop-chip">
+                <i data-lucide="home" class="w-5 h-5"></i>
+                <span data-lang-block="am">ቤት</span><span data-lang-block="en">Home</span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" data-property-type="office" onclick="selectPropertyType('office', this)" class="ms-prop-chip">
+                <i data-lucide="building-2" class="w-5 h-5"></i>
+                <span data-lang-block="am">ቢሮ</span><span data-lang-block="en">Office</span>
+              </button>
+              <button type="button" role="radio" aria-checked="false" data-property-type="hotel" onclick="selectPropertyType('hotel', this)" class="ms-prop-chip">
+                <i data-lucide="hotel" class="w-5 h-5"></i>
+                <span data-lang-block="am">ሆቴል / ሬስቶራንት</span><span data-lang-block="en">Hotel/Restaurant</span>
+              </button>
+            </div>
           </div>
 
           <p class="font-semibold mb-3 text-sm text-navy"><span data-lang-block="am">የጽዳት አገልግሎት ይምረጡ</span><span data-lang-block="en">Choose cleaning service</span></p>
-          <div class="grid grid-cols-2 gap-2.5 mb-2">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-2">
             @php
               $wizardServices = $activeServices->take(8);
-              $firstWizardService = $wizardServices->first();
-              $firstWizardPrice = (float)($firstWizardService?->base_price ?? 350);
               $iconList = [
                 'sofa' => 'sofa',
                 'carpet' => 'layout-grid',
@@ -2520,20 +2539,21 @@
                 $wNameAm = $ws->name_am ?: $ws->name_en;
                 $wNameEn = $ws->name_en ?: $ws->name_am;
               @endphp
-              <button type="button" onclick="selectServiceForBooking('{{ $ws->code }}', {{ $ws->id }})" class="svc-btn border-2 {{ $idx === 0 ? 'border-navy' : 'border-navy/10' }} rounded-lg p-3 text-left flex items-center gap-2.5 cursor-pointer">
+              <button type="button" onclick="selectServiceForBooking('{{ $ws->code }}', {{ $ws->id }})" class="svc-btn border-2 border-navy/10 rounded-lg p-3 text-left flex items-center gap-3 cursor-pointer min-h-[56px]">
                 <i data-lucide="{{ $wIcon }}" class="w-5 h-5 text-teal-dark shrink-0"></i>
-                <span>
-                  <span class="font-semibold text-xs sm:text-sm block">
-                    <span data-lang-block="am">{{ $wNameAm }}</span>
-                    <span data-lang-block="en">{{ $wNameEn }}</span>
-                  </span>
-                  <span class="text-xs text-navy/50 wiz-price" data-wiz-price="{{ $ws->id }}" data-wiz-unit="{{ $wUnit }}">
-                    {{ number_format($wPrice) }} ETB / {{ $wUnit }}
-                  </span>
+                <span class="font-semibold text-sm flex-1 min-w-0 ms-clamp2">
+                  <span data-lang-block="am">{{ $wNameAm }}</span>
+                  <span data-lang-block="en">{{ $wNameEn }}</span>
+                </span>
+                <span class="text-sm font-bold text-teal-dark shrink-0 wiz-price" data-wiz-price="{{ $ws->id }}" data-wiz-unit="{{ $wUnit }}">
+                  {{ number_format($wPrice) }} ETB / {{ $wUnit }}
                 </span>
               </button>
             @endforeach
           </div>
+          <p id="step1-hint" class="hidden text-xs text-red-600 font-bold mt-3 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> <span data-lang-block="am">እባክዎ መጀመሪያ አገልግሎት ይምረጡ።</span><span data-lang-block="en">Please choose a service first.</span>
+          </p>
           <label class="text-xs font-semibold block mt-4 text-navy"><span data-lang-block="am">ብዛት / መጠን (Quantity / Units)</span><span data-lang-block="en">Quantity</span></label>
           <div class="flex items-center gap-3 mt-1.5 mb-2">
             <button type="button" onclick="changeQty(-1)" class="w-11 h-11 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">−</button>
@@ -2542,10 +2562,10 @@
           </div>
           <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-5 flex items-center justify-between">
             <span class="text-xs sm:text-sm font-semibold text-teal-dark"><span data-lang-block="am">የግምት ድምር (Estimated Price)</span><span data-lang-block="en">Estimated total</span></span>
-            <span id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">{{ number_format($firstWizardPrice) }} ETB</span>
+            <span id="wiz-total" class="font-serif font-semibold text-base sm:text-lg text-teal-dark"><span data-lang-block="am">አገልግሎት ይምረጡ ዋጋ ለማየት</span><span data-lang-block="en">Choose a service to see the price</span></span>
           </div>
           <button type="button" onclick="resetWizard()" class="w-full mt-1 text-xs font-bold text-navy/50 hover:text-red-600 py-2 cursor-pointer"><span data-lang-block="am">↺ ቀጠሮውን አጽዳ</span><span data-lang-block="en">↺ Clear booking</span></button>
-          <button type="button" onclick="showWizardStep(2)" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-2">
+          <button type="button" onclick="validateStep1AndContinue()" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-2 min-h-[48px]">
             <span data-lang-block="am">ቀጣይ: አድራሻ ያስገቡ</span><span data-lang-block="en">Next: Address &amp; Location</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
@@ -2890,7 +2910,7 @@
 
           <div class="bg-fog rounded-md px-4 py-3 mb-5 flex items-center justify-between border border-navy/10">
             <span class="text-sm font-semibold text-navy/70"><span data-lang-block="am">ጠቅላላ የሚከፈል</span><span data-lang-block="en">Total to pay</span></span>
-            <span id="wiz-total-2" class="font-serif font-semibold text-xl text-teal-dark">{{ number_format($firstWizardPrice) }} ETB</span>
+            <span id="wiz-total-2" class="font-serif font-semibold text-base text-teal-dark"><span data-lang-block="am">አገልግሎት ይምረጡ ዋጋ ለማየት</span><span data-lang-block="en">Choose a service to see the price</span></span>
           </div>
           <div class="flex gap-3">
             <button type="button" onclick="showWizardStep(3)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
@@ -2921,6 +2941,19 @@
 
           <p class="text-xs text-navy/60 max-w-sm mx-auto mb-6"><span data-lang-block="am">ቡድናችን በቅርቡ ደውሎ ዝርዝሮችን ያረጋግጥልዎታል። እናመሰግናለን!</span><span data-lang-block="en">Our team will call you shortly to confirm the appointment. Thank you!</span></p>
           <button type="button" onclick="resetWizard()" class="border border-navy/15 font-bold px-6 py-3 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ሌላ ቀጠሮ ያዙ</span><span data-lang-block="en">Book another</span></button>
+        </div>
+
+        <!-- R7: sticky bottom bar inside the form — total + Next always visible. -->
+        <div class="sticky bottom-0 z-10 -mx-6 md:-mx-9 mt-6 px-6 md:px-9 py-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-t border-navy/10 rounded-b-xl flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <div class="text-[11px] font-bold text-navy/50 uppercase tracking-wider"><span data-lang-block="am">የግምት ድምር</span><span data-lang-block="en">Estimated total</span></div>
+            <div id="wiz-total-sticky" class="font-serif font-semibold text-base text-teal-dark truncate"><span data-lang-block="am">አገልግሎት ይምረጡ ዋጋ ለማየት</span><span data-lang-block="en">Choose a service to see the price</span></div>
+          </div>
+          <button type="button" id="wiz-sticky-next" onclick="wizStickyNext()" class="shrink-0 min-h-[48px] bg-navy hover:bg-teal-dark text-white font-bold text-sm px-6 rounded-xl transition cursor-pointer flex items-center gap-2">
+            <span id="wiz-sticky-next-label"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Next</span></span>
+            <span id="wiz-sticky-confirm-label" class="hidden"><span data-lang-block="am">ቀጠሮ አረጋግጥ</span><span data-lang-block="en">Confirm booking</span></span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
         </div>
       </form>
     </div>
@@ -3745,12 +3778,12 @@
     contract_cleaning: 'Regular Contract Cleaning / ቋሚ የኮንትራት ውል'
   };
 
-  // Default to the first service shown in the wizard so the highlighted button
-  // and the priced service always agree.
-  let selectedSvc = @json($activeServices->take(8)->first()?->code ?? 'sofa');
-  let selectedSvcId = {{ (int) ($activeServices->take(8)->first()?->id ?? 1) }};
+  // R7: NO preselection — nothing is chosen until the user taps a service,
+  // and no price shows until then ("Choose a service to see the price").
+  let selectedSvc = null;
+  let selectedSvcId = null;
   let wizardQty = 1;
-  const FIRST_WIZARD_SVC = @json($activeServices->take(8)->first()?->code ?? 'sofa');
+  let currentWizardStep = 1;
 
   function preselectService(svc){
     selectedSvc = svc;
@@ -3758,8 +3791,40 @@
     document.querySelectorAll('.svc-btn').forEach(b => { b.classList.remove('border-navy'); b.classList.add('border-navy/10'); });
     const btn = document.querySelector(`.svc-btn[onclick*="'${svc}'"]`);
     if (btn) { btn.classList.remove('border-navy/10'); btn.classList.add('border-navy'); }
+    document.getElementById('step1-hint')?.classList.add('hidden');
     showWizardStep(1);
     updateWizardTotal();
+  }
+
+  /* R7: property-type chips (Home / Office / Hotel-Restaurant). The hidden
+     input keeps the id the submit logic reads. */
+  function selectPropertyType(value, btn){
+    const input = document.getElementById('book-property-type');
+    if (input) input.value = value;
+    document.querySelectorAll('[data-property-type]').forEach(function (b) {
+      b.setAttribute('aria-checked', b === btn ? 'true' : 'false');
+    });
+  }
+
+  /* R7: step 1 needs a chosen service before continuing. The hint shows
+     only after the user taps Next without choosing — never on load. */
+  function validateStep1AndContinue(){
+    if (!selectedSvcId) {
+      document.getElementById('step1-hint')?.classList.remove('hidden');
+      document.getElementById('step-1')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    document.getElementById('step1-hint')?.classList.add('hidden');
+    showWizardStep(2);
+  }
+
+  /* R7: the sticky bar's Next mirrors the current step's own continue
+     action; on step 4 it submits the booking. */
+  function wizStickyNext(){
+    if (currentWizardStep === 1) validateStep1AndContinue();
+    else if (currentWizardStep === 2) validateStep2AndContinue();
+    else if (currentWizardStep === 3) validateStep3AndContinue();
+    else document.getElementById('btn-submit-booking')?.click();
   }
 
   /* R4: services tabs (Business / Home). Business is the default so the
@@ -3780,6 +3845,7 @@
     document.querySelectorAll('.svc-btn').forEach(b => { b.classList.remove('border-navy'); b.classList.add('border-navy/10'); });
     event?.currentTarget?.classList.remove('border-navy/10');
     event?.currentTarget?.classList.add('border-navy');
+    document.getElementById('step1-hint')?.classList.add('hidden');
     updateWizardTotal();
   }
 
@@ -3818,17 +3884,18 @@
     const checked = document.querySelector('input[name="sub_plan"]:checked');
     selectedSubPlan = checked ? checked.value : 'one_time';
     const discPercent = subPlanDiscounts[selectedSubPlan] || 0;
+    const totalEl2 = document.getElementById('wiz-total-2');
+    if (!selectedSvcId) { if (totalEl2) totalEl2.innerHTML = `<span data-lang-block="am">አገልግሎት ይምረጡ ዋጋ ለማየት</span><span data-lang-block="en">Choose a service to see the price</span>`; return; }
     const price = servicePrices[selectedSvcId] || 0;
     const baseTotal = price * wizardQty;
     const discountAmount = (baseTotal * discPercent) / 100;
     const finalTotal = Math.max(0, baseTotal - discountAmount);
 
-    const totalEl = document.getElementById('wiz-total-2');
-    if (totalEl) {
+    if (totalEl2) {
       if (discPercent > 0) {
-        totalEl.innerHTML = `<span class="line-through text-xs text-navy/40 mr-1.5">${baseTotal.toLocaleString()} ETB</span> ${finalTotal.toLocaleString()} ETB`;
+        totalEl2.innerHTML = `<span class="line-through text-xs text-navy/40 mr-1.5">${baseTotal.toLocaleString()} ETB</span> ${finalTotal.toLocaleString()} ETB`;
       } else {
-        totalEl.textContent = baseTotal.toLocaleString() + ' ' + currency;
+        totalEl2.textContent = baseTotal.toLocaleString() + ' ' + currency;
       }
     }
 
@@ -3845,10 +3912,20 @@
   }
 
   function updateWizardTotal(){
-    const price = servicePrices[selectedSvcId];
+    // R7: no price anywhere until a service is chosen.
+    const chooseHtml = `<span data-lang-block="am">አገልግሎት ይምረጡ ዋጋ ለማየት</span><span data-lang-block="en">Choose a service to see the price</span>`;
     const totalEl = document.getElementById('wiz-total');
+    const stickyEl = document.getElementById('wiz-total-sticky');
+    if (!selectedSvcId) {
+      if (totalEl) totalEl.innerHTML = chooseHtml;
+      if (stickyEl) stickyEl.innerHTML = chooseHtml;
+      updateSubscriptionDiscount();
+      return;
+    }
+    const price = servicePrices[selectedSvcId];
     const text = price != null ? ((price * wizardQty).toLocaleString() + ' ' + currency) : formatPrice(null);
     if (totalEl) totalEl.textContent = text;
+    if (stickyEl) stickyEl.textContent = text;
     updateSubscriptionDiscount();
   }
 
@@ -3856,17 +3933,27 @@
   renderPrices();
   updateWizardTotal();
 
-  // Clear the whole booking wizard back to its initial state.
+  // Clear the whole booking wizard back to its initial state (R7: no
+  // service preselected after a reset either).
   function resetWizard(){
     const form = document.getElementById('booking-form');
     if (form) form.reset();
     wizardQty = 1;
+    selectedSvc = null;
+    selectedSvcId = null;
     const qtyEl = document.getElementById('qty-display');
     if (qtyEl) qtyEl.innerText = wizardQty;
     const step2Err = document.getElementById('step2-error');
     if (step2Err) step2Err.classList.add('hidden');
+    document.getElementById('step1-hint')?.classList.add('hidden');
     document.getElementById('step-success')?.classList.add('hidden');
-    preselectService(FIRST_WIZARD_SVC);
+    document.querySelectorAll('.svc-btn').forEach(b => { b.classList.remove('border-navy'); b.classList.add('border-navy/10'); });
+    const propInput = document.getElementById('book-property-type');
+    if (propInput) propInput.value = 'residential';
+    document.querySelectorAll('[data-property-type]').forEach(function (b) {
+      b.setAttribute('aria-checked', b.dataset.propertyType === 'residential' ? 'true' : 'false');
+    });
+    updateWizardTotal();
     showWizardStep(1);
   }
 
@@ -3901,9 +3988,19 @@
   }
 
   function showWizardStep(n){
+    currentWizardStep = n;
     document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
     const target = document.getElementById('step-' + n);
     if (target) target.classList.remove('hidden');
+    // R7: clear progress bar (Step N of 4).
+    document.querySelectorAll('.wiz-step-num').forEach(function (el) { el.textContent = String(n); });
+    const fill = document.getElementById('wiz-progress-fill');
+    if (fill) fill.style.width = (n * 25) + '%';
+    const pct = document.getElementById('wiz-progress-pct');
+    if (pct) pct.textContent = (n * 25) + '%';
+    // R7: the sticky bar's button becomes Confirm on the last step.
+    document.getElementById('wiz-sticky-next-label')?.classList.toggle('hidden', n === 4);
+    document.getElementById('wiz-sticky-confirm-label')?.classList.toggle('hidden', n !== 4);
     document.querySelectorAll('.step-dot').forEach(d => {
       d.classList.remove('text-teal-dark', 'bg-teal/10', 'font-black');
     });
@@ -3917,6 +4014,7 @@
 
   async function submitBooking(e){
     e.preventDefault();
+    if (!selectedSvcId) { showWizardStep(1); validateStep1AndContinue(); return; }
     const btn = document.getElementById('btn-submit-booking');
     btn.disabled = true;
     const unitPrice = servicePrices[selectedSvcId] || 0;
