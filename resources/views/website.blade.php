@@ -131,8 +131,9 @@
 <meta name="author" content="{{ $companyName }}">
 <meta name="theme-color" content="#0B1220">
 <link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/assets/icon-192.png">
-<link rel="icon" type="image/jpeg" href="{{ $logoSrc }}">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Meash">
 
