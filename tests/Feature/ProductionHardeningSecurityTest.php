@@ -227,7 +227,10 @@ class ProductionHardeningSecurityTest extends TestCase
     {
         $this->app->detectEnvironment(fn () => 'production');
 
-        $res = $this->get('/');
+        // Explicit http URL: $this->get('/') would inherit
+        // config('app.url'), which is https in CI (.env.example), and
+        // Laravel would then build a secure request.
+        $res = $this->get('http://localhost/');
         $res->assertStatus(200);
         $res->assertHeaderMissing('Strict-Transport-Security');
     }
