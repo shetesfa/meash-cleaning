@@ -64,8 +64,9 @@ class ReviewsLinksVisibilityTest extends TestCase
         $html = $res->getContent();
 
         // Exactly the three links carry the marker class: desktop nav,
-        // mobile drawer, footer.
-        $this->assertSame(3, substr_count($html, 'js-reviews-link'));
+        // mobile drawer, footer. (The class string also appears twice in
+        // the JS hide/show code below, so count <a> tags, not raw text.)
+        $this->assertSame(3, preg_match_all('/<a[^>]*js-reviews-link/', $html));
 
         // The JS hides the links together with the section …
         $this->assertStringContainsString(

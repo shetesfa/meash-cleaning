@@ -993,6 +993,10 @@
   .ms-stage.ms-dragging { cursor: grabbing; }
   .ms-stage.ms-dragging .ms-slide { transition: none; }
   .ms-slide { position: absolute; top: 50%; left: 50%; width: min(302px, 64vw); aspect-ratio: 3/4; border-radius: 22px; overflow: hidden; background: #0d2c49; box-shadow: 0 30px 60px rgba(0,0,0,.45); transition: transform .65s cubic-bezier(.22,.9,.28,1), opacity .65s ease, filter .65s ease; will-change: transform; cursor: pointer; border: 1px solid rgba(255,255,255,.14); margin: 0; }
+  /* Responsive <picture> wrappers (P10): the picture must fill its
+     frame exactly like the bare <img> did, or the img's height:100%
+     has nothing to resolve against. */
+  .ms-slide picture, .ms-svc .ms-ph picture, .ms-step .ms-ph picture, .ms-gal-slide picture, .ms-gal-thumb picture { display: block; width: 100%; height: 100%; }
   .ms-slide img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-user-drag: none; }
   .ms-slide figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 34px 16px 13px; color: #fff; background: linear-gradient(transparent, rgba(4,20,36,.85)); font-weight: 700; font-size: .92rem; }
   .ms-slide figcaption .ms-cap-name { display: block; }
@@ -1050,6 +1054,7 @@
   @media (max-width: 820px) { .ms-gal-stage { aspect-ratio: 4/3; } }
   .ms-lb { position: fixed; inset: 0; z-index: 100; background: rgba(3,14,25,.93); display: none; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
   .ms-lb.open { display: flex; }
+  .ms-lb picture { display: contents; }
   .ms-lb img { max-width: min(920px, 94vw); max-height: 76vh; border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.6); object-fit: contain; }
   .ms-lb .ms-lb-cap { color: #E4F2FA; font-weight: 700; margin-top: 16px; text-align: center; }
   .ms-lb .ms-lb-row { display: flex; gap: 12px; margin-top: 14px; align-items: center; }
@@ -1389,6 +1394,63 @@
       $captionByFile[$row['file']] = ['am' => $row['am'], 'en' => $row['en']];
     }
   }
+  // Responsive images: local gallery JPGs have -800.webp / -1600.webp
+  // variants on disk (quality ~80). A local file renders as <picture>
+  // with a WebP srcset + width/height from the original file, so the
+  // layout never jumps while loading; remote/Cloudinary URLs keep a
+  // plain <img> (no variants exist for them). The original JPG stays
+  // as the <img> fallback for browsers without WebP.
+  // Normalise any stored photo value to a local gallery path
+  // ('office-cleaning.jpg' and '/images/gallery/office-cleaning.jpg'
+  // are the same file); anything else (remote URL, other folder) has
+  // no WebP variants on disk and returns null.
+  $localGalleryPath = function ($file) {
+    if (!is_string($file) || $file === '') return null;
+    if (str_starts_with($file, 'http://') || str_starts_with($file, 'https://')) return null;
+    $name = ltrim($file, '/');
+    if (str_starts_with($name, 'images/gallery/')) {
+      return preg_match('/\.jpe?g$/i', $name) ? $name : null;
+    }
+    if (preg_match('/\.jpe?g$/i', $name) && !str_contains($name, '/')) return 'images/gallery/' . $name;
+    return null;
+  };
+  $photoDims = function ($file) use ($localGalleryPath) {
+    $name = $localGalleryPath($file);
+    if ($name === null) return null;
+    $abs = public_path($name);
+    $dims = is_file($abs) ? @getimagesize($abs) : false;
+    return $dims ? [(int)$dims[0], (int)$dims[1]] : null;
+  };
+  $photoSrcset = function ($file) use ($localGalleryPath) {
+    $name = $localGalleryPath($file);
+    if ($name === null) return '';
+    $base = preg_replace('/\.jpe?g$/i', '', $name);
+    $candidates = [];
+    foreach ([800, 1600] as $w) {
+      $variant = $base . '-' . $w . '.webp';
+      if (is_file(public_path($variant))) {
+        $vDims = @getimagesize(public_path($variant));
+        $candidates[] = '/' . $variant . ' ' . ($vDims ? $vDims[0] : $w) . 'w';
+      }
+    }
+    return implode(', ', $candidates);
+  };
+  $responsiveImg = function ($file, $altAm, $altEn, array $opts = []) use ($photoSrc, $photoDims, $photoSrcset) {
+    $src = $photoSrc($file);
+    $altAm = (string)$altAm; $altEn = (string)$altEn;
+    $lazy = $opts['lazy'] ?? true;
+    $sizes = $opts['sizes'] ?? '(max-width: 820px) 100vw, 800px';
+    $fetch = !empty($opts['fetchpriority']) ? ' fetchpriority="high"' : '';
+    $loading = $lazy ? ' loading="lazy"' : '';
+    $altAttr = ' alt="' . e($altEn !== '' ? $altEn : $altAm) . '" data-alt-am="' . e($altAm) . '" data-alt-en="' . e($altEn) . '"';
+    $dims = $photoDims($file);
+    $wh = ($dims) ? ' width="' . $dims[0] . '" height="' . $dims[1] . '"' : '';
+    $srcset = $photoSrcset($file);
+    if ($srcset === '') {
+      return '<img src="' . e($src) . '"' . $altAttr . $wh . $loading . $fetch . '>';
+    }
+    return '<picture><source type="image/webp" srcset="' . e($srcset) . '" sizes="' . e($sizes) . '"><img src="' . e($src) . '"' . $altAttr . $wh . $loading . $fetch . '></picture>';
+  };
 @endphp
 
 <main id="main-content">
@@ -1400,7 +1462,7 @@
       <div class="inline-flex items-center gap-2 text-teal-dark bg-teal-light/40 border border-teal/20 px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide mb-5 w-fit">
         <i data-lucide="shield-check" class="w-4 h-4"></i>
         <span data-lang-block="am">በህጋዊ ፈቃድ የታገዘ@if(!empty($steamClaimAm)) • {{ $steamClaimAm }}@endif</span>
-        <span data-lang-block="en">Licensed &amp; Insured@if(!empty($steamClaimEn)) • {{ $steamClaimEn }}@endif</span>
+        <span data-lang-block="en">Licensed &amp; Insured @if(!empty($steamClaimEn)) • {{ $steamClaimEn }}@endif</span>
       </div>
 
       <!-- Slogan Badge (STRICTLY IN ENGLISH EVERYWHERE — DO NOT TRANSLATE TO AMHARIC) -->
@@ -1466,7 +1528,7 @@
           @foreach($galleryPhotos as $gi => $p)
             @php $slideSvc = $activeServices->firstWhere('code', $p['code']); @endphp
             <figure class="ms-slide" role="group" aria-label="{{ $gi + 1 }} of {{ count($galleryPhotos) }}" data-ms-slide="{{ $gi }}">
-              <img src="{{ $photoSrc($p['file']) }}" alt="{{ $p['en'] }}" data-alt-am="{{ $p['am'] }}" data-alt-en="{{ $p['en'] }}" @if($gi > 0) loading="lazy" @endif>
+              {!! $responsiveImg($p['file'], $p['am'], $p['en'], ['lazy' => $gi > 0, 'fetchpriority' => $gi === 0, 'sizes' => '(max-width: 900px) 64vw, 302px']) !!}
               <figcaption>
                 <span class="ms-cap-name"><span data-lang-block="am">{{ $p['am'] }}</span><span data-lang-block="en">{{ $p['en'] }}</span></span>
                 @if($slideSvc)
@@ -1915,7 +1977,7 @@
             $svcAltEn = ($svcCaption['en'] ?? '') !== '' ? $svcCaption['en'] : ($svc->name_en ?: $svc->name_am);
             $svcAltAm = ($svcCaption['am'] ?? '') !== '' ? $svcCaption['am'] : ($svc->name_am ?: $svc->name_en);
           @endphp
-          <div class="ms-ph"><img src="{{ $photoSrc($svcPhoto) }}" alt="{{ $svcAltEn }}" data-alt-am="{{ $svcAltAm }}" data-alt-en="{{ $svcAltEn }}" loading="lazy"></div>
+          <div class="ms-ph">{!! $responsiveImg($svcPhoto, $svcAltAm, $svcAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
         @else
           <div class="ms-ph flex items-center justify-center bg-teal/10 text-teal-dark"><i data-lucide="{{ $iconName }}" class="w-14 h-14"></i></div>
         @endif
@@ -1989,19 +2051,19 @@
         <span class="ms-num font-serif">01.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">አገልግሎትዎን ይዘዙ</span><span data-lang-block="en">Book your service</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">አገልግሎቱን፣ ቀኑን እና ቦታውን ይምረጡ። መጠኑን ይንገሩን — በካሬ ሜትር፣ በወንበር ወይም በስራ።</span><span data-lang-block="en">Choose the service, date and place. Tell us the size — per square metre, per seat or per job.</span></p>
-        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[0]['file']) }}" alt="{{ $featurePhotos[0]['en'] }}" data-alt-am="{{ $featurePhotos[0]['am'] }}" data-alt-en="{{ $featurePhotos[0]['en'] }}" loading="lazy"></div>
+        <div class="ms-ph">{!! $responsiveImg($featurePhotos[0]['file'], $featurePhotos[0]['am'], $featurePhotos[0]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>
       </div>
       <div class="ms-step">
         <span class="ms-num font-serif">02.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">ቡድናችን ይደርሳል</span><span data-lang-block="en">Our team arrives</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">ዩኒፎርም የለበሰ ቡድን ከሙያዊ ማሽኖች እና ደህንነቱ የተጠበቀ ሳሙናዎች ጋር ይደርሳል።</span><span data-lang-block="en">A uniformed crew arrives with professional machines and safe detergents.</span></p>
-        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[1]['file']) }}" alt="{{ $featurePhotos[1]['en'] }}" data-alt-am="{{ $featurePhotos[1]['am'] }}" data-alt-en="{{ $featurePhotos[1]['en'] }}" loading="lazy"></div>
+        <div class="ms-ph">{!! $responsiveImg($featurePhotos[1]['file'], $featurePhotos[1]['am'], $featurePhotos[1]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>
       </div>
       <div class="ms-step">
         <span class="ms-num font-serif">03.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">በትኩስነቱ ይደሰቱ</span><span data-lang-block="en">Enjoy the freshness</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">እንጨርሳለን፣ እርስዎ ይፈትሹ። ንጹህ ወለሎች፣ የሚያብረቀርቅ መስታወት እና እንደ አዲስ የሚሸት ቦታ።</span><span data-lang-block="en">We finish, you inspect. Spotless floors, shining glass and a space that smells new again.</span></p>
-        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[2]['file']) }}" alt="{{ $featurePhotos[2]['en'] }}" data-alt-am="{{ $featurePhotos[2]['am'] }}" data-alt-en="{{ $featurePhotos[2]['en'] }}" loading="lazy"></div>
+        <div class="ms-ph">{!! $responsiveImg($featurePhotos[2]['file'], $featurePhotos[2]['am'], $featurePhotos[2]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>
       </div>
     </div>
   </div>
@@ -2178,9 +2240,9 @@
     <div class="ms-gal-slider" id="ms-gal-slider">
       <div class="ms-gal-stage" id="ms-gal-stage" tabindex="0" role="region" aria-label="Work gallery slider">
         @foreach($galleryOrder as $gidx => $gfile)
-          @php $gp = $galleryByFile[$gfile]; @endphp
-          <figure class="ms-gal-slide{{ $gidx === 0 ? ' on' : '' }}" data-ms-gal="{{ $gidx }}" data-ms-full="{{ $photoSrc($gfile) }}" data-ms-cap-am="{{ $gp['am'] }}" data-ms-cap-en="{{ $gp['en'] }}" aria-label="{{ $gp['en'] }}">
-            <img src="{{ $photoSrc($gfile) }}" alt="{{ $gp['en'] }}" data-alt-am="{{ $gp['am'] }}" data-alt-en="{{ $gp['en'] }}" @if($gidx !== 0) loading="lazy" @endif>
+          @php $gp = $galleryByFile[$gfile]; $galDims = $photoDims($gfile); $galSrcset = $photoSrcset($gfile); @endphp
+          <figure class="ms-gal-slide{{ $gidx === 0 ? ' on' : '' }}" data-ms-gal="{{ $gidx }}" data-ms-full="{{ $photoSrc($gfile) }}" data-ms-srcset="{{ $galSrcset }}" data-ms-w="{{ $galDims[0] ?? '' }}" data-ms-h="{{ $galDims[1] ?? '' }}" data-ms-cap-am="{{ $gp['am'] }}" data-ms-cap-en="{{ $gp['en'] }}" aria-label="{{ $gp['en'] }}">
+            {!! $responsiveImg($gfile, $gp['am'], $gp['en'], ['lazy' => $gidx !== 0, 'sizes' => '(max-width: 820px) 100vw, 1152px']) !!}
             <figcaption class="ms-gal-cap">
               <span><span data-lang-block="am">{{ $gp['am'] }}</span><span data-lang-block="en">{{ $gp['en'] }}</span></span>
             </figcaption>
@@ -2194,7 +2256,7 @@
       <div class="ms-gal-thumbs" id="ms-gal-thumbs">
         @foreach($galleryOrder as $gidx => $gfile)
           <button type="button" class="ms-gal-thumb{{ $gidx === 0 ? ' on' : '' }}" data-ms-thumb="{{ $gidx }}" aria-label="{{ $galleryByFile[$gfile]['en'] }}">
-            <img src="{{ $photoSrc($gfile) }}" alt="{{ $galleryByFile[$gfile]['en'] }}" data-alt-am="{{ $galleryByFile[$gfile]['am'] }}" data-alt-en="{{ $galleryByFile[$gfile]['en'] }}" loading="lazy">
+            {!! $responsiveImg($gfile, $galleryByFile[$gfile]['am'], $galleryByFile[$gfile]['en'], ['sizes' => '84px']) !!}
           </button>
         @endforeach
       </div>
@@ -2207,7 +2269,13 @@
   <button class="ms-lb-close" id="ms-lb-close" type="button" aria-label="Close viewer">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
   </button>
-  <img id="ms-lb-img" src="{{ $photoSrc($galleryOrder[0] ?? 'office-cleaning.jpg') }}" alt="{{ ($captionByFile[basename($galleryOrder[0] ?? 'office-cleaning.jpg')]['en'] ?? '') ?: 'Meash cleaning team at work' }}">
+  @php
+    $lbFirst = $galleryOrder[0] ?? 'office-cleaning.jpg';
+    $lbDims0 = $photoDims($lbFirst);
+    $lbSrcset0 = $photoSrcset($lbFirst);
+    $lbAlt0 = ($captionByFile[basename($lbFirst)]['en'] ?? '') ?: 'Meash cleaning team at work';
+  @endphp
+  <picture><source id="ms-lb-src" type="image/webp" srcset="{{ $lbSrcset0 }}" sizes="(max-width: 920px) 94vw, 920px"><img id="ms-lb-img" src="{{ $photoSrc($lbFirst) }}" alt="{{ $lbAlt0 }}"@if($lbDims0) width="{{ $lbDims0[0] }}" height="{{ $lbDims0[1] }}"@endif></picture>
   <div class="ms-lb-cap"><span data-lang-block="am" id="ms-lb-cap-am"></span><span data-lang-block="en" id="ms-lb-cap-en"></span></div>
   <div class="ms-lb-row">
     <button id="ms-lb-prev" type="button" aria-label="Previous photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 5.5-6 6.5 6 6.5"/></svg></button>
@@ -4948,12 +5016,20 @@
       /* Lightbox — same as before, now fed by the slider slides. */
       var lb = document.getElementById('ms-lightbox');
       var lbImg = document.getElementById('ms-lb-img');
+      var lbSrc = document.getElementById('ms-lb-src');
       var lbCapAm = document.getElementById('ms-lb-cap-am');
       var lbCapEn = document.getElementById('ms-lb-cap-en');
       var lbPos = 0;
       function showLb() {
         var c = gSlides[lbPos];
         lbImg.src = c.getAttribute('data-ms-full');
+        var lbSrcset = c.getAttribute('data-ms-srcset') || '';
+        if (lbSrc) {
+          if (lbSrcset) { lbSrc.setAttribute('srcset', lbSrcset); } else { lbSrc.removeAttribute('srcset'); }
+        }
+        var lbW = c.getAttribute('data-ms-w'), lbH = c.getAttribute('data-ms-h');
+        if (lbW && lbH) { lbImg.setAttribute('width', lbW); lbImg.setAttribute('height', lbH); }
+        else { lbImg.removeAttribute('width'); lbImg.removeAttribute('height'); }
         var capAm = c.getAttribute('data-ms-cap-am') || '';
         var capEn = c.getAttribute('data-ms-cap-en') || '';
         lbImg.setAttribute('data-alt-am', capAm);
