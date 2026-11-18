@@ -9000,7 +9000,7 @@
                                     </div>
                                     <div>
                                         <label class="text-[11px] text-slate-400 block mb-0.5">የአካውንት ስም (Account Name):</label>
-                                        <input type="text" id="set-pay-telebirr-name" value="${escapeHtml(s.telebirr_account_name || 'Meash Cleaning / Tesfaye')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs">
+                                        <input type="text" id="set-pay-telebirr-name" value="${escapeHtml(s.telebirr_account_name || 'Meash Cleaning Solution')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white text-xs">
                                     </div>
                                 </div>
 

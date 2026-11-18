@@ -110,7 +110,7 @@ class WebsiteSetting extends Model
 
             // Payment Accounts
             'telebirr_account_number' => '0970075509',
-            'telebirr_account_name' => 'Meash Cleaning / Tesfaye',
+            'telebirr_account_name' => 'Meash Cleaning Solution',
             'cbe_account_number' => '1000552467891',
             'cbe_account_name' => 'Meash Cleaning Solution',
             'boa_account_number' => '54321678',
