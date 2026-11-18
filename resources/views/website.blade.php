@@ -997,6 +997,12 @@
      frame exactly like the bare <img> did, or the img's height:100%
      has nothing to resolve against. */
   .ms-slide picture, .ms-svc .ms-ph picture, .ms-step .ms-ph picture, .ms-gal-slide picture, .ms-gal-thumb picture { display: block; width: 100%; height: 100%; }
+  /* Portrait photos (P14): in the fixed-ratio cards (hero 3/4, service
+     4/3, steps 16/10, gallery 16/10, thumbs 4/3) a portrait is cropped
+     top and bottom by object-fit: cover. Keep the TOP - the faces -
+     instead of the centre crop cutting heads off. Card heights do not
+     change: .ms-slide and .ms-gal-stage keep their fixed aspect-ratio. */
+  img.ms-portrait { object-position: center top; }
   .ms-slide img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-user-drag: none; }
   .ms-slide figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 34px 16px 13px; color: #fff; background: linear-gradient(transparent, rgba(4,20,36,.85)); font-weight: 700; font-size: .92rem; }
   .ms-slide figcaption .ms-cap-name { display: block; }
@@ -1445,11 +1451,14 @@
     $altAttr = ' alt="' . e($altEn !== '' ? $altEn : $altAm) . '" data-alt-am="' . e($altAm) . '" data-alt-en="' . e($altEn) . '"';
     $dims = $photoDims($file);
     $wh = ($dims) ? ' width="' . $dims[0] . '" height="' . $dims[1] . '"' : '';
+    // Portrait photos: mark them so the CSS keeps the TOP of the photo
+    // (faces) instead of cropping it away in the fixed-ratio cards.
+    $portrait = ($dims && $dims[1] > $dims[0]) ? ' class="ms-portrait"' : '';
     $srcset = $photoSrcset($file);
     if ($srcset === '') {
-      return '<img src="' . e($src) . '"' . $altAttr . $wh . $loading . $fetch . '>';
+      return '<img src="' . e($src) . '"' . $altAttr . $wh . $portrait . $loading . $fetch . '>';
     }
-    return '<picture><source type="image/webp" srcset="' . e($srcset) . '" sizes="' . e($sizes) . '"><img src="' . e($src) . '"' . $altAttr . $wh . $loading . $fetch . '></picture>';
+    return '<picture><source type="image/webp" srcset="' . e($srcset) . '" sizes="' . e($sizes) . '"><img src="' . e($src) . '"' . $altAttr . $wh . $portrait . $loading . $fetch . '></picture>';
   };
 @endphp
 
