@@ -1120,7 +1120,7 @@ class TelegramBroadcastController extends Controller
 
     /**
      * Base URL for SMS Bridge links (QR code, launch page, pull/report).
-     * Behind Render's proxy the request scheme reads http (no trusted-proxy
+     * Behind the Plesk nginx proxy the request scheme reads http (no trusted-proxy
      * config), so force https for every non-local host — the phone must
      * reach the launch page over https. Local dev (localhost/127.0.0.1)
      * keeps its real scheme.
@@ -1229,8 +1229,7 @@ class TelegramBroadcastController extends Controller
         Cache::put("sms_bridge_{$campaign->id}", $sessionToken, now()->addHours(24));
 
         // Build URLs from the host actually serving the admin (not APP_URL):
-        // with two Render services on different databases, APP_URL could
-        // point at the other host, whose DB has no such campaign/token.
+        // if APP_URL ever points at another host, its DB has no such campaign/token.
         // Scheme is forced to https (see bridgeBaseUrl) — the phone scans
         // the QR and must reach the launch page over https.
         $baseUrl = $this->bridgeBaseUrl($request);
