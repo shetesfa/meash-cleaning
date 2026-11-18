@@ -20,7 +20,7 @@ class PhotoController extends Controller
     public function index(CloudinaryService $cloudinary): JsonResponse
     {
         // Ordered hero -> service -> gallery -> feature, then sort_order.
-        // Sorted in PHP (not FIELD()) so it works on TiDB and SQLite
+        // Sorted in PHP (not FIELD()) so it works on MySQL and SQLite
         // alike — the gy5x host still runs SQLite.
         $sectionOrder = array_flip(Photo::SECTIONS);
         $photos = Photo::orderBy('sort_order')
@@ -244,12 +244,12 @@ class PhotoController extends Controller
      * start), and return its root-relative URL. Used only while
      * Cloudinary is not configured.
      *
-     * Why storage, not public/images/gallery: the container runs PHP
-     * as www-data and only storage/ + bootstrap/cache are chowned to
-     * www-data (see docker/entrypoint.sh) — public/ stays root-owned,
-     * so moving an upload there throws and the API returns a 500.
-     * On Render the file is wiped on the next deploy/restart; on
-     * Plesk (real domain, later) it persists.
+     * Why storage, not public/images/gallery: on the Plesk server the
+     * app runs as the subscription user and only storage/ +
+     * bootstrap/cache are writable by it — public/ stays read-only, so
+     * moving an upload there throws and the API returns a 500. Files
+     * in storage/ persist on Plesk (they are wiped only if the
+     * subscription is re-created).
      * The file is already validated as an image (jpg/png/webp, max
      * 5 MB) by the request rules, and gets a unique name so an
      * upload can never overwrite a seeded photo.
