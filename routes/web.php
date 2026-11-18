@@ -8,13 +8,39 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// 0. Light health check for uptime monitors (see README "Keep the
+// site awake"). Plain "OK" — no database, no view, no session. The
+// framework's default /up rendered the welcome page (1.8 KB of HTML
+// with external font/CDN links), so it is replaced by this route.
+Route::get('/up', function () {
+    return response('OK', 200)->header('Content-Type', 'text/plain');
+})->withoutMiddleware([
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
+
 // 1. Public Customer Website & 7-Step Booking Wizard
-// Q4: Cache-Control: no-cache on the HTML page so customers always get
-// the newest page (assets themselves keep the 30-day cache and are
-// versioned with filemtime, so only the HTML is re-fetched).
+// F5: the homepage is identical for every visitor (public settings,
+// services, photos — no user data), so the browser/CDN may reuse the
+// HTML for 60 seconds (was: no-cache). Admin edits clear the server
+// cache at once and show within 60s at most. Assets keep the 30-day
+// cache and are versioned with filemtime.
+// F5: no session/cookie middleware on this public GET (StartSession,
+// CSRF cookie, EncryptCookies). A session used to be started and
+// written on every visit. The staff app (/app) and the booking POST
+// keep their sessions — only this route skips them.
 Route::get('/', function () {
-    return response()->view('website')->header('Cache-Control', 'no-cache');
-});
+    return response()->view('website')->header('Cache-Control', 'public, max-age=60');
+})->withoutMiddleware([
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+]);
 
 // 2. Telegram Mini App (TMA embedded webapp)
 Route::get('/telegram-miniapp', function () {
