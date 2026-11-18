@@ -874,27 +874,6 @@
     color: rgba(255, 255, 255, .90) !important;
   }
 
-  /* 2. Process Section (#process) */
-  html.light #process {
-    background-color: #0B1220 !important;
-    color: #FFFFFF !important;
-    border-color: rgba(255, 255, 255, .10) !important;
-  }
-  html.light #process h2,
-  html.light #process h3,
-  html.light #process p,
-  html.light #process span,
-  html.light #process .text-white {
-    color: #FFFFFF !important;
-  }
-  html.light #process [class*="text-white/"] {
-    color: rgba(255, 255, 255, .80) !important;
-  }
-  html.light #process .text-teal,
-  html.light #process .text-teal-dark {
-    color: #5FA9DD !important;
-  }
-
   /* 3. About Section Company Badge Box */
   html.light .from-slate-900.to-navy,
   html.light .from-navy.to-slate-900 {
@@ -1077,10 +1056,23 @@
   .ms-svc-cta p { color: #BCD6E8; }
   @media (max-width: 900px) { .ms-svc-grid { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 560px) { .ms-svc-grid { grid-template-columns: 1fr; } }
+  /* R4: on phones the service-tab cards become a horizontal swipe row. */
+  @media (max-width: 560px) {
+    .ms-svc-grid.ms-swipe { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 10px; scrollbar-width: thin; }
+    .ms-svc-grid.ms-swipe .ms-svc { flex: 0 0 78%; scroll-snap-align: start; }
+  }
+  /* R4: service tabs (Business / Home). */
+  .ms-tab-btn { min-height: 48px; padding: .75rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: .875rem; color: #0F172A; background: #fff; border: 1px solid rgba(15,23,42,.12); cursor: pointer; transition: background .2s ease, color .2s ease, border-color .2s ease; display: inline-flex; align-items: center; gap: .5rem; }
+  .ms-tab-btn[aria-selected="true"] { background: #3E8ECC; border-color: #3E8ECC; color: #fff; box-shadow: 0 4px 12px rgba(62,142,204,.35); }
+  html.dark .ms-tab-btn, html:not(.light) .ms-tab-btn { background: #162032; color: #F8FAFC; border-color: rgba(255,255,255,.14); }
+  /* R4: one-line card descriptions (clamped to two lines so Amharic wraps fit). */
+  .ms-clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
   /* 3-step section */
-  .ms-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
-  .ms-step { border-top: 3px solid rgba(11,18,32,.1); padding-top: 20px; }
+  .ms-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; position: relative; padding-top: 20px; }
+  /* R4: one continuous connecting line across the three steps (01/02/03). */
+  .ms-steps::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #3E8ECC, #7FB8E4); border-radius: 2px; }
+  .ms-step { padding-top: 4px; }
   .ms-step .ms-num { font-size: 2.1rem; font-weight: 800; color: #3E8ECC; }
   .ms-step .ms-ph { margin-top: 16px; border-radius: 16px; overflow: hidden; aspect-ratio: 16/10; }
   .ms-step .ms-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -1719,18 +1711,19 @@
 
 <!-- ================= ABOUT US SECTION ================= -->
 <section id="about" class="ms-sec py-16 md:py-24 bg-white dark:bg-slate-900 border-b border-navy/10">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
-    <div>
-      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3 py-1 rounded-full">
-        <i data-lucide="info" class="w-3.5 h-3.5"></i>
-        <span data-lang-block="am">ስለ ድርጅታችን</span><span data-lang-block="en">ABOUT MEASH CLEANING</span>
+  <span id="advantage"></span>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="max-w-2xl">
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
+        <i data-lucide="award" class="w-3.5 h-3.5"></i>
+        <span data-lang-block="am">ለምን ሜሽን ይመርጣሉ?</span><span data-lang-block="en">WHY MEASH?</span>
       </div>
       <h2 class="ms-sec-title font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight mb-6">
         <span class="block text-teal-dark font-mono text-xs uppercase tracking-widest mb-1">"Your Environment, Our Responsibility."</span>
         <span data-lang-block="am">ሜሽ የጽዳት አገልግሎት<br><span class="text-teal-dark font-normal text-[0.8em]">ለተቋማትና ንግድ ቦታዎች ፕሪሚየም አጋር</span></span>
         <span data-lang-block="en">MEASH CLEANING SOLUTION<br><span class="text-teal-dark font-normal text-[0.8em]">Licensed &amp; Insured Premium B2B Partner</span></span>
       </h2>
-      <div class="text-navy/75 text-[15px] sm:text-[16px] leading-relaxed space-y-4">
+      <div class="text-navy/75 text-[15px] sm:text-[16px] leading-relaxed space-y-4 mt-6">
         <p data-lang-block="am" class="font-medium">
           ሜሽ የጽዳት አገልግሎት (MEASH CLEANING) ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማት ፕሪሚየም የጽዳት አገልግሎት የሚሰጥ ተቋም ነው። የሥራ ቦታዎን ንፅህና ለድርጅትዎ ስምና ክብር፣ እንዲሁም ለሰራተኞችዎ ጤና እና ምርታማነት ወሳኝ መሆኑን ተረድተን በላቀ ጥራት እንሰራለን።
         </p>
@@ -1738,42 +1731,40 @@
           Meash Cleaning Solution is a fully licensed and insured premium B2B cleaning partner based at Ayat Square. We deliver exceptional commercial-grade sanitation services designed to protect your facility, project a flawless corporate image, and boost workplace productivity.
         </p>
       </div>
+    </div>
 
-      <!-- Feature Checklist -->
-      <div class="mt-8 grid sm:grid-cols-2 gap-4">
-        <div class="flex items-start gap-3">
-          <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
-          <div>
-            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">ህጋዊ ፈቃድና የንብረት ዋስትና</span><span data-lang-block="en">Fully Licensed &amp; Insured</span></h4>
-            <p class="text-xs text-navy/60"><span data-lang-block="am">ለድርጅትዎ እቃዎችና ንብረቶች ሙሉ ጥበቃ</span><span data-lang-block="en">Total asset protection for your corporate facilities</span></p>
-          </div>
-        </div>
-        <div class="flex items-start gap-3">
-          <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
-          <div>
-            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">ቀላልና ተለዋዋጭ የቀጠሮ አያያዝ</span><span data-lang-block="en">Flexible Shift Scheduling</span></h4>
-            <p class="text-xs text-navy/60"><span data-lang-block="am">የሌሊት ፈረቃ እና የሳምንቱ መጨረሻ ስራዎችን ጨምሮ</span><span data-lang-block="en">Night shifts &amp; weekends with zero business downtime</span></p>
-          </div>
-        </div>
-        <div class="flex items-start gap-3">
-          <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
-          <div>
-            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">ነፃ የቦታ ምልከታና ፕሮፎርማ</span><span data-lang-block="en">Prompt On-Site Inspection</span></h4>
-            <p class="text-xs text-navy/60"><span data-lang-block="am">ትክክለኛውን ግምት ለመስጠት አስቀድመን በነፃ እንገመግማለን</span><span data-lang-block="en">Accurate, transparent quotations with zero guesswork</span></p>
-          </div>
-        </div>
-        <div class="flex items-start gap-3">
-          <i data-lucide="check-circle" class="w-5 h-5 text-teal shrink-0 mt-0.5"></i>
-          <div>
-            <h4 class="font-bold text-sm text-navy"><span data-lang-block="am">የተቋማትና የቢሮ ኮንትራት ውል</span><span data-lang-block="en">Commercial Retainers &amp; SLAs</span></h4>
-            <p class="text-xs text-navy/60"><span data-lang-block="am">ህጋዊ የቫት ደረሰኝ፣ ፕሮፎርማ እና የረጅም ጊዜ ስምምነት</span><span data-lang-block="en">Official VAT invoicing, SLAs &amp; dedicated supervisors</span></p>
-          </div>
-        </div>
+    {{-- R4: the 5 pillars + the About checklist, merged into 4 icon cards.
+         Licensed & Insured merges pillar 4 + checklist item 1; Flexible &
+         Discrete merges pillar 3 + checklist item 2. Free inspection already
+         leads the trust bar and the hero, and retainers/SLAs live on the
+         Business tab, so they are not repeated here. The old checklist's
+         "Official VAT invoicing" line is dropped: no VAT value is stored in
+         settings, so the claim is unverified (R3). --}}
+    <div class="grid grid-cols-2 gap-4 md:gap-6 mt-10 md:mt-12">
+      <div class="ms-card p-5 md:p-6">
+        <div class="w-11 h-11 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center mb-4"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+        <h3 class="font-serif font-bold text-base md:text-lg text-navy dark:text-white mb-2"><span data-lang-block="am">ህጋዊ ፈቃድ ያለው እና የንብረት ዋስትና</span><span data-lang-block="en">Fully Licensed &amp; Insured</span></h3>
+        <p class="text-xs md:text-sm text-navy/70 dark:text-slate-300 leading-relaxed"><span data-lang-block="am">በጽዳት ወቅት በቢሮዎ እቃዎች ላይ ለሚደርስ ለማንኛውም ጉዳት ሙሉ የዋስትና ሽፋን (Insurance) እንሰጣለን።</span><span data-lang-block="en">Your high-end office furniture and assets are completely safe with us — total asset protection for your corporate facilities.</span></p>
+      </div>
+      <div class="ms-card p-5 md:p-6">
+        <div class="w-11 h-11 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center mb-4"><i data-lucide="users-round" class="w-5 h-5"></i></div>
+        <h3 class="font-serif font-bold text-base md:text-lg text-navy dark:text-white mb-2"><span data-lang-block="am">የሰለጠኑና የታመኑ ባለሙያዎች</span><span data-lang-block="en">Certified &amp; Vetted Teams</span></h3>
+        <p class="text-xs md:text-sm text-navy/70 dark:text-slate-300 leading-relaxed"><span data-lang-block="am">ስነ-ምግባር እና ጥራትን የተላበሱ፣ ሙሉ የደንብ ልብስ የለበሱ ባለሙያዎች።</span><span data-lang-block="en">Uniformed, background-checked, and rigorously trained professionals.</span></p>
+      </div>
+      <div class="ms-card p-5 md:p-6">
+        <div class="w-11 h-11 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center mb-4"><i data-lucide="leaf" class="w-5 h-5"></i></div>
+        <h3 class="font-serif font-bold text-base md:text-lg text-navy dark:text-white mb-2"><span data-lang-block="am">ደህንነታቸው የተጠበቀ ኬሚካሎች</span><span data-lang-block="en">Eco-Friendly &amp; Safe</span></h3>
+        <p class="text-xs md:text-sm text-navy/70 dark:text-slate-300 leading-relaxed"><span data-lang-block="am">ለጤና እና ለንብረት ፍጹም ጉዳት የማያደርሱ ኬሚካሎችን እንጠቀማለን።</span><span data-lang-block="en">We use hospital-grade, non-toxic, and surface-safe premium chemicals.</span></p>
+      </div>
+      <div class="ms-card p-5 md:p-6">
+        <div class="w-11 h-11 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center mb-4"><i data-lucide="moon-star" class="w-5 h-5"></i></div>
+        <h3 class="font-serif font-bold text-base md:text-lg text-navy dark:text-white mb-2"><span data-lang-block="am">ምቹ የሥራ መርሐ-ግብር</span><span data-lang-block="en">Flexible &amp; Discrete</span></h3>
+        <p class="text-xs md:text-sm text-navy/70 dark:text-slate-300 leading-relaxed"><span data-lang-block="am">የእርስዎን የሥራ ሰዓት በማይጋፋ መልኩ ለእርስዎ የሚመች ሰዓት (በሌሊት ወይም በሳምንቱ መጨረሻ) መስራት መቻላችን።</span><span data-lang-block="en">Customized scheduling (night shifts/weekends) to eliminate business downtime.</span></p>
       </div>
     </div>
 
     <!-- Company Badge Box -->
-    <div class="bg-gradient-to-br from-slate-900 to-navy text-white rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden">
+    <div class="bg-gradient-to-br from-slate-900 to-navy text-white rounded-3xl p-8 sm:p-10 shadow-2xl relative overflow-hidden mt-10 md:mt-12">
       <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-teal/20 rounded-full blur-3xl pointer-events-none"></div>
       <div class="flex items-center gap-3 mb-6">
         <img src="{{ $logoSrc }}" alt="Logo" class="w-12 h-12 rounded-xl object-cover border border-white/20">
@@ -1837,260 +1828,9 @@
   </div>
 </section>
 
-<!-- ================= WHY MEASH? THE MEASH ADVANTAGE (5 PILLARS) ================= -->
-<section id="advantage" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900 border-b border-navy/10">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6">
-    <div class="text-center max-w-2xl mx-auto mb-14">
-      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
-        <i data-lucide="award" class="w-3.5 h-3.5"></i>
-        <span data-lang-block="am">ለምን ሜሽን ይመርጣሉ?</span><span data-lang-block="en">WHY MEASH? — THE MEASH ADVANTAGE</span>
-      </div>
-      <h2 class="ms-sec-title font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight">
-        <span data-lang-block="am">የሜሽ 5ቱ የላቁ መለያዎች (5 Core Pillars)</span>
-        <span data-lang-block="en">5 Pillars of Cleaning Excellence</span>
-      </h2>
-      <p class="ms-sec-sub text-navy/70 text-sm sm:text-base mt-2">
-        <span data-lang-block="am">ንግድዎን፣ ንብረትዎን እና ሰራተኞችዎን የሚጠብቅ አስተማማኝ አገልግሎት እናቀርባለን።</span>
-        <span data-lang-block="en">Commercial-grade sanitation designed to protect your facility, project a flawless corporate image, and boost workplace productivity.</span>
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-5">
-      <!-- 1. Certified & Vetted Teams -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-md flex flex-col justify-between">
-        <div>
-          <div class="w-11 h-11 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-4">
-            <i data-lucide="users-round" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-base text-navy dark:text-white mb-2">
-            <span data-lang-block="am">1. የሰለጠኑና የታመኑ ባለሙያዎች</span>
-            <span data-lang-block="en">1. Certified &amp; Vetted Teams</span>
-          </h3>
-          <p class="text-xs text-navy/70 dark:text-slate-300 leading-relaxed">
-            <span data-lang-block="am">ስነ-ምግባር እና ጥራትን የተላበሱ፣ ሙሉ የደንብ ልብስ የለበሱ ባለሙያዎች።</span>
-            <span data-lang-block="en">Uniformed, background-checked, and rigorously trained professionals.</span>
-          </p>
-        </div>
-      </div>
-
-      <!-- 2. Eco-Friendly & Safe -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-md flex flex-col justify-between">
-        <div>
-          <div class="w-11 h-11 rounded-xl bg-teal-500/10 text-teal-600 flex items-center justify-center mb-4">
-            <i data-lucide="leaf" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-base text-navy dark:text-white mb-2">
-            <span data-lang-block="am">2. ደህንነታቸው የተጠበቀ ኬሚካሎች</span>
-            <span data-lang-block="en">2. Eco-Friendly &amp; Safe</span>
-          </h3>
-          <p class="text-xs text-navy/70 dark:text-slate-300 leading-relaxed">
-            <span data-lang-block="am">ለጤና እና ለንብረት ፍጹም ጉዳት የማያደርሱ ኬሚካሎችን እንጠቀማለን።</span>
-            <span data-lang-block="en">We use hospital-grade, non-toxic, and surface-safe premium chemicals.</span>
-          </p>
-        </div>
-      </div>
-
-      <!-- 3. Flexible & Discrete -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-md flex flex-col justify-between">
-        <div>
-          <div class="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center mb-4">
-            <i data-lucide="moon-star" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-base text-navy dark:text-white mb-2">
-            <span data-lang-block="am">3. ምቹ የሥራ መርሐ-ግብር</span>
-            <span data-lang-block="en">3. Flexible &amp; Discrete</span>
-          </h3>
-          <p class="text-xs text-navy/70 dark:text-slate-300 leading-relaxed">
-            <span data-lang-block="am">የእርስዎን የሥራ ሰዓት በማይጋፋ መልኩ ለእርስዎ የሚመች ሰዓት (በሌሊት ወይም በሳምንቱ መጨረሻ) መስራት መቻላችን።</span>
-            <span data-lang-block="en">Customized scheduling (night shifts/weekends) to eliminate business downtime.</span>
-          </p>
-        </div>
-      </div>
-
-      <!-- 4. Fully Insured -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-md flex flex-col justify-between">
-        <div>
-          <div class="w-11 h-11 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-4">
-            <i data-lucide="shield-check" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-base text-navy dark:text-white mb-2">
-            <span data-lang-block="am">4. የንብረት ዋስትና</span>
-            <span data-lang-block="en">4. Fully Insured</span>
-          </h3>
-          <p class="text-xs text-navy/70 dark:text-slate-300 leading-relaxed">
-            <span data-lang-block="am">በጽዳት ወቅት በቢሮዎ እቃዎች ላይ ለሚደርስ ለማንኛውም ጉዳት ሙሉ የዋስትና ሽፋን (Insurance) እንሰጣለን።</span>
-            <span data-lang-block="en">Your high-end office furniture and assets are completely safe with us.</span>
-          </p>
-        </div>
-      </div>
-
-      <!-- 5. No Estimation Guesswork -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-md flex flex-col justify-between">
-        <div>
-          <div class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-4">
-            <i data-lucide="clipboard-check" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-base text-navy dark:text-white mb-2">
-            <span data-lang-block="am">5. ትክክለኛ ግምገማ (ነፃ ምልከታ)</span>
-            <span data-lang-block="en">5. No Guesswork (Free Quote)</span>
-          </h3>
-          <p class="text-xs text-navy/70 dark:text-slate-300 leading-relaxed">
-            <span data-lang-block="am">ትክክለኛውን ዋጋ (Proforma) ለማቅረብ አስቀድመን በነፃ በቦታው ድረስ በመገኘት እንገመግማለን።</span>
-            <span data-lang-block="en">Free, prompt on-site technical inspection before any quotation.</span>
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= COMMERCIAL CLEANING SERVICES (DEDICATED SECTION) ================= -->
-<section id="commercial" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900 border-b border-navy/10 relative overflow-hidden">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6">
-    <div class="max-w-2xl mb-16">
-      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
-        <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
-        <span data-lang-block="am">ለድርጅቶች፣ ለሆቴሎች እና ለተቋማት</span><span data-lang-block="en">COMMERCIAL &amp; CONTRACT CLEANING</span>
-      </div>
-      <h2 class="ms-sec-title font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight">
-        <span data-lang-block="am">የተቋማት እና የንግድ ቦታዎች ጥልቅ ጽዳት</span>
-        <span data-lang-block="en">Commercial &amp; Facility Cleaning Solutions</span>
-      </h2>
-      <p class="ms-sec-sub text-navy/70 text-base mt-3">
-        <span data-lang-block="am">ለቢሮዎች፣ ለሆቴሎች፣ ለሬስቶራንቶች፣ ለካፌዎች እና ለስብሰባ አዳራሾች አስተማማኝ የረጅም ጊዜ የኮንትራት ወይም የጊዜያዊ ጽዳት ውል። ህጋዊ ደረሰኝ እና የቫት ሰነድ እናቀርባለን።</span>
-        <span data-lang-block="en">Tailored recurring contracts and deep turnaround sanitization for corporations, hospitality chains, dining spots, and auditorium venues across Addis Ababa.</span>
-      </p>
-    </div>
-
-    <!-- Commercial Grid of 6 Specialized Sectors -->
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- 1. Office Cleaning -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-lg flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-5">
-            <i data-lucide="briefcase" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-xl text-navy mb-2">
-            <span data-lang-block="am">የቢሮ እና የስራ ቦታ ጽዳት</span><span data-lang-block="en">Office &amp; Corporate Cleaning</span>
-          </h3>
-          <p class="text-sm text-navy/65 leading-relaxed">
-            <span data-lang-block="am">የቢሮ ጠረጴዛዎች፣ ወንበሮች፣ ምንጣፍ በሮተሪ ማሽን ማጠብ፣ የኮምፒውተር ገመዶች ጽዳት እና የሽንት ቤት ጥልቅ ማጽዳት።</span>
-            <span data-lang-block="en">Executive desks, partitioned workstations, carpet extraction, restrooms sanitization &amp; trash collection.</span>
-          </p>
-        </div>
-        <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
-          <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ተለዋዋጭ ሰዓት (ምሽት/ቅዳሜ)</span><span data-lang-block="en">After-Hours / Weekends</span></span>
-          <a href="#book" onclick="preselectService('office')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
-        </div>
-      </div>
-
-      <!-- 2. Hotel Cleaning -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-lg flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-5">
-            <i data-lucide="hotel" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-xl text-navy mb-2">
-            <span data-lang-block="am">የሆቴል እና ሎጅ ጽዳት</span><span data-lang-block="en">Hotel &amp; Hospitality Sanitization</span>
-          </h3>
-          <p class="text-sm text-navy/65 leading-relaxed">
-            <span data-lang-block="am">የእንግዳ ማረፊያ ክፍሎች፣ አልጋዎች፣ ፍራሽ በስቲም ማጽዳት፣ ኮሪደር ምንጣፍ እጥበት እና የሎቢ ወለል ማሽን እጥበት።</span>
-            <span data-lang-block="en">Guest room deep clean, steam mattress disinfection, corridor carpet cleaning and marble lobby polishing.</span>
-          </p>
-        </div>
-        <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
-          <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">የቱሪዝም ደረጃ ጥራት</span><span data-lang-block="en">Hospitality Standards</span></span>
-          <a href="#book" onclick="preselectService('hotel_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
-        </div>
-      </div>
-
-      <!-- 3. Restaurant & Cafe -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-lg flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-5">
-            <i data-lucide="coffee" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-xl text-navy mb-2">
-            <span data-lang-block="am">የሬስቶራንት እና ካፌ ጽዳት</span><span data-lang-block="en">Restaurant &amp; Café Cleaning</span>
-          </h3>
-          <p class="text-sm text-navy/65 leading-relaxed">
-            <span data-lang-block="am">የንግድ ኩሽና ዘይት ማቅለጥና ማስወገድ (Degreasing)፣ የወንበሮችና የሶፋዎች እጥበት፣ የወለል ሴራሚክ እጥበት።</span>
-            <span data-lang-block="en">Heavy kitchen hood degreasing, dining chair upholstery, ceramic grout scrub &amp; food-safe sanitizers.</span>
-          </p>
-        </div>
-        <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
-          <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ጤና ጥበቃ ደረጃ</span><span data-lang-block="en">Food-Safe Chemicals</span></span>
-          <a href="#book" onclick="preselectService('restaurant_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
-        </div>
-      </div>
-
-      <!-- 4. Hall & Commercial Chair -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-lg flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-5">
-            <i data-lucide="armchair" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-xl text-navy mb-2">
-            <span data-lang-block="am">የአዳራሽና ወንበሮች እጥበት</span><span data-lang-block="en">Auditorium &amp; Hall Chairs</span>
-          </h3>
-          <p class="text-sm text-navy/65 leading-relaxed">
-            <span data-lang-block="am">የስብሰባ አዳራሾች፣ ሲኒማዎች፣ ቤተ-እምነቶች ወንበሮችን በጅምላ በቦታው ላይ በፈጣን ማሽን ማጠብ እና ማድረቅ።</span>
-            <span data-lang-block="en">High-volume fabric &amp; leather seat shampoo extraction for cinemas, churches &amp; conference halls.</span>
-          </p>
-        </div>
-        <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
-          <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">በጅምላ ቅናሽ ያለው</span><span data-lang-block="en">Volume Discounts</span></span>
-          <a href="#book" onclick="preselectService('hall_chair_clean')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
-        </div>
-      </div>
-
-      <!-- 5. Commercial Glass Facade -->
-      <div class="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-navy/10 hover:border-teal transition shadow-sm hover:shadow-lg flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-5">
-            <i data-lucide="sun" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-xl text-navy mb-2">
-            <span data-lang-block="am">የፎቅ እና መስታወት ጽዳት</span><span data-lang-block="en">Commercial Glass Facades</span>
-          </h3>
-          <p class="text-sm text-navy/65 leading-relaxed">
-            <span data-lang-block="am">የህንፃዎች የውጭና የውስጥ መስታወት፣ የሾፕ ፍሮንት (Showrooms) እና የባንኮች መስታወት ጥርት ያለ እጥበት።</span>
-            <span data-lang-block="en">Streak-free pure water window washing, bank branch facades, automotive showrooms &amp; multistory glass.</span>
-          </p>
-        </div>
-        <div class="mt-6 pt-5 border-t border-navy/10 flex items-center justify-between">
-          <span class="text-xs font-bold text-teal-dark"><span data-lang-block="am">ጭረት የማይተው እጥበት</span><span data-lang-block="en">Streak-Free</span></span>
-          <a href="#book" onclick="preselectService('glass')" class="text-xs font-bold bg-navy text-white px-3 py-1.5 rounded hover:bg-teal transition">ውል ይያዙ</a>
-        </div>
-      </div>
-
-      <!-- 6. Long-Term Contracts -->
-      <div class="bg-gradient-to-br from-navy to-slate-900 text-white rounded-2xl p-7 border border-teal/30 shadow-xl flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-teal text-white flex items-center justify-center mb-5">
-            <i data-lucide="file-check-2" class="w-6 h-6"></i>
-          </div>
-          <h3 class="font-serif font-bold text-xl text-white mb-2">
-            <span data-lang-block="am">ቋሚ የጽዳት ኮንትራት ውል</span><span data-lang-block="en">Long-Term Cleaning SLAs</span>
-          </h3>
-          <p class="text-sm text-white/80 leading-relaxed">
-            <span data-lang-block="am">ሳምንታዊ፣ በየ 15 ቀኑ ወይም ወርሃዊ ቋሚ የጽዳት ውል ከቋሚ ሰራተኞች እና ክትትል ጋር። ለኤምባሲዎች፣ ባንኮች እና ድርጅቶች።</span>
-            <span data-lang-block="en">Dedicated daily/weekly cleaners, site supervisors, and guaranteed SLA replacements for NGOs &amp; banks.</span>
-          </p>
-        </div>
-        <div class="mt-6 pt-5 border-t border-white/20 flex items-center justify-between">
-          <span class="text-xs font-bold text-teal-light"><span data-lang-block="am">እስከ 15% የኮንትራት ቅናሽ</span><span data-lang-block="en">Up to 15% Off</span></span>
-          <a href="tel:{{ $phone1 }}" class="text-xs font-bold bg-teal text-white px-3.5 py-1.5 rounded hover:bg-teal-dark transition flex items-center gap-1">
-            <i data-lucide="phone-call" class="w-3 h-3"></i> ደውለው ይወያዩ
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
+<!-- ================= SERVICES — BUSINESS & HOME TABS (R4) ================= -->
 <!-- ================= CORE SERVICES (OFFICIAL 6 SERVICES) ================= -->
-<section id="services" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900"><div class="max-w-7xl mx-auto px-4 sm:px-6">
+<section id="services" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900"><span id="commercial"></span><div class="max-w-7xl mx-auto px-4 sm:px-6">
   <div class="max-w-2xl mb-14">
     <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
       <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
@@ -2106,7 +1846,140 @@
     </p>
   </div>
 
-  <div id="services-list" class="ms-svc-grid">
+  @php $svcByCode = $activeServices->keyBy('code'); @endphp
+  {-- R4: Commercial + Core Services merged into ONE section with tabs.
+       Business = the 6 commercial sectors (photos + prices from the mapped
+       real service — the old fake codes office/hotel_clean/restaurant_clean/
+       hall_chair_clean fell back to service 1; the Book buttons now preselect
+       the real service). Home = the 6 DB services. #commercial stays as an
+       anchor above so old links land here on the Business tab. --}
+  <div class="flex flex-wrap gap-2 mb-8" role="tablist" aria-label="Service categories">
+    <button type="button" role="tab" aria-selected="true" data-service-tab="business" onclick="showServiceTab('business')" class="ms-tab-btn"><i data-lucide="building-2" class="w-5 h-5"></i><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></button>
+    <button type="button" role="tab" aria-selected="false" data-service-tab="home" onclick="showServiceTab('home')" class="ms-tab-btn"><i data-lucide="home" class="w-5 h-5"></i><span data-lang-block="am">ለቤት</span><span data-lang-block="en">Home</span></button>
+  </div>
+  <div id="tab-business" class="ms-svc-grid ms-swipe" role="tabpanel" aria-label="Business services">
+      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+        <div class="ms-ph">{!! $responsiveImg('/images/gallery/office-cleaning.jpg', $captionByFile['office-cleaning.jpg']['am'] ?? '' !== '' ? $captionByFile['office-cleaning.jpg']['am'] ?? '' : 'Office &amp; Corporate Cleaning', $captionByFile['office-cleaning.jpg']['en'] ?? '' !== '' ? $captionByFile['office-cleaning.jpg']['en'] ?? '' : 'Office &amp; Corporate Cleaning', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        <div class="ms-bd">
+          <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
+          <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
+            <span data-lang-block="am">የቢሮ እና የስራ ቦታ ጽዳት</span>
+            <span data-lang-block="en">Office &amp; Corporate Cleaning</span>
+          </h3>
+          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1 ms-clamp2">
+            <span data-lang-block="am">የቢሮ ጠረጴዛዎች፣ ወንበሮች፣ ምንጣፍ በሮተሪ ማሽን ማጠብ፣ የኮምፒውተር ገመዶች ጽዳት እና የሽንት ቤት ጥልቅ ማጽዳት።</span>
+            <span data-lang-block="en">Executive desks, partitioned workstations, carpet extraction, restrooms sanitization &amp; trash collection.</span>
+          </p>
+          <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" @if($bizSvc = $svcByCode['facilities_general'] ?? null) data-svc-price="{{ $bizSvc->id }}" data-svc-unit="{{ $bizSvc->unit ?: 'service' }}">@endif{{ $bizSvc ? number_format($bizSvc->base_price).' ETB'.(($bizSvc->unit && $bizSvc->unit !== 'service') ? ' / '.$bizSvc->unit : '') : '—' }}</div>
+            <a href="#book" onclick="preselectService('facilities_general')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </article>
+      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+        <div class="ms-ph">{!! $responsiveImg('/images/gallery/villa-carpet.jpg', $captionByFile['villa-carpet.jpg']['am'] ?? '' !== '' ? $captionByFile['villa-carpet.jpg']['am'] ?? '' : 'Hotel &amp; Hospitality Sanitization', $captionByFile['villa-carpet.jpg']['en'] ?? '' !== '' ? $captionByFile['villa-carpet.jpg']['en'] ?? '' : 'Hotel &amp; Hospitality Sanitization', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        <div class="ms-bd">
+          <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
+          <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
+            <span data-lang-block="am">የሆቴል እና ሎጅ ጽዳት</span>
+            <span data-lang-block="en">Hotel &amp; Hospitality Sanitization</span>
+          </h3>
+          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1 ms-clamp2">
+            <span data-lang-block="am">የእንግዳ ማረፊያ ክፍሎች፣ አልጋዎች፣ ፍራሽ በስቲም ማጽዳት፣ ኮሪደር ምንጣፍ እጥበት እና የሎቢ ወለል ማሽን እጥበት።</span>
+            <span data-lang-block="en">Guest room deep clean, steam mattress disinfection, corridor carpet cleaning and marble lobby polishing.</span>
+          </p>
+          <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" @if($bizSvc = $svcByCode['facilities_general'] ?? null) data-svc-price="{{ $bizSvc->id }}" data-svc-unit="{{ $bizSvc->unit ?: 'service' }}">@endif{{ $bizSvc ? number_format($bizSvc->base_price).' ETB'.(($bizSvc->unit && $bizSvc->unit !== 'service') ? ' / '.$bizSvc->unit : '') : '—' }}</div>
+            <a href="#book" onclick="preselectService('facilities_general')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </article>
+      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+        <div class="ms-ph">{!! $responsiveImg('/images/gallery/hotel-restaurant.jpg', $captionByFile['hotel-restaurant.jpg']['am'] ?? '' !== '' ? $captionByFile['hotel-restaurant.jpg']['am'] ?? '' : 'Restaurant &amp; Café Cleaning', $captionByFile['hotel-restaurant.jpg']['en'] ?? '' !== '' ? $captionByFile['hotel-restaurant.jpg']['en'] ?? '' : 'Restaurant &amp; Café Cleaning', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        <div class="ms-bd">
+          <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
+          <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
+            <span data-lang-block="am">የሬስቶራንት እና ካፌ ጽዳት</span>
+            <span data-lang-block="en">Restaurant &amp; Café Cleaning</span>
+          </h3>
+          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1 ms-clamp2">
+            <span data-lang-block="am">የንግድ ኩሽና ዘይት ማቅለጥና ማስወገድ (Degreasing)፣ የወንበሮችና የሶፋዎች እጥበት፣ የወለል ሴራሚክ እጥበት።</span>
+            <span data-lang-block="en">Heavy kitchen hood degreasing, dining chair upholstery, ceramic grout scrub &amp; food-safe sanitizers.</span>
+          </p>
+          <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" @if($bizSvc = $svcByCode['kitchen_dining'] ?? null) data-svc-price="{{ $bizSvc->id }}" data-svc-unit="{{ $bizSvc->unit ?: 'service' }}">@endif{{ $bizSvc ? number_format($bizSvc->base_price).' ETB'.(($bizSvc->unit && $bizSvc->unit !== 'service') ? ' / '.$bizSvc->unit : '') : '—' }}</div>
+            <a href="#book" onclick="preselectService('kitchen_dining')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </article>
+      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+        <div class="ms-ph">{!! $responsiveImg('/images/gallery/sofa-carpet-steam.jpg', $captionByFile['sofa-carpet-steam.jpg']['am'] ?? '' !== '' ? $captionByFile['sofa-carpet-steam.jpg']['am'] ?? '' : 'Auditorium &amp; Hall Chairs', $captionByFile['sofa-carpet-steam.jpg']['en'] ?? '' !== '' ? $captionByFile['sofa-carpet-steam.jpg']['en'] ?? '' : 'Auditorium &amp; Hall Chairs', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        <div class="ms-bd">
+          <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
+          <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
+            <span data-lang-block="am">የአዳራሽና ወንበሮች እጥበት</span>
+            <span data-lang-block="en">Auditorium &amp; Hall Chairs</span>
+          </h3>
+          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1 ms-clamp2">
+            <span data-lang-block="am">የስብሰባ አዳራሾች፣ ሲኒማዎች፣ ቤተ-እምነቶች ወንበሮችን በጅምላ በቦታው ላይ በፈጣን ማሽን ማጠብ እና ማድረቅ።</span>
+            <span data-lang-block="en">High-volume fabric &amp; leather seat shampoo extraction for cinemas, churches &amp; conference halls.</span>
+          </p>
+          <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" @if($bizSvc = $svcByCode['upholstery_carpet'] ?? null) data-svc-price="{{ $bizSvc->id }}" data-svc-unit="{{ $bizSvc->unit ?: 'service' }}">@endif{{ $bizSvc ? number_format($bizSvc->base_price).' ETB'.(($bizSvc->unit && $bizSvc->unit !== 'service') ? ' / '.$bizSvc->unit : '') : '—' }}</div>
+            <a href="#book" onclick="preselectService('upholstery_carpet')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </article>
+      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+        <div class="ms-ph">{!! $responsiveImg('/images/gallery/facade-scaffold.jpg', $captionByFile['facade-scaffold.jpg']['am'] ?? '' !== '' ? $captionByFile['facade-scaffold.jpg']['am'] ?? '' : 'Commercial Glass Facades', $captionByFile['facade-scaffold.jpg']['en'] ?? '' !== '' ? $captionByFile['facade-scaffold.jpg']['en'] ?? '' : 'Commercial Glass Facades', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        <div class="ms-bd">
+          <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
+          <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
+            <span data-lang-block="am">የፎቅ እና መስታወት ጽዳት</span>
+            <span data-lang-block="en">Commercial Glass Facades</span>
+          </h3>
+          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1 ms-clamp2">
+            <span data-lang-block="am">የህንፃዎች የውጭና የውስጥ መስታወት፣ የሾፕ ፍሮንት (Showrooms) እና የባንኮች መስታወት ጥርት ያለ እጥበት።</span>
+            <span data-lang-block="en">Streak-free pure water window washing, bank branch facades, automotive showrooms &amp; multistory glass.</span>
+          </p>
+          <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" @if($bizSvc = $svcByCode['glass'] ?? null) data-svc-price="{{ $bizSvc->id }}" data-svc-unit="{{ $bizSvc->unit ?: 'service' }}">@endif{{ $bizSvc ? number_format($bizSvc->base_price).' ETB'.(($bizSvc->unit && $bizSvc->unit !== 'service') ? ' / '.$bizSvc->unit : '') : '—' }}</div>
+            <a href="#book" onclick="preselectService('glass')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+      </article>
+      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+        <div class="ms-ph">{!! $responsiveImg('/images/gallery/office-polisher.jpg', $captionByFile['office-polisher.jpg']['am'] ?? 'Long-Term Cleaning SLAs', $captionByFile['office-polisher.jpg']['en'] ?? 'Long-Term Cleaning SLAs', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        <div class="ms-bd">
+          <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
+          <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
+            <span data-lang-block="am">ቋሚ የጽዳት ኮንትራት ውል</span>
+            <span data-lang-block="en">Long-Term Cleaning SLAs</span>
+          </h3>
+          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1 ms-clamp2">
+            <span data-lang-block="am">ሳምንታዊ፣ በየ 15 ቀኑ ወይም ወርሃዊ ቋሚ የጽዳት ውል ከቋሚ ሰራተኞች እና ክትትል ጋር። ለኤምባሲዎች፣ ባንኮች እና ድርጅቶች።</span>
+            <span data-lang-block="en">Dedicated daily/weekly cleaners, site supervisors, and guaranteed SLA replacements for NGOs &amp; banks.</span>
+          </p>
+          <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal"><span data-lang-block="am">እስከ {{ (int)($pricingRules['weekly_discount'] ?? 15) }}% ቅናሽ</span><span data-lang-block="en">Up to {{ (int)($pricingRules['weekly_discount'] ?? 15) }}% off</span></div>
+            <a href="tel:{{ $phone1 }}" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+              <i data-lucide="phone-call" class="w-4 h-4"></i> <span data-lang-block="am">ደውለው ይወያዩ</span><span data-lang-block="en">Call to discuss</span>
+            </a>
+          </div>
+        </div>
+      </article>
+  </div>
+  <div id="tab-home" class="ms-svc-grid ms-swipe hidden" role="tabpanel" aria-label="Home services">
     @forelse($activeServices as $idx => $svc)
       @php
         $svcNum = $idx + 1;
@@ -2139,7 +2012,7 @@
             <span data-lang-block="am">{{ $svc->name_am ?: $svc->name_en }}</span>
             <span data-lang-block="en">{{ $svc->name_en ?: $svc->name_am }}</span>
           </h3>
-          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1">
+          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1 ms-clamp2">
             <span data-lang-block="am">{{ $svc->description_am ?: $svc->description_en }}</span>
             <span data-lang-block="en">{{ $svc->description_en ?: $svc->description_am }}</span>
           </p>
@@ -2160,7 +2033,7 @@
             <span data-lang-block="am">1. የሴራሚክ እና የእንጨት ወለሎች ጥልቅ ጽዳት</span>
             <span data-lang-block="en">1. Ceramic &amp; Hardwood Floor Cleaning</span>
           </h3>
-          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1">
+          <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1 ms-clamp2">
             <span data-lang-block="am">የሴራሚክ፣ የግራናይት እና የእንጨት ወለሎች ጥልቅ የማሽን እጥበት፣ ነጠብጣብ ማስወገድ እና የወለል ማደስ።</span>
             <span data-lang-block="en">Deep tile &amp; grout restoration, single-disc rotary scrub, and hardwood revitalization.</span>
           </p>
@@ -2178,10 +2051,10 @@
       <div class="ms-bd">
         <h3 class="font-serif font-bold text-xl"><span data-lang-block="am">በየሳምንቱ ጽዳት ይፈልጋሉ?</span><span data-lang-block="en">Need cleaning every week?</span></h3>
         <p class="text-sm"><span data-lang-block="am">ለቢሮዎች፣ ሆቴሎች፣ ግቢዎች እና ሕንፃዎች የሚደገም የጽዳት እቅዶች — ተመሳሳይ ቡድን በመደበኛ መርሃ ግብር።</span><span data-lang-block="en">Recurring cleaning plans for offices, hotels, compounds and buildings — the same crew on a regular schedule.</span></p>
-        <a href="#commercial" class="inline-flex items-center justify-center gap-2 bg-teal hover:bg-teal-dark text-white font-bold text-sm px-5 py-3 rounded-lg transition w-fit"><span data-lang-block="am">ኮንትራት ያግኙ</span><span data-lang-block="en">Get a Contract</span></a>
+        <a href="#services" onclick="showServiceTab('business'); return false;" class="inline-flex items-center justify-center gap-2 bg-teal hover:bg-teal-dark text-white font-bold text-sm px-5 py-3 rounded-lg transition w-fit"><span data-lang-block="am">ኮንትራት ያግኙ</span><span data-lang-block="en">Get a Contract</span></a>
       </div>
     </article>
-  </div>
+    </div>
   </div>
 </section>
 
@@ -2222,113 +2095,9 @@
   </div>
 </section>
 
-<!-- ================= OUR PROCESS (5-STEP PROCESS SECTION) ================= -->
-<section id="process" class="ms-sec bg-navy text-white py-16 md:py-24 border-t border-b border-white/10">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6">
-    <div class="max-w-2xl mb-14">
-      <div class="inline-flex items-center gap-2 text-teal font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label ms-sec-label--light bg-teal/20 px-3.5 py-1.5 rounded-full">
-        <i data-lucide="workflow" class="w-3.5 h-3.5"></i>
-        <span data-lang-block="am">ቀላል አሰራራችን</span><span data-lang-block="en">OUR 5-STEP PROCESS</span>
-      </div>
-      <h2 class="ms-sec-title ms-sec-title--light font-serif font-semibold text-3xl md:text-4xl leading-tight">
-        <span data-lang-block="am">እንዴት እንሰራለን? (How We Work)</span>
-        <span data-lang-block="en">How We Work — From First Call to Handover</span>
-      </h2>
-      <p class="ms-sec-sub ms-sec-sub--light text-white/70 text-sm sm:text-base mt-2">
-        <span data-lang-block="am">የእርስዎን የሥራ ሰዓት እና የንግድ እንቅስቃሴ ሳናስተጓጉል ጥራቱን የጠበቀ ጽዳት የምናቀርብበት ባለ 5 ደረጃ ሂደት።</span>
-        <span data-lang-block="en">Our streamlined 5-step operational journey ensures zero business interruption and 100% satisfaction.</span>
-      </p>
-    </div>
+<span id="process"></span>
 
-    <!-- 5 Process Steps Grid -->
-    <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
-      <!-- Step 1 -->
-      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 relative flex flex-col justify-between">
-        <div>
-          <div class="font-serif font-bold text-3xl text-teal mb-3">01</div>
-          <h4 class="font-bold text-base mb-1.5 text-white">
-            <span data-lang-block="am">Step 1 — ግንኙነት መፍጠር</span>
-            <span data-lang-block="en">Step 1 — Connect</span>
-          </h4>
-          <p class="text-white/65 text-xs leading-relaxed">
-            <span data-lang-block="am">በስልክ፣ በኢሜይል ወይም በማህበራዊ ሚዲያ ያግኙን።</span>
-            <span data-lang-block="en">Reach out via phone, email, or social channels.</span>
-          </p>
-        </div>
-      </div>
 
-      <!-- Step 2 -->
-      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 relative flex flex-col justify-between">
-        <div>
-          <div class="font-serif font-bold text-3xl text-teal mb-3">02</div>
-          <h4 class="font-bold text-base mb-1.5 text-white">
-            <span data-lang-block="am">Step 2 — የቦታ ምልከታ</span>
-            <span data-lang-block="en">Step 2 — Site Visit</span>
-          </h4>
-          <p class="text-white/65 text-xs leading-relaxed">
-            <span data-lang-block="am">የጽዳቱን ሁኔታ በቦታው ተገኝተን በነፃ መገምገም።</span>
-            <span data-lang-block="en">Free on-site inspection to gauge specific needs.</span>
-          </p>
-        </div>
-      </div>
-
-      <!-- Step 3 -->
-      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 relative flex flex-col justify-between">
-        <div>
-          <div class="font-serif font-bold text-3xl text-teal mb-3">03</div>
-          <h4 class="font-bold text-base mb-1.5 text-white">
-            <span data-lang-block="am">Step 3 — ዋጋ ማቅረብ</span>
-            <span data-lang-block="en">Step 3 — Custom Quote</span>
-          </h4>
-          <p class="text-white/65 text-xs leading-relaxed">
-            <span data-lang-block="am">ግልጽ የሆነ እና ሁሉንም ያካተተ ፕሮፎርማ (Proforma) ማዘጋጀት።</span>
-            <span data-lang-block="en">Tailored, transparent proforma proposal.</span>
-          </p>
-        </div>
-      </div>
-
-      <!-- Step 4 -->
-      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 relative flex flex-col justify-between">
-        <div>
-          <div class="font-serif font-bold text-3xl text-teal mb-3">04</div>
-          <h4 class="font-bold text-base mb-1.5 text-white">
-            <span data-lang-block="am">Step 4 — ተግባራዊ አፈጻጸም</span>
-            <span data-lang-block="en">Step 4 — Execution</span>
-          </h4>
-          <p class="text-white/65 text-xs leading-relaxed">
-            <span data-lang-block="am">የሥራ ሰዓትዎን ሳይጋፋ በተባለው ሰዓት (በሌሊት ወይም ቅዳሜና እሁድ) መከናወን።</span>
-            <span data-lang-block="en">On-time cleaning with zero business interruption.</span>
-          </p>
-        </div>
-      </div>
-
-      <!-- Step 5 -->
-      <div class="bg-white/5 border border-white/10 rounded-2xl p-6 relative flex flex-col justify-between">
-        <div>
-          <div class="font-serif font-bold text-3xl text-teal mb-3">05</div>
-          <h4 class="font-bold text-base mb-1.5 text-white">
-            <span data-lang-block="am">Step 5 — የጥራት ርክክብ</span>
-            <span data-lang-block="en">Step 5 — Quality Review</span>
-          </h4>
-          <p class="text-white/65 text-xs leading-relaxed">
-            <span data-lang-block="am">እርስዎ ሙሉ በሙሉ መርካትዎን አረጋግጠን ሥራውን ማስረከብ።</span>
-            <span data-lang-block="en">A final joint inspection ensuring 100% satisfaction.</span>
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Process CTA Button -->
-    <div class="mt-12 text-center">
-      <a href="#book" class="inline-flex items-center gap-2.5 bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white font-extrabold text-sm sm:text-base px-8 py-4 rounded-xl shadow-xl shadow-teal/20 transition transform hover:-translate-y-0.5">
-        <i data-lucide="clipboard-check" class="w-5 h-5"></i>
-        <span data-lang-block="am">ነፃ የቦታ ምልከታ እና ፕሮፎርማ ይጠይቁ (Request Free Inspection &amp; Proforma)</span>
-        <span data-lang-block="en">Request Free On-Site Inspection &amp; Proforma</span>
-        <i data-lucide="arrow-right" class="w-5 h-5"></i>
-      </a>
-    </div>
-  </div>
-</section>
 
 <!-- ================= CUSTOMER GUARANTEE & PROMISE BANNER ================= -->
 <section class="py-16 bg-gradient-to-r from-slate-900 via-navy to-slate-900 text-white border-b border-navy/10 relative overflow-hidden">
@@ -3892,6 +3661,18 @@
     if (btn) { btn.classList.remove('border-navy/10'); btn.classList.add('border-navy'); }
     showWizardStep(1);
     updateWizardTotal();
+  }
+
+  /* R4: services tabs (Business / Home). Business is the default so the
+     #commercial anchor lands on the business cards. */
+  function showServiceTab(tab){
+    document.querySelectorAll('[data-service-tab]').forEach(function (b) {
+      b.setAttribute('aria-selected', b.dataset.serviceTab === tab ? 'true' : 'false');
+    });
+    var biz = document.getElementById('tab-business');
+    var home = document.getElementById('tab-home');
+    if (biz) biz.classList.toggle('hidden', tab !== 'business');
+    if (home) home.classList.toggle('hidden', tab !== 'home');
   }
 
   function selectServiceForBooking(svc, id){
