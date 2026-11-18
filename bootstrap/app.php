@@ -10,11 +10,9 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
-        health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Q5: the site sits behind an HTTPS proxy (Plesk nginx; Render
-        // before that). Without trusted proxies Laravel sees the plain
+        // Q5: the site sits behind an HTTPS proxy (Plesk nginx). Without trusted proxies Laravel sees the plain
         // HTTP hop behind the proxy, so url('/') could come out http://
         // and HSTS would never be sent. Trust the proxy's forwarding
         // headers so the request is correctly seen as HTTPS.
