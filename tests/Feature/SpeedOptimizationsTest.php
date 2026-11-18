@@ -137,4 +137,30 @@ class SpeedOptimizationsTest extends TestCase
         $this->assertStringContainsString('.ms-arrow { width: 46px; height: 46px;', $html);
         $this->assertStringContainsString('.ms-lb button { width: 48px; height: 48px;', $html);
     }
+
+    // Q9: form autofill hints, labels, and 16px inputs on phones.
+    public function test_q9_form_autofill_labels_and_16px_inputs(): void
+    {
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+        $this->assertStringContainsString('id="book-name" type="text" autocomplete="name"', $html);
+        $this->assertStringContainsString('id="book-phone" type="tel" inputmode="tel" autocomplete="tel"', $html);
+        $this->assertStringContainsString('id="book-address" type="text" autocomplete="street-address"', $html);
+        $this->assertStringContainsString('id="track-input" type="text" inputmode="text" autocapitalize="characters" autocomplete="off"', $html);
+        $this->assertStringContainsString('id="quickMsgName" autocomplete="name"', $html);
+        $this->assertStringContainsString('id="quickMsgPhone" inputmode="tel" autocomplete="tel"', $html);
+        $this->assertStringContainsString('id="staff-login-input" autocomplete="username"', $html);
+        $this->assertStringContainsString('id="staff-password-input" autocomplete="current-password"', $html);
+        $this->assertStringContainsString('id="resched-phone" inputmode="tel" autocomplete="tel"', $html);
+        // Every field has a label or aria-label (spot-check the association).
+        $this->assertStringContainsString('<label for="staff-login-input"', $html);
+        $this->assertStringContainsString('<label for="staff-password-input"', $html);
+        $this->assertStringContainsString('<label for="eth-day"', $html);
+        $this->assertStringContainsString('aria-label="Full name"', $html);
+        $this->assertStringContainsString('aria-label="Order number or phone"', $html);
+        // 16px minimum input font on phones (stops iPhone zoom).
+        $this->assertStringContainsString('@media (max-width: 640px) {', $html);
+        $this->assertStringContainsString('input, select, textarea { font-size: 16px; }', $html);
+    }
 }

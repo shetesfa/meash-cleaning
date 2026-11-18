@@ -1113,6 +1113,13 @@
   #floating-actions { bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
   #floating-actions.floating-lifted { bottom: calc(7rem + env(safe-area-inset-bottom)); }
   #floating-actions.floating-hidden { display: none; }
+
+  /* Q9: inputs must be at least 16px on phones, or iPhones zoom in
+     when the field is focused. */
+  @media (max-width: 640px) {
+    input, select, textarea { font-size: 16px; }
+  }
+
   @media (prefers-reduced-motion: reduce) { .ms-slide, .ms-svc .ms-ph img, .ms-gal-slide img { transition: none; } }
 </style>
 </head>
@@ -2497,7 +2504,7 @@
         <div id="step-1" class="wizard-step">
           <!-- Property Type Selector (NEW for Residential & Commercial) -->
           <div class="mb-5 bg-teal-light/30 border border-teal/20 p-3.5 rounded-xl">
-            <label class="text-xs font-bold text-teal-dark uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
+            <label for="book-property-type" class="text-xs font-bold text-teal-dark uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
               <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
               <span data-lang-block="am">የቦታው / የንብረቱ አይነት</span><span data-lang-block="en">Property Type</span>
             </label>
@@ -2581,7 +2588,7 @@
         <!-- STEP 2 -->
         <div id="step-2" class="wizard-step hidden">
           <p class="font-semibold mb-4 text-sm"><span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Address</span></p>
-          <select id="book-subcity" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 bg-white text-sm" required onchange="document.getElementById('step2-error')?.classList.add('hidden')">
+          <select id="book-subcity" aria-label="Subcity" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 bg-white text-sm" required onchange="document.getElementById('step2-error')?.classList.add('hidden')">
             <option value="">-- Subcity / ክፍለ ከተማ --</option>
             @php
               $activeSubcitiesList = !empty($subcities) ? array_filter($subcities, fn($c) => !isset($c['active']) || !empty($c['active'])) : [
@@ -2601,8 +2608,8 @@
               <option value="{{ $sc['name_en'] ?? $sc['name_am'] }}">{{ $sc['name_en'] ?? $sc['name_am'] }} ({{ $sc['name_am'] ?? $sc['name_en'] }})</option>
             @endforeach
           </select>
-          <input id="book-address" type="text" placeholder="Street, house no. / ጎዳና፣ የቤት ቁጥር" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required oninput="document.getElementById('step2-error')?.classList.add('hidden')">
-          <input id="book-landmark" type="text" placeholder="Landmark / መለያ ቦታ (ምሳሌ፡ ሆቴል አጠገብ)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm">
+          <input id="book-address" type="text" autocomplete="street-address" aria-label="Street and house number" placeholder="Street, house no. / ጎዳና፣ የቤት ቁጥር" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required oninput="document.getElementById('step2-error')?.classList.add('hidden')">
+          <input id="book-landmark" type="text" aria-label="Landmark" placeholder="Landmark / መለያ ቦታ (ምሳሌ፡ ሆቴል አጠገብ)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm">
           <p id="step2-error" class="hidden text-xs text-red-600 font-bold mb-3 flex items-center gap-1">
             <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> እባክዎ ክፍለ ከተማ ይምረጡ እና ጎዳና / የቤት ቁጥር ያስገቡ! (Please select a subcity and enter the street address!)
           </p>
@@ -2643,13 +2650,13 @@
             <!-- Selectors -->
             <div class="grid grid-cols-3 gap-2 mb-3">
               <div>
-                <label class="block text-xs font-bold text-navy/70 mb-1">ቀን (Day)</label>
+                <label for="eth-day" class="block text-xs font-bold text-navy/70 mb-1">ቀን (Day)</label>
                 <select id="eth-day" onchange="syncEthToGreg()" class="w-full rounded-lg border border-navy/20 px-3 py-2.5 text-sm font-bold text-navy bg-white focus:outline-none focus:border-teal cursor-pointer">
                   <!-- filled by JS -->
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-bold text-navy/70 mb-1">ወር (Month)</label>
+                <label for="eth-month" class="block text-xs font-bold text-navy/70 mb-1">ወር (Month)</label>
                 <select id="eth-month" onchange="updateEthDays(); syncEthToGreg()" class="w-full rounded-lg border border-navy/20 px-2 py-2.5 text-xs font-bold text-navy bg-white focus:outline-none focus:border-teal cursor-pointer">
                   <option value="1">1 - መስከረም</option>
                   <option value="2">2 - ጥቅምት</option>
@@ -2667,7 +2674,7 @@
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-bold text-navy/70 mb-1">ዓ.ም (Year)</label>
+                <label for="eth-year" class="block text-xs font-bold text-navy/70 mb-1">ዓ.ም (Year)</label>
                 <select id="eth-year" onchange="updateEthDays(); syncEthToGreg()" class="w-full rounded-lg border border-navy/20 px-2 py-2.5 text-xs font-bold text-navy bg-white focus:outline-none focus:border-teal cursor-pointer">
                   <!-- filled by JS -->
                 </select>
@@ -2693,7 +2700,7 @@
               <span class="text-xs text-navy/50">ፈረንጆች ቀን</span>
             </div>
 
-            <input type="date" id="greg-date-input" onchange="syncGregToEth()" class="w-full mb-3 rounded-lg border border-navy/20 bg-white px-3.5 py-2.5 text-sm font-semibold text-navy focus:outline-none focus:border-teal cursor-pointer">
+            <input type="date" id="greg-date-input" aria-label="Gregorian date" onchange="syncGregToEth()" class="w-full mb-3 rounded-lg border border-navy/20 bg-white px-3.5 py-2.5 text-sm font-semibold text-navy focus:outline-none focus:border-teal cursor-pointer">
 
             <!-- Converted Ethiopian Display -->
             <div class="p-2.5 rounded-lg bg-teal-light/40 border border-teal/30 flex items-center justify-between text-xs">
@@ -2795,7 +2802,7 @@
             </p>
           </div>
 
-          <textarea id="book-notes" placeholder="Notes (optional) / ተጨማሪ ማስታወሻ..." class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" rows="2"></textarea>
+          <textarea id="book-notes" aria-label="Notes (optional)" placeholder="Notes (optional) / ተጨማሪ ማስታወሻ..." class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" rows="2"></textarea>
           <div class="flex gap-3">
             <button type="button" onclick="showWizardStep(2)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
             <button type="button" onclick="validateStep3AndContinue()" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer shadow-md"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
@@ -2838,8 +2845,8 @@
             </div>
           </div>
 
-          <input id="book-name" type="text" placeholder="Full name / ሙሉ ስም" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
-          <input id="book-phone" type="tel" placeholder="Phone / ስልክ ቁጥር (09...)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
+          <input id="book-name" type="text" autocomplete="name" aria-label="Full name" placeholder="Full name / ሙሉ ስም" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
+          <input id="book-phone" type="tel" inputmode="tel" autocomplete="tel" aria-label="Phone" placeholder="Phone / ስልክ ቁጥር (09...)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
 
           <!-- Recurring Subscription Plan Selector -->
           <div class="mb-4 p-3.5 rounded-xl bg-teal-light/50 border border-teal/20">
@@ -2964,7 +2971,7 @@
   <h2 class="font-serif font-semibold text-2xl mb-2"><span data-lang-block="am">የትዕዛዝዎን ሁኔታ ይከታተሉ</span><span data-lang-block="en">Track Your Order Status</span></h2>
   <p class="text-xs text-navy/60 mb-5 max-w-md mx-auto"><span data-lang-block="am">የትዕዛዝ ቁጥርዎን ወይም ስልክዎን በማስገባት የትዕዛዝዎን የስራ ሂደት እና የቀጠሮ ቀን ይመልከቱ</span><span data-lang-block="en">Enter your order ID or phone number to see real-time order status and schedule.</span></p>
   <form onsubmit="trackOrder(event)" class="max-w-md mx-auto flex gap-2">
-    <input id="track-input" type="text" placeholder="MEASH-000123 or phone" class="flex-1 rounded-md border border-navy/15 px-4 py-3 text-sm focus:outline-none focus:border-teal">
+    <input id="track-input" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" aria-label="Order number or phone" placeholder="MEASH-000123 or phone" class="flex-1 rounded-md border border-navy/15 px-4 py-3 text-sm focus:outline-none focus:border-teal">
     <button type="submit" id="btn-track-submit" class="bg-navy hover:bg-teal-dark text-white font-bold px-6 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ፈልግ</span><span data-lang-block="en">Track</span></button>
   </form>
   <div id="track-result" class="hidden mt-6 text-left"></div>
@@ -3052,10 +3059,10 @@
           <form id="quickMessageForm" onsubmit="submitQuickMessage(event)" class="space-y-3">
             <div id="quickMsgAlert" class="hidden p-3 rounded-lg text-xs font-bold"></div>
             <div class="grid sm:grid-cols-2 gap-3">
-              <input type="text" id="quickMsgName" placeholder="ሙሉ ስም / Full Name" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal">
-              <input type="tel" id="quickMsgPhone" placeholder="ስልክ ቁጥር / Phone Number (09...)" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal">
+              <input type="text" id="quickMsgName" autocomplete="name" aria-label="Full name" placeholder="ሙሉ ስም / Full Name" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal">
+              <input type="tel" id="quickMsgPhone" inputmode="tel" autocomplete="tel" aria-label="Phone" placeholder="ስልክ ቁጥር / Phone Number (09...)" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal">
             </div>
-            <textarea id="quickMsgText" placeholder="የሚፈልጉትን አገልግሎት ወይም ጥያቄዎን እዚህ ይጻፉ... / Message or cleaning requirements" rows="3" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal"></textarea>
+            <textarea id="quickMsgText" aria-label="Message" placeholder="የሚፈልጉትን አገልግሎት ወይም ጥያቄዎን እዚህ ይጻፉ... / Message or cleaning requirements" rows="3" required class="w-full rounded-lg border border-navy/15 px-3.5 py-2.5 text-sm bg-white dark:bg-slate-900 text-navy dark:text-white focus:border-teal"></textarea>
             <button type="submit" id="quickMsgBtn" class="bg-navy hover:bg-teal-dark text-white font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-lg transition flex items-center justify-center gap-2 w-full cursor-pointer">
               <i data-lucide="send" class="w-3.5 h-3.5"></i>
               <span id="quickMsgBtnText" data-lang-block="am">መልእክት ላክ</span>
@@ -3256,14 +3263,14 @@
 
       <form onsubmit="handleStaffLogin(event)" class="space-y-3.5">
         <div>
-          <label class="block text-xs font-bold text-navy/70 mb-1">ኢሜይል ወይም ስልክ ቁጥር (Email or Phone)</label>
-          <input type="text" id="staff-login-input" required placeholder="ምሳሌ፦ 0911000001" class="w-full px-3.5 py-2.5 rounded-lg border border-navy/20 bg-fog text-navy text-xs font-semibold focus:outline-none focus:border-teal">
+          <label for="staff-login-input" class="block text-xs font-bold text-navy/70 mb-1">ኢሜይል ወይም ስልክ ቁጥር (Email or Phone)</label>
+          <input type="text" id="staff-login-input" autocomplete="username" required placeholder="ምሳሌ፦ 0911000001" class="w-full px-3.5 py-2.5 rounded-lg border border-navy/20 bg-fog text-navy text-xs font-semibold focus:outline-none focus:border-teal">
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-navy/70 mb-1">የይለፍ ቃል (Password)</label>
+          <label for="staff-password-input" class="block text-xs font-bold text-navy/70 mb-1">የይለፍ ቃል (Password)</label>
           <div class="relative">
-            <input type="password" id="staff-password-input" required placeholder="••••••••••••" class="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-navy/20 bg-fog text-navy text-xs focus:outline-none focus:border-teal">
+            <input type="password" id="staff-password-input" autocomplete="current-password" required placeholder="••••••••••••" class="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-navy/20 bg-fog text-navy text-xs focus:outline-none focus:border-teal">
             <button type="button" onclick="toggleStaffPasswordVisibility()" class="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-navy/40 hover:text-teal transition cursor-pointer">
               <i id="staff-pwd-eye" data-lucide="eye" class="w-4 h-4"></i>
             </button>
@@ -4010,19 +4017,19 @@
           </div>
           <form onsubmit="submitWebReschedule(event, '${orderNumber}')" class="space-y-3 text-xs">
             <div>
-              <label class="block font-bold text-navy dark:text-white mb-1">የትዕዛዝ ቁጥር:</label>
-              <input type="text" value="${orderNumber}" readonly class="w-full bg-slate-100 dark:bg-slate-800 border border-navy/15 rounded-lg px-3 py-2 font-mono font-bold text-navy dark:text-white">
+              <label for="resched-order" class="block font-bold text-navy dark:text-white mb-1">የትዕዛዝ ቁጥር:</label>
+              <input type="text" id="resched-order" value="${orderNumber}" readonly class="w-full bg-slate-100 dark:bg-slate-800 border border-navy/15 rounded-lg px-3 py-2 font-mono font-bold text-navy dark:text-white">
             </div>
             <div>
-              <label class="block font-bold text-navy dark:text-white mb-1">በትዕዛዙ የተጠቀሙት ስልክ ቁጥር *:</label>
-              <input type="tel" id="resched-phone" required placeholder="09... / 07..." class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy dark:text-white dark:bg-slate-800 focus:border-teal-dark focus:outline-none">
+              <label for="resched-phone" class="block font-bold text-navy dark:text-white mb-1">በትዕዛዙ የተጠቀሙት ስልክ ቁጥር *:</label>
+              <input type="tel" id="resched-phone" inputmode="tel" autocomplete="tel" required placeholder="09... / 07..." class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy dark:text-white dark:bg-slate-800 focus:border-teal-dark focus:outline-none">
             </div>
             <div>
-              <label class="block font-bold text-navy dark:text-white mb-1">አዲሱ የቀጠሮ ቀን (New Date) *:</label>
+              <label for="resched-date" class="block font-bold text-navy dark:text-white mb-1">አዲሱ የቀጠሮ ቀን (New Date) *:</label>
               <input type="date" id="resched-date" required min="${tomorrowStr}" value="${tomorrowStr}" class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy dark:text-white dark:bg-slate-800 focus:border-teal-dark focus:outline-none">
             </div>
             <div>
-              <label class="block font-bold text-navy dark:text-white mb-1">የቀጠሮ ሰዓት (Time Slot) *:</label>
+              <label for="resched-slot" class="block font-bold text-navy dark:text-white mb-1">የቀጠሮ ሰዓት (Time Slot) *:</label>
               <select id="resched-slot" class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy dark:text-white dark:bg-slate-800 focus:border-teal-dark focus:outline-none">
                 <option value="morning">ጥዋት (2:00 - 6:00 ጠዋቱ • Morning 8am-12pm)</option>
                 <option value="afternoon">ከሰዓት (7:00 - 11:00 ከሰዓቱ • Afternoon 1pm-5pm)</option>
@@ -4031,7 +4038,7 @@
               </select>
             </div>
             <div>
-              <label class="block font-bold text-navy dark:text-white mb-1">ምክንያት (Reason):</label>
+              <label for="resched-reason" class="block font-bold text-navy dark:text-white mb-1">ምክንያት (Reason):</label>
               <input type="text" id="resched-reason" placeholder="ምክንያቱን በአጭሩ ይጻፉ..." value="በደንበኛው ጥያቄ" class="w-full border border-navy/20 rounded-lg px-3 py-2 text-navy dark:text-white dark:bg-slate-800 focus:border-teal-dark focus:outline-none">
             </div>
             <div id="resched-status-msg" class="hidden my-2"></div>
@@ -4172,7 +4179,7 @@
 
         <!-- Comment Box -->
         <div class="max-w-xl mx-auto mb-5 text-left">
-          <label class="block text-xs font-bold text-navy/80 mb-1.5">የእርስዎ አስተያየት (አማራጭ)፦</label>
+          <label for="website-review-comment" class="block text-xs font-bold text-navy/80 mb-1.5">የእርስዎ አስተያየት (አማራጭ)፦</label>
           <textarea id="website-review-comment" rows="3" placeholder="ስለ አገልግሎቱ ጥራት እና ስለ ሰራተኞቻችን ያለዎትን አስተያየት እዚህ ይጻፉ..." class="w-full text-xs sm:text-sm p-3.5 rounded-2xl border-2 border-amber-300 focus:border-teal focus:ring-2 focus:ring-teal/20 outline-none bg-white text-navy shadow-inner"></textarea>
         </div>
 
