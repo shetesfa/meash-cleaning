@@ -4,10 +4,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class WebsiteSetting extends Model
 {
     use HasFactory;
+
+    /**
+     * F5: the public homepage reads these settings on every visit, so
+     * the filtered public array is cached for 5 minutes. Any save or
+     * delete clears it (see booted) so admin edits show immediately.
+     */
+    public const PUBLIC_CACHE_KEY = 'meash:settings:public';
+
+    public const PUBLIC_CACHE_TTL_SECONDS = 300;
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => static::forgetPublicCache());
+        static::deleted(fn () => static::forgetPublicCache());
+    }
+
+    public static function forgetPublicCache(): void
+    {
+        Cache::forget(self::PUBLIC_CACHE_KEY);
+    }
 
     protected $table = 'website_settings';
 
@@ -352,23 +373,26 @@ class WebsiteSetting extends Model
      */
     public static function getPublicKeyValue(): array
     {
-        $all = static::getAllKeyValue();
-        $allowlist = static::getPublicAllowlist();
+        // F5: cached 5 minutes — the homepage reads this on every visit.
+        return Cache::remember(self::PUBLIC_CACHE_KEY, self::PUBLIC_CACHE_TTL_SECONDS, function () {
+            $all = static::getAllKeyValue();
+            $allowlist = static::getPublicAllowlist();
 
-        $filtered = [];
-        foreach ($allowlist as $allowedKey) {
-            if (array_key_exists($allowedKey, $all)) {
-                $filtered[$allowedKey] = $all[$allowedKey];
+            $filtered = [];
+            foreach ($allowlist as $allowedKey) {
+                if (array_key_exists($allowedKey, $all)) {
+                    $filtered[$allowedKey] = $all[$allowedKey];
+                }
             }
-        }
 
-        // Secondary defense-in-depth: enforce regex block against sensitive words
-        return array_filter($filtered, function ($val, $key) {
-            $keyLower = strtolower($key);
-            if (preg_match('/(token|secret|password|credential|private_key|api_key|admin_chat)/i', $keyLower)) {
-                return false;
-            }
-            return true;
-        }, ARRAY_FILTER_USE_BOTH);
+            // Secondary defense-in-depth: enforce regex block against sensitive words
+            return array_filter($filtered, function ($val, $key) {
+                $keyLower = strtolower($key);
+                if (preg_match('/(token|secret|password|credential|private_key|api_key|admin_chat)/i', $keyLower)) {
+                    return false;
+                }
+                return true;
+            }, ARRAY_FILTER_USE_BOTH);
+        });
     }
 }
