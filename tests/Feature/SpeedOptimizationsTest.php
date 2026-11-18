@@ -114,4 +114,27 @@ class SpeedOptimizationsTest extends TestCase
         $this->assertStringContainsString('Verified Paid', $html);
         $this->assertStringContainsString('PAID', $html);
     }
+
+    // Q8: icon buttons are at least 44x44px on phones (icon stays small);
+    // floating buttons lift above the booking wizard, hide with modals,
+    // and respect the safe area.
+    public function test_q8_tap_targets_and_floating_buttons(): void
+    {
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+        $this->assertStringContainsString('id="theme-toggle-btn" class="p-2 sm:p-2.5 min-w-[44px] min-h-[44px]', $html);
+        $this->assertStringContainsString('id="mobile-menu-btn" class="p-2 sm:p-2.5 min-w-[44px] min-h-[44px]', $html);
+        $this->assertStringContainsString('onclick="closeStaffModal()" class="w-11 h-11', $html);
+        $this->assertStringContainsString('onclick="toggleStaffPasswordVisibility()" class="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px]', $html);
+        $this->assertStringContainsString('onclick="changeQty(-1)" class="w-11 h-11', $html);
+        $this->assertStringContainsString('id="floating-actions"', $html);
+        $this->assertStringContainsString('#floating-actions { bottom: calc(1.5rem + env(safe-area-inset-bottom)); }', $html);
+        $this->assertStringContainsString('floating-lifted', $html);
+        $this->assertStringContainsString('floating-hidden', $html);
+        $this->assertStringContainsString("document.getElementById('book')", $html);
+        // Slider / lightbox controls were already >= 44px (46px / 48px).
+        $this->assertStringContainsString('.ms-arrow { width: 46px; height: 46px;', $html);
+        $this->assertStringContainsString('.ms-lb button { width: 48px; height: 48px;', $html);
+    }
 }

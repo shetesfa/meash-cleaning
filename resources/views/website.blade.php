@@ -1108,6 +1108,11 @@
   .ms-lb .ms-lb-row { display: flex; gap: 12px; margin-top: 14px; align-items: center; }
   .ms-lb button { width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.35); background: rgba(255,255,255,.1); color: #fff; display: grid; place-items: center; cursor: pointer; }
   .ms-lb .ms-lb-close { position: absolute; top: 16px; right: 16px; }
+  /* Q8: floating contact buttons — safe-area aware; lifted above the
+     booking wizard while it is on screen; hidden while a modal is open. */
+  #floating-actions { bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
+  #floating-actions.floating-lifted { bottom: calc(7rem + env(safe-area-inset-bottom)); }
+  #floating-actions.floating-hidden { display: none; }
   @media (prefers-reduced-motion: reduce) { .ms-slide, .ms-svc .ms-ph img, .ms-gal-slide img { transition: none; } }
 </style>
 </head>
@@ -1196,7 +1201,7 @@
       </a>
 
       <!-- Dark Mode Toggle Button (Default Dark) -->
-      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 rounded-full border border-slate-700 dark:border-slate-700 text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
+      <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 sm:p-2.5 min-w-[44px] min-h-[44px] rounded-full border border-slate-700 dark:border-slate-700 text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer flex items-center justify-center shrink-0" title="የጨለማ/ብርሃን ሁነታ ቀይር (Toggle Dark/Light Mode)">
         <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
       </button>
 
@@ -1213,7 +1218,7 @@
       </a>
 
       <!-- Hamburger Menu Button (Available on all screens: mobile, tablet & desktop) -->
-      <button type="button" onclick="toggleMobileNav()" id="mobile-menu-btn" class="p-2 sm:p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center justify-center cursor-pointer shrink-0" aria-label="Open Navigation Menu" title="ምናሌ (Menu)">
+      <button type="button" onclick="toggleMobileNav()" id="mobile-menu-btn" class="p-2 sm:p-2.5 min-w-[44px] min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center justify-center cursor-pointer shrink-0" aria-label="Open Navigation Menu" title="ምናሌ (Menu)">
         <i data-lucide="menu" id="mobile-menu-icon" class="w-5 h-5"></i>
       </button>
     </div>
@@ -1232,7 +1237,7 @@
           <span class="text-[11px] font-bold text-teal block">CLEANING SOLUTION</span>
         </div>
       </div>
-      <button type="button" onclick="closeMobileNav()" class="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer" aria-label="Close menu">
+      <button type="button" onclick="closeMobileNav()" class="p-2 min-w-[44px] min-h-[44px] rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer" aria-label="Close menu">
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
     </div>
@@ -2558,9 +2563,9 @@
           </div>
           <label class="text-xs font-semibold block mt-4 text-navy"><span data-lang-block="am">ብዛት / መጠን (Quantity / Units)</span><span data-lang-block="en">Quantity</span></label>
           <div class="flex items-center gap-3 mt-1.5 mb-2">
-            <button type="button" onclick="changeQty(-1)" class="w-9 h-9 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">−</button>
+            <button type="button" onclick="changeQty(-1)" class="w-11 h-11 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">−</button>
             <span id="qty-display" class="font-serif font-semibold text-xl w-8 text-center text-navy">1</span>
-            <button type="button" onclick="changeQty(1)" class="w-9 h-9 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">+</button>
+            <button type="button" onclick="changeQty(1)" class="w-11 h-11 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">+</button>
           </div>
           <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-5 flex items-center justify-between">
             <span class="text-xs sm:text-sm font-semibold text-teal-dark"><span data-lang-block="am">የግምት ድምር (Estimated Price)</span><span data-lang-block="en">Estimated total</span></span>
@@ -3231,7 +3236,7 @@
           <p class="text-xs text-navy/50">Staff & Admin Access — MEASH CLEANING SOLUTION</p>
         </div>
       </div>
-      <button type="button" onclick="closeStaffModal()" class="w-7 h-7 rounded-lg text-navy/40 hover:text-navy hover:bg-fog flex items-center justify-center transition cursor-pointer">
+      <button type="button" onclick="closeStaffModal()" class="w-11 h-11 rounded-lg text-navy/40 hover:text-navy hover:bg-fog flex items-center justify-center transition cursor-pointer">
         <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     </div>
@@ -3259,7 +3264,7 @@
           <label class="block text-xs font-bold text-navy/70 mb-1">የይለፍ ቃል (Password)</label>
           <div class="relative">
             <input type="password" id="staff-password-input" required placeholder="••••••••••••" class="w-full px-3.5 py-2.5 pr-10 rounded-lg border border-navy/20 bg-fog text-navy text-xs focus:outline-none focus:border-teal">
-            <button type="button" onclick="toggleStaffPasswordVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-navy/40 hover:text-teal transition cursor-pointer">
+            <button type="button" onclick="toggleStaffPasswordVisibility()" class="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px] flex items-center justify-center text-navy/40 hover:text-teal transition cursor-pointer">
               <i id="staff-pwd-eye" data-lucide="eye" class="w-4 h-4"></i>
             </button>
           </div>
@@ -4001,7 +4006,7 @@
               <i data-lucide="calendar-clock" class="w-5 h-5 text-teal"></i>
               <h3 class="font-bold text-navy dark:text-white text-sm">ቀጠሮ ቀን ማስተላለፊያ (Reschedule Service)</h3>
             </div>
-            <button onclick="document.getElementById('web-reschedule-backdrop').remove()" class="text-navy/40 hover:text-navy text-lg font-bold">&times;</button>
+            <button onclick="document.getElementById('web-reschedule-backdrop').remove()" class="text-navy/40 hover:text-navy text-lg font-bold min-w-[44px] min-h-[44px] flex items-center justify-center">&times;</button>
           </div>
           <form onsubmit="submitWebReschedule(event, '${orderNumber}')" class="space-y-3 text-xs">
             <div>
@@ -5144,11 +5149,11 @@
   }
 </script>
 <!-- Floating Quick Chat Buttons (WhatsApp & Telegram) -->
-<div class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2.5 pointer-events-auto">
+<div id="floating-actions" class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2.5 pointer-events-auto">
   <a href="https://wa.me/251970075509?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20request%20a%20quote" 
      target="_blank" 
      rel="noopener noreferrer"
-     class="flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white px-3.5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-xs font-bold"
+     class="flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white px-3.5 py-2.5 min-h-[44px] rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-xs font-bold"
      title="Chat on WhatsApp">
     <i data-lucide="message-circle" class="w-5 h-5 text-white"></i>
     <span class="hidden sm:inline">WhatsApp</span>
@@ -5156,12 +5161,44 @@
   <a href="https://t.me/meash_cleaning_solution_bot" 
      target="_blank" 
      rel="noopener noreferrer"
-     class="flex items-center gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white px-3.5 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-xs font-bold"
+     class="flex items-center gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white px-3.5 py-2.5 min-h-[44px] rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-xs font-bold"
      title="Telegram Bot">
     <i data-lucide="send" class="w-5 h-5 text-white"></i>
     <span class="hidden sm:inline">Telegram Bot</span>
   </a>
 </div>
+
+<!-- Q8: keep the floating WhatsApp/Telegram buttons off the booking
+     wizard's Next/Submit buttons and out of the way of open modals. -->
+<script>
+  (function () {
+    var fab = document.getElementById('floating-actions');
+    if (!fab) return;
+    function anyModalOpen() {
+      var staff = document.getElementById('staff-auth-modal');
+      if (staff && !staff.classList.contains('hidden')) return true;
+      if (document.querySelector('.ms-lb.open')) return true; // gallery lightbox
+      if (document.getElementById('web-reschedule-backdrop')) return true;
+      var nav = document.getElementById('mobile-nav-drawer');
+      if (nav && !nav.classList.contains('hidden')) return true;
+      return false;
+    }
+    function updateFab() {
+      fab.classList.toggle('floating-hidden', anyModalOpen());
+    }
+    var book = document.getElementById('book');
+    if ('IntersectionObserver' in window && book) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          fab.classList.toggle('floating-lifted', e.isIntersecting);
+        });
+      }, { rootMargin: '0px 0px -80px 0px' }).observe(book);
+    }
+    // Modals open/close by toggling classes or adding/removing nodes.
+    new MutationObserver(updateFab).observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+    updateFab();
+  })();
+</script>
 
 </body>
 </html>
