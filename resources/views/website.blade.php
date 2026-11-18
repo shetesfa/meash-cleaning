@@ -1084,7 +1084,7 @@
         <span data-lang-block="am">የድርጅቶች ጽዳት</span><span data-lang-block="en">Commercial</span>
       </a>
       <a href="#gallery" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">የስራ ጋለሪ</span><span data-lang-block="en">Projects</span></a>
-      <a href="#reviews" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">አስተያየቶች</span><span data-lang-block="en">Reviews</span></a>
+      <a href="#reviews" class="js-reviews-link px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">አስተያየቶች</span><span data-lang-block="en">Reviews</span></a>
       <a href="#contact" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Contact</span></a>
       <a href="#track" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
         <i data-lucide="search" class="w-3.5 h-3.5"></i>
@@ -1174,7 +1174,7 @@
           <i data-lucide="image" class="w-4 h-4 text-teal"></i>
           <span><span data-lang-block="am">የስራዎች ጋለሪ</span><span data-lang-block="en">Projects Gallery</span></span>
         </a>
-        <a href="#reviews" onclick="closeMobileNav()" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
+        <a href="#reviews" onclick="closeMobileNav()" class="js-reviews-link flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
           <i data-lucide="star" class="w-4 h-4 text-amber-400"></i>
           <span><span data-lang-block="am">የደንበኞች አስተያየት</span><span data-lang-block="en">Customer Reviews</span></span>
         </a>
@@ -2947,7 +2947,7 @@
         <li><a href="#advantage" class="hover:text-teal transition">ለምን ሜሽን ይመርጣሉ? (5 Pillars)</a></li>
         <li><a href="#process" class="hover:text-teal transition">ቀላል አሰራራችን (5-Step Process)</a></li>
         <li><a href="#gallery" class="hover:text-teal transition">የስራ ጋለሪ (Before &amp; After)</a></li>
-        <li><a href="#reviews" class="hover:text-teal transition">የደንበኞች አስተያየት (Reviews)</a></li>
+        <li><a href="#reviews" class="js-reviews-link hover:text-teal transition">የደንበኞች አስተያየት (Reviews)</a></li>
         <li><a href="#contact" class="hover:text-teal transition">አድራሻ እና ካርታ (Contact)</a></li>
         <li class="pt-2">
           <!-- Staff & Admin Secure Access Button -->
@@ -3428,10 +3428,13 @@
     updateWizardTotal();
   }
 
-  // Hide the whole testimonials section: it must only ever show real,
-  // approved reviews (there are no hardcoded cards any more).
+  // Hide the whole testimonials section AND the three #reviews nav links
+  // (desktop menu, mobile menu, footer): with no approved reviews the
+  // links would scroll to a hidden section. When approved reviews exist,
+  // loadPublicReviews() shows both the section and the links again.
   function hideReviewsSection(){
     document.getElementById('reviews')?.classList.add('hidden');
+    document.querySelectorAll('.js-reviews-link').forEach(function (el) { el.classList.add('hidden'); });
   }
 
   async function loadPublicReviews(){
@@ -3451,6 +3454,7 @@
         if (aggText) aggText.textContent = avg.toFixed(1) + ' / 5.0 (' + list.length + (list.length === 1 ? ' Review)' : ' Reviews)');
         if (aggBlock) aggBlock.classList.remove('hidden');
         document.getElementById('reviews')?.classList.remove('hidden');
+        document.querySelectorAll('.js-reviews-link').forEach(function (el) { el.classList.remove('hidden'); });
         const grid = document.getElementById('dynamic-reviews-grid');
         if (grid) {
           grid.innerHTML = list.slice(0, 6).map(r => `
