@@ -2383,7 +2383,12 @@
       <!-- Website QR -->
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-navy/10 flex flex-col items-center">
         <div class="p-3 bg-white rounded-xl shadow-inner border border-gray-100 mb-4">
-          <img id="qr-website" data-qr="{{ url('/') }}" src="" alt="Website QR Code" class="w-36 h-36 rounded-lg">
+          {{-- FIX (freeze): an empty src makes the browser re-request the document
+               URL, so each QR img re-downloaded the whole 370 KB homepage
+               (and held a PHP-FPM worker). A 1x1 transparent GIF data URI
+               loads instantly with no request; the QR script replaces src
+               with the generated QR data URL when the card scrolls into view. --}}
+          <img id="qr-website" data-qr="{{ url('/') }}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Website QR Code" class="w-36 h-36 rounded-lg">
         </div>
         <h4 class="font-bold text-sm text-navy dark:text-white flex items-center gap-1.5 mb-1">
           <i data-lucide="globe" class="w-4 h-4 text-teal"></i> Website Direct Booking
@@ -2394,7 +2399,7 @@
       <!-- Telegram Bot QR -->
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-navy/10 flex flex-col items-center">
         <div class="p-3 bg-white rounded-xl shadow-inner border border-gray-100 mb-4">
-          <img id="qr-telegram" data-qr="https://t.me/meash_cleaning_solution_bot" src="" alt="Telegram Bot QR Code" class="w-36 h-36 rounded-lg">
+          <img id="qr-telegram" data-qr="https://t.me/meash_cleaning_solution_bot" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Telegram Bot QR Code" class="w-36 h-36 rounded-lg">
         </div>
         <h4 class="font-bold text-sm text-navy dark:text-white flex items-center gap-1.5 mb-1">
           <i data-lucide="bot" class="w-4 h-4 text-teal"></i> Telegram Mini App &amp; Bot
@@ -5027,7 +5032,10 @@
   // handles navigation/autoplay/swipe, and opens the gallery lightbox.
   (function () {
     'use strict';
-    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // FIX (freeze): guard matchMedia — without it, a browser that lacks
+    // matchMedia throws on this first line and the whole hero/gallery/
+    // lightbox script (slider dots, transforms, lightbox) never runs.
+    var reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
 
     /* ---------- 3D coverflow slider ---------- */
     var stage = document.getElementById('ms-stage');
@@ -5369,6 +5377,18 @@
         });
       }, { threshold: 0.12 });
       fadeEls.forEach(function (el) { io.observe(el); });
+      // FIX (freeze): safety net — if the observer never fires for an
+      // element already in view (slow load, throttled observer), it would
+      // stay opacity:0 forever and the page would look empty/frozen.
+      // After 1.5s, reveal whatever is in the viewport anyway. Elements
+      // below the fold keep their scroll animation.
+      setTimeout(function () {
+        fadeEls.forEach(function (el) {
+          if (el.classList.contains('ms-in')) return;
+          var r = el.getBoundingClientRect();
+          if (r.top < window.innerHeight && r.bottom > 0) el.classList.add('ms-in');
+        });
+      }, 1500);
     } else {
       fadeEls.forEach(function (el) { el.classList.add('ms-in'); });
     }

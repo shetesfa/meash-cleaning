@@ -94,6 +94,18 @@ Route::fallback(function () {
     if (request()->is('api/*')) {
         abort(404);
     }
+    // FIX (freeze): a missing static file used to return the whole 370 KB
+    // homepage HTML with HTTP 200 — every miss wasted a full page download
+    // (and a PHP-FPM worker) and could be cached by the service worker as
+    // that asset. Real 404 for asset-looking paths; the SPA fallback stays
+    // for genuine website section URLs only.
+    if (request()->is([
+        'images/*', 'css/*', 'js/*', 'vendor/*', 'fonts/*', 'assets/*',
+        'storage/*', 'favicon.ico', 'favicon-*.png', 'apple-touch-icon.png',
+        'manifest.json', 'sw.js', 'offline.html',
+    ])) {
+        abort(404);
+    }
     return view('website');
 });
 
