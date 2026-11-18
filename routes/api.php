@@ -233,7 +233,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // L. Telegram Administrative Operations (Strictly Owner Only)
     Route::prefix('telegram')->middleware('role:owner')->group(function () {
         Route::get('/status', [TelegramController::class, 'getWebhookStatus']);
-        Route::post('/set-webhook', [TelegramController::class, 'setRenderWebhook']);
+        Route::post('/set-webhook', [TelegramController::class, 'setTelegramWebhook']);
         Route::post('/send-test', [TelegramController::class, 'sendTestMessage']);
     });
 });
