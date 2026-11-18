@@ -1,40 +1,19 @@
-const CACHE_NAME = 'meash-pwa-v7';
+const CACHE_NAME = 'meash-pwa-v8';
 
+// Q3: precache ONLY what the public page needs on first visit.
+// Removed: /app, /telegram-miniapp, /vendor/chart.umd.js, leaflet files,
+// /vendor/lucide.min.js (Q2 sprite is inline in the page) and all 20 font
+// files. Fonts and other assets are cached at runtime on first use
+// (cache-first in handleStaticAsset below) instead of being downloaded
+// up front. The staff app loads its own libraries when staff open it;
+// they enter the same runtime cache. Old precache was ~1.8 MB; this
+// list is ~0.23 MB of static files plus the '/' page itself.
 const PRECACHE_ASSETS = [
   '/',
-  '/app',
-  '/telegram-miniapp',
   '/offline.html',
   '/manifest.json',
   '/css/fonts.css',
   '/css/meash.css',
-  '/vendor/lucide.min.js',
-  '/vendor/chart.umd.js',
-  '/vendor/leaflet/leaflet.js',
-  '/vendor/leaflet/leaflet.css',
-  '/vendor/leaflet/images/marker-icon.png',
-  '/vendor/leaflet/images/marker-icon-2x.png',
-  '/vendor/leaflet/images/marker-shadow.png',
-  '/fonts/font-1-f7346798.woff2',
-  '/fonts/font-2-2d146ec4.woff2',
-  '/fonts/font-3-4b7f806c.woff2',
-  '/fonts/font-4-fccbe4fa.woff2',
-  '/fonts/font-5-fdf1d5c3.woff2',
-  '/fonts/font-6-9f6257e3.woff2',
-  '/fonts/font-7-fdb05bf0.woff2',
-  '/fonts/font-8-490d6b98.woff2',
-  '/fonts/font-9-6cc8f67d.woff2',
-  '/fonts/font-10-feced23e.woff2',
-  '/fonts/font-11-0511eb67.woff2',
-  '/fonts/font-12-79671606.woff2',
-  '/fonts/font-13-39ce2001.woff2',
-  '/fonts/font-14-ec84a376.woff2',
-  '/fonts/font-15-4ee8fc98.woff2',
-  '/fonts/font-16-f55b8d39.woff2',
-  '/fonts/font-17-eef1e497.woff2',
-  '/fonts/font-18-983e9094.woff2',
-  '/fonts/font-19-39529051.woff2',
-  '/fonts/font-20-56724408.woff2',
   '/js/meash-i18n.js',
   '/js/meash-offline.js',
   '/logo.jpg',

@@ -44,4 +44,24 @@ class SpeedOptimizationsTest extends TestCase
         $app->assertStatus(200);
         $app->assertSee('<script src="/vendor/lucide.min.js"></script>', false);
     }
+
+    // Q3: service worker precaches only the public page's needs (v8).
+    public function test_q3_sw_precache_is_lean_and_version_bumped(): void
+    {
+        $sw = file_get_contents(public_path('sw.js'));
+        $this->assertStringContainsString("const CACHE_NAME = 'meash-pwa-v8';", $sw);
+        foreach (["'/'", "'/offline.html'", "'/manifest.json'", "'/css/fonts.css'", "'/css/meash.css'", "'/js/meash-i18n.js'", "'/js/meash-offline.js'", "'/logo.jpg'", "'/assets/icon-192.png'", "'/assets/icon-512.png'"] as $needed) {
+            $this->assertStringContainsString($needed, $sw);
+        }
+        // Heavy items must NOT be precached any more (runtime cache instead).
+        // (Check only the array literal, not the comment above it.)
+        $start = strpos($sw, 'const PRECACHE_ASSETS = [');
+        $precache = substr($sw, $start, strpos($sw, '];', $start) - $start);
+        $this->assertStringNotContainsString("'/app'", $precache);
+        $this->assertStringNotContainsString("'/telegram-miniapp'", $precache);
+        $this->assertStringNotContainsString('chart.umd.js', $precache);
+        $this->assertStringNotContainsString('leaflet', $precache);
+        $this->assertStringNotContainsString('lucide.min.js', $precache);
+        $this->assertStringNotContainsString('/fonts/font-', $precache);
+    }
 }
