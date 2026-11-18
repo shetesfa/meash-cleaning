@@ -120,19 +120,20 @@
       }
     } catch (e) {}
 
-    // 2. Initialize theme
+    // 2. Initialize theme — R1: LIGHT is the default for new visitors.
+    // The saved choice is respected; only a saved 'dark' turns dark on.
     try {
       var saved = localStorage.getItem('meash_theme');
-      if (saved === 'light') {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
-      } else {
+      if (saved === 'dark') {
         document.documentElement.classList.add('dark');
         document.documentElement.classList.remove('light');
-        if (!saved) localStorage.setItem('meash_theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+        if (!saved) localStorage.setItem('meash_theme', 'light');
       }
     } catch (e) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add('light');
     }
   })();
 </script>
@@ -142,7 +143,7 @@
 <meta name="description" content="{{ $companyName }} ({{ $companyNameAm }}) — {{ $subtitleEn }}. {{ $sloganEn }} Call {{ $phone1 }} / {{ $phone2 }}">
 <meta name="keywords" content="Cleaning Services in Addis Ababa, Commercial Cleaning Addis Ababa, Hotel Cleaning Addis Ababa, Restaurant Sanitation, Office Cleaning Addis Ababa, Deep Cleaning Ethiopia, Meash Cleaning Solution, ሜሽ የጽዳት አገልግሎት, የቢሮ ጽዳት, የሆቴል ጽዳት, የወለል እጥበት, የሶፋ እጥበት">
 <meta name="author" content="{{ $companyName }}">
-<meta name="theme-color" content="#0B1220">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -270,7 +271,7 @@
 
   /* ---------- Design tokens ---------- */
   :root {
-    color-scheme: dark;
+    color-scheme: light;
 
     --bg: #0B1220;
     --bg-soft: #0F172A;
@@ -579,6 +580,10 @@
   }
 
   /* ================= LIGHT MODE (when toggled) ================= */
+  html.dark {
+    color-scheme: dark;
+  }
+
   html.light {
     color-scheme: light;
 
@@ -1121,6 +1126,34 @@
     input, select, textarea { font-size: 16px; }
   }
 
+  /* ============ R1: section rhythm, heading system, card system ============ */
+  /* One consistent section rhythm: py-16 on phones, py-24 on desktop. */
+  .ms-sec { padding-top: 4rem; padding-bottom: 4rem; }
+  @media (min-width: 768px) { .ms-sec { padding-top: 6rem; padding-bottom: 6rem; } }
+
+  /* One consistent heading style: small blue label, big bold title, one short sentence. */
+  .ms-sec-label { display: inline-flex; align-items: center; gap: .5rem; color: #2F6FA8; font-weight: 700; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; margin-bottom: .75rem; background: rgba(62,142,204,.1); padding: .375rem .875rem; border-radius: 999px; }
+  .ms-sec-title { font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; font-weight: 700; font-size: 1.875rem; line-height: 1.2; color: #0F172A; letter-spacing: -0.01em; }
+  @media (min-width: 640px) { .ms-sec-title { font-size: 2.25rem; } }
+  .ms-sec-sub { color: rgba(15,23,42,.7); font-size: .95rem; line-height: 1.6; margin-top: .5rem; max-width: 42rem; }
+  html.dark .ms-sec-title, html:not(.light) .ms-sec-title { color: #F8FAFC; }
+  html.dark .ms-sec-sub, html:not(.light) .ms-sec-sub { color: #CBD5E1; }
+  html.dark .ms-sec-label, html:not(.light) .ms-sec-label { color: #5FA9DD; background: rgba(95,169,221,.12); }
+  /* Light-on-navy variants (process section + final CTA). */
+  .ms-sec-label--light { color: #7FB8E4; background: rgba(255,255,255,.12); }
+  .ms-sec-title--light { color: #FFFFFF; }
+  .ms-sec-sub--light { color: rgba(255,255,255,.75); }
+
+  /* One card system: white, 16px radius, soft shadow, lift on hover, no heavy borders. */
+  .ms-card { background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(15,23,42,.06), 0 10px 24px -4px rgba(15,23,42,.08); border: 1px solid rgba(15,23,42,.05); transition: transform .2s ease, box-shadow .2s ease; }
+  .ms-card:hover { transform: translateY(-4px); box-shadow: 0 4px 6px -1px rgba(15,23,42,.08), 0 20px 25px -5px rgba(15,23,42,.12); }
+  html.dark .ms-card, html:not(.light) .ms-card { background: #162032; border-color: rgba(255,255,255,.08); box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 12px 32px -12px rgba(0,0,0,.55); }
+  /* Existing card grids follow the same system without touching every card. */
+  #advantage .grid > div, #commercial .grid > div { border-radius: 16px !important; border-color: rgba(15,23,42,.05) !important; box-shadow: 0 1px 3px rgba(15,23,42,.06), 0 10px 24px -4px rgba(15,23,42,.08) !important; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease !important; }
+  #advantage .grid > div:hover, #commercial .grid > div:hover { transform: translateY(-4px); box-shadow: 0 4px 6px -1px rgba(15,23,42,.08), 0 20px 25px -5px rgba(15,23,42,.12) !important; }
+  .ms-svc { border-radius: 16px; }
+  .ms-svc:hover { transform: translateY(-4px); }
+
   @media (prefers-reduced-motion: reduce) { .ms-slide, .ms-svc .ms-ph img, .ms-gal-slide img { transition: none; } }
 </style>
 </head>
@@ -1610,7 +1643,7 @@
 </section>
 
 <!-- ================= LOGO/TRUST STRIP ================= -->
-<section class="border-y border-navy/10 bg-fog">
+<section class="border-y border-navy/10 bg-[#F4F8FC] dark:bg-slate-900">
   <div class="max-w-7xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-navy/60 text-xs font-bold tracking-wide">
     <span class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ህጋዊ ፈቃድ ያለው ድርጅት</span><span data-lang-block="en">Licensed &amp; Insured Facility Service</span></span>
     <span class="flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የሰለጠኑ ቋሚ ባለሙያዎች</span><span data-lang-block="en">Vetted &amp; Certified Staff</span></span>
@@ -1623,14 +1656,14 @@
 </section>
 
 <!-- ================= ABOUT US SECTION ================= -->
-<section id="about" class="py-20 bg-white border-b border-navy/10">
+<section id="about" class="ms-sec py-16 md:py-24 bg-white dark:bg-slate-900 border-b border-navy/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
     <div>
-      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3 py-1 rounded-full">
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3 py-1 rounded-full">
         <i data-lucide="info" class="w-3.5 h-3.5"></i>
         <span data-lang-block="am">ስለ ድርጅታችን</span><span data-lang-block="en">ABOUT MEASH CLEANING</span>
       </div>
-      <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight mb-6">
+      <h2 class="ms-sec-title font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight mb-6">
         <span class="block text-teal-dark font-mono text-xs uppercase tracking-widest mb-1">"Your Environment, Our Responsibility."</span>
         <span data-lang-block="am">ሜሽ የጽዳት አገልግሎት<br><span class="text-teal-dark font-normal text-[0.8em]">ለተቋማትና ንግድ ቦታዎች ፕሪሚየም አጋር</span></span>
         <span data-lang-block="en">MEASH CLEANING SOLUTION<br><span class="text-teal-dark font-normal text-[0.8em]">Licensed &amp; Insured Premium B2B Partner</span></span>
@@ -1743,18 +1776,18 @@
 </section>
 
 <!-- ================= WHY MEASH? THE MEASH ADVANTAGE (5 PILLARS) ================= -->
-<section id="advantage" class="py-20 bg-fog border-b border-navy/10">
+<section id="advantage" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900 border-b border-navy/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="text-center max-w-2xl mx-auto mb-14">
-      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
         <i data-lucide="award" class="w-3.5 h-3.5"></i>
         <span data-lang-block="am">ለምን ሜሽን ይመርጣሉ?</span><span data-lang-block="en">WHY MEASH? — THE MEASH ADVANTAGE</span>
       </div>
-      <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight">
+      <h2 class="ms-sec-title font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight">
         <span data-lang-block="am">የሜሽ 5ቱ የላቁ መለያዎች (5 Core Pillars)</span>
         <span data-lang-block="en">5 Pillars of Cleaning Excellence</span>
       </h2>
-      <p class="text-navy/70 text-sm sm:text-base mt-2">
+      <p class="ms-sec-sub text-navy/70 text-sm sm:text-base mt-2">
         <span data-lang-block="am">ንግድዎን፣ ንብረትዎን እና ሰራተኞችዎን የሚጠብቅ አስተማማኝ አገልግሎት እናቀርባለን።</span>
         <span data-lang-block="en">Commercial-grade sanitation designed to protect your facility, project a flawless corporate image, and boost workplace productivity.</span>
       </p>
@@ -1850,18 +1883,18 @@
 </section>
 
 <!-- ================= COMMERCIAL CLEANING SERVICES (DEDICATED SECTION) ================= -->
-<section id="commercial" class="py-24 bg-fog border-b border-navy/10 relative overflow-hidden">
+<section id="commercial" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900 border-b border-navy/10 relative overflow-hidden">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="max-w-2xl mb-16">
-      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
         <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
         <span data-lang-block="am">ለድርጅቶች፣ ለሆቴሎች እና ለተቋማት</span><span data-lang-block="en">COMMERCIAL &amp; CONTRACT CLEANING</span>
       </div>
-      <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight">
+      <h2 class="ms-sec-title font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight">
         <span data-lang-block="am">የተቋማት እና የንግድ ቦታዎች ጥልቅ ጽዳት</span>
         <span data-lang-block="en">Commercial &amp; Facility Cleaning Solutions</span>
       </h2>
-      <p class="text-navy/70 text-base mt-3">
+      <p class="ms-sec-sub text-navy/70 text-base mt-3">
         <span data-lang-block="am">ለቢሮዎች፣ ለሆቴሎች፣ ለሬስቶራንቶች፣ ለካፌዎች እና ለስብሰባ አዳራሾች አስተማማኝ የረጅም ጊዜ የኮንትራት ወይም የጊዜያዊ ጽዳት ውል። ህጋዊ ደረሰኝ እና የቫት ሰነድ እናቀርባለን።</span>
         <span data-lang-block="en">Tailored recurring contracts and deep turnaround sanitization for corporations, hospitality chains, dining spots, and auditorium venues across Addis Ababa.</span>
       </p>
@@ -1995,17 +2028,17 @@
 </section>
 
 <!-- ================= CORE SERVICES (OFFICIAL 6 SERVICES) ================= -->
-<section id="services" class="max-w-7xl mx-auto px-4 sm:px-6 py-24">
+<section id="services" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900"><div class="max-w-7xl mx-auto px-4 sm:px-6">
   <div class="max-w-2xl mb-14">
-    <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
+    <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
       <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
       <span data-lang-block="am">ዋና ዋና አገልግሎቶቻችን</span><span data-lang-block="en">OUR CORE SERVICES</span>
     </div>
-    <h2 class="font-serif font-bold text-3xl md:text-4xl text-navy leading-tight">
+    <h2 class="ms-sec-title font-serif font-bold text-3xl md:text-4xl text-navy leading-tight">
       <span data-lang-block="am">ሜሽ የሚሰጣቸው 6ቱ ይፋዊ አገልግሎቶች</span>
       <span data-lang-block="en">6 Core Commercial &amp; Deep Cleaning Solutions</span>
     </h2>
-    <p class="text-navy/70 text-sm sm:text-base mt-2">
+    <p class="ms-sec-sub text-navy/70 text-sm sm:text-base mt-2">
       <span data-lang-block="am">ለሆቴሎች፣ ሬስቶራንቶች፣ ካፌዎች፣ ቢሮዎች እና መኖሪያ ቤቶች በከፍተኛ ጥራት የሚሰጡ አገልግሎቶች።</span>
       <span data-lang-block="en">Specialized sanitation for Hotels, Restaurants, Cafés, Corporate Offices, and Residential spaces.</span>
     </p>
@@ -2087,18 +2120,19 @@
       </div>
     </article>
   </div>
+  </div>
 </section>
 
 
 <!-- ================= HOW WE DELIVER (3-STEP, from approved modern sample) ================= -->
-<section id="how" class="py-20 bg-white dark:bg-slate-900 border-b border-navy/10">
+<section id="how" class="ms-sec py-16 md:py-24 bg-white dark:bg-slate-900 border-b border-navy/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="max-w-2xl mb-10">
-      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
         <i data-lucide="workflow" class="w-3.5 h-3.5"></i>
         <span data-lang-block="am">ቀላል ሂደት</span><span data-lang-block="en">SIMPLE PROCESS</span>
       </div>
-      <h2 class="font-serif font-bold text-3xl md:text-4xl text-navy dark:text-white leading-tight">
+      <h2 class="ms-sec-title font-serif font-bold text-3xl md:text-4xl text-navy dark:text-white leading-tight">
         <span data-lang-block="am">ፍጹም ጽዳት እንዴት እናደርሳለን</span>
         <span data-lang-block="en">How we deliver a perfect clean</span>
       </h2>
@@ -2127,18 +2161,18 @@
 </section>
 
 <!-- ================= OUR PROCESS (5-STEP PROCESS SECTION) ================= -->
-<section id="process" class="bg-navy text-white py-24 border-t border-b border-white/10">
+<section id="process" class="ms-sec bg-navy text-white py-16 md:py-24 border-t border-b border-white/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="max-w-2xl mb-14">
-      <div class="inline-flex items-center gap-2 text-teal font-bold text-xs tracking-wider uppercase mb-3 bg-teal/20 px-3.5 py-1.5 rounded-full">
+      <div class="inline-flex items-center gap-2 text-teal font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label ms-sec-label--light bg-teal/20 px-3.5 py-1.5 rounded-full">
         <i data-lucide="workflow" class="w-3.5 h-3.5"></i>
         <span data-lang-block="am">ቀላል አሰራራችን</span><span data-lang-block="en">OUR 5-STEP PROCESS</span>
       </div>
-      <h2 class="font-serif font-semibold text-3xl md:text-4xl leading-tight">
+      <h2 class="ms-sec-title ms-sec-title--light font-serif font-semibold text-3xl md:text-4xl leading-tight">
         <span data-lang-block="am">እንዴት እንሰራለን? (How We Work)</span>
         <span data-lang-block="en">How We Work — From First Call to Handover</span>
       </h2>
-      <p class="text-white/70 text-sm sm:text-base mt-2">
+      <p class="ms-sec-sub ms-sec-sub--light text-white/70 text-sm sm:text-base mt-2">
         <span data-lang-block="am">የእርስዎን የሥራ ሰዓት እና የንግድ እንቅስቃሴ ሳናስተጓጉል ጥራቱን የጠበቀ ጽዳት የምናቀርብበት ባለ 5 ደረጃ ሂደት።</span>
         <span data-lang-block="en">Our streamlined 5-step operational journey ensures zero business interruption and 100% satisfaction.</span>
       </p>
@@ -2266,19 +2300,19 @@
 </section>
 
 <!-- ================= PROJECTS / GALLERY SECTION (BEFORE & AFTER) ================= -->
-<section id="gallery" class="py-24 bg-white dark:bg-slate-900 border-b border-navy/10">
+<section id="gallery" class="ms-sec py-16 md:py-24 bg-white dark:bg-slate-900 border-b border-navy/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="flex flex-col md:flex-row md:items-end justify-between mb-14">
       <div>
-        <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3 py-1 rounded-full">
+        <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3 py-1 rounded-full">
           <i data-lucide="image" class="w-3.5 h-3.5"></i>
           <span data-lang-block="am">የስራ ውጤቶች ጋለሪ</span><span data-lang-block="en">PROJECTS &amp; RESULTS</span>
         </div>
-        <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
+        <h2 class="ms-sec-title font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
           <span data-lang-block="am">ሥራችን፣ በየስፍራው</span>
           <span data-lang-block="en">Our work, in every situation</span>
         </h2>
-        <p class="text-navy/65 dark:text-slate-300 text-sm sm:text-base mt-2 max-w-xl">
+        <p class="ms-sec-sub text-navy/65 dark:text-slate-300 text-sm sm:text-base mt-2 max-w-xl">
           <span data-lang-block="am">ሙሉ ማያ ለማየት ማንኛውንም ፎቶ ይንኩ።</span>
           <span data-lang-block="en">Tap any photo to view it full-screen.</span>
         </p>
@@ -2341,11 +2375,11 @@
 </div>
 
 <!-- ================= REVIEWS / TESTIMONIALS ================= -->
-<section id="reviews" class="max-w-7xl mx-auto px-4 sm:px-6 py-24 border-b border-navy/10">
+<section id="reviews" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900 border-b border-navy/10"><div class="max-w-7xl mx-auto px-4 sm:px-6">
   <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-14">
     <div>
-      <div class="text-teal-dark font-bold text-xs tracking-wider uppercase mb-3"><span data-lang-block="am">የደንበኞች ምስክርነት</span><span data-lang-block="en">CLIENT TESTIMONIALS</span></div>
-      <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
+      <div class="ms-sec-label text-teal-dark font-bold text-xs tracking-wider uppercase mb-3"><span data-lang-block="am">የደንበኞች ምስክርነት</span><span data-lang-block="en">CLIENT TESTIMONIALS</span></div>
+      <h2 class="ms-sec-title font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
         <span data-lang-block="am">ደንበኞቻችን ስለ እኛ ምን ይላሉ?</span><span data-lang-block="en">What our clients say</span>
       </h2>
     </div>
@@ -2368,10 +2402,11 @@
        no approved reviews the whole #reviews section is hidden. -->
   <div id="dynamic-reviews-grid" class="grid md:grid-cols-3 gap-8">
   </div>
+  </div>
 </section>
 
 <!-- ================= QR CODE SECTION ================= -->
-<section id="qr-code" class="py-20 bg-fog dark:bg-slate-800/50 border-b border-navy/10">
+<section id="qr-code" class="ms-sec py-16 md:py-24 bg-white dark:bg-slate-900 border-b border-navy/10">
   <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
     <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3 py-1 rounded-full">
       <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
@@ -2481,11 +2516,11 @@
 </script>
 
 <!-- ================= BOOKING WIZARD ================= -->
-<section id="book" class="bg-fog py-24 border-t border-navy/10">
+<section id="book" class="ms-sec bg-[#F4F8FC] dark:bg-slate-900 py-16 md:py-24 border-t border-navy/10">
   <div class="max-w-2xl mx-auto px-6">
     <div class="text-center mb-10">
-      <div class="text-teal-dark font-bold text-xs tracking-wide mb-3"><span data-lang-block="am">ቀጠሮ</span><span data-lang-block="en">BOOKING</span></div>
-      <h2 class="font-serif font-semibold text-3xl"><span data-lang-block="am">ቀጠሮ ይያዙ</span><span data-lang-block="en">Schedule your cleaning</span></h2>
+      <div class="ms-sec-label text-teal-dark font-bold text-xs tracking-wide mb-3"><span data-lang-block="am">ቀጠሮ</span><span data-lang-block="en">BOOKING</span></div>
+      <h2 class="ms-sec-title font-serif font-semibold text-3xl"><span data-lang-block="am">ቀጠሮ ይያዙ</span><span data-lang-block="en">Schedule your cleaning</span></h2>
     </div>
 
     <div class="bg-white rounded-xl p-6 md:p-9 shadow-sm border border-navy/10">
@@ -2963,7 +2998,7 @@
 </section>
 
 <!-- ================= TRACK ORDER ================= -->
-<section id="track" class="max-w-2xl mx-auto px-6 py-20 text-center">
+<section id="track" class="ms-sec py-16 md:py-24 bg-white dark:bg-slate-900"><div class="max-w-2xl mx-auto px-6 text-center">
   <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-light text-teal-dark text-xs font-bold mb-3">
     <i data-lucide="search" class="w-3.5 h-3.5"></i>
     <span data-lang-block="am">የትዕዛዝ ሁኔታ መከታተያ</span>
@@ -2976,23 +3011,22 @@
     <button type="submit" id="btn-track-submit" class="bg-navy hover:bg-teal-dark text-white font-bold px-6 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ፈልግ</span><span data-lang-block="en">Track</span></button>
   </form>
   <div id="track-result" class="hidden mt-6 text-left"></div>
-</section>
-
+  </div>
 </section>
 
 <!-- ================= CONTACT US & GOOGLE MAPS SECTION ================= -->
-<section id="contact" class="py-24 bg-white dark:bg-slate-900 border-t border-navy/10">
+<section id="contact" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900 border-t border-navy/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="text-center max-w-2xl mx-auto mb-16">
-      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 bg-teal/10 px-3.5 py-1.5 rounded-full">
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
         <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
         <span data-lang-block="am">ያግኙን እና አድራሻችን</span><span data-lang-block="en">CONTACT US &amp; LOCATION</span>
       </div>
-      <h2 class="font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
+      <h2 class="ms-sec-title font-serif font-bold text-3xl sm:text-4xl text-navy dark:text-white leading-tight">
         <span data-lang-block="am">ከእኛ ጋር በቀላሉ ይገናኙ</span>
         <span data-lang-block="en">Get in Touch with Meash Cleaning</span>
       </h2>
-      <p class="text-navy/70 dark:text-slate-300 text-sm sm:text-base mt-2">
+      <p class="ms-sec-sub text-navy/70 dark:text-slate-300 text-sm sm:text-base mt-2">
         <span data-lang-block="am">ለማንኛውም ጥያቄ፣ የቀጠሮ ማረጋገጫ ወይም የድርጅት ጽዳት ውይይት በማንኛውም ሰዓት ይደውሉልን።</span>
         <span data-lang-block="en">Call our direct lines, chat with us on Telegram, or visit our headquarters at Ayat Square, Addis Ababa, Ethiopia.</span>
       </p>
@@ -4850,15 +4884,18 @@
   // ---- Theme (Dark/Light Mode) Engine ----
   function initTheme() {
     let saved = localStorage.getItem('meash_theme');
-    // STRICT DEFAULT: Always dark mode for website unless user explicitly chose light
-    if (saved !== 'light') {
-      saved = 'dark';
-      localStorage.setItem('meash_theme', 'dark');
+    // R1 STRICT DEFAULT: always LIGHT for new visitors unless the
+    // visitor explicitly chose dark before.
+    if (saved !== 'dark') {
+      saved = 'light';
+      localStorage.setItem('meash_theme', 'light');
     }
     applyTheme(saved);
   }
 
   function applyTheme(theme) {
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', theme === 'dark' ? '#0B1220' : '#FFFFFF');
     const icon = document.getElementById('theme-icon');
     const btn = document.getElementById('theme-toggle-btn');
     if (theme === 'dark') {
