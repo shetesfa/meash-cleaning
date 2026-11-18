@@ -57,10 +57,10 @@ class RedesignTest extends TestCase
 
     private function heroHtml(string $html): string
     {
-        $start = strpos($html, 'id="hero"');
-        $end = strpos($html, 'LOGO/TRUST STRIP');
+        $start = strpos($html, 'HERO');
+        $end = strpos($html, 'TRUST BAR');
         $this->assertNotFalse($start, 'Hero section missing');
-        $this->assertNotFalse($end, 'Trust strip missing');
+        $this->assertNotFalse($end, 'Trust bar missing');
         return substr($html, $start, $end - $start);
     }
 
@@ -92,5 +92,53 @@ class RedesignTest extends TestCase
         $this->assertStringContainsString('Free inspection', $hero);
         // Phone stage is compact so the first screen fits 390x844.
         $res->assertSee('.ms-stage { height: 330px; }', false);
+    }
+
+    // R3: trust bar — 4 big items, ONLY verified claims from settings.
+    public function test_r3_trust_bar_only_verified_claims(): void
+    {
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+        $start = strpos($html, 'id="trust"');
+        $end = strpos($html, 'id="about"');
+        $this->assertNotFalse($start, 'Trust bar missing');
+        $this->assertNotFalse($end, 'About section missing');
+        $trust = substr($html, $start, $end - $start);
+
+        // The four verified claims are present.
+        $this->assertStringContainsString('Free inspection', $trust);
+        $this->assertStringContainsString('Mon–Sat 8:00–18:00', $trust);
+        $this->assertStringContainsString('Licensed &amp; Insured', $trust);
+        // Discount comes from the real pricing rules (weekly 15 = maximum).
+        $this->assertStringContainsString('Up to 15% off', $trust);
+        $this->assertStringContainsString('Weekly plans &amp; recurring contracts', $trust);
+
+        // Unverified / false claims are NOT used anywhere on the page.
+        $this->assertStringNotContainsString('VAT invoice', $html);
+        $this->assertStringNotContainsString('Monthly contracts up to 15% off', $html);
+        $this->assertStringNotContainsString('500+ clients', $html);
+        $this->assertStringNotContainsString('Vetted &amp; Certified Staff', $html);
+        // No client-logo block: there are no real logos to show.
+        $this->assertStringNotContainsString('client-logo', $html);
+        $this->assertStringNotContainsString('Our Clients', $html);
+        // 2x2 grid on phones, single row on desktop.
+        $this->assertStringContainsString('grid grid-cols-2 lg:grid-cols-4', $trust);
+    }
+
+    // R3: clearing a trust setting hides that claim (steam/equipment pattern).
+    public function test_r3_clearing_trust_setting_hides_claim(): void
+    {
+        \App\Models\WebsiteSetting::setVal('trust_free_inspection_en', '');
+        \App\Models\WebsiteSetting::setVal('trust_free_inspection_am', '');
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+        $start = strpos($html, 'id="trust"');
+        $end = strpos($html, 'id="about"');
+        $trust = substr($html, $start, $end - $start);
+        $this->assertStringNotContainsString('Free inspection', $trust);
+        // The other claims still show.
+        $this->assertStringContainsString('Licensed &amp; Insured', $trust);
     }
 }

@@ -114,6 +114,17 @@ class WebsiteSetting extends Model
             // message anytime; night shift for companies by appointment.
             'working_hours_am' => 'ስልክ እና ቴሌግራም፦ ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 ይመለሳል፤ አስቸኳይ ጥያቄዎች በመልእክት በማንኛውም ጊዜ። የሌሊት ፈረቃ ለድርጅቶች በቀጠሮ።',
             'working_hours_en' => 'Calls and Telegram: answered Mon-Sat 8:00-18:00; urgent requests by message anytime. Night shift for companies by appointment.',
+            // R3 trust bar — ONLY verified claims, each editable from admin.
+            // Clear a value in admin settings to remove that claim from the bar.
+            // "Up to 15% off" is NOT a setting here: it is derived from
+            // pricing_rules.weekly_discount (15 = the real maximum; monthly is 5%).
+            // "VAT invoice" is deliberately NOT a claim: no VAT value is stored.
+            'trust_free_inspection_am' => 'ነፃ የቦታ ምልከታ',
+            'trust_free_inspection_en' => 'Free inspection',
+            'trust_hours_am' => 'ከሰኞ እስከ ቅዳሜ 8:00–18:00',
+            'trust_hours_en' => 'Mon–Sat 8:00–18:00',
+            'trust_licensed_am' => 'ህጋዊ ፈቃድ ያለው ድርጅት',
+            'trust_licensed_en' => 'Licensed & Insured',
             'telegram_channel' => 'https://t.me/meashdeepcleanning',
             'telegram_support' => '@meashcleaning',
             'telegram_bot' => 'https://t.me/meash_cleaning_solution_bot',
@@ -297,6 +308,12 @@ class WebsiteSetting extends Model
             'social_handle',
             'working_hours_am',
             'working_hours_en',
+            'trust_free_inspection_am',
+            'trust_free_inspection_en',
+            'trust_hours_am',
+            'trust_hours_en',
+            'trust_licensed_am',
+            'trust_licensed_en',
             'telegram_channel',
             'telegram_support',
             'telegram_bot',

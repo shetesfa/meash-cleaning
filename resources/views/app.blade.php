@@ -8964,6 +8964,36 @@
                                 </div>
                             </div>
 
+                            <div class="pt-2">
+                                <div class="text-xs font-bold text-slate-400 mb-2">የእምነት ባር (Trust Bar — R3: only verified claims; clear a value to hide that claim. The discount comes from Pricing Rules, weekly %.)</div>
+                                <div class="grid sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-300 block mb-1">ነፃ ምልከታ በአማርኛ (Free Inspection AM)</label>
+                                        <input type="text" id="set-trust-free-am" value="${escapeHtml(s.trust_free_inspection_am || 'ነፃ የቦታ ምልከታ')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-300 block mb-1">ነፃ ምልከታ በእንግሊዝኛ (Free Inspection EN)</label>
+                                        <input type="text" id="set-trust-free-en" value="${escapeHtml(s.trust_free_inspection_en || 'Free inspection')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-300 block mb-1">የስራ ሰዓት በአማርኛ (Trust Hours AM)</label>
+                                        <input type="text" id="set-trust-hours-am" value="${escapeHtml(s.trust_hours_am || 'ከሰኞ እስከ ቅዳሜ 8:00–18:00')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-300 block mb-1">የስራ ሰዓት በእንግሊዝኛ (Trust Hours EN)</label>
+                                        <input type="text" id="set-trust-hours-en" value="${escapeHtml(s.trust_hours_en || 'Mon–Sat 8:00–18:00')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-300 block mb-1">ፈቃድ በአማርኛ (Licensed AM)</label>
+                                        <input type="text" id="set-trust-lic-am" value="${escapeHtml(s.trust_licensed_am || 'ህጋዊ ፈቃድ ያለው ድርጅት')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    </div>
+                                    <div>
+                                        <label class="text-xs font-bold text-slate-300 block mb-1">ፈቃድ በእንግሊዝኛ (Licensed EN)</label>
+                                        <input type="text" id="set-trust-lic-en" value="${escapeHtml(s.trust_licensed_en || 'Licensed & Insured')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">ቴሌግራም ቦት (Bot Link)</label>
@@ -9179,6 +9209,12 @@
                 company_address: document.getElementById('set-address-en').value.trim(),
                 working_hours_am: document.getElementById('set-hours-am').value.trim(),
                 working_hours_en: document.getElementById('set-hours-en').value.trim(),
+                trust_free_inspection_am: document.getElementById('set-trust-free-am').value.trim(),
+                trust_free_inspection_en: document.getElementById('set-trust-free-en').value.trim(),
+                trust_hours_am: document.getElementById('set-trust-hours-am').value.trim(),
+                trust_hours_en: document.getElementById('set-trust-hours-en').value.trim(),
+                trust_licensed_am: document.getElementById('set-trust-lic-am').value.trim(),
+                trust_licensed_en: document.getElementById('set-trust-lic-en').value.trim(),
                 telegram_bot: document.getElementById('set-tg-bot').value.trim(),
                 telegram_channel: document.getElementById('set-tg-chan').value.trim(),
                 telegram_support: document.getElementById('set-tg-support') ? document.getElementById('set-tg-support').value.trim() : '@meashcleaning',

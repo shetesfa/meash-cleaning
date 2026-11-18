@@ -1657,16 +1657,63 @@
   </div>
 </section>
 
-<!-- ================= LOGO/TRUST STRIP ================= -->
-<section class="border-y border-navy/10 bg-[#F4F8FC] dark:bg-slate-900">
-  <div class="max-w-7xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-navy/60 text-xs font-bold tracking-wide">
-    <span class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ህጋዊ ፈቃድ ያለው ድርጅት</span><span data-lang-block="en">Licensed &amp; Insured Facility Service</span></span>
-    <span class="flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የሰለጠኑ ቋሚ ባለሙያዎች</span><span data-lang-block="en">Vetted &amp; Certified Staff</span></span>
-    @if(!empty($equipmentClaimAm) || !empty($equipmentClaimEn))
-    <span class="flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">{{ $equipmentClaimAm }}</span><span data-lang-block="en">{{ $equipmentClaimEn }}</span></span>
-    @endif
-    <span class="flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ተለዋዋጭ የስራ ሰዓት</span><span data-lang-block="en">Flexible Scheduling (7 Days)</span></span>
-    <span class="flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የተቋማት ዓመታዊ ኮንትራት</span><span data-lang-block="en">Corporate Facility Contracts</span></span>
+<!-- ================= TRUST BAR (R3) ================= -->
+{{-- Four big items, ONLY verified claims, each editable from WebsiteSetting.
+     Clear a value in admin settings to hide that claim. The discount is
+     derived from pricing_rules.weekly_discount (15 = the real maximum;
+     monthly is 5%, so "Monthly contracts up to 15% off" is FALSE and is
+     never used). "VAT invoice" is not used: no VAT value is stored.
+     No client-logo block exists (no real logos) and the reviews block
+     below renders only when approved reviews exist (P2 rule). --}}
+@php
+  $trustFreeAm = $websiteSettings['trust_free_inspection_am'] ?? 'ነፃ የቦታ ምልከታ';
+  $trustFreeEn = $websiteSettings['trust_free_inspection_en'] ?? 'Free inspection';
+  $trustHoursAm = $websiteSettings['trust_hours_am'] ?? 'ከሰኞ እስከ ቅዳሜ 8:00–18:00';
+  $trustHoursEn = $websiteSettings['trust_hours_en'] ?? 'Mon–Sat 8:00–18:00';
+  $trustLicAm = $websiteSettings['trust_licensed_am'] ?? 'ህጋዊ ፈቃድ ያለው ድርጅት';
+  $trustLicEn = $websiteSettings['trust_licensed_en'] ?? 'Licensed & Insured';
+  $trustWeeklyDiscount = (int)($pricingRules['weekly_discount'] ?? 15);
+@endphp
+<section id="trust" class="py-10 md:py-14 bg-[#F4F8FC] dark:bg-slate-900 border-y border-navy/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
+      @if(!empty($trustFreeAm) || !empty($trustFreeEn))
+      <div class="ms-card flex items-center gap-3 md:gap-4 p-4 md:p-5">
+        <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="clipboard-check" class="w-5 h-5"></i></div>
+        <div class="min-w-0">
+          <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">{{ $trustFreeAm }}</span><span data-lang-block="en">{{ $trustFreeEn }}</span></div>
+          <div class="text-xs md:text-sm text-navy/60 dark:text-slate-300 leading-snug"><span data-lang-block="am">ምልከታ እና ፕሮፎርማ ሲጠይቁ</span><span data-lang-block="en">Inspection &amp; proforma on request</span></div>
+        </div>
+      </div>
+      @endif
+      @if(!empty($trustHoursAm) || !empty($trustHoursEn))
+      <div class="ms-card flex items-center gap-3 md:gap-4 p-4 md:p-5">
+        <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="clock" class="w-5 h-5"></i></div>
+        <div class="min-w-0">
+          <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">{{ $trustHoursAm }}</span><span data-lang-block="en">{{ $trustHoursEn }}</span></div>
+          <div class="text-xs md:text-sm text-navy/60 dark:text-slate-300 leading-snug"><span data-lang-block="am">የስራ ሰዓት</span><span data-lang-block="en">Working hours</span></div>
+        </div>
+      </div>
+      @endif
+      @if(!empty($trustLicAm) || !empty($trustLicEn))
+      <div class="ms-card flex items-center gap-3 md:gap-4 p-4 md:p-5">
+        <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+        <div class="min-w-0">
+          <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">{{ $trustLicAm }}</span><span data-lang-block="en">{{ $trustLicEn }}</span></div>
+          <div class="text-xs md:text-sm text-navy/60 dark:text-slate-300 leading-snug"><span data-lang-block="am">የባለሙያ አገልግሎት</span><span data-lang-block="en">Professional service</span></div>
+        </div>
+      </div>
+      @endif
+      @if($trustWeeklyDiscount > 0)
+      <div class="ms-card flex items-center gap-3 md:gap-4 p-4 md:p-5">
+        <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="badge-percent" class="w-5 h-5"></i></div>
+        <div class="min-w-0">
+          <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">እስከ {{ $trustWeeklyDiscount }}% ቅናሽ</span><span data-lang-block="en">Up to {{ $trustWeeklyDiscount }}% off</span></div>
+          <div class="text-xs md:text-sm text-navy/60 dark:text-slate-300 leading-snug"><span data-lang-block="am">ሳምንታዊ እቅዶች እና ተደጋጋሚ ኮንትራቶች</span><span data-lang-block="en">Weekly plans &amp; recurring contracts</span></div>
+        </div>
+      </div>
+      @endif
+    </div>
   </div>
 </section>
 
