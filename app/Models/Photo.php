@@ -22,12 +22,18 @@ class Photo extends Model
     public const STATUS_ADDED = 'added';
     public const STATUS_NOT_ADDED = 'not_added';
 
+    // R6: before/after pairs. Two rows share one pair_id; one is
+    // role 'before', the other 'after'. Null pair_id = not in a pair.
+    public const PAIR_ROLES = ['before', 'after'];
+
     protected $fillable = [
         'url',
         'title_en',
         'title_am',
         'section',
         'service_code',
+        'pair_id',
+        'role',
         'status',
         'sort_order',
     ];

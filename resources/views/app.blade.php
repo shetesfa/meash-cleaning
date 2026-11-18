@@ -9630,6 +9630,18 @@
                                     ${serviceOptions}
                                 </select>
                             </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">ከዚህ በፊት / በኋላ ጥንድ (Before/After pair name — same name on both photos, e.g. sofa-1)</label>
+                                <input type="text" name="pair_id" maxlength="64" placeholder="e.g. sofa-1 (leave empty if not a pair)" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የጥንዱ ሚና (Pair role)</label>
+                                <select name="role" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400 cursor-pointer">
+                                    <option value="">— Not in a pair —</option>
+                                    <option value="before">Before (ከዚህ በፊት)</option>
+                                    <option value="after">After (ከዚህ በኋላ)</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <button type="submit" id="btn-ph-upload" class="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-cyan-600/20 cursor-pointer">ፎቶ ጨምር (Add photo)</button>
@@ -9664,7 +9676,8 @@
             // other cards have — their step in the "How we deliver" strip.
             const categoryLine = photoSectionLabel(p.section)
                 + (p.service_code ? ' • ' + escapeHtml(p.service_code)
-                    : (p.section === 'feature' && typeof idxInSection === 'number' ? ' • Step ' + (idxInSection + 1) + ' (ደረጃ ' + (idxInSection + 1) + ')' : ''));
+                    : (p.section === 'feature' && typeof idxInSection === 'number' ? ' • Step ' + (idxInSection + 1) + ' (ደረጃ ' + (idxInSection + 1) + ')' : ''))
+                + (p.pair_id ? ' • Pair ' + escapeHtml(p.pair_id) + (p.role ? ' (' + (p.role === 'before' ? 'Before' : 'After') + ')' : '') : '');
             return '<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">'
                 + '<div class="relative"><img src="' + escapeHtml(p.src) + '" alt="' + escapeHtml(p.title_en || p.title_am || 'Photo') + '" class="w-full h-40 object-cover" loading="lazy">'
                 + '<span class="absolute top-2 left-2">' + badge + '</span></div>'
@@ -9673,6 +9686,15 @@
                 + '<input type="text" id="ph-cap-en-' + p.id + '" value="' + escapeHtml(p.title_en || '') + '" maxlength="255" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:border-cyan-400"></div>'
                 + '<div><label class="text-[10px] font-bold text-slate-400 block mb-0.5">Caption አማርኛ</label>'
                 + '<input type="text" id="ph-cap-am-' + p.id + '" value="' + escapeHtml(p.title_am || '') + '" maxlength="255" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:border-cyan-400"></div>'
+                + '<div class="grid grid-cols-2 gap-2">'
+                + '<div><label class="text-[10px] font-bold text-slate-400 block mb-0.5">Pair name</label>'
+                + '<input type="text" id="ph-pair-' + p.id + '" value="' + escapeHtml(p.pair_id || '') + '" maxlength="64" placeholder="e.g. sofa-1" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:border-cyan-400"></div>'
+                + '<div><label class="text-[10px] font-bold text-slate-400 block mb-0.5">Pair role</label>'
+                + '<select id="ph-role-' + p.id + '" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white text-xs focus:border-cyan-400 cursor-pointer">'
+                + '<option value=""' + (!p.role ? ' selected' : '') + '>— Not in a pair —</option>'
+                + '<option value="before"' + (p.role === 'before' ? ' selected' : '') + '>Before</option>'
+                + '<option value="after"' + (p.role === 'after' ? ' selected' : '') + '>After</option>'
+                + '</select></div></div>'
                 + '<p class="text-[11px] text-slate-500 font-semibold">' + categoryLine + '</p>'
                 + '<div class="flex flex-wrap gap-1.5 pt-1">'
                 + '<button type="button" onclick="savePhotoCaptions(' + p.id + ')" class="px-2.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[11px] rounded-lg cursor-pointer">Caption አስቀምጥ</button>'
@@ -9706,10 +9728,12 @@
         async function savePhotoCaptions(id) {
             const en = document.getElementById('ph-cap-en-' + id);
             const am = document.getElementById('ph-cap-am-' + id);
+            const pair = document.getElementById('ph-pair-' + id);
+            const role = document.getElementById('ph-role-' + id);
             try {
                 const res = await apiFetch('/api/admin/website/photos/' + id, {
                     method: 'PUT',
-                    body: JSON.stringify({ title_en: en ? en.value.trim() : null, title_am: am ? am.value.trim() : null })
+                    body: JSON.stringify({ title_en: en ? en.value.trim() : null, title_am: am ? am.value.trim() : null, pair_id: pair ? (pair.value.trim() || null) : null, role: role ? (role.value || null) : null })
                 });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.message || ('Save failed (' + res.status + ')'));

@@ -1098,6 +1098,33 @@
   .ms-gal-thumb.on { border-color: #3E8ECC; }
   .ms-gal-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   @media (max-width: 820px) { .ms-gal-stage { aspect-ratio: 4/3; } }
+  /* R6: on desktop the gallery is a masonry grid (same photos, same
+     lightbox — tap a tile to open it); the slider chrome (arrows, dots,
+     thumbs, counter) is hidden. Phones keep the slider. */
+  @media (min-width: 821px) {
+    .ms-gal-stage { aspect-ratio: auto; overflow: visible; background: transparent; box-shadow: none; border-radius: 0; cursor: default; column-count: 3; column-gap: 16px; }
+    .ms-gal-slide { position: relative; opacity: 1; pointer-events: auto; break-inside: avoid; margin: 0 0 16px; border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 8px 22px rgba(8,42,74,.10); }
+    .ms-gal-slide picture { height: auto; }
+    .ms-gal-slide img { height: auto; }
+    .ms-gal-nav, .ms-gal-count, .ms-gal-dots, .ms-gal-thumbs { display: none; }
+  }
+  /* R6: fix the empty gap under the gallery thumbnails on phones — the
+     section's bottom padding was stacking with the next section's top. */
+  @media (max-width: 820px) {
+    .ms-gal-sec { padding-bottom: 2.5rem; }
+    .ms-gal-thumbs { margin-top: 10px; padding-bottom: 0; }
+  }
+  /* R6: before/after comparison slider. */
+  .ms-ba { position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 22px rgba(8,42,74,.10); aspect-ratio: 16/10; background: #0d2c49; }
+  .ms-ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ms-ba .ms-ba-after { clip-path: inset(0 0 0 var(--ba-pos, 50%)); }
+  .ms-ba .ms-ba-tag { position: absolute; top: 12px; z-index: 2; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: rgba(3,14,25,.55); padding: 4px 10px; border-radius: 999px; }
+  .ms-ba .ms-ba-tag-before { left: 12px; }
+  .ms-ba .ms-ba-tag-after { right: 12px; }
+  .ms-ba .ms-ba-divider { position: absolute; top: 0; bottom: 0; left: var(--ba-pos, 50%); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.15); z-index: 2; pointer-events: none; }
+  .ms-ba .ms-ba-handle { position: absolute; top: 50%; left: var(--ba-pos, 50%); transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; background: #fff; color: #0F172A; display: grid; place-items: center; box-shadow: 0 4px 14px rgba(0,0,0,.35); z-index: 2; pointer-events: none; }
+  .ms-ba input[type="range"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; z-index: 3; margin: 0; -webkit-appearance: none; appearance: none; background: transparent; }
+  @media (max-width: 820px) { .ms-ba { aspect-ratio: 4/3; } }
   .ms-lb { position: fixed; inset: 0; z-index: 100; background: rgba(3,14,25,.93); display: none; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
   .ms-lb.open { display: flex; }
   .ms-lb picture { display: contents; }
@@ -1498,6 +1525,29 @@
     if (!isset($captionByFile[$row['file']])) {
       $captionByFile[$row['file']] = ['am' => $row['am'], 'en' => $row['en']];
     }
+  }
+  // R6: before/after pairs for the slider above the gallery. Two Photo
+  // rows share one pair_id (role before/after); a pair shows only when
+  // BOTH roles exist and both rows are Added. No pairs exist yet, so the
+  // block is hidden on first deploy.
+  $beforeAfterPairs = [];
+  try {
+    $pairRows = \App\Models\Photo::whereNotNull('pair_id')->where('pair_id', '!=', '')
+        ->where('status', \App\Models\Photo::STATUS_ADDED)
+        ->orderBy('sort_order')->get();
+    $pairGroups = [];
+    foreach ($pairRows as $prow) {
+      if (in_array($prow->role, ['before', 'after'], true)) {
+        $pairGroups[$prow->pair_id][$prow->role] = $prow;
+      }
+    }
+    foreach ($pairGroups as $pid => $roles) {
+      if (!empty($roles['before']) && !empty($roles['after'])) {
+        $beforeAfterPairs[] = ['id' => $pid, 'before' => $roles['before'], 'after' => $roles['after']];
+      }
+    }
+  } catch (\Throwable $e) {
+    $beforeAfterPairs = [];
   }
   // Responsive images: local gallery JPGs have -800.webp / -1600.webp
   // variants on disk (quality ~80). A local file renders as <picture>
@@ -2143,7 +2193,44 @@
 </section>
 
 <!-- ================= PROJECTS / GALLERY SECTION (BEFORE & AFTER) ================= -->
-<section id="gallery" class="ms-sec py-16 md:py-24 bg-white dark:bg-slate-900 border-b border-navy/10">
+@if(count($beforeAfterPairs) > 0)
+{{-- R6: before/after slider — only when at least one complete pair exists.
+     Pairs are created in admin (Photos): two photos, same pair name, one
+     role Before and one role After, both Added. Drag the handle to compare. --}}
+<section id="before-after" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900 border-b border-navy/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="max-w-2xl mb-10">
+      <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
+        <i data-lucide="repeat" class="w-3.5 h-3.5"></i>
+        <span data-lang-block="am">ከዚህ በፊት እና በኋላ</span><span data-lang-block="en">BEFORE &amp; AFTER</span>
+      </div>
+      <h2 class="ms-sec-title font-serif font-bold text-3xl sm:text-4xl text-navy leading-tight">
+        <span data-lang-block="am">ልዩነቱን እራስዎ ይመልከቱ</span>
+        <span data-lang-block="en">See the difference yourself</span>
+      </h2>
+      <p class="ms-sec-sub text-navy/70 text-sm sm:text-base mt-2">
+        <span data-lang-block="am">መንደሩን ይጎትቱ — ከዚህ በፊት እና ከዚህ በኋላ ያለውን ይወዳድሩ።</span>
+        <span data-lang-block="en">Drag the handle to compare before and after.</span>
+      </p>
+    </div>
+    <div class="grid md:grid-cols-2 gap-6">
+      @foreach($beforeAfterPairs as $pair)
+      <div class="ms-ba" style="--ba-pos: 50%">
+        <img src="{{ \App\Models\Photo::resolveUrl($pair['before']->url) }}" alt="{{ $pair['before']->title_en ?: $pair['before']->title_am ?: 'Before cleaning' }}" loading="lazy">
+        <img class="ms-ba-after" src="{{ \App\Models\Photo::resolveUrl($pair['after']->url) }}" alt="{{ $pair['after']->title_en ?: $pair['after']->title_am ?: 'After cleaning' }}" loading="lazy">
+        <span class="ms-ba-tag ms-ba-tag-before"><span data-lang-block="am">ከዚህ በፊት</span><span data-lang-block="en">Before</span></span>
+        <span class="ms-ba-tag ms-ba-tag-after"><span data-lang-block="am">ከዚህ በኋላ</span><span data-lang-block="en">After</span></span>
+        <span class="ms-ba-divider" aria-hidden="true"></span>
+        <span class="ms-ba-handle" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5-4 7 4 7"/><path d="m15 5 4 7-4 7"/></svg></span>
+        <input type="range" min="0" max="100" value="50" step="1" aria-label="Compare before and after" oninput="this.parentElement.style.setProperty('--ba-pos', this.value + '%')">
+      </div>
+      @endforeach
+    </div>
+  </div>
+</section>
+@endif
+
+<section id="gallery" class="ms-sec ms-gal-sec py-16 md:py-24 bg-white dark:bg-slate-900 border-b border-navy/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="flex flex-col md:flex-row md:items-end justify-between mb-14">
       <div>

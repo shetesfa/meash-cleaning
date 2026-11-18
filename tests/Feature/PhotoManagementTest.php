@@ -105,4 +105,39 @@ class PhotoManagementTest extends TestCase
         $this->assertSame($sharedUrl, $gallery->fresh()->url);
         $this->assertSame('Gallery caption', $gallery->fresh()->title_en);
     }
+
+    /**
+     * R6: before/after pair fields are stored on create, editable on
+     * update, and rejected when the role is not before/after.
+     */
+    public function test_pair_fields_store_update_and_validate(): void
+    {
+        $this->assertTrue(\Illuminate\Support\Facades\Schema::hasColumn('photos', 'pair_id'));
+        $this->assertTrue(\Illuminate\Support\Facades\Schema::hasColumn('photos', 'role'));
+
+        $res = $this->actingAs($this->owner)->postJson('/api/admin/website/photos', [
+            'url' => 'https://example.com/sofa-before.jpg',
+            'title_en' => 'Sofa before',
+            'section' => 'gallery',
+            'pair_id' => 'sofa-1',
+            'role' => 'before',
+        ]);
+        $res->assertStatus(201);
+        $this->assertDatabaseHas('photos', ['pair_id' => 'sofa-1', 'role' => 'before']);
+        $this->assertSame('sofa-1', $res->json('photo.pair_id'));
+        $this->assertSame('before', $res->json('photo.role'));
+
+        $photo = Photo::where('pair_id', 'sofa-1')->first();
+        $res = $this->actingAs($this->owner)->putJson('/api/admin/website/photos/' . $photo->id, [
+            'role' => 'after',
+        ]);
+        $res->assertStatus(200);
+        $this->assertSame('after', $photo->fresh()->role);
+        $this->assertSame('sofa-1', $photo->fresh()->pair_id);
+
+        $res = $this->actingAs($this->owner)->putJson('/api/admin/website/photos/' . $photo->id, [
+            'role' => 'sideways',
+        ]);
+        $res->assertStatus(422);
+    }
 }

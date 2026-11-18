@@ -54,6 +54,8 @@ class PhotoController extends Controller
             'title_am' => 'nullable|string|max:255',
             'section' => ['required', 'string', Rule::in(Photo::SECTIONS)],
             'service_code' => 'nullable|string|max:64',
+            'pair_id' => 'nullable|string|max:64',
+            'role' => ['nullable', 'string', Rule::in(Photo::PAIR_ROLES)],
             'status' => ['nullable', 'string', Rule::in([Photo::STATUS_ADDED, Photo::STATUS_NOT_ADDED])],
             'sort_order' => 'nullable|integer|min:0|max:1000',
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
@@ -96,6 +98,8 @@ class PhotoController extends Controller
             'title_am' => $validated['title_am'] ?? null,
             'section' => $validated['section'],
             'service_code' => $validated['service_code'] ?? null,
+            'pair_id' => $validated['pair_id'] ?? null,
+            'role' => $validated['role'] ?? null,
             'status' => $validated['status'] ?? Photo::STATUS_NOT_ADDED,
             'sort_order' => $validated['sort_order'] ?? (int) (Photo::where('section', $validated['section'])->max('sort_order') ?? -1) + 1,
         ]);
@@ -119,6 +123,8 @@ class PhotoController extends Controller
             'title_am' => 'nullable|string|max:255',
             'section' => ['nullable', 'string', Rule::in(Photo::SECTIONS)],
             'service_code' => 'nullable|string|max:64',
+            'pair_id' => 'nullable|string|max:64',
+            'role' => ['nullable', 'string', Rule::in(Photo::PAIR_ROLES)],
             'status' => ['nullable', 'string', Rule::in([Photo::STATUS_ADDED, Photo::STATUS_NOT_ADDED])],
             'sort_order' => 'nullable|integer|min:0|max:1000',
             'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
@@ -141,7 +147,7 @@ class PhotoController extends Controller
         // Only keys actually sent are changed — captions are never
         // wiped by an update that did not include them.
         $data = [];
-        foreach (['title_en', 'title_am', 'section', 'status', 'sort_order'] as $key) {
+        foreach (['title_en', 'title_am', 'section', 'status', 'sort_order', 'pair_id', 'role'] as $key) {
             if (array_key_exists($key, $validated)) {
                 $data[$key] = $validated[$key];
             }
@@ -292,6 +298,8 @@ class PhotoController extends Controller
             'title_am' => $photo->title_am,
             'section' => $photo->section,
             'service_code' => $photo->service_code,
+            'pair_id' => $photo->pair_id,
+            'role' => $photo->role,
             'status' => $photo->status,
             'sort_order' => $photo->sort_order,
             'created_at' => $photo->created_at?->toIso8601String(),

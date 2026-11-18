@@ -290,4 +290,62 @@ class RedesignTest extends TestCase
         $this->assertStringContainsString('hero.offsetHeight', $html);
         $this->assertStringContainsString('floating-hidden', $html);
     }
+
+    // R6: before/after block shows ONLY with a complete pair; the gallery
+    // is a masonry grid on desktop, and the phone thumb gap is tightened.
+    public function test_r6_before_after_block_only_with_complete_pair(): void
+    {
+        // No pairs in the data yet: the block stays hidden.
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $this->assertStringNotContainsString('id="before-after"', $res->getContent());
+
+        // A lone Before (no After) is not a pair: still hidden.
+        \App\Models\Photo::create([
+            'url' => '/images/gallery/sofa-carpet-steam.jpg', 'title_en' => 'Dirty sofa',
+            'section' => 'gallery', 'status' => 'added', 'sort_order' => 50,
+            'pair_id' => 'sofa-1', 'role' => 'before',
+        ]);
+        $res = $this->get('/');
+        $this->assertStringNotContainsString('id="before-after"', $res->getContent());
+
+        // The matching After completes the pair: the block renders.
+        \App\Models\Photo::create([
+            'url' => '/images/gallery/sofa-carpet.jpg', 'title_en' => 'Clean sofa',
+            'section' => 'gallery', 'status' => 'added', 'sort_order' => 51,
+            'pair_id' => 'sofa-1', 'role' => 'after',
+        ]);
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+        $this->assertStringContainsString('id="before-after"', $html);
+        $start = strpos($html, 'id="before-after"');
+        $end = strpos($html, 'id="gallery"', $start);
+        $block = substr($html, $start, $end - $start);
+        $this->assertStringContainsString('sofa-carpet-steam.jpg', $block);
+        $this->assertStringContainsString('sofa-carpet.jpg', $block);
+        $this->assertStringContainsString('Before', $block);
+        $this->assertStringContainsString('After', $block);
+        $this->assertStringContainsString('type="range"', $block);
+        $this->assertStringContainsString('ms-ba-divider', $block);
+        // The block sits directly above the gallery.
+        $this->assertStringContainsString('See the difference yourself', $block);
+    }
+
+    public function test_r6_masonry_gallery_and_phone_gap_fix(): void
+    {
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+        // Desktop masonry: 3 columns, slider chrome hidden; phones keep
+        // the slider (the masonry rules live inside min-width: 821px).
+        $this->assertStringContainsString('column-count: 3;', $html);
+        $this->assertStringContainsString('.ms-gal-nav, .ms-gal-count, .ms-gal-dots, .ms-gal-thumbs { display: none; }', $html);
+        // The lightbox wiring is untouched: tapping a tile still opens it.
+        $this->assertStringContainsString('openLb(i)', $html);
+        $this->assertStringContainsString('id="ms-lightbox"', $html);
+        // Phone gap fix: tighter bottom padding under the thumbnails.
+        $this->assertStringContainsString('.ms-gal-sec { padding-bottom: 2.5rem; }', $html);
+        $this->assertStringContainsString('ms-gal-sec', $html);
+    }
 }
