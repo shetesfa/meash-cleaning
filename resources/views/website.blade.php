@@ -203,21 +203,36 @@
 </script>
 
 <!-- Fonts & Minified Compiled CSS -->
+    <!-- Q1: preload the one Ethiopic font file the first screen needs
+         (font-1 covers weights 400-800 of the Ethiopic subset). -->
+    <link rel="preload" href="/fonts/font-1-f7346798.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/css/fonts.css">
     <link rel="stylesheet" href="/css/meash.css?v=20261117b">
 
     <!-- Self-Hosted Vendor Libraries -->
-    <script src="/vendor/lucide.min.js"></script>
-    <!-- Batch 11a (F8): vendored QR generator — the public-site QR codes
-         below are now rendered locally instead of api.qrserver.com -->
-    <script src="/vendor/qrcode-generator.min.js"></script>
+    <!-- Q1: lucide loads with defer so it no longer blocks the first paint.
+         Every createIcons() call is guarded (see Safety Fallbacks below)
+         and re-run on DOMContentLoaded, by which time the deferred
+         script has executed. -->
+    <script src="/vendor/lucide.min.js" defer></script>
+    <!-- Batch 11a (F8): vendored QR generator — NOT loaded up front any
+         more (Q1). It is injected once, lazily, when the contact QR codes
+         scroll into view (see renderSiteQrs below). -->
 
     <!-- Safety Fallbacks -->
     <script>
         if (typeof lucide === 'undefined') {
             window.lucide = { createIcons: function(){} };
-            console.warn('Lucide icon library not loaded; using fallback');
+            console.warn('Lucide icon library not loaded yet; icons render on DOMContentLoaded');
         }
+        // Q1: deferred scripts run before DOMContentLoaded, so the real
+        // lucide is available here. Re-render: any createIcons() call that
+        // ran while only the no-op stub existed did nothing.
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                try { window.lucide.createIcons(); } catch (e) { console.warn('Lucide re-render failed', e); }
+            }
+        });
     </script>
     <style>
   /* =====================================================================
@@ -2358,9 +2373,34 @@
 
 <!-- Batch 11a (F8): local QR generation with the vendored qrcode-generator
      (same pattern as the SMS Bridge QR in app.blade.php) — no third-party
-     call, no data leaves the browser. -->
+     call, no data leaves the browser.
+     Q1: the QR library is NOT loaded at page start. It is injected once,
+     lazily, when the contact QR codes are about to scroll into view
+     (IntersectionObserver); browsers without it fall back to loading on
+     DOMContentLoaded. The QR codes still render the same. -->
 <script>
   (function () {
+    var qrScriptLoading = false;
+    var qrQueue = [];
+    function ensureQrLib(cb) {
+      if (typeof qrcode !== 'undefined') { cb(); return; }
+      qrQueue.push(cb);
+      if (qrScriptLoading) return;
+      qrScriptLoading = true;
+      var s = document.createElement('script');
+      s.src = '/vendor/qrcode-generator.min.js';
+      s.onload = function () {
+        qrScriptLoading = false;
+        var q = qrQueue; qrQueue = [];
+        q.forEach(function (fn) { try { fn(); } catch (e) { console.error('QR render failed', e); } });
+      };
+      s.onerror = function () {
+        qrScriptLoading = false;
+        qrQueue = [];
+        console.error('QR library failed to load');
+      };
+      document.head.appendChild(s);
+    }
     function renderLocalQr(imgEl) {
       if (!imgEl || !imgEl.dataset.qr) return;
       if (typeof qrcode === 'undefined') {
@@ -2375,10 +2415,22 @@
       } catch (e) { console.error('QR generation failed', e); }
     }
     function renderSiteQrs() {
-      renderLocalQr(document.getElementById('qr-website'));
-      renderLocalQr(document.getElementById('qr-telegram'));
+      ensureQrLib(function () {
+        renderLocalQr(document.getElementById('qr-website'));
+        renderLocalQr(document.getElementById('qr-telegram'));
+      });
     }
-    if (document.readyState === 'loading') {
+    var qrImgs = [document.getElementById('qr-website'), document.getElementById('qr-telegram')]
+      .filter(function (el) { return !!el; });
+    if ('IntersectionObserver' in window && qrImgs.length) {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries.some(function (e) { return e.isIntersecting; })) {
+          io.disconnect();
+          renderSiteQrs();
+        }
+      }, { rootMargin: '200px' });
+      qrImgs.forEach(function (el) { io.observe(el); });
+    } else if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', renderSiteQrs);
     } else {
       renderSiteQrs();
