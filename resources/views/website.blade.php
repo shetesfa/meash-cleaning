@@ -1062,7 +1062,7 @@
       </span>
       <span class="hidden lg:flex items-center gap-1.5 text-teal-400 font-semibold">
         <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
-        <span>24/7 ፈጣን አገልግሎት • Active Service</span>
+        <span data-lang-block="am">ስልክ እና ቴሌግራም፦ ሰኞ–ቅዳሜ 2:00–12:00</span><span data-lang-block="en">Calls &amp; Telegram: Mon–Sat 8:00–18:00</span>
       </span>
     </div>
 
@@ -1548,7 +1548,7 @@
         </div>
 
         <div class="border-b border-white/10 pb-3">
-          <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ቀጥታ ስልክ መስመሮች (24/7)</span><span data-lang-block="en">Direct Hotlines</span></div>
+          <div class="text-xs text-white/60 mb-1"><span data-lang-block="am">ቀጥታ ስልክ መስመሮች</span><span data-lang-block="en">Direct Hotlines</span></div>
           <div class="flex flex-wrap gap-3 mt-1.5">
             <a href="tel:{{ $phone1 }}" class="font-bold text-white bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-lg transition flex items-center gap-2">
               <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone1 }}
@@ -1557,6 +1557,7 @@
               <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone2 }}
             </a>
           </div>
+          <p class="text-[11px] text-white/60 mt-2"><span data-lang-block="am">{{ $hoursAm }}</span><span data-lang-block="en">{{ $hoursEn }}</span></p>
         </div>
 
         <div class="border-b border-white/10 pb-3">
@@ -2527,7 +2528,7 @@
                 <i data-lucide="clock" class="w-3.5 h-3.5 text-teal"></i>
                 <span>የቀጠሮ ክፍለ ጊዜ (Time Slot &amp; Shifts)</span>
               </p>
-              <span class="text-[10px] text-teal-dark font-bold">24/7 ተለዋዋጭ ፈረቃዎች</span>
+              <span class="text-[10px] text-teal-dark font-bold"><span data-lang-block="am">ተለዋዋጭ ፈረቃዎች</span><span data-lang-block="en">Flexible shifts</span></span>
             </div>
             <div class="grid grid-cols-2 gap-2.5">
               <!-- 1. Morning -->
@@ -2808,7 +2809,7 @@
             <div class="w-10 h-10 rounded-xl bg-teal/10 text-teal-dark flex items-center justify-center mb-3">
               <i data-lucide="phone-call" class="w-5 h-5"></i>
             </div>
-            <h4 class="font-bold text-xs uppercase tracking-wider text-navy/50 dark:text-slate-400 mb-1"><span data-lang-block="am">ቀጥታ ስልክ መስመሮች (24/7)</span><span data-lang-block="en">Direct Hotlines</span></h4>
+            <h4 class="font-bold text-xs uppercase tracking-wider text-navy/50 dark:text-slate-400 mb-1"><span data-lang-block="am">ቀጥታ ስልክ መስመሮች</span><span data-lang-block="en">Direct Hotlines</span></h4>
             <a href="tel:{{ $phone1 }}" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition">{{ $phone1 }}</a>
             <a href="tel:{{ $phone2 }}" class="block font-bold text-base text-navy dark:text-white hover:text-teal transition mt-0.5">{{ $phone2 }}</a>
           </div>

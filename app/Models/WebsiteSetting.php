@@ -93,8 +93,12 @@ class WebsiteSetting extends Model
             'map_embed_url' => 'https://www.google.com/maps?q=Ayat+Square+Addis+Ababa&output=embed',
             'map_link_url' => 'https://maps.google.com/?q=Ayat+Square+Addis+Ababa',
             'social_handle' => '@meashcleaningsolution',
-            'working_hours_am' => 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)',
-            'working_hours_en' => 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday & Night Shift by Appointment)',
+            // Working hours — ONE source of truth (these two keys), reused
+            // everywhere on the site. No "24/7" anywhere: phones and
+            // Telegram are answered Mon-Sat 8:00-18:00; urgent requests by
+            // message anytime; night shift for companies by appointment.
+            'working_hours_am' => 'ስልክ እና ቴሌግራም፦ ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 ይመለሳል፤ አስቸኳይ ጥያቄዎች በመልእክት በማንኛውም ጊዜ። የሌሊት ፈረቃ ለድርጅቶች በቀጠሮ።',
+            'working_hours_en' => 'Calls and Telegram: answered Mon-Sat 8:00-18:00; urgent requests by message anytime. Night shift for companies by appointment.',
             'telegram_channel' => 'https://t.me/meashdeepcleanning',
             'telegram_support' => '@meashcleaning',
             'telegram_bot' => 'https://t.me/meash_cleaning_solution_bot',
