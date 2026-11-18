@@ -65,8 +65,11 @@ class SpeedOptimizationsTest extends TestCase
         $this->assertStringNotContainsString('/fonts/font-', $precache);
     }
 
-    // Q4: filemtime versions on local assets; no-cache on the HTML page.
-    public function test_q4_assets_are_filemtime_versioned_and_page_is_no_cache(): void
+    // Q4: filemtime versions on local assets. F5 changed the homepage
+    // HTML from no-cache to public, max-age=60: the page is identical
+    // for every visitor (no user data in it) and admin edits clear the
+    // server cache at once, so a 60s browser reuse is safe.
+    public function test_q4_assets_are_filemtime_versioned_and_page_is_public_cached(): void
     {
         $res = $this->get('/');
         $res->assertStatus(200);
@@ -76,7 +79,8 @@ class SpeedOptimizationsTest extends TestCase
         $this->assertMatchesRegularExpression('#/vendor/qrcode-generator\.min\.js\?v=\d+#', $html);
         // The font preload must stay unversioned so it matches fonts.css.
         $this->assertStringContainsString('<link rel="preload" href="/fonts/font-1-f7346798.woff2" as="font" type="font/woff2" crossorigin>', $html);
-        $this->assertStringContainsString('no-cache', $res->headers->get('Cache-Control') ?? '');
+        $this->assertStringContainsString('max-age=60', $res->headers->get('Cache-Control') ?? '');
+        $this->assertStringContainsString('public', $res->headers->get('Cache-Control') ?? '');
 
         $mini = $this->get('/telegram-miniapp');
         $mini->assertStatus(200);
@@ -86,15 +90,13 @@ class SpeedOptimizationsTest extends TestCase
         $this->assertMatchesRegularExpression('#/vendor/lucide\.min\.js\?v=\d+#', $miniHtml);
     }
 
-    // Q6: nginx headers agree with the PHP middleware (no X-XSS, strict
-    // Referrer-Policy). Note: docker/nginx.conf is NOT what serves the
-    // live Plesk site — the PHP middleware is the live source of truth.
-    public function test_q6_nginx_headers_match_middleware(): void
+    // Q6: security headers come from the PHP middleware only (no X-XSS,
+    // strict Referrer-Policy). F6 deleted the Render Docker nginx config
+    // (docker/nginx.conf) with the whole docker/ directory — the
+    // middleware is the only source of truth on the live Plesk site.
+    public function test_q6_security_headers_come_from_middleware_only(): void
     {
-        $nginx = file_get_contents(base_path('docker/nginx.conf'));
-        $this->assertStringNotContainsString('add_header X-XSS-Protection', $nginx);
-        $this->assertStringNotContainsString('no-referrer-when-downgrade', $nginx);
-        $this->assertStringContainsString('Referrer-Policy "strict-origin-when-cross-origin"', $nginx);
+        $this->assertDirectoryDoesNotExist(base_path('docker'));
 
         $middleware = file_get_contents(app_path('Http/Middleware/SecurityHeaders.php'));
         $this->assertStringContainsString("Referrer-Policy', 'strict-origin-when-cross-origin'", $middleware);
