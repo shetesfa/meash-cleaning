@@ -64,4 +64,25 @@ class SpeedOptimizationsTest extends TestCase
         $this->assertStringNotContainsString('lucide.min.js', $precache);
         $this->assertStringNotContainsString('/fonts/font-', $precache);
     }
+
+    // Q4: filemtime versions on local assets; no-cache on the HTML page.
+    public function test_q4_assets_are_filemtime_versioned_and_page_is_no_cache(): void
+    {
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+        $this->assertMatchesRegularExpression('#/css/fonts\.css\?v=\d+#', $html);
+        $this->assertMatchesRegularExpression('#/css/meash\.css\?v=\d+#', $html);
+        $this->assertMatchesRegularExpression('#/vendor/qrcode-generator\.min\.js\?v=\d+#', $html);
+        // The font preload must stay unversioned so it matches fonts.css.
+        $this->assertStringContainsString('<link rel="preload" href="/fonts/font-1-f7346798.woff2" as="font" type="font/woff2" crossorigin>', $html);
+        $this->assertStringContainsString('no-cache', $res->headers->get('Cache-Control') ?? '');
+
+        $mini = $this->get('/telegram-miniapp');
+        $mini->assertStatus(200);
+        $miniHtml = $mini->getContent();
+        $this->assertMatchesRegularExpression('#/css/fonts\.css\?v=\d+#', $miniHtml);
+        $this->assertMatchesRegularExpression('#/css/meash\.css\?v=\d+#', $miniHtml);
+        $this->assertMatchesRegularExpression('#/vendor/lucide\.min\.js\?v=\d+#', $miniHtml);
+    }
 }

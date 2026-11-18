@@ -204,10 +204,16 @@
 
 <!-- Fonts & Minified Compiled CSS -->
     <!-- Q1: preload the one Ethiopic font file the first screen needs
-         (font-1 covers weights 400-800 of the Ethiopic subset). -->
+         (font-1 covers weights 400-800 of the Ethiopic subset).
+         Q4: NOT versioned on purpose — fonts.css references this exact
+         URL, and the preload only shares the download when the URLs
+         match byte for byte. The filename already carries a content
+         hash, so it is immutable. -->
     <link rel="preload" href="/fonts/font-1-f7346798.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="/css/fonts.css">
-    <link rel="stylesheet" href="/css/meash.css?v=20261117b">
+    <!-- Q4: filemtime() versions — the URL changes whenever the file
+         changes, so the 30-day cache never serves a stale file. -->
+    <link rel="stylesheet" href="/css/fonts.css?v={{ filemtime(public_path('css/fonts.css')) }}">
+    <link rel="stylesheet" href="/css/meash.css?v={{ filemtime(public_path('css/meash.css')) }}">
 
     <!-- Self-Hosted Vendor Libraries -->
     <!-- Q2: the public page no longer loads the full 359 KB lucide.min.js.
@@ -2411,7 +2417,7 @@
       if (qrScriptLoading) return;
       qrScriptLoading = true;
       var s = document.createElement('script');
-      s.src = '/vendor/qrcode-generator.min.js';
+      s.src = '/vendor/qrcode-generator.min.js?v={{ filemtime(public_path('vendor/qrcode-generator.min.js')) }}';
       s.onload = function () {
         qrScriptLoading = false;
         var q = qrQueue; qrQueue = [];

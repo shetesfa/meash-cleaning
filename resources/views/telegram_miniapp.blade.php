@@ -85,11 +85,13 @@
   </script>
 
   <!-- Fonts & Minified Compiled CSS -->
-  <link rel="stylesheet" href="/css/fonts.css">
-  <link rel="stylesheet" href="/css/meash.css">
+  <!-- Q4: filemtime() versions — the URL changes whenever the file
+       changes, so the 30-day cache never serves a stale file. -->
+  <link rel="stylesheet" href="/css/fonts.css?v={{ filemtime(public_path('css/fonts.css')) }}">
+  <link rel="stylesheet" href="/css/meash.css?v={{ filemtime(public_path('css/meash.css')) }}">
 
   <!-- Self-Hosted Vendor Libraries -->
-  <script src="/vendor/lucide.min.js"></script>
+  <script src="/vendor/lucide.min.js?v={{ filemtime(public_path('vendor/lucide.min.js')) }}"></script>
 
   <!-- Safety Fallbacks -->
   <script>

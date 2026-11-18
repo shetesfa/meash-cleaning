@@ -9,8 +9,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 // 1. Public Customer Website & 7-Step Booking Wizard
+// Q4: Cache-Control: no-cache on the HTML page so customers always get
+// the newest page (assets themselves keep the 30-day cache and are
+// versioned with filemtime, so only the HTML is re-fetched).
 Route::get('/', function () {
-    return view('website');
+    return response()->view('website')->header('Cache-Control', 'no-cache');
 });
 
 // 2. Telegram Mini App (TMA embedded webapp)
