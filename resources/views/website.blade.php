@@ -210,28 +210,49 @@
     <link rel="stylesheet" href="/css/meash.css?v=20261117b">
 
     <!-- Self-Hosted Vendor Libraries -->
-    <!-- Q1: lucide loads with defer so it no longer blocks the first paint.
-         Every createIcons() call is guarded (see Safety Fallbacks below)
-         and re-run on DOMContentLoaded, by which time the deferred
-         script has executed. -->
-    <script src="/vendor/lucide.min.js" defer></script>
-    <!-- Batch 11a (F8): vendored QR generator — NOT loaded up front any
-         more (Q1). It is injected once, lazily, when the contact QR codes
-         scroll into view (see renderSiteQrs below). -->
-
-    <!-- Safety Fallbacks -->
+    <!-- Q2: the public page no longer loads the full 359 KB lucide.min.js.
+         Only the 66 icons it uses (59 static + 7 dynamic service/wizard
+         icons) live in an inline SVG sprite (partials/lucide-sprite,
+         included right after <body>). This tiny shim keeps the same
+         window.lucide.createIcons() API every existing call site uses,
+         so icons render exactly as before. /app still loads the full
+         library. If a service icon is ever set to a name outside the
+         sprite, it is skipped and a warning is logged — regenerate the
+         sprite with scripts/build-lucide-sprite.cjs. -->
     <script>
-        if (typeof lucide === 'undefined') {
-            window.lucide = { createIcons: function(){} };
-            console.warn('Lucide icon library not loaded yet; icons render on DOMContentLoaded');
-        }
-        // Q1: deferred scripts run before DOMContentLoaded, so the real
-        // lucide is available here. Re-render: any createIcons() call that
-        // ran while only the no-op stub existed did nothing.
-        document.addEventListener('DOMContentLoaded', function () {
-            if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                try { window.lucide.createIcons(); } catch (e) { console.warn('Lucide re-render failed', e); }
+        window.lucide = {
+            createIcons: function () {
+                document.querySelectorAll('[data-lucide]').forEach(function (el) {
+                    if (el.tagName.toLowerCase() === 'svg') return; // already rendered
+                    var name = el.getAttribute('data-lucide');
+                    if (!document.getElementById('lucide-' + name)) {
+                        console.warn('Lucide icon not in sprite, skipped:', name);
+                        return;
+                    }
+                    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                    svg.setAttribute('width', '24');
+                    svg.setAttribute('height', '24');
+                    svg.setAttribute('viewBox', '0 0 24 24');
+                    svg.setAttribute('fill', 'none');
+                    svg.setAttribute('stroke', 'currentColor');
+                    svg.setAttribute('stroke-width', '2');
+                    svg.setAttribute('stroke-linecap', 'round');
+                    svg.setAttribute('stroke-linejoin', 'round');
+                    Array.prototype.slice.call(el.attributes).forEach(function (a) {
+                        svg.setAttribute(a.name, a.value);
+                    });
+                    var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+                    use.setAttribute('href', '#lucide-' + name);
+                    svg.appendChild(use);
+                    el.replaceWith(svg);
+                });
             }
+        };
+        // Re-run once the document is parsed: any icon added before the
+        // sprite itself was parsed is covered here.
+        document.addEventListener('DOMContentLoaded', function () {
+            try { window.lucide.createIcons(); } catch (e) { console.warn('Lucide sprite re-render failed', e); }
         });
     </script>
     <style>
@@ -1085,6 +1106,8 @@
 </style>
 </head>
 <body id="top" class="antialiased">
+    {{-- Q2: inline SVG sprite with the 66 icons the public page uses. --}}
+    @include('partials.lucide-sprite')
 
 <!-- ================= TOP ANNOUNCEMENT & HOTLINE BAR (Desktop/Tablet) ================= -->
 <div class="hidden md:block bg-[#070D18] text-slate-300 text-[11px] font-medium border-b border-white/10 relative z-50">
