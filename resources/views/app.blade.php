@@ -9591,7 +9591,7 @@
 
                     ${cmsPhotosCloudinary
                         ? '<p class="text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-xl px-3.5 py-2.5">Cloudinary ተገናኝቷል — ፎቶ መጫን ይቻላል።</p>'
-                        : '<p class="text-xs font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 rounded-xl px-3.5 py-2.5">Test mode — ፎቶዎች በዚህ ሰርቨር ላይ ይቀመጣሉ (Render ላይ redeploy ሲደረግ ይጠፋሉ፤ Plesk ላይ ይቆያሉ)። Cloudinary በኋላ መጨመር ይቻላል።</p>'}
+                        : '<p class="text-xs font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 rounded-xl px-3.5 py-2.5">Test mode — ፎቶዎች በዚህ ሰርቨር ላይ ይቀመጣሉ (Plesk ላይ ይቆያሉ)። Cloudinary በኋላ መጨመር ይቻላል።</p>'}
 
                     <!-- Upload control -->
                     <form id="ph-upload-form" onsubmit="uploadNewPhoto(event)" class="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-xl">

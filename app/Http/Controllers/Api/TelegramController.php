@@ -3302,7 +3302,7 @@ class TelegramController extends Controller
   /**
    * Register or reset Webhook with Telegram
    */
-  public function setRenderWebhook(Request $request): JsonResponse
+  public function setTelegramWebhook(Request $request): JsonResponse
   {
     if ($request->filled('token')) {
       $newToken = trim($request->input('token'));

@@ -6,15 +6,23 @@
   $timeSlots = [];
   $pricingRules = [];
   try {
-    if (\Illuminate\Support\Facades\Schema::hasTable('services')) {
-      $activeServices = \App\Models\Service::where('is_active', true)->orderBy('sort_order')->get();
-    }
-    if (\Illuminate\Support\Facades\Schema::hasTable('website_settings')) {
-      $websiteSettings = \App\Models\WebsiteSetting::getPublicKeyValue();
-      $subcities = \App\Models\WebsiteSetting::getJson('subcities', []);
-      $timeSlots = \App\Models\WebsiteSetting::getJson('time_slots', []);
-      $pricingRules = \App\Models\WebsiteSetting::getJson('pricing_rules', []);
-    }
+    // F5: no table-existence checks on the request path — each one was
+    // a query on every visit, and the tables exist once migrated. The
+    // try/catch below is the guard for a pre-migration state.
+    // Homepage data comes from 5-minute caches (see the models):
+    // one settings array, the active services, the added photos.
+    $activeServices = \App\Models\Service::activeForHomepage();
+    $websiteSettings = \App\Models\WebsiteSetting::getPublicKeyValue();
+    // F5: these three used to be one query each (getJson -> getVal).
+    // They already live in the cached settings array above (as JSON
+    // strings, from defaults or the DB), so decode them here instead.
+    $jsonSetting = function ($key) use ($websiteSettings) {
+      $decoded = json_decode($websiteSettings[$key] ?? '', true);
+      return is_array($decoded) ? $decoded : [];
+    };
+    $subcities = $jsonSetting('subcities');
+    $timeSlots = $jsonSetting('time_slots');
+    $pricingRules = $jsonSetting('pricing_rules');
   } catch (\Throwable $e) {
     // Graceful fallback for pre-migration or isolated test runs
   }
@@ -78,11 +86,14 @@
   // row is missing, so the header/footer can never break.
   $logoSrc = '/logo.jpg';
   try {
-    if (\Illuminate\Support\Facades\Schema::hasTable('photos')) {
-      $logoRow = \App\Models\Photo::where('section', 'logo')->where('status', 'added')->orderBy('sort_order')->orderBy('id')->first();
-      if ($logoRow && !empty($logoRow->url)) {
-        $logoSrc = \App\Models\Photo::resolveUrl($logoRow->url);
-      }
+    // F5: the logo comes from the same cached photo collection the
+    // gallery below uses — no extra query, no hasTable check. Keep the
+    // collection in $homepagePhotos so the gallery + pairs blocks
+    // below reuse it instead of hitting the cache store again.
+    $homepagePhotos = \App\Models\Photo::homepagePhotos();
+    $logoRow = $homepagePhotos->firstWhere('section', 'logo');
+    if ($logoRow && !empty($logoRow->url)) {
+      $logoSrc = \App\Models\Photo::resolveUrl($logoRow->url);
     }
   } catch (\Throwable $e) {
     // Fallback /logo.jpg stays.
@@ -220,7 +231,7 @@
 
     <!-- Self-Hosted Vendor Libraries -->
     <!-- Q2: the public page no longer loads the full 359 KB lucide.min.js.
-         Only the 66 icons it uses (59 static + 7 dynamic service/wizard
+         Only the 67 icons it uses (60 static + 7 dynamic service/wizard
          icons) live in an inline SVG sprite (partials/lucide-sprite,
          included right after <body>). This tiny shim keeps the same
          window.lucide.createIcons() API every existing call site uses,
@@ -1152,6 +1163,12 @@
   #sticky-bottom-bar { transform: translateY(110%); transition: transform .3s ease; }
   #sticky-bottom-bar.ms-bar-visible { transform: none; }
   #sticky-bottom-bar.ms-bar-hidden { transform: translateY(110%); }
+  /* F4: the fixed sticky bar is ~64px tall on phones and would cover the
+     footer / last form fields. Give the page that much bottom breathing
+     room on phones only (the bar is md:hidden, so no padding on desktop). */
+  @media (max-width: 767px) {
+    body { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+  }
 
   /* Q9: inputs must be at least 16px on phones, or iPhones zoom in
      when the field is focused. */
@@ -1222,7 +1239,7 @@
 </style>
 </head>
 <body id="top" class="antialiased">
-    {{-- Q2: inline SVG sprite with the 66 icons the public page uses. --}}
+    {{-- Q2: inline SVG sprite with the 67 icons the public page uses. --}}
     @include('partials.lucide-sprite')
 
 <!-- ================= TOP ANNOUNCEMENT & HOTLINE BAR (Desktop/Tablet) ================= -->
@@ -1475,7 +1492,9 @@
   $featurePhotos = $fallbackFeaturePhotos;
   $galleryByFile = collect($galleryPhotos)->keyBy('file');
   try {
-    $dbPhotos = \App\Models\Photo::where('status', 'added')->orderBy('sort_order')->orderBy('id')->get();
+    // F5: reuse the cached collection from the logo block above
+    // (falls back to one cached query if that block was skipped).
+    $dbPhotos = $homepagePhotos ?? \App\Models\Photo::homepagePhotos();
     if ($dbPhotos && $dbPhotos->count() > 0) {
       $hero = $dbPhotos->where('section', 'hero')->values();
       if ($hero->count() > 0) {
@@ -1558,9 +1577,12 @@
   // block is hidden on first deploy.
   $beforeAfterPairs = [];
   try {
-    $pairRows = \App\Models\Photo::whereNotNull('pair_id')->where('pair_id', '!=', '')
-        ->where('status', \App\Models\Photo::STATUS_ADDED)
-        ->orderBy('sort_order')->get();
+    // F5: pairs are filtered from the same cached photo collection
+    // (added rows, sort_order/id order — same set and order as the old
+    // pair_id query, with a deterministic id tiebreak).
+    $pairRows = ($homepagePhotos ?? \App\Models\Photo::homepagePhotos())->filter(function ($p) {
+      return !empty($p->pair_id);
+    })->values();
     $pairGroups = [];
     foreach ($pairRows as $prow) {
       if (in_array($prow->role, ['before', 'after'], true)) {
@@ -1727,7 +1749,10 @@
         </div>
       </div>
       @php $floorSvc = $activeServices->firstWhere('code', 'floor_ceramic'); @endphp
-      <div class="hidden md:flex absolute -bottom-5 left-5 items-center gap-3 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-navy/10 px-4 py-3 z-10">
+      {{-- F4: the price card sits in normal flow BELOW the slider panel.
+           It used to be absolute -bottom-5 over the panel and covered the
+           slider arrows and dots on desktop. --}}
+      <div class="hidden md:flex mt-4 items-center gap-3 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-navy/10 px-4 py-3">
         <div class="w-10 h-10 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="sparkles" class="w-5 h-5"></i></div>
         <div class="leading-tight">
           <div class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">ከ {{ number_format($floorSvc?->base_price ?? 60) }} ETB / ካሬ ሜትር ጀምሮ</span><span data-lang-block="en">From {{ number_format($floorSvc?->base_price ?? 60) }} ETB/sqm</span></div>
@@ -1771,7 +1796,10 @@
       <div class="ms-card ms-fade-up flex items-center gap-3 md:gap-4 p-4 md:p-5">
         <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="clock" class="w-5 h-5"></i></div>
         <div class="min-w-0">
-          <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">{{ $trustHoursAm }}</span><span data-lang-block="en">{{ $trustHoursEn }}</span></div>
+          {{-- F4: lg:whitespace-nowrap keeps "Mon–Sat 8:00–18:00" on one line
+               on desktop (it wrapped mid-time before). The grid is already
+               equal-width (grid-cols-2 lg:grid-cols-4). --}}
+          <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white lg:whitespace-nowrap"><span data-lang-block="am">{{ $trustHoursAm }}</span><span data-lang-block="en">{{ $trustHoursEn }}</span></div>
           <div class="text-xs md:text-sm text-navy/60 dark:text-slate-300 leading-snug"><span data-lang-block="am">የስራ ሰዓት</span><span data-lang-block="en">Working hours</span></div>
         </div>
       </div>
@@ -1936,12 +1964,12 @@
   </div>
 
   @php $svcByCode = $activeServices->keyBy('code'); @endphp
-  {-- R4: Commercial + Core Services merged into ONE section with tabs.
+  {{-- R4: Commercial + Core Services merged into ONE section with tabs.
        Business = the 6 commercial sectors (photos + prices from the mapped
        real service — the old fake codes office/hotel_clean/restaurant_clean/
        hall_chair_clean fell back to service 1; the Book buttons now preselect
        the real service). Home = the 6 DB services. #commercial stays as an
-       anchor above so old links land here on the Business tab. --}
+       anchor above so old links land here on the Business tab. --}}
   <div class="flex flex-wrap gap-2 mb-8" role="tablist" aria-label="Service categories">
     <button type="button" role="tab" aria-selected="true" data-service-tab="business" onclick="showServiceTab('business')" class="ms-tab-btn"><i data-lucide="building-2" class="w-5 h-5"></i><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></button>
     <button type="button" role="tab" aria-selected="false" data-service-tab="home" onclick="showServiceTab('home')" class="ms-tab-btn"><i data-lucide="home" class="w-5 h-5"></i><span data-lang-block="am">ለቤት</span><span data-lang-block="en">Home</span></button>
@@ -4102,20 +4130,28 @@
     }
   }
 
+  // F1: single place that closes the reschedule modal and refreshes the
+  // floating-button / sticky-bar state. The R5 observer no longer watches
+  // the whole document, so backdrop open/close must notify it explicitly.
+  function closeWebReschedule() {
+    document.getElementById('web-reschedule-backdrop')?.remove();
+    if (window.meashFabRefresh) window.meashFabRefresh();
+  }
+
   function openWebRescheduleModal(orderNumber) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
     const modalHtml = `
-      <div id="web-reschedule-backdrop" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto" onclick="if(event.target === this) this.remove()">
+      <div id="web-reschedule-backdrop" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto" onclick="if(event.target === this) closeWebReschedule()">
         <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 shadow-2xl space-y-4 my-auto border border-navy/10">
           <div class="flex items-center justify-between pb-3 border-b border-navy/10">
             <div class="flex items-center gap-2">
               <i data-lucide="calendar-clock" class="w-5 h-5 text-teal"></i>
               <h3 class="font-bold text-navy dark:text-white text-sm">ቀጠሮ ቀን ማስተላለፊያ (Reschedule Service)</h3>
             </div>
-            <button onclick="document.getElementById('web-reschedule-backdrop').remove()" class="text-navy/40 hover:text-navy text-lg font-bold min-w-[44px] min-h-[44px] flex items-center justify-center">&times;</button>
+            <button onclick="closeWebReschedule()" class="text-navy/40 hover:text-navy text-lg font-bold min-w-[44px] min-h-[44px] flex items-center justify-center">&times;</button>
           </div>
           <form onsubmit="submitWebReschedule(event, '${orderNumber}')" class="space-y-3 text-xs">
             <div>
@@ -4145,7 +4181,7 @@
             </div>
             <div id="resched-status-msg" class="hidden my-2"></div>
             <div class="flex justify-end gap-2 pt-2 border-t border-navy/10 sticky bottom-0 bg-white dark:bg-slate-900 pb-1">
-              <button type="button" onclick="document.getElementById('web-reschedule-backdrop').remove()" class="px-4 py-2 border border-navy/20 rounded-lg text-navy dark:text-white font-bold cursor-pointer">ሰርዝ</button>
+              <button type="button" onclick="closeWebReschedule()" class="px-4 py-2 border border-navy/20 rounded-lg text-navy dark:text-white font-bold cursor-pointer">ሰርዝ</button>
               <button type="submit" id="btn-submit-resched" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold rounded-lg shadow cursor-pointer">ቀጠሮ አስተላልፍ</button>
             </div>
           </form>
@@ -4154,6 +4190,8 @@
     `;
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     if (window.lucide) lucide.createIcons();
+    // F1: the backdrop is in the DOM now — refresh the fab/bar modal state.
+    if (window.meashFabRefresh) window.meashFabRefresh();
   }
 
   async function submitWebReschedule(e, orderNumber) {
@@ -4185,7 +4223,7 @@
           msgEl.classList.remove('hidden');
         }
         setTimeout(() => {
-          document.getElementById('web-reschedule-backdrop')?.remove();
+          closeWebReschedule();
           // re-run track
           const trackIn = document.getElementById('track-input');
           if (trackIn) {
@@ -4919,7 +4957,7 @@
         if (res.status === 429) {
           errorMsg = 'በርካታ ሙከራዎች ተደርገዋል፤ እባክዎ ጥቂት ደቂቃ ቆይተው እንደገና ይሞክሩ።';
         } else if (res.status >= 500) {
-          errorMsg = 'ሰርቨሩ በመነሳት ላይ ነው (Render Cold Start)፤ እባክዎ ከ20-30 ሰከንድ በኋላ እንደገና ይሞክሩ።';
+          errorMsg = 'ሰርቨሩ በመነሳት ላይ ነው፤ እባክዎ ከ20-30 ሰከንድ በኋላ እንደገና ይሞክሩ።';
         } else if (data && data.errors && typeof data.errors === 'object') {
           const rawErr = Object.values(data.errors).flat().join(' ');
           errorMsg = rawErr.includes('credentials') ? 'የተሳሳተ የይለፍ ቃል ወይም ተጠቃሚ አልተገኘም!' : rawErr;
@@ -5316,12 +5354,19 @@
       if (nav && !nav.classList.contains('hidden')) return true;
       return false;
     }
+    // F1: idempotent class setter — only touches the DOM when the state
+    // actually needs to change, so apply() can never re-trigger an observer.
+    function setCls(el, cls, on) {
+      if (!el) return;
+      if (on) { if (!el.classList.contains(cls)) el.classList.add(cls); }
+      else if (el.classList.contains(cls)) { el.classList.remove(cls); }
+    }
     function apply() {
       var show = pastHero && !onBook && !modalOpen;
-      fab.classList.toggle('ms-fab-visible', show);
-      fab.classList.toggle('floating-hidden', modalOpen || onBook);
-      bar.classList.toggle('ms-bar-visible', show);
-      bar.classList.toggle('ms-bar-hidden', !show);
+      setCls(fab, 'ms-fab-visible', show);
+      setCls(fab, 'floating-hidden', modalOpen || onBook);
+      setCls(bar, 'ms-bar-visible', show);
+      setCls(bar, 'ms-bar-hidden', !show);
       if (!show) closeMenu();
     }
     function onScroll() {
@@ -5330,8 +5375,9 @@
       apply();
     }
     function closeMenu() {
-      fab.classList.remove('ms-fab-open');
-      if (toggle) toggle.setAttribute('aria-expanded', 'false');
+      // F1: idempotent — only touch the DOM when something really changes.
+      if (fab.classList.contains('ms-fab-open')) fab.classList.remove('ms-fab-open');
+      if (toggle && toggle.getAttribute('aria-expanded') !== 'false') toggle.setAttribute('aria-expanded', 'false');
     }
     if (toggle) {
       toggle.addEventListener('click', function (e) {
@@ -5358,7 +5404,35 @@
     window.addEventListener('scroll', function () {
       if (!ticking) { window.requestAnimationFrame(function () { onScroll(); ticking = false; }); ticking = true; }
     }, { passive: true });
-    new MutationObserver(function () { modalOpen = anyModalOpen(); apply(); }).observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+    // F1: refresh the modal state, but only apply() when it really changed.
+    function refreshModalState() {
+      var m = anyModalOpen();
+      if (m !== modalOpen) { modalOpen = m; apply(); }
+    }
+    // F1: observe ONLY the modal elements — never the whole document.body.
+    // The old observer watched body with { attributes, childList, subtree },
+    // so every class/DOM change on the page (fade-up reveals, slider and
+    // gallery autoplay, count-up, wizard steps) re-ran apply(), and apply()
+    // itself changes classes on #floating-actions / #sticky-bottom-bar
+    // inside body — a self-feeding observer loop that froze the tab.
+    // Modal open/close only ever changes the class of one of these elements,
+    // so watching them (class attribute only, no subtree) is all that is
+    // needed. The reschedule backdrop (#web-reschedule-backdrop) is inserted
+    // into the DOM later by openWebRescheduleModal() and removed by
+    // closeWebReschedule(), which both call window.meashFabRefresh below —
+    // it is never observed, so no body-wide observation is needed for it.
+    var modalTargets = [];
+    ['staff-auth-modal', 'mobile-nav-drawer'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) modalTargets.push(el);
+    });
+    var lbEl = document.querySelector('.ms-lb');
+    if (lbEl) modalTargets.push(lbEl);
+    var modalObserver = new MutationObserver(refreshModalState);
+    modalTargets.forEach(function (el) {
+      modalObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+    window.meashFabRefresh = refreshModalState;
     onScroll();
   })();
 </script>
