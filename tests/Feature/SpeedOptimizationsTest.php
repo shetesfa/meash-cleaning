@@ -100,4 +100,18 @@ class SpeedOptimizationsTest extends TestCase
         $this->assertStringContainsString("Referrer-Policy', 'strict-origin-when-cross-origin'", $middleware);
         $this->assertStringNotContainsString("headers->set('X-XSS-Protection'", $middleware);
     }
+
+    // Q7: no unreadably small text on the public page. All 9px/10px gone;
+    // only the 6 allowed 11px spots remain (2 logo taglines + 4 badges).
+    public function test_q7_no_tiny_text_on_public_page(): void
+    {
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+        $this->assertStringNotContainsString('text-[9px]', $html);
+        $this->assertStringNotContainsString('text-[10px]', $html);
+        $this->assertEquals(6, substr_count($html, 'text-[11px]'));
+        $this->assertStringContainsString('Verified Paid', $html);
+        $this->assertStringContainsString('PAID', $html);
+    }
 }
