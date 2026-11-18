@@ -85,4 +85,19 @@ class SpeedOptimizationsTest extends TestCase
         $this->assertMatchesRegularExpression('#/css/meash\.css\?v=\d+#', $miniHtml);
         $this->assertMatchesRegularExpression('#/vendor/lucide\.min\.js\?v=\d+#', $miniHtml);
     }
+
+    // Q6: nginx headers agree with the PHP middleware (no X-XSS, strict
+    // Referrer-Policy). Note: docker/nginx.conf is NOT what serves the
+    // live Plesk site — the PHP middleware is the live source of truth.
+    public function test_q6_nginx_headers_match_middleware(): void
+    {
+        $nginx = file_get_contents(base_path('docker/nginx.conf'));
+        $this->assertStringNotContainsString('add_header X-XSS-Protection', $nginx);
+        $this->assertStringNotContainsString('no-referrer-when-downgrade', $nginx);
+        $this->assertStringContainsString('Referrer-Policy "strict-origin-when-cross-origin"', $nginx);
+
+        $middleware = file_get_contents(app_path('Http/Middleware/SecurityHeaders.php'));
+        $this->assertStringContainsString("Referrer-Policy', 'strict-origin-when-cross-origin'", $middleware);
+        $this->assertStringNotContainsString("headers->set('X-XSS-Protection'", $middleware);
+    }
 }
