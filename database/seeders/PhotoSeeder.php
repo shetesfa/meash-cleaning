@@ -60,7 +60,7 @@ class PhotoSeeder extends Seeder
         // Feature strip (3-step "How we deliver") photos, with the live
         // alt texts as their titles.
         $featurePhotos = [
-            ['file' => 'facade-scaffold.jpg', 'am' => 'የመስታወት ጽዳት መፍትሔ የሚያዘጋጅ የሜሽ ሰራተኛ', 'en' => 'Meash cleaner preparing glass-cleaning solution'],
+            ['file' => 'facade-scaffold.jpg', 'am' => 'ሰራተኞች ከስካፎልድ ላይ የሕንፃ መስታወት እያጸዱ', 'en' => 'Cleaners washing a glass facade from scaffolding'],
             ['file' => 'office-cleaning.jpg', 'am' => 'የሜሽ ቡድን በቢሮ ውስጥ እየሰራ', 'en' => 'Meash team at work in an office'],
             ['file' => 'villa-carpet.jpg', 'am' => 'በብሩህ የሆቴል ላውንጅ ውስጥ አዲስ የታጠበ ካርፔት', 'en' => 'Freshly shampooed carpet in a bright hotel lounge'],
         ];

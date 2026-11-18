@@ -1297,7 +1297,7 @@
   $fallbackGalleryOrder = ['office-cleaning.jpg', 'villa-carpet.jpg', 'sofa-steam.jpg', 'rope-access.jpg', 'facade-scaffold.jpg', 'living-room.jpg', 'hotel-restaurant.jpg', 'office-polisher.jpg', 'bedroom.jpg', 'bathroom.jpg', 'sofa-carpet-steam.jpg', 'windows-ladder.jpg', 'post-construction.jpg', 'kitchen.jpg'];
   // Feature strip (3-step "How we deliver") fallback photos.
   $fallbackFeaturePhotos = [
-    ['file' => 'facade-scaffold.jpg', 'am' => 'የመስታወት ጽዳት መፍትሔ የሚያዘጋጅ የሜሽ ሰራተኛ', 'en' => 'Meash cleaner preparing glass-cleaning solution'],
+    ['file' => 'facade-scaffold.jpg', 'am' => 'ሰራተኞች ከስካፎልድ ላይ የሕንፃ መስታወት እያጸዱ', 'en' => 'Cleaners washing a glass facade from scaffolding'],
     ['file' => 'office-cleaning.jpg', 'am' => 'የሜሽ ቡድን በቢሮ ውስጥ እየሰራ', 'en' => 'Meash team at work in an office'],
     ['file' => 'villa-carpet.jpg', 'am' => 'በብሩህ የሆቴል ላውንጅ ውስጥ አዲስ የታጠበ ካርፔት', 'en' => 'Freshly shampooed carpet in a bright hotel lounge'],
   ];
@@ -1367,6 +1367,26 @@
   foreach ($galleryOrder as $gfile) {
     if (!isset($galleryByFile[$gfile])) {
       $galleryByFile[$gfile] = $fallbackByFile[$gfile] ?? ['file' => $gfile, 'code' => null, 'am' => '', 'en' => ''];
+    }
+  }
+  // Caption lookup by bare filename, for honest alt text: a service card
+  // or step photo must be described by what the picture really shows,
+  // not by the service name. DB captions win; fallbacks fill the gaps.
+  $captionByFile = [];
+  foreach ($galleryByFile as $key => $row) {
+    $base = basename((string)$key);
+    if (!isset($captionByFile[$base])) {
+      $captionByFile[$base] = ['am' => (string)($row['am'] ?? ''), 'en' => (string)($row['en'] ?? '')];
+    }
+  }
+  foreach ($fallbackPhotos as $row) {
+    if (!isset($captionByFile[$row['file']])) {
+      $captionByFile[$row['file']] = ['am' => $row['am'], 'en' => $row['en']];
+    }
+  }
+  foreach ($fallbackFeaturePhotos as $row) {
+    if (!isset($captionByFile[$row['file']])) {
+      $captionByFile[$row['file']] = ['am' => $row['am'], 'en' => $row['en']];
     }
   }
 @endphp
@@ -1446,7 +1466,7 @@
           @foreach($galleryPhotos as $gi => $p)
             @php $slideSvc = $activeServices->firstWhere('code', $p['code']); @endphp
             <figure class="ms-slide" role="group" aria-label="{{ $gi + 1 }} of {{ count($galleryPhotos) }}" data-ms-slide="{{ $gi }}">
-              <img src="{{ $photoSrc($p['file']) }}" alt="{{ $p['en'] }}" @if($gi > 0) loading="lazy" @endif>
+              <img src="{{ $photoSrc($p['file']) }}" alt="{{ $p['en'] }}" data-alt-am="{{ $p['am'] }}" data-alt-en="{{ $p['en'] }}" @if($gi > 0) loading="lazy" @endif>
               <figcaption>
                 <span class="ms-cap-name"><span data-lang-block="am">{{ $p['am'] }}</span><span data-lang-block="en">{{ $p['en'] }}</span></span>
                 @if($slideSvc)
@@ -1890,7 +1910,12 @@
       @endphp
       <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
         @if($svcPhoto)
-          <div class="ms-ph"><img src="{{ $photoSrc($svcPhoto) }}" alt="{{ $svc->name_en ?: $svc->name_am }}" loading="lazy"></div>
+          @php
+            $svcCaption = $captionByFile[basename((string)$svcPhoto)] ?? null;
+            $svcAltEn = ($svcCaption['en'] ?? '') !== '' ? $svcCaption['en'] : ($svc->name_en ?: $svc->name_am);
+            $svcAltAm = ($svcCaption['am'] ?? '') !== '' ? $svcCaption['am'] : ($svc->name_am ?: $svc->name_en);
+          @endphp
+          <div class="ms-ph"><img src="{{ $photoSrc($svcPhoto) }}" alt="{{ $svcAltEn }}" data-alt-am="{{ $svcAltAm }}" data-alt-en="{{ $svcAltEn }}" loading="lazy"></div>
         @else
           <div class="ms-ph flex items-center justify-center bg-teal/10 text-teal-dark"><i data-lucide="{{ $iconName }}" class="w-14 h-14"></i></div>
         @endif
@@ -1964,19 +1989,19 @@
         <span class="ms-num font-serif">01.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">አገልግሎትዎን ይዘዙ</span><span data-lang-block="en">Book your service</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">አገልግሎቱን፣ ቀኑን እና ቦታውን ይምረጡ። መጠኑን ይንገሩን — በካሬ ሜትር፣ በወንበር ወይም በስራ።</span><span data-lang-block="en">Choose the service, date and place. Tell us the size — per square metre, per seat or per job.</span></p>
-        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[0]['file']) }}" alt="{{ $featurePhotos[0]['en'] }}" loading="lazy"></div>
+        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[0]['file']) }}" alt="{{ $featurePhotos[0]['en'] }}" data-alt-am="{{ $featurePhotos[0]['am'] }}" data-alt-en="{{ $featurePhotos[0]['en'] }}" loading="lazy"></div>
       </div>
       <div class="ms-step">
         <span class="ms-num font-serif">02.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">ቡድናችን ይደርሳል</span><span data-lang-block="en">Our team arrives</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">ዩኒፎርም የለበሰ ቡድን ከሙያዊ ማሽኖች እና ደህንነቱ የተጠበቀ ሳሙናዎች ጋር ይደርሳል።</span><span data-lang-block="en">A uniformed crew arrives with professional machines and safe detergents.</span></p>
-        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[1]['file']) }}" alt="{{ $featurePhotos[1]['en'] }}" loading="lazy"></div>
+        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[1]['file']) }}" alt="{{ $featurePhotos[1]['en'] }}" data-alt-am="{{ $featurePhotos[1]['am'] }}" data-alt-en="{{ $featurePhotos[1]['en'] }}" loading="lazy"></div>
       </div>
       <div class="ms-step">
         <span class="ms-num font-serif">03.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">በትኩስነቱ ይደሰቱ</span><span data-lang-block="en">Enjoy the freshness</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">እንጨርሳለን፣ እርስዎ ይፈትሹ። ንጹህ ወለሎች፣ የሚያብረቀርቅ መስታወት እና እንደ አዲስ የሚሸት ቦታ።</span><span data-lang-block="en">We finish, you inspect. Spotless floors, shining glass and a space that smells new again.</span></p>
-        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[2]['file']) }}" alt="{{ $featurePhotos[2]['en'] }}" loading="lazy"></div>
+        <div class="ms-ph"><img src="{{ $photoSrc($featurePhotos[2]['file']) }}" alt="{{ $featurePhotos[2]['en'] }}" data-alt-am="{{ $featurePhotos[2]['am'] }}" data-alt-en="{{ $featurePhotos[2]['en'] }}" loading="lazy"></div>
       </div>
     </div>
   </div>
@@ -2155,7 +2180,7 @@
         @foreach($galleryOrder as $gidx => $gfile)
           @php $gp = $galleryByFile[$gfile]; @endphp
           <figure class="ms-gal-slide{{ $gidx === 0 ? ' on' : '' }}" data-ms-gal="{{ $gidx }}" data-ms-full="{{ $photoSrc($gfile) }}" data-ms-cap-am="{{ $gp['am'] }}" data-ms-cap-en="{{ $gp['en'] }}" aria-label="{{ $gp['en'] }}">
-            <img src="{{ $photoSrc($gfile) }}" alt="{{ $gp['en'] }}" @if($gidx !== 0) loading="lazy" @endif>
+            <img src="{{ $photoSrc($gfile) }}" alt="{{ $gp['en'] }}" data-alt-am="{{ $gp['am'] }}" data-alt-en="{{ $gp['en'] }}" @if($gidx !== 0) loading="lazy" @endif>
             <figcaption class="ms-gal-cap">
               <span><span data-lang-block="am">{{ $gp['am'] }}</span><span data-lang-block="en">{{ $gp['en'] }}</span></span>
             </figcaption>
@@ -2169,7 +2194,7 @@
       <div class="ms-gal-thumbs" id="ms-gal-thumbs">
         @foreach($galleryOrder as $gidx => $gfile)
           <button type="button" class="ms-gal-thumb{{ $gidx === 0 ? ' on' : '' }}" data-ms-thumb="{{ $gidx }}" aria-label="{{ $galleryByFile[$gfile]['en'] }}">
-            <img src="{{ $photoSrc($gfile) }}" alt="" loading="lazy">
+            <img src="{{ $photoSrc($gfile) }}" alt="{{ $galleryByFile[$gfile]['en'] }}" data-alt-am="{{ $galleryByFile[$gfile]['am'] }}" data-alt-en="{{ $galleryByFile[$gfile]['en'] }}" loading="lazy">
           </button>
         @endforeach
       </div>
@@ -2182,7 +2207,7 @@
   <button class="ms-lb-close" id="ms-lb-close" type="button" aria-label="Close viewer">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
   </button>
-  <img id="ms-lb-img" src="{{ $photoSrc($galleryOrder[0] ?? 'office-cleaning.jpg') }}" alt="Meash cleaning team at work">
+  <img id="ms-lb-img" src="{{ $photoSrc($galleryOrder[0] ?? 'office-cleaning.jpg') }}" alt="{{ ($captionByFile[basename($galleryOrder[0] ?? 'office-cleaning.jpg')]['en'] ?? '') ?: 'Meash cleaning team at work' }}">
   <div class="ms-lb-cap"><span data-lang-block="am" id="ms-lb-cap-am"></span><span data-lang-block="en" id="ms-lb-cap-en"></span></div>
   <div class="ms-lb-row">
     <button id="ms-lb-prev" type="button" aria-label="Previous photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 5.5-6 6.5 6 6.5"/></svg></button>
@@ -3439,6 +3464,13 @@
         btn.classList.add('active-lang', 'bg-teal', 'text-white', 'shadow-sm');
         btn.classList.remove('text-slate-600', 'dark:text-slate-300');
       }
+    });
+    // Photo alt text follows the language: every photo img carries
+    // data-alt-am / data-alt-en with its caption (incl. the lightbox
+    // image, whose data attributes showLb() keeps in sync).
+    document.querySelectorAll('img[data-alt-am]').forEach(function (img) {
+      var alt = (l === 'am') ? img.getAttribute('data-alt-am') : img.getAttribute('data-alt-en');
+      if (alt) img.setAttribute('alt', alt);
     });
     if (window.lucide) lucide.createIcons();
   }
@@ -4922,9 +4954,13 @@
       function showLb() {
         var c = gSlides[lbPos];
         lbImg.src = c.getAttribute('data-ms-full');
-        lbImg.alt = c.getAttribute('data-ms-cap-en');
-        lbCapAm.textContent = c.getAttribute('data-ms-cap-am');
-        lbCapEn.textContent = c.getAttribute('data-ms-cap-en');
+        var capAm = c.getAttribute('data-ms-cap-am') || '';
+        var capEn = c.getAttribute('data-ms-cap-en') || '';
+        lbImg.setAttribute('data-alt-am', capAm);
+        lbImg.setAttribute('data-alt-en', capEn);
+        lbImg.alt = (document.documentElement.getAttribute('data-lang') === 'am' && capAm) ? capAm : capEn;
+        lbCapAm.textContent = capAm;
+        lbCapEn.textContent = capEn;
       }
       function openLb(i) { lbPos = i; showLb(); lb.classList.add('open'); document.body.style.overflow = 'hidden'; }
       function closeLb() { lb.classList.remove('open'); document.body.style.overflow = ''; }
