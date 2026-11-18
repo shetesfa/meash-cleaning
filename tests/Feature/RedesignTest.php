@@ -54,4 +54,43 @@ class RedesignTest extends TestCase
             'Unbalanced <section> tags on the public page'
         );
     }
+
+    private function heroHtml(string $html): string
+    {
+        $start = strpos($html, 'id="hero"');
+        $end = strpos($html, 'LOGO/TRUST STRIP');
+        $this->assertNotFalse($start, 'Hero section missing');
+        $this->assertNotFalse($end, 'Trust strip missing');
+        return substr($html, $start, $end - $start);
+    }
+
+    // R2: phone-first hero — photo first, ONE headline, ONE sentence,
+    // exactly two buttons; the POPULAR-storefront photo is excluded.
+    public function test_r2_phone_first_hero(): void
+    {
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $hero = $this->heroHtml($res->getContent());
+
+        // The red POPULAR-storefront photo (another company's sign +
+        // readable car plates) never appears in the hero slider.
+        $this->assertStringNotContainsString('rope-access.jpg', $hero,
+            'Hero must not show the POPULAR storefront photo');
+
+        // Slogan appears exactly once in the hero (in the headline).
+        $this->assertSame(1, substr_count($hero, 'Your Environment, Our Responsibility.'),
+            'Slogan must appear exactly once in the hero');
+        // Short company name as the headline.
+        $this->assertStringContainsString('MEASH', $hero);
+        // The Commercial Contracts button is out of the hero (nav keeps it).
+        $this->assertStringNotContainsString('Commercial Contracts', $hero);
+        // Exactly two primary hero buttons: Get Quote & Book + round Call.
+        $this->assertStringContainsString('Get Quote &amp; Book', $hero);
+        $this->assertStringContainsString('tel:', $hero);
+        // Desktop floating card on the photo: real price, free inspection.
+        $this->assertStringContainsString('ETB/sqm', $hero);
+        $this->assertStringContainsString('Free inspection', $hero);
+        // Phone stage is compact so the first screen fits 390x844.
+        $res->assertSee('.ms-stage { height: 330px; }', false);
+    }
 }

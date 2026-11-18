@@ -1126,6 +1126,13 @@
     input, select, textarea { font-size: 16px; }
   }
 
+  /* R2: phone-first hero — the 520px coverflow stage cannot fit a 390x844
+     first screen together with the headline + buttons. Compact it on phones. */
+  @media (max-width: 820px) {
+    .ms-stage { height: 330px; }
+    .ms-slide { width: min(224px, 58vw); }
+  }
+
   /* ============ R1: section rhythm, heading system, card system ============ */
   /* One consistent section rhythm: py-16 on phones, py-24 on desktop. */
   .ms-sec { padding-top: 4rem; padding-bottom: 4rem; }
@@ -1452,6 +1459,13 @@
   } catch (\Throwable $e) {
     // Fallback lists above stay in place; the site keeps working.
   }
+  // R2: the hero slider never shows rope-access.jpg — it is the red
+  // "POPULAR" storefront photo: another company's sign plus readable
+  // car plates. The photo stays in the gallery + service cards; only
+  // the hero excludes it.
+  $galleryPhotos = array_values(array_filter($galleryPhotos, function ($ph) {
+      return basename((string)($ph['file'] ?? '')) !== 'rope-access.jpg';
+  }));
   // Safety net: sections fall back independently, so a gallery file
   // must always resolve in the lookup even if it is not in the hero
   // slider rows (otherwise the slider below errors).
@@ -1547,21 +1561,16 @@
 
 <!-- ================= HERO ================= -->
 <section class="relative bg-gradient-to-b from-teal-light/20 via-transparent to-transparent">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-[1.15fr_.85fr] gap-6 min-h-[580px] items-center py-12 md:py-16">
-    <div class="flex flex-col justify-center pr-0 md:pr-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-[1.15fr_.85fr] gap-4 md:gap-6 md:min-h-[580px] items-center py-6 md:py-16">
+    <div class="flex flex-col justify-center pr-0 md:pr-10 order-2 md:order-1">
       <div class="inline-flex items-center gap-2 text-teal-dark bg-teal-light/40 border border-teal/20 px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide mb-5 w-fit">
         <i data-lucide="shield-check" class="w-4 h-4"></i>
         <span data-lang-block="am">በህጋዊ ፈቃድ የታገዘ@if(!empty($steamClaimAm)) • {{ $steamClaimAm }}@endif</span>
         <span data-lang-block="en">Licensed &amp; Insured @if(!empty($steamClaimEn)) • {{ $steamClaimEn }}@endif</span>
       </div>
 
-      <!-- Slogan Badge (STRICTLY IN ENGLISH EVERYWHERE — DO NOT TRANSLATE TO AMHARIC) -->
-      <div class="mb-3 text-xs sm:text-sm font-black tracking-wider uppercase text-teal-dark bg-teal-light/40 border border-teal/20 px-3.5 py-1.5 rounded-xl w-fit">
-        <span>"Your Environment, Our Responsibility."</span>
-      </div>
-
-      <h1 class="font-serif font-bold text-[2.4rem] sm:text-[3.2rem] md:text-[3.6rem] leading-[1.08] tracking-tight text-navy">
-        MEASH CLEANING SOLUTION<br><span class="text-teal-dark text-[0.65em] font-bold block mt-1"><span data-lang-block="am">ሜሽ የጽዳት አገልግሎት</span><span data-lang-block="en">Premium Commercial Cleaning Partner</span></span>
+      <h1 class="font-serif font-bold text-[2.1rem] sm:text-[3.2rem] md:text-[3.6rem] leading-[1.08] tracking-tight text-navy">
+        MEASH<br><span class="text-teal-dark text-[0.62em] font-bold block mt-1"><span data-lang-block="am">ሜሽ የጽዳት አገልግሎት</span><span data-lang-block="en">{{ $sloganEn }}</span></span>
       </h1>
 
       <p class="mt-4 text-teal-dark font-extrabold text-[15px] sm:text-[17px] leading-snug">
@@ -1569,38 +1578,36 @@
         <span data-lang-block="en">{{ $subtitleEn }}</span>
       </p>
 
-      <p class="mt-3 text-navy/70 text-[14px] sm:text-[15px] leading-relaxed max-w-xl">
+      <p class="mt-3 text-navy/70 text-[14px] sm:text-[15px] leading-relaxed max-w-xl hidden md:block">
         <span data-lang-block="am">ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማት ፕሪሚየም የጽዳት አገልግሎት የሚሰጥ ተቋም። በሰለጠኑ ታማኝ ባለሙያዎች እና በዘመናዊ ማሽኖች የተደገፈ ጥልቅ ጽዳት።</span>
         <span data-lang-block="en">Fully licensed and insured premium B2B cleaning partner based at Ayat Square. We deliver exceptional commercial-grade sanitation designed to protect your facility and boost workplace productivity.</span>
       </p>
 
-      <!-- Primary Action Buttons & Click to Call -->
-      <div class="mt-8 flex flex-wrap items-center gap-3">
-        <a href="#book" class="bg-navy hover:bg-teal-dark text-white font-bold text-sm px-6 py-3.5 rounded-lg transition shadow-md flex items-center gap-2">
-          <i data-lucide="sparkles" class="w-4 h-4"></i>
+      <!-- Primary Action Buttons: exactly two (R2) -->
+      <div class="mt-6 md:mt-8 flex items-center gap-3">
+        <a href="#book" class="bg-[#3E8ECC] hover:bg-[#2F6FA8] text-white font-bold text-sm sm:text-base h-12 px-6 rounded-xl transition shadow-md shadow-[#3E8ECC]/30 flex items-center justify-center gap-2 flex-1 sm:flex-none">
+          <i data-lucide="sparkles" class="w-5 h-5"></i>
           <span data-lang-block="am">የዋጋ ስሌት እና ቀጠሮ</span><span data-lang-block="en">Get Quote &amp; Book</span>
           <i data-lucide="arrow-right" class="w-4 h-4"></i>
         </a>
-        <a href="#commercial" class="border-2 border-teal-dark text-teal-dark hover:bg-teal-dark hover:text-white font-bold text-sm px-5 py-3 rounded-lg transition flex items-center gap-2">
-          <i data-lucide="building-2" class="w-4 h-4"></i>
-          <span data-lang-block="am">የድርጅቶች ኮንትራት</span><span data-lang-block="en">Commercial Contracts</span>
+        <a href="tel:{{ $phone1 }}" aria-label="Call Meash Cleaning" class="w-12 h-12 shrink-0 rounded-full bg-navy hover:bg-teal-dark text-white transition shadow-md flex items-center justify-center">
+          <i data-lucide="phone" class="w-5 h-5"></i>
         </a>
       </div>
 
-      <!-- Quick Contact Pills (Direct Call, WhatsApp & Telegram) -->
-      <div class="mt-6 flex flex-wrap items-center gap-3 text-xs font-bold text-navy">
-        <span class="text-navy/50 font-medium"><span data-lang-block="am">አሁኑኑ ይደውሉ፡</span><span data-lang-block="en">Call Now:</span></span>
-        <a href="tel:{{ $phone1 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
+      <!-- Quick Contact Row (small, under the buttons — R2) -->
+      <div class="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold text-navy">
+        <a href="tel:{{ $phone1 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-2.5 py-1.5 rounded-full shadow-sm min-h-[36px]">
           <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone1 }}
         </a>
-        <a href="tel:{{ $phone2 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-3 py-1.5 rounded-md shadow-sm">
+        <a href="tel:{{ $phone2 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-2.5 py-1.5 rounded-full shadow-sm min-h-[36px]">
           <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone2 }}
         </a>
-        <a href="https://wa.me/251{{ ltrim($phone1, '0') }}?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20inquire%20about%20your%20services" target="_blank" class="hover:opacity-90 flex items-center gap-1.5 bg-[#25D366]/15 text-[#128C7E] dark:text-[#25D366] border border-[#25D366]/30 px-3 py-1.5 rounded-md">
+        <a href="https://wa.me/251{{ ltrim($phone1, '0') }}?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20inquire%20about%20your%20services" target="_blank" class="hover:opacity-90 flex items-center gap-1.5 bg-[#25D366]/15 text-[#128C7E] dark:text-[#25D366] border border-[#25D366]/30 px-2.5 py-1.5 rounded-full min-h-[36px]">
           <i data-lucide="message-circle" class="w-3.5 h-3.5 text-[#25D366]"></i> WhatsApp
         </a>
-        <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 bg-teal/10 text-teal-dark border border-teal/20 px-3 py-1.5 rounded-md">
-          <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram Bot
+        <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 bg-teal/10 text-teal-dark border border-teal/20 px-2.5 py-1.5 rounded-full min-h-[36px]">
+          <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram
         </a>
       </div>
 
@@ -1611,8 +1618,8 @@
            re-add numbers here unless they come from a real endpoint. -->
     </div>
 
-    <!-- Hero Visual — 3D coverflow slider with real Meash work photos -->
-    <div class="relative">
+    <!-- Hero Visual — 3D coverflow slider with real Meash work photos (first on phones — R2) -->
+    <div class="relative order-1 md:order-2">
       <div class="ms-hero-panel">
         <div class="ms-stage" id="ms-stage" role="region" aria-roledescription="carousel" aria-label="Meash cleaning work photos" tabindex="0">
           @foreach($galleryPhotos as $gi => $p)
@@ -1636,6 +1643,14 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 5.5 6 6.5-6 6.5"/></svg>
             </button>
           </div>
+        </div>
+      </div>
+      @php $floorSvc = $activeServices->firstWhere('code', 'floor_ceramic'); @endphp
+      <div class="hidden md:flex absolute -bottom-5 left-5 items-center gap-3 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-navy/10 px-4 py-3 z-10">
+        <div class="w-10 h-10 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="sparkles" class="w-5 h-5"></i></div>
+        <div class="leading-tight">
+          <div class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">ከ {{ number_format($floorSvc?->base_price ?? 60) }} ETB / ካሬ ሜትር ጀምሮ</span><span data-lang-block="en">From {{ number_format($floorSvc?->base_price ?? 60) }} ETB/sqm</span></div>
+          <div class="text-xs text-navy/60 dark:text-slate-300"><span data-lang-block="am">ነፃ የቦታ ምልከታ</span><span data-lang-block="en">Free inspection</span></div>
         </div>
       </div>
     </div>
