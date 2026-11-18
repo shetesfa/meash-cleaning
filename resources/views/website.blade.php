@@ -107,6 +107,7 @@
 <head>
 <script>
   (function() {
+    document.documentElement.classList.add('js');
     // 1. Disable browser scroll restoration so page always opens at the top header on mobile & desktop
     try {
       if ('scrollRestoration' in history) {
@@ -1038,8 +1039,6 @@
   .ms-arrow { width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.35); background: rgba(255,255,255,.10); color: #fff; display: grid; place-items: center; backdrop-filter: blur(6px); cursor: pointer; }
   .ms-arrow:hover { background: #1E9BD7; border-color: #1E9BD7; }
   .ms-dots { display: flex; gap: 8px; }
-  .ms-dot { width: 9px; height: 9px; min-height: 0; border-radius: 99px; border: 0; padding: 0; background: rgba(255,255,255,.35); transition: width .3s, background .3s; cursor: pointer; }
-  .ms-dot.on { width: 28px; background: #3E8ECC; }
   @media (max-width: 900px) { .ms-stage { height: 470px; } }
 
   /* Photo service cards */
@@ -1091,8 +1090,6 @@
   .ms-gal-next { right: 12px; }
   .ms-gal-count { position: absolute; top: 12px; right: 12px; background: rgba(3,14,25,.55); color: #fff; font-size: .75rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; z-index: 3; }
   .ms-gal-dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-  .ms-gal-dot { width: 10px; height: 10px; border-radius: 50%; border: 0; background: #CBD5E1; cursor: pointer; padding: 0; }
-  .ms-gal-dot.on { background: #3E8ECC; transform: scale(1.25); }
   .ms-gal-thumbs { display: flex; gap: 10px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px; }
   .ms-gal-thumb { flex: none; width: 84px; aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; border: 2px solid transparent; padding: 0; cursor: pointer; background: #0d2c49; }
   .ms-gal-thumb.on { border-color: #3E8ECC; }
@@ -1198,6 +1195,30 @@
   .ms-svc:hover { transform: translateY(-4px); }
 
   @media (prefers-reduced-motion: reduce) { .ms-slide, .ms-svc .ms-ph img, .ms-gal-slide img { transition: none; } }
+
+  /* R8: CSS-only animations, consistent sizes, 44px tap targets. */
+  /* Fade-up on scroll (once). Hidden state only applies when JS runs
+     (html.js), so the cards stay visible with JS disabled. */
+  html.js .ms-fade-up { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+  html.js .ms-fade-up.ms-in { opacity: 1; transform: none; }
+  /* Soft gradient glow behind the hero image (logo blue, blurred). */
+  .ms-hero-glow { position: absolute; inset: -12% -8%; background: radial-gradient(60% 60% at 50% 40%, rgba(62,142,204,.35), rgba(62,142,204,0) 70%); filter: blur(30px); z-index: 0; pointer-events: none; }
+  .ms-hero-panel { z-index: 1; }
+  /* Smooth hover on buttons and links (fills gaps where no class transition exists). */
+  button, a { transition-property: background-color, border-color, color, box-shadow, transform, opacity; transition-duration: .2s; transition-timing-function: ease; }
+  /* Dots keep their small look but get a 44px-tall tap area. */
+  .ms-gal-dot, .ms-dot { min-height: 44px; padding: 12px 9px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 0; cursor: pointer; }
+  .ms-gal-dot::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: #CBD5E1; transition: transform .2s ease, background .2s ease; }
+  .ms-gal-dot.on::before { background: #3E8ECC; transform: scale(1.25); }
+  .ms-dot { width: auto; }
+  .ms-dot::before { content: ''; width: 9px; height: 9px; border-radius: 99px; background: rgba(255,255,255,.35); transition: width .3s, background .3s; }
+  .ms-dot.on::before { width: 28px; background: #3E8ECC; }
+  @media (prefers-reduced-motion: reduce) {
+    html.js .ms-fade-up { opacity: 1; transform: none; transition: none; }
+    .ms-gal-dot::before, .ms-dot::before { transition: none; }
+    .ms-hero-glow { filter: none; }
+    button, a { transition-duration: 0s; }
+  }
 </style>
 </head>
 <body id="top" class="antialiased">
@@ -1257,17 +1278,17 @@
     </a>
 
     <!-- Desktop Nav Links (xl:flex) -->
-    <nav class="hidden xl:flex items-center gap-1 text-[13px] font-bold text-slate-700 dark:text-slate-200">
-      <a href="#about" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">ስለ እኛ</span><span data-lang-block="en">About</span></a>
-      <a href="#services" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">የቤት ጽዳት</span><span data-lang-block="en">Residential</span></a>
-      <a href="#commercial" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition flex items-center gap-1 text-teal dark:text-teal-400">
+    <nav class="hidden xl:flex items-center gap-1 text-sm font-bold text-slate-700 dark:text-slate-200">
+      <a href="#about" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition min-h-[44px] flex items-center"><span data-lang-block="am">ስለ እኛ</span><span data-lang-block="en">About</span></a>
+      <a href="#services" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition min-h-[44px] flex items-center"><span data-lang-block="am">የቤት ጽዳት</span><span data-lang-block="en">Residential</span></a>
+      <a href="#commercial" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition min-h-[44px] flex items-center flex items-center gap-1 text-teal dark:text-teal-400">
         <i data-lucide="building-2" class="w-4 h-4"></i>
         <span data-lang-block="am">የድርጅቶች ጽዳት</span><span data-lang-block="en">Commercial</span>
       </a>
-      <a href="#gallery" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">የስራ ጋለሪ</span><span data-lang-block="en">Projects</span></a>
-      <a href="#reviews" class="js-reviews-link px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">አስተያየቶች</span><span data-lang-block="en">Reviews</span></a>
-      <a href="#contact" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition"><span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Contact</span></a>
-      <a href="#track" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+      <a href="#gallery" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition min-h-[44px] flex items-center"><span data-lang-block="am">የስራ ጋለሪ</span><span data-lang-block="en">Projects</span></a>
+      <a href="#reviews" class="js-reviews-link px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition min-h-[44px] flex items-center"><span data-lang-block="am">አስተያየቶች</span><span data-lang-block="en">Reviews</span></a>
+      <a href="#contact" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition min-h-[44px] flex items-center"><span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Contact</span></a>
+      <a href="#track" class="px-3 py-2 rounded-xl hover:text-teal hover:bg-slate-100 dark:hover:bg-slate-800/80 transition min-h-[44px] flex items-center flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
         <i data-lucide="search" class="w-3.5 h-3.5"></i>
         <span data-lang-block="am">ትዕዛዝ መከታተያ</span><span data-lang-block="en">Track</span>
       </a>
@@ -1296,7 +1317,7 @@
       </div>
 
       <!-- Main CTA: Quote / Book -->
-      <a href="#book" class="header-book-btn bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-[12px] sm:text-[13px] font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5" style="background-color: #3E8ECC; color: #FFFFFF;">
+      <a href="#book" class="header-book-btn bg-gradient-to-r from-teal to-teal-dark hover:from-teal-dark hover:to-teal text-white text-sm font-black px-3 sm:px-4.5 py-2 sm:py-2.5 rounded-xl transition shadow-md shadow-teal/20 flex items-center gap-1.5 shrink-0 transform hover:-translate-y-0.5 min-h-[44px]" style="background-color: #3E8ECC; color: #FFFFFF;">
         <i data-lucide="calendar" class="w-4 h-4 hidden sm:inline text-white"></i>
         <span data-lang-block="am" class="text-white font-black">ቀጠሮ ያዙ</span><span data-lang-block="en" class="text-white font-black">Book Now</span>
       </a>
@@ -1647,7 +1668,7 @@
         <a href="#book" class="bg-[#3E8ECC] hover:bg-[#2F6FA8] text-white font-bold text-sm sm:text-base h-12 px-6 rounded-xl transition shadow-md shadow-[#3E8ECC]/30 flex items-center justify-center gap-2 flex-1 sm:flex-none">
           <i data-lucide="sparkles" class="w-5 h-5"></i>
           <span data-lang-block="am">የዋጋ ስሌት እና ቀጠሮ</span><span data-lang-block="en">Get Quote &amp; Book</span>
-          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
         </a>
         <a href="tel:{{ $phone1 }}" aria-label="Call Meash Cleaning" class="w-12 h-12 shrink-0 rounded-full bg-navy hover:bg-teal-dark text-white transition shadow-md flex items-center justify-center">
           <i data-lucide="phone" class="w-5 h-5"></i>
@@ -1656,17 +1677,17 @@
 
       <!-- Quick Contact Row (small, under the buttons — R2) -->
       <div class="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold text-navy">
-        <a href="tel:{{ $phone1 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-2.5 py-1.5 rounded-full shadow-sm min-h-[36px]">
-          <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone1 }}
+        <a href="tel:{{ $phone1 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-2.5 py-1.5 rounded-full shadow-sm min-h-[44px]">
+          <i data-lucide="phone" class="w-5 h-5 text-teal"></i> {{ $phone1 }}
         </a>
-        <a href="tel:{{ $phone2 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-2.5 py-1.5 rounded-full shadow-sm min-h-[36px]">
-          <i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> {{ $phone2 }}
+        <a href="tel:{{ $phone2 }}" class="hover:text-teal flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-navy/15 px-2.5 py-1.5 rounded-full shadow-sm min-h-[44px]">
+          <i data-lucide="phone" class="w-5 h-5 text-teal"></i> {{ $phone2 }}
         </a>
-        <a href="https://wa.me/251{{ ltrim($phone1, '0') }}?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20inquire%20about%20your%20services" target="_blank" class="hover:opacity-90 flex items-center gap-1.5 bg-[#25D366]/15 text-[#128C7E] dark:text-[#25D366] border border-[#25D366]/30 px-2.5 py-1.5 rounded-full min-h-[36px]">
-          <i data-lucide="message-circle" class="w-3.5 h-3.5 text-[#25D366]"></i> WhatsApp
+        <a href="https://wa.me/251{{ ltrim($phone1, '0') }}?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20inquire%20about%20your%20services" target="_blank" class="hover:opacity-90 flex items-center gap-1.5 bg-[#25D366]/15 text-[#128C7E] dark:text-[#25D366] border border-[#25D366]/30 px-2.5 py-1.5 rounded-full min-h-[44px]">
+          <i data-lucide="message-circle" class="w-5 h-5 text-[#25D366]"></i> WhatsApp
         </a>
-        <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 bg-teal/10 text-teal-dark border border-teal/20 px-2.5 py-1.5 rounded-full min-h-[36px]">
-          <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram
+        <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 bg-teal/10 text-teal-dark border border-teal/20 px-2.5 py-1.5 rounded-full min-h-[44px]">
+          <i data-lucide="send" class="w-5 h-5"></i> Telegram
         </a>
       </div>
 
@@ -1679,6 +1700,7 @@
 
     <!-- Hero Visual — 3D coverflow slider with real Meash work photos (first on phones — R2) -->
     <div class="relative order-1 md:order-2">
+      <div class="ms-hero-glow" aria-hidden="true"></div>
       <div class="ms-hero-panel">
         <div class="ms-stage" id="ms-stage" role="region" aria-roledescription="carousel" aria-label="Meash cleaning work photos" tabindex="0">
           @foreach($galleryPhotos as $gi => $p)
@@ -1737,7 +1759,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
       @if(!empty($trustFreeAm) || !empty($trustFreeEn))
-      <div class="ms-card flex items-center gap-3 md:gap-4 p-4 md:p-5">
+      <div class="ms-card ms-fade-up flex items-center gap-3 md:gap-4 p-4 md:p-5">
         <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="clipboard-check" class="w-5 h-5"></i></div>
         <div class="min-w-0">
           <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">{{ $trustFreeAm }}</span><span data-lang-block="en">{{ $trustFreeEn }}</span></div>
@@ -1746,7 +1768,7 @@
       </div>
       @endif
       @if(!empty($trustHoursAm) || !empty($trustHoursEn))
-      <div class="ms-card flex items-center gap-3 md:gap-4 p-4 md:p-5">
+      <div class="ms-card ms-fade-up flex items-center gap-3 md:gap-4 p-4 md:p-5">
         <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="clock" class="w-5 h-5"></i></div>
         <div class="min-w-0">
           <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">{{ $trustHoursAm }}</span><span data-lang-block="en">{{ $trustHoursEn }}</span></div>
@@ -1755,7 +1777,7 @@
       </div>
       @endif
       @if(!empty($trustLicAm) || !empty($trustLicEn))
-      <div class="ms-card flex items-center gap-3 md:gap-4 p-4 md:p-5">
+      <div class="ms-card ms-fade-up flex items-center gap-3 md:gap-4 p-4 md:p-5">
         <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
         <div class="min-w-0">
           <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">{{ $trustLicAm }}</span><span data-lang-block="en">{{ $trustLicEn }}</span></div>
@@ -1764,10 +1786,10 @@
       </div>
       @endif
       @if($trustWeeklyDiscount > 0)
-      <div class="ms-card flex items-center gap-3 md:gap-4 p-4 md:p-5">
+      <div class="ms-card ms-fade-up flex items-center gap-3 md:gap-4 p-4 md:p-5">
         <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="badge-percent" class="w-5 h-5"></i></div>
         <div class="min-w-0">
-          <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">እስከ {{ $trustWeeklyDiscount }}% ቅናሽ</span><span data-lang-block="en">Up to {{ $trustWeeklyDiscount }}% off</span></div>
+          <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">እስከ <span class="ms-count" data-count="{{ $trustWeeklyDiscount }}">{{ $trustWeeklyDiscount }}</span>% ቅናሽ</span><span data-lang-block="en">Up to <span class="ms-count" data-count="{{ $trustWeeklyDiscount }}">{{ $trustWeeklyDiscount }}</span>% off</span></div>
           <div class="text-xs md:text-sm text-navy/60 dark:text-slate-300 leading-snug"><span data-lang-block="am">ሳምንታዊ እቅዶች እና ተደጋጋሚ ኮንትራቶች</span><span data-lang-block="en">Weekly plans &amp; recurring contracts</span></div>
         </div>
       </div>
@@ -1808,22 +1830,22 @@
          "Official VAT invoicing" line is dropped: no VAT value is stored in
          settings, so the claim is unverified (R3). --}}
     <div class="grid grid-cols-2 gap-4 md:gap-6 mt-10 md:mt-12">
-      <div class="ms-card p-5 md:p-6">
+      <div class="ms-card ms-fade-up p-5 md:p-6">
         <div class="w-11 h-11 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center mb-4"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
         <h3 class="font-serif font-bold text-base md:text-lg text-navy dark:text-white mb-2"><span data-lang-block="am">ህጋዊ ፈቃድ ያለው እና የንብረት ዋስትና</span><span data-lang-block="en">Fully Licensed &amp; Insured</span></h3>
         <p class="text-xs md:text-sm text-navy/70 dark:text-slate-300 leading-relaxed"><span data-lang-block="am">በጽዳት ወቅት በቢሮዎ እቃዎች ላይ ለሚደርስ ለማንኛውም ጉዳት ሙሉ የዋስትና ሽፋን (Insurance) እንሰጣለን።</span><span data-lang-block="en">Your high-end office furniture and assets are completely safe with us — total asset protection for your corporate facilities.</span></p>
       </div>
-      <div class="ms-card p-5 md:p-6">
+      <div class="ms-card ms-fade-up p-5 md:p-6">
         <div class="w-11 h-11 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center mb-4"><i data-lucide="users-round" class="w-5 h-5"></i></div>
         <h3 class="font-serif font-bold text-base md:text-lg text-navy dark:text-white mb-2"><span data-lang-block="am">የሰለጠኑና የታመኑ ባለሙያዎች</span><span data-lang-block="en">Certified &amp; Vetted Teams</span></h3>
         <p class="text-xs md:text-sm text-navy/70 dark:text-slate-300 leading-relaxed"><span data-lang-block="am">ስነ-ምግባር እና ጥራትን የተላበሱ፣ ሙሉ የደንብ ልብስ የለበሱ ባለሙያዎች።</span><span data-lang-block="en">Uniformed, background-checked, and rigorously trained professionals.</span></p>
       </div>
-      <div class="ms-card p-5 md:p-6">
+      <div class="ms-card ms-fade-up p-5 md:p-6">
         <div class="w-11 h-11 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center mb-4"><i data-lucide="leaf" class="w-5 h-5"></i></div>
         <h3 class="font-serif font-bold text-base md:text-lg text-navy dark:text-white mb-2"><span data-lang-block="am">ደህንነታቸው የተጠበቀ ኬሚካሎች</span><span data-lang-block="en">Eco-Friendly &amp; Safe</span></h3>
         <p class="text-xs md:text-sm text-navy/70 dark:text-slate-300 leading-relaxed"><span data-lang-block="am">ለጤና እና ለንብረት ፍጹም ጉዳት የማያደርሱ ኬሚካሎችን እንጠቀማለን።</span><span data-lang-block="en">We use hospital-grade, non-toxic, and surface-safe premium chemicals.</span></p>
       </div>
-      <div class="ms-card p-5 md:p-6">
+      <div class="ms-card ms-fade-up p-5 md:p-6">
         <div class="w-11 h-11 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center mb-4"><i data-lucide="moon-star" class="w-5 h-5"></i></div>
         <h3 class="font-serif font-bold text-base md:text-lg text-navy dark:text-white mb-2"><span data-lang-block="am">ምቹ የሥራ መርሐ-ግብር</span><span data-lang-block="en">Flexible &amp; Discrete</span></h3>
         <p class="text-xs md:text-sm text-navy/70 dark:text-slate-300 leading-relaxed"><span data-lang-block="am">የእርስዎን የሥራ ሰዓት በማይጋፋ መልኩ ለእርስዎ የሚመች ሰዓት (በሌሊት ወይም በሳምንቱ መጨረሻ) መስራት መቻላችን።</span><span data-lang-block="en">Customized scheduling (night shifts/weekends) to eliminate business downtime.</span></p>
@@ -1925,7 +1947,7 @@
     <button type="button" role="tab" aria-selected="false" data-service-tab="home" onclick="showServiceTab('home')" class="ms-tab-btn"><i data-lucide="home" class="w-5 h-5"></i><span data-lang-block="am">ለቤት</span><span data-lang-block="en">Home</span></button>
   </div>
   <div id="tab-business" class="ms-svc-grid ms-swipe" role="tabpanel" aria-label="Business services">
-      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+      <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
         <div class="ms-ph">{!! $responsiveImg('/images/gallery/office-cleaning.jpg', $captionByFile['office-cleaning.jpg']['am'] ?? '' !== '' ? $captionByFile['office-cleaning.jpg']['am'] ?? '' : 'Office &amp; Corporate Cleaning', $captionByFile['office-cleaning.jpg']['en'] ?? '' !== '' ? $captionByFile['office-cleaning.jpg']['en'] ?? '' : 'Office &amp; Corporate Cleaning', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
@@ -1939,13 +1961,13 @@
           </p>
           <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
             <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" @if($bizSvc = $svcByCode['facilities_general'] ?? null) data-svc-price="{{ $bizSvc->id }}" data-svc-unit="{{ $bizSvc->unit ?: 'service' }}">@endif{{ $bizSvc ? number_format($bizSvc->base_price).' ETB'.(($bizSvc->unit && $bizSvc->unit !== 'service') ? ' / '.$bizSvc->unit : '') : '—' }}</div>
-            <a href="#book" onclick="preselectService('facilities_general')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
-              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <a href="#book" onclick="preselectService('facilities_general')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </a>
           </div>
         </div>
       </article>
-      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+      <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
         <div class="ms-ph">{!! $responsiveImg('/images/gallery/villa-carpet.jpg', $captionByFile['villa-carpet.jpg']['am'] ?? '' !== '' ? $captionByFile['villa-carpet.jpg']['am'] ?? '' : 'Hotel &amp; Hospitality Sanitization', $captionByFile['villa-carpet.jpg']['en'] ?? '' !== '' ? $captionByFile['villa-carpet.jpg']['en'] ?? '' : 'Hotel &amp; Hospitality Sanitization', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
@@ -1959,13 +1981,13 @@
           </p>
           <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
             <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" @if($bizSvc = $svcByCode['facilities_general'] ?? null) data-svc-price="{{ $bizSvc->id }}" data-svc-unit="{{ $bizSvc->unit ?: 'service' }}">@endif{{ $bizSvc ? number_format($bizSvc->base_price).' ETB'.(($bizSvc->unit && $bizSvc->unit !== 'service') ? ' / '.$bizSvc->unit : '') : '—' }}</div>
-            <a href="#book" onclick="preselectService('facilities_general')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
-              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <a href="#book" onclick="preselectService('facilities_general')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </a>
           </div>
         </div>
       </article>
-      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+      <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
         <div class="ms-ph">{!! $responsiveImg('/images/gallery/hotel-restaurant.jpg', $captionByFile['hotel-restaurant.jpg']['am'] ?? '' !== '' ? $captionByFile['hotel-restaurant.jpg']['am'] ?? '' : 'Restaurant &amp; Café Cleaning', $captionByFile['hotel-restaurant.jpg']['en'] ?? '' !== '' ? $captionByFile['hotel-restaurant.jpg']['en'] ?? '' : 'Restaurant &amp; Café Cleaning', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
@@ -1979,13 +2001,13 @@
           </p>
           <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
             <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" @if($bizSvc = $svcByCode['kitchen_dining'] ?? null) data-svc-price="{{ $bizSvc->id }}" data-svc-unit="{{ $bizSvc->unit ?: 'service' }}">@endif{{ $bizSvc ? number_format($bizSvc->base_price).' ETB'.(($bizSvc->unit && $bizSvc->unit !== 'service') ? ' / '.$bizSvc->unit : '') : '—' }}</div>
-            <a href="#book" onclick="preselectService('kitchen_dining')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
-              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <a href="#book" onclick="preselectService('kitchen_dining')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </a>
           </div>
         </div>
       </article>
-      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+      <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
         <div class="ms-ph">{!! $responsiveImg('/images/gallery/sofa-carpet-steam.jpg', $captionByFile['sofa-carpet-steam.jpg']['am'] ?? '' !== '' ? $captionByFile['sofa-carpet-steam.jpg']['am'] ?? '' : 'Auditorium &amp; Hall Chairs', $captionByFile['sofa-carpet-steam.jpg']['en'] ?? '' !== '' ? $captionByFile['sofa-carpet-steam.jpg']['en'] ?? '' : 'Auditorium &amp; Hall Chairs', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
@@ -1999,13 +2021,13 @@
           </p>
           <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
             <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" @if($bizSvc = $svcByCode['upholstery_carpet'] ?? null) data-svc-price="{{ $bizSvc->id }}" data-svc-unit="{{ $bizSvc->unit ?: 'service' }}">@endif{{ $bizSvc ? number_format($bizSvc->base_price).' ETB'.(($bizSvc->unit && $bizSvc->unit !== 'service') ? ' / '.$bizSvc->unit : '') : '—' }}</div>
-            <a href="#book" onclick="preselectService('upholstery_carpet')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
-              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <a href="#book" onclick="preselectService('upholstery_carpet')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </a>
           </div>
         </div>
       </article>
-      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+      <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
         <div class="ms-ph">{!! $responsiveImg('/images/gallery/facade-scaffold.jpg', $captionByFile['facade-scaffold.jpg']['am'] ?? '' !== '' ? $captionByFile['facade-scaffold.jpg']['am'] ?? '' : 'Commercial Glass Facades', $captionByFile['facade-scaffold.jpg']['en'] ?? '' !== '' ? $captionByFile['facade-scaffold.jpg']['en'] ?? '' : 'Commercial Glass Facades', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
@@ -2019,13 +2041,13 @@
           </p>
           <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
             <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" @if($bizSvc = $svcByCode['glass'] ?? null) data-svc-price="{{ $bizSvc->id }}" data-svc-unit="{{ $bizSvc->unit ?: 'service' }}">@endif{{ $bizSvc ? number_format($bizSvc->base_price).' ETB'.(($bizSvc->unit && $bizSvc->unit !== 'service') ? ' / '.$bizSvc->unit : '') : '—' }}</div>
-            <a href="#book" onclick="preselectService('glass')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
-              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <a href="#book" onclick="preselectService('glass')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </a>
           </div>
         </div>
       </article>
-      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+      <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
         <div class="ms-ph">{!! $responsiveImg('/images/gallery/office-polisher.jpg', $captionByFile['office-polisher.jpg']['am'] ?? 'Long-Term Cleaning SLAs', $captionByFile['office-polisher.jpg']['en'] ?? 'Long-Term Cleaning SLAs', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
@@ -2039,7 +2061,7 @@
           </p>
           <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
             <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal"><span data-lang-block="am">እስከ {{ (int)($pricingRules['weekly_discount'] ?? 15) }}% ቅናሽ</span><span data-lang-block="en">Up to {{ (int)($pricingRules['weekly_discount'] ?? 15) }}% off</span></div>
-            <a href="tel:{{ $phone1 }}" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
+            <a href="tel:{{ $phone1 }}" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
               <i data-lucide="phone-call" class="w-4 h-4"></i> <span data-lang-block="am">ደውለው ይወያዩ</span><span data-lang-block="en">Call to discuss</span>
             </a>
           </div>
@@ -2062,7 +2084,7 @@
           default => 'sparkles'
         };
       @endphp
-      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+      <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
         @if($svcPhoto)
           @php
             $svcCaption = $captionByFile[basename((string)$svcPhoto)] ?? null;
@@ -2085,15 +2107,15 @@
           </p>
           <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
             <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" data-svc-price="{{ $svc->id }}" data-svc-unit="{{ $svc->unit ?: 'service' }}">{{ number_format($svc->base_price) }} ETB{{ $unitLabel }}</div>
-            <a href="#book" onclick="preselectService('{{ $svc->code }}')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
-              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <a href="#book" onclick="preselectService('{{ $svc->code }}')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </a>
           </div>
         </div>
       </article>
     @empty
       <!-- Fallback when database is empty (price is filled live by renderPrices(); no hardcoded price) -->
-      <article class="ms-svc bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
+      <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
         <div class="ms-ph flex items-center justify-center bg-teal/10 text-teal-dark"><i data-lucide="sparkles" class="w-14 h-14"></i></div>
         <div class="ms-bd">
           <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
@@ -2106,8 +2128,8 @@
           </p>
           <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
             <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" data-svc-price="1" data-svc-unit="sqm">&mdash;</div>
-            <a href="#book" onclick="preselectService('floor_ceramic')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-lg transition flex items-center gap-1.5 shrink-0 cursor-pointer">
-              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <a href="#book" onclick="preselectService('floor_ceramic')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
+              <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </a>
           </div>
         </div>
@@ -2140,19 +2162,19 @@
       </h2>
     </div>
     <div class="ms-steps">
-      <div class="ms-step">
+      <div class="ms-step ms-fade-up">
         <span class="ms-num font-serif">01.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">አገልግሎትዎን ይዘዙ</span><span data-lang-block="en">Book your service</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">አገልግሎቱን፣ ቀኑን እና ቦታውን ይምረጡ። መጠኑን ይንገሩን — በካሬ ሜትር፣ በወንበር ወይም በስራ።</span><span data-lang-block="en">Choose the service, date and place. Tell us the size — per square metre, per seat or per job.</span></p>
         <div class="ms-ph">{!! $responsiveImg($featurePhotos[0]['file'], $featurePhotos[0]['am'], $featurePhotos[0]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>
       </div>
-      <div class="ms-step">
+      <div class="ms-step ms-fade-up">
         <span class="ms-num font-serif">02.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">ቡድናችን ይደርሳል</span><span data-lang-block="en">Our team arrives</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">ዩኒፎርም የለበሰ ቡድን ከሙያዊ ማሽኖች እና ደህንነቱ የተጠበቀ ሳሙናዎች ጋር ይደርሳል።</span><span data-lang-block="en">A uniformed crew arrives with professional machines and safe detergents.</span></p>
         <div class="ms-ph">{!! $responsiveImg($featurePhotos[1]['file'], $featurePhotos[1]['am'], $featurePhotos[1]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>
       </div>
-      <div class="ms-step">
+      <div class="ms-step ms-fade-up">
         <span class="ms-num font-serif">03.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">በትኩስነቱ ይደሰቱ</span><span data-lang-block="en">Enjoy the freshness</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">እንጨርሳለን፣ እርስዎ ይፈትሹ። ንጹህ ወለሎች፣ የሚያብረቀርቅ መስታወት እና እንደ አዲስ የሚሸት ቦታ።</span><span data-lang-block="en">We finish, you inspect. Spotless floors, shining glass and a space that smells new again.</span></p>
@@ -2220,7 +2242,7 @@
     </div>
     <div class="grid md:grid-cols-2 gap-6">
       @foreach($beforeAfterPairs as $pair)
-      <div class="ms-ba" style="--ba-pos: 50%">
+      <div class="ms-ba ms-fade-up" style="--ba-pos: 50%">
         <img src="{{ \App\Models\Photo::resolveUrl($pair['before']->url) }}" alt="{{ $pair['before']->title_en ?: $pair['before']->title_am ?: 'Before cleaning' }}" loading="lazy">
         <img class="ms-ba-after" src="{{ \App\Models\Photo::resolveUrl($pair['after']->url) }}" alt="{{ $pair['after']->title_en ?: $pair['after']->title_am ?: 'After cleaning' }}" loading="lazy">
         <span class="ms-ba-tag ms-ba-tag-before"><span data-lang-block="am">ከዚህ በፊት</span><span data-lang-block="en">Before</span></span>
@@ -2253,8 +2275,8 @@
         </p>
       </div>
       <div class="mt-6 md:mt-0 flex items-center gap-3">
-        <a href="#book" class="bg-navy hover:bg-teal-dark text-white text-xs font-bold px-4 py-2.5 rounded-lg transition flex items-center gap-2">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+        <a href="#book" class="bg-navy hover:bg-teal-dark text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 min-h-[44px]">
+          <i data-lucide="sparkles" class="w-5 h-5"></i>
           <span data-lang-block="am">የእርሶንም ያጽዱ</span><span data-lang-block="en">Book Transformation</span>
         </a>
       </div>
@@ -2458,16 +2480,16 @@
       <h2 class="ms-sec-title font-serif font-semibold text-3xl"><span data-lang-block="am">ቀጠሮ ይያዙ</span><span data-lang-block="en">Schedule your cleaning</span></h2>
     </div>
 
-    <div class="bg-white rounded-xl p-6 md:p-9 shadow-sm border border-navy/10">
+    <div class="bg-white rounded-2xl ms-fade-up p-6 md:p-9 shadow-sm border border-navy/10">
       <!-- Step Indicator Bar: Horizontally scrollable and compact on phone screens -->
       <div class="flex items-center justify-between mb-8 text-xs font-bold text-navy/40 uppercase tracking-wider overflow-x-auto pb-2 gap-2 sm:gap-3 -mx-2 px-2 sm:mx-0 sm:px-0 scrollbar-none" style="-webkit-overflow-scrolling: touch;">
-        <span class="step-dot text-teal-dark bg-teal/10 font-black whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer py-1.5 px-2.5 rounded-lg transition" data-step="1">01 <span data-lang-block="am">አገልግሎት</span><span data-lang-block="en">Service</span></span>
+        <span class="step-dot text-teal-dark bg-teal/10 font-black whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer py-1.5 px-2.5 rounded-lg transition min-h-[44px]" data-step="1">01 <span data-lang-block="am">አገልግሎት</span><span data-lang-block="en">Service</span></span>
         <span class="text-navy/20 shrink-0 font-normal">›</span>
-        <span class="step-dot whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer py-1.5 px-2.5 rounded-lg transition" data-step="2">02 <span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Address</span></span>
+        <span class="step-dot whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer py-1.5 px-2.5 rounded-lg transition min-h-[44px]" data-step="2">02 <span data-lang-block="am">አድራሻ</span><span data-lang-block="en">Address</span></span>
         <span class="text-navy/20 shrink-0 font-normal">›</span>
-        <span class="step-dot whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer py-1.5 px-2.5 rounded-lg transition" data-step="3">03 <span data-lang-block="am">ቀጠሮ</span><span data-lang-block="en">Schedule</span></span>
+        <span class="step-dot whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer py-1.5 px-2.5 rounded-lg transition min-h-[44px]" data-step="3">03 <span data-lang-block="am">ቀጠሮ</span><span data-lang-block="en">Schedule</span></span>
         <span class="text-navy/20 shrink-0 font-normal">›</span>
-        <span class="step-dot whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer py-1.5 px-2.5 rounded-lg transition" data-step="4">04 <span data-lang-block="am">ማረጋገጫ</span><span data-lang-block="en">Confirm</span></span>
+        <span class="step-dot whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer py-1.5 px-2.5 rounded-lg transition min-h-[44px]" data-step="4">04 <span data-lang-block="am">ማረጋገጫ</span><span data-lang-block="en">Confirm</span></span>
       </div>
 
       <!-- R7: clear progress bar (Step 1 of 4) -->
@@ -2556,18 +2578,18 @@
           </p>
           <label class="text-xs font-semibold block mt-4 text-navy"><span data-lang-block="am">ብዛት / መጠን (Quantity / Units)</span><span data-lang-block="en">Quantity</span></label>
           <div class="flex items-center gap-3 mt-1.5 mb-2">
-            <button type="button" onclick="changeQty(-1)" class="w-11 h-11 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">−</button>
+            <button type="button" onclick="changeQty(-1)" class="w-11 h-11 rounded-xl border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">−</button>
             <span id="qty-display" class="font-serif font-semibold text-xl w-8 text-center text-navy">1</span>
-            <button type="button" onclick="changeQty(1)" class="w-11 h-11 rounded-md border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">+</button>
+            <button type="button" onclick="changeQty(1)" class="w-11 h-11 rounded-xl border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">+</button>
           </div>
           <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-5 flex items-center justify-between">
             <span class="text-xs sm:text-sm font-semibold text-teal-dark"><span data-lang-block="am">የግምት ድምር (Estimated Price)</span><span data-lang-block="en">Estimated total</span></span>
             <span id="wiz-total" class="font-serif font-semibold text-base sm:text-lg text-teal-dark"><span data-lang-block="am">አገልግሎት ይምረጡ ዋጋ ለማየት</span><span data-lang-block="en">Choose a service to see the price</span></span>
           </div>
           <button type="button" onclick="resetWizard()" class="w-full mt-1 text-xs font-bold text-navy/50 hover:text-red-600 py-2 cursor-pointer"><span data-lang-block="am">↺ ቀጠሮውን አጽዳ</span><span data-lang-block="en">↺ Clear booking</span></button>
-          <button type="button" onclick="validateStep1AndContinue()" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-2 min-h-[48px]">
+          <button type="button" onclick="validateStep1AndContinue()" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 min-h-[48px]">
             <span data-lang-block="am">ቀጣይ: አድራሻ ያስገቡ</span><span data-lang-block="en">Next: Address &amp; Location</span>
-            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <i data-lucide="arrow-right" class="w-5 h-5"></i>
           </button>
         </div>
 
@@ -2600,8 +2622,8 @@
             <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> እባክዎ ክፍለ ከተማ ይምረጡ እና ጎዳና / የቤት ቁጥር ያስገቡ! (Please select a subcity and enter the street address!)
           </p>
           <div class="flex gap-3">
-            <button type="button" onclick="showWizardStep(1)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
-            <button type="button" onclick="validateStep2AndContinue()" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
+            <button type="button" onclick="showWizardStep(1)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-xl text-sm cursor-pointer hover:bg-fog min-h-[48px]"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
+            <button type="button" onclick="validateStep2AndContinue()" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-xl text-sm transition cursor-pointer min-h-[48px]"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
           </div>
         </div>
 
@@ -2790,8 +2812,8 @@
 
           <textarea id="book-notes" aria-label="Notes (optional)" placeholder="Notes (optional) / ተጨማሪ ማስታወሻ..." class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" rows="2"></textarea>
           <div class="flex gap-3">
-            <button type="button" onclick="showWizardStep(2)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
-            <button type="button" onclick="validateStep3AndContinue()" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer shadow-md"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
+            <button type="button" onclick="showWizardStep(2)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-xl text-sm cursor-pointer hover:bg-fog min-h-[48px]"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
+            <button type="button" onclick="validateStep3AndContinue()" class="flex-1 bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-xl text-sm transition cursor-pointer min-h-[48px] shadow-md"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Continue</span></button>
           </div>
         </div>
 
@@ -2801,7 +2823,7 @@
 
           <!-- Your Booking summary (recap of Steps 1-3, like the mini-app
                confirmation panel) — values filled by updateStep4Summary(). -->
-          <div class="mb-4 p-4 rounded-xl bg-teal-light/40 border border-teal/30">
+          <div class="mb-4 p-4 rounded-2xl bg-teal-light/40 border border-teal/30">
             <p class="text-xs font-bold text-teal-dark uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
               <i data-lucide="clipboard-check" class="w-3.5 h-3.5"></i>
               <span data-lang-block="am">የእርስዎ ቀጠሮ</span>
@@ -2914,7 +2936,7 @@
           </div>
           <div class="flex gap-3">
             <button type="button" onclick="showWizardStep(3)" class="flex-1 border border-navy/15 font-bold py-3.5 rounded-md text-sm cursor-pointer hover:bg-fog"><span data-lang-block="am">ተመለስ</span><span data-lang-block="en">Back</span></button>
-            <button type="submit" id="btn-submit-booking" class="flex-1 bg-teal-dark hover:bg-teal text-white font-bold py-3.5 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ቀጠሮ አረጋግጥ</span><span data-lang-block="en">Confirm Booking</span></button>
+            <button type="submit" id="btn-submit-booking" class="flex-1 bg-teal-dark hover:bg-teal text-white font-bold py-3.5 rounded-xl text-sm transition cursor-pointer min-h-[48px]"><span data-lang-block="am">ቀጠሮ አረጋግጥ</span><span data-lang-block="en">Confirm Booking</span></button>
           </div>
           <div id="booking-error-msg" class="hidden mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs text-center font-bold"></div>
         </div>
@@ -2952,7 +2974,7 @@
           <button type="button" id="wiz-sticky-next" onclick="wizStickyNext()" class="shrink-0 min-h-[48px] bg-navy hover:bg-teal-dark text-white font-bold text-sm px-6 rounded-xl transition cursor-pointer flex items-center gap-2">
             <span id="wiz-sticky-next-label"><span data-lang-block="am">ቀጣይ</span><span data-lang-block="en">Next</span></span>
             <span id="wiz-sticky-confirm-label" class="hidden"><span data-lang-block="am">ቀጠሮ አረጋግጥ</span><span data-lang-block="en">Confirm booking</span></span>
-            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <i data-lucide="arrow-right" class="w-5 h-5"></i>
           </button>
         </div>
       </form>
@@ -2971,7 +2993,7 @@
   <p class="text-xs text-navy/60 mb-5 max-w-md mx-auto"><span data-lang-block="am">የትዕዛዝ ቁጥርዎን ወይም ስልክዎን በማስገባት የትዕዛዝዎን የስራ ሂደት እና የቀጠሮ ቀን ይመልከቱ</span><span data-lang-block="en">Enter your order ID or phone number to see real-time order status and schedule.</span></p>
   <form onsubmit="trackOrder(event)" class="max-w-md mx-auto flex gap-2">
     <input id="track-input" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" aria-label="Order number or phone" placeholder="MEASH-000123 or phone" class="flex-1 rounded-md border border-navy/15 px-4 py-3 text-sm focus:outline-none focus:border-teal">
-    <button type="submit" id="btn-track-submit" class="bg-navy hover:bg-teal-dark text-white font-bold px-6 rounded-md text-sm transition cursor-pointer"><span data-lang-block="am">ፈልግ</span><span data-lang-block="en">Track</span></button>
+    <button type="submit" id="btn-track-submit" class="bg-navy hover:bg-teal-dark text-white font-bold px-6 rounded-xl text-sm transition cursor-pointer min-h-[44px]"><span data-lang-block="am">ፈልግ</span><span data-lang-block="en">Track</span></button>
   </form>
   <div id="track-result" class="hidden mt-6 text-left"></div>
   </div>
@@ -5250,7 +5272,7 @@
     </a>
   </div>
   <button type="button" id="fab-toggle" aria-label="Contact Meash Cleaning" aria-haspopup="menu" aria-expanded="false" class="w-14 h-14 rounded-full bg-[#3E8ECC] hover:bg-[#2F6FA8] text-white shadow-xl flex items-center justify-center transition cursor-pointer">
-    <i data-lucide="message-circle" class="w-6 h-6"></i>
+    <i data-lucide="message-circle" class="w-5 h-5"></i>
   </button>
 </div>
 
@@ -5330,6 +5352,49 @@
     }, { passive: true });
     new MutationObserver(function () { modalOpen = anyModalOpen(); apply(); }).observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
     onScroll();
+  })();
+</script>
+
+
+<script>
+  // R8: CSS-only animations — fade-up on scroll (once) + trust-bar count-up.
+  // Respects prefers-reduced-motion; fade-up is skipped entirely then.
+  (function () {
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var fadeEls = document.querySelectorAll('.ms-fade-up');
+    if (!reduceMotion && 'IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('ms-in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12 });
+      fadeEls.forEach(function (el) { io.observe(el); });
+    } else {
+      fadeEls.forEach(function (el) { el.classList.add('ms-in'); });
+    }
+    function runCount(el) {
+      var target = parseInt(el.getAttribute('data-count') || '0', 10);
+      if (reduceMotion || !target) { el.textContent = String(target); return; }
+      var start = null, dur = 900;
+      function tick(ts) {
+        if (!start) start = ts;
+        var p = Math.min((ts - start) / dur, 1);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+    var counters = document.querySelectorAll('.ms-count');
+    if ('IntersectionObserver' in window) {
+      var cio = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { runCount(e.target); cio.unobserve(e.target); }
+        });
+      }, { threshold: 0.4 });
+      counters.forEach(function (el) { cio.observe(el); });
+    } else {
+      counters.forEach(runCount);
+    }
   })();
 </script>
 

@@ -113,7 +113,8 @@ class RedesignTest extends TestCase
         $this->assertStringContainsString('Mon–Sat 8:00–18:00', $trust);
         $this->assertStringContainsString('Licensed &amp; Insured', $trust);
         // Discount comes from the real pricing rules (weekly 15 = maximum).
-        $this->assertStringContainsString('Up to 15% off', $trust);
+        // R8 wraps the number in a count-up span, so assert the pieces.
+        $this->assertStringContainsString('Up to <span class="ms-count" data-count="15">15</span>% off', $trust);
         $this->assertStringContainsString('Weekly plans &amp; recurring contracts', $trust);
 
         // Unverified / false claims are NOT used anywhere on the page.
@@ -186,7 +187,7 @@ class RedesignTest extends TestCase
         $this->assertStringContainsString('WHY MEASH?', $about);
         // Exactly 4 icon cards in a 2x2 grid.
         $this->assertStringContainsString('grid grid-cols-2 gap-4', $about);
-        $this->assertSame(4, substr_count($about, 'ms-card p-5'), 'Why Meash must have exactly 4 cards');
+        $this->assertSame(4, substr_count($about, 'ms-card ms-fade-up p-5'), 'Why Meash must have exactly 4 cards');
         $this->assertStringContainsString('Fully Licensed &amp; Insured', $about);
         $this->assertStringContainsString('Certified &amp; Vetted Teams', $about);
         $this->assertStringContainsString('Eco-Friendly &amp; Safe', $about);
@@ -403,5 +404,65 @@ class RedesignTest extends TestCase
         // The Ethiopian calendar logic in step 3 is untouched.
         $this->assertStringContainsString('id="book-date"', $book);
         $this->assertStringContainsString('EC.toEth', $html);
+    }
+
+
+    public function test_r8_css_animations_and_tap_targets(): void
+    {
+        $this->seedEssentialServices();
+
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+        $head = substr($html, 0, strpos($html, '</style>') ?: strlen($html));
+
+        // Fade-up on scroll (once): hidden state only when JS runs, observer adds .ms-in and unobserves.
+        $this->assertStringContainsString("html.js .ms-fade-up { opacity: 0; transform: translateY(16px);", $head);
+        $this->assertStringContainsString('html.js .ms-fade-up.ms-in', $head);
+        $this->assertStringContainsString("document.documentElement.classList.add('js')", $html);
+        $this->assertStringContainsString("document.querySelectorAll('.ms-fade-up')", $html);
+        $this->assertStringContainsString('io.unobserve(e.target)', $html);
+        // Fade-up is on the redesigned cards: 4 trust + 4 why + 12 service + 3 steps + 1 booking = 24.
+        $this->assertGreaterThanOrEqual(24, substr_count($html, 'ms-fade-up'));
+
+        // Count-up on the trust bar discount (the only countable trust-bar number):
+        // 15% comes from pricing_rules.weekly_discount (R3), animated 0 -> 15.
+        $this->assertStringContainsString('class="ms-count" data-count="15"', $html);
+        $this->assertStringContainsString('requestAnimationFrame(tick)', $html);
+
+        // Soft gradient glow behind the hero image.
+        $this->assertStringContainsString('<div class="ms-hero-glow" aria-hidden="true"></div>', $html);
+        $this->assertStringContainsString('.ms-hero-glow { position: absolute;', $head);
+        $this->assertStringContainsString('radial-gradient(60% 60% at 50% 40%, rgba(62,142,204,.35)', $head);
+
+        // Smooth hover on buttons/links + prefers-reduced-motion respected.
+        $this->assertStringContainsString('button, a { transition-property:', $head);
+        $this->assertStringContainsString('@media (prefers-reduced-motion: reduce)', $head);
+        $this->assertStringContainsString("window.matchMedia('(prefers-reduced-motion: reduce)')", $html);
+        $this->assertStringContainsString('reduceMotion', $html);
+
+        // Consistent 20px icons on buttons/cards: no 16px button arrows left.
+        $this->assertStringNotContainsString('arrow-right" class="w-4 h-4"', $html);
+        $this->assertStringContainsString('arrow-right" class="w-5 h-5"', $html);
+        $this->assertStringContainsString('<i data-lucide="message-circle" class="w-5 h-5"></i>', $html);
+
+        // Button radius 12px / height 48px; cards 16px.
+        $this->assertStringContainsString('rounded-xl text-sm transition cursor-pointer min-h-[48px]', $html);
+        $this->assertStringContainsString('rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]', $html);
+        $this->assertStringContainsString('<div class="bg-white rounded-2xl ms-fade-up p-6 md:p-9 shadow-sm border border-navy/10">', $html);
+
+        // Tap targets >= 44px: nav links, step dots, track submit, gallery CTA.
+        $this->assertStringContainsString('min-h-[44px] flex items-center', $html);
+        $this->assertStringContainsString('rounded-lg transition min-h-[44px]" data-step=', $html);
+        $this->assertStringContainsString('rounded-xl text-sm transition cursor-pointer min-h-[44px]', $html);
+        $this->assertStringContainsString('rounded-xl transition flex items-center gap-2 min-h-[44px]', $html);
+        // Dots keep a small look but get a 44px-tall tap area.
+        $this->assertStringContainsString('.ms-gal-dot::before', $head);
+        $this->assertStringContainsString('.ms-dot::before', $head);
+        $this->assertStringContainsString('min-height: 44px; padding: 12px 9px;', $head);
+
+        // Body text at least 14px: the header nav was 13px, now 14px (text-sm).
+        $this->assertStringNotContainsString('text-[13px]', $html);
+        $this->assertStringContainsString('class="hidden xl:flex items-center gap-1 text-sm font-bold', $html);
     }
 }
