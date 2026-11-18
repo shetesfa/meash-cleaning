@@ -1106,11 +1106,23 @@
   .ms-lb .ms-lb-row { display: flex; gap: 12px; margin-top: 14px; align-items: center; }
   .ms-lb button { width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.35); background: rgba(255,255,255,.1); color: #fff; display: grid; place-items: center; cursor: pointer; }
   .ms-lb .ms-lb-close { position: absolute; top: 16px; right: 16px; }
-  /* Q8: floating contact buttons — safe-area aware; lifted above the
-     booking wizard while it is on screen; hidden while a modal is open. */
-  #floating-actions { bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
-  #floating-actions.floating-lifted { bottom: calc(7rem + env(safe-area-inset-bottom)); }
+  /* R5 (replaces Q8's two pills): ONE round 56px menu button, bottom-right,
+     safe margin + safe-area. Hidden until the user scrolls past the hero
+     (ms-fab-visible), hidden on the booking form and while a modal is open
+     (floating-hidden). On phones it sits above the sticky bottom bar. */
+  #floating-actions { bottom: calc(1.5rem + env(safe-area-inset-bottom)); opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .3s ease, transform .3s ease; }
+  #floating-actions.ms-fab-visible { opacity: 1; pointer-events: auto; transform: none; }
   #floating-actions.floating-hidden { display: none; }
+  @media (max-width: 820px) { #floating-actions.ms-fab-visible { bottom: calc(4.75rem + env(safe-area-inset-bottom)); } }
+  /* The small menu above the button (WhatsApp / Telegram / Call). */
+  .ms-fab-menu { opacity: 0; pointer-events: none; transform: translateY(6px) scale(.97); transform-origin: bottom right; transition: opacity .2s ease, transform .2s ease; }
+  #floating-actions.ms-fab-open .ms-fab-menu { opacity: 1; pointer-events: auto; transform: none; }
+  /* R5: slim sticky bottom bar on phones (Call + Book now). Slides in after
+     the hero; hides on the booking form (the form has its own bar, R7) and
+     while a modal is open. */
+  #sticky-bottom-bar { transform: translateY(110%); transition: transform .3s ease; }
+  #sticky-bottom-bar.ms-bar-visible { transform: none; }
+  #sticky-bottom-bar.ms-bar-hidden { transform: translateY(110%); }
 
   /* Q9: inputs must be at least 16px on phones, or iPhones zoom in
      when the field is focused. */
@@ -1552,7 +1564,7 @@
 <main id="main-content">
 
 <!-- ================= HERO ================= -->
-<section class="relative bg-gradient-to-b from-teal-light/20 via-transparent to-transparent">
+<section id="hero" class="relative bg-gradient-to-b from-teal-light/20 via-transparent to-transparent">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-[1.15fr_.85fr] gap-4 md:gap-6 md:min-h-[580px] items-center py-6 md:py-16">
     <div class="flex flex-col justify-center pr-0 md:pr-10 order-2 md:order-1">
       <div class="inline-flex items-center gap-2 text-teal-dark bg-teal-light/40 border border-teal/20 px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide mb-5 w-fit">
@@ -5036,32 +5048,50 @@
     });
   }
 </script>
-<!-- Floating Quick Chat Buttons (WhatsApp & Telegram) -->
-<div id="floating-actions" class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2.5 pointer-events-auto">
-  <a href="https://wa.me/251970075509?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20request%20a%20quote" 
-     target="_blank" 
-     rel="noopener noreferrer"
-     class="flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white px-3.5 py-2.5 min-h-[44px] rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-xs font-bold"
-     title="Chat on WhatsApp">
-    <i data-lucide="message-circle" class="w-5 h-5 text-white"></i>
-    <span class="hidden sm:inline">WhatsApp</span>
-  </a>
-  <a href="https://t.me/meash_cleaning_solution_bot" 
-     target="_blank" 
-     rel="noopener noreferrer"
-     class="flex items-center gap-2 bg-[#0088cc] hover:bg-[#0077b5] text-white px-3.5 py-2.5 min-h-[44px] rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-xs font-bold"
-     title="Telegram Bot">
-    <i data-lucide="send" class="w-5 h-5 text-white"></i>
-    <span class="hidden sm:inline">Telegram Bot</span>
-  </a>
+<!-- R5: ONE round 56px contact button (bottom-right) opening a small menu. -->
+<div id="floating-actions" class="fixed bottom-6 right-6 z-40">
+  <div class="ms-fab-menu absolute bottom-[4.5rem] right-0 w-56 rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-navy/10 dark:border-white/10 p-2" role="menu" aria-label="Contact Meash Cleaning">
+    <a href="https://wa.me/251{{ ltrim($phone1, '0') }}?text=Hello%20Meash%20Cleaning%20Solution,%20I%20would%20like%20to%20request%20a%20quote" target="_blank" rel="noopener noreferrer" role="menuitem" class="flex items-center gap-3 min-h-[44px] px-3 py-2 rounded-xl hover:bg-[#25D366]/10 text-sm font-bold text-navy dark:text-white transition">
+      <span class="w-9 h-9 shrink-0 rounded-full bg-[#25D366] text-white flex items-center justify-center"><i data-lucide="message-circle" class="w-5 h-5"></i></span>
+      WhatsApp
+    </a>
+    <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" rel="noopener noreferrer" role="menuitem" class="flex items-center gap-3 min-h-[44px] px-3 py-2 rounded-xl hover:bg-[#0088cc]/10 text-sm font-bold text-navy dark:text-white transition">
+      <span class="w-9 h-9 shrink-0 rounded-full bg-[#0088cc] text-white flex items-center justify-center"><i data-lucide="send" class="w-5 h-5"></i></span>
+      Telegram Bot
+    </a>
+    <a href="tel:{{ $phone1 }}" role="menuitem" class="flex items-center gap-3 min-h-[44px] px-3 py-2 rounded-xl hover:bg-[#3E8ECC]/10 text-sm font-bold text-navy dark:text-white transition">
+      <span class="w-9 h-9 shrink-0 rounded-full bg-navy text-white flex items-center justify-center"><i data-lucide="phone" class="w-5 h-5"></i></span>
+      <span data-lang-block="am">ደውል {{ $phone1 }}</span><span data-lang-block="en">Call {{ $phone1 }}</span>
+    </a>
+  </div>
+  <button type="button" id="fab-toggle" aria-label="Contact Meash Cleaning" aria-haspopup="menu" aria-expanded="false" class="w-14 h-14 rounded-full bg-[#3E8ECC] hover:bg-[#2F6FA8] text-white shadow-xl flex items-center justify-center transition cursor-pointer">
+    <i data-lucide="message-circle" class="w-6 h-6"></i>
+  </button>
 </div>
 
-<!-- Q8: keep the floating WhatsApp/Telegram buttons off the booking
-     wizard's Next/Submit buttons and out of the way of open modals. -->
+<!-- R5: slim sticky bottom bar on phones (Call + Book now). -->
+<div id="sticky-bottom-bar" class="fixed bottom-0 inset-x-0 z-40 md:hidden" style="padding-bottom: env(safe-area-inset-bottom)">
+  <div class="flex gap-2 p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-navy/10 shadow-[0_-4px_16px_rgba(0,0,0,.08)]">
+    <a href="tel:{{ $phone1 }}" class="flex-1 h-12 rounded-xl border border-navy/15 bg-white dark:bg-slate-800 text-navy dark:text-white font-bold text-sm flex items-center justify-center gap-2">
+      <i data-lucide="phone" class="w-5 h-5 text-[#2F6FA8]"></i> <span data-lang-block="am">ደውል</span><span data-lang-block="en">Call</span>
+    </a>
+    <a href="#book" class="flex-1 h-12 rounded-xl bg-[#3E8ECC] hover:bg-[#2F6FA8] text-white font-bold text-sm flex items-center justify-center gap-2 transition">
+      <i data-lucide="calendar-check" class="w-5 h-5"></i> <span data-lang-block="am">አሁን ያዙ</span><span data-lang-block="en">Book now</span>
+    </a>
+  </div>
+</div>
+
+<!-- R5: fab + sticky bar behaviour — fade in after the hero, hide on the
+     booking form (it has its own bar, R7) and while a modal is open. -->
 <script>
   (function () {
     var fab = document.getElementById('floating-actions');
-    if (!fab) return;
+    var bar = document.getElementById('sticky-bottom-bar');
+    var hero = document.getElementById('hero');
+    var book = document.getElementById('book');
+    var toggle = document.getElementById('fab-toggle');
+    if (!fab || !bar) return;
+    var pastHero = false, onBook = false, modalOpen = false;
     function anyModalOpen() {
       var staff = document.getElementById('staff-auth-modal');
       if (staff && !staff.classList.contains('hidden')) return true;
@@ -5071,20 +5101,50 @@
       if (nav && !nav.classList.contains('hidden')) return true;
       return false;
     }
-    function updateFab() {
-      fab.classList.toggle('floating-hidden', anyModalOpen());
+    function apply() {
+      var show = pastHero && !onBook && !modalOpen;
+      fab.classList.toggle('ms-fab-visible', show);
+      fab.classList.toggle('floating-hidden', modalOpen || onBook);
+      bar.classList.toggle('ms-bar-visible', show);
+      bar.classList.toggle('ms-bar-hidden', !show);
+      if (!show) closeMenu();
     }
-    var book = document.getElementById('book');
+    function onScroll() {
+      pastHero = window.scrollY > (hero ? hero.offsetHeight - 120 : 600);
+      modalOpen = anyModalOpen();
+      apply();
+    }
+    function closeMenu() {
+      fab.classList.remove('ms-fab-open');
+      if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    }
+    if (toggle) {
+      toggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = fab.classList.toggle('ms-fab-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
+    document.addEventListener('click', function (e) {
+      if (!fab.contains(e.target)) closeMenu();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeMenu();
+    });
     if ('IntersectionObserver' in window && book) {
       new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
-          fab.classList.toggle('floating-lifted', e.isIntersecting);
+          onBook = e.isIntersecting;
+          apply();
         });
       }, { rootMargin: '0px 0px -80px 0px' }).observe(book);
     }
-    // Modals open/close by toggling classes or adding/removing nodes.
-    new MutationObserver(updateFab).observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
-    updateFab();
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+      if (!ticking) { window.requestAnimationFrame(function () { onScroll(); ticking = false; }); ticking = true; }
+    }, { passive: true });
+    new MutationObserver(function () { modalOpen = anyModalOpen(); apply(); }).observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+    onScroll();
   })();
 </script>
 

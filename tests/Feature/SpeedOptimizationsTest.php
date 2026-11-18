@@ -115,9 +115,10 @@ class SpeedOptimizationsTest extends TestCase
         $this->assertStringContainsString('PAID', $html);
     }
 
-    // Q8: icon buttons are at least 44x44px on phones (icon stays small);
-    // floating buttons lift above the booking wizard, hide with modals,
-    // and respect the safe area.
+    // Q8: icon buttons are at least 44x44px on phones (icon stays small).
+    // R5 superseded Q8's two floating pills: ONE 56px menu button now fades
+    // in after the hero, hides on the booking form and with modals, and
+    // respects the safe area.
     public function test_q8_tap_targets_and_floating_buttons(): void
     {
         $res = $this->get('/');
@@ -129,8 +130,8 @@ class SpeedOptimizationsTest extends TestCase
         $this->assertStringContainsString('onclick="toggleStaffPasswordVisibility()" class="absolute right-1 top-1/2 -translate-y-1/2 min-w-[44px] min-h-[44px]', $html);
         $this->assertStringContainsString('onclick="changeQty(-1)" class="w-11 h-11', $html);
         $this->assertStringContainsString('id="floating-actions"', $html);
-        $this->assertStringContainsString('#floating-actions { bottom: calc(1.5rem + env(safe-area-inset-bottom)); }', $html);
-        $this->assertStringContainsString('floating-lifted', $html);
+        $this->assertStringContainsString('#floating-actions { bottom: calc(1.5rem + env(safe-area-inset-bottom));', $html);
+        $this->assertStringContainsString('ms-fab-visible', $html);
         $this->assertStringContainsString('floating-hidden', $html);
         $this->assertStringContainsString("document.getElementById('book')", $html);
         // Slider / lightbox controls were already >= 44px (46px / 48px).

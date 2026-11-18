@@ -254,4 +254,40 @@ class RedesignTest extends TestCase
         $this->assertStringContainsString('02.', $html);
         $this->assertStringContainsString('03.', $html);
     }
+
+    // R5: ONE 56px floating menu button + phone sticky bar (Call / Book now).
+    public function test_r5_one_floating_button_and_sticky_bar(): void
+    {
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+
+        // Exactly one floating container with one 56px round button.
+        $this->assertSame(1, substr_count($html, 'id="floating-actions"'));
+        $this->assertStringContainsString('id="fab-toggle"', $html);
+        $this->assertStringContainsString('w-14 h-14 rounded-full', $html);
+        $this->assertStringContainsString('aria-haspopup="menu"', $html);
+        // The small menu above it holds WhatsApp, Telegram and Call.
+        $this->assertStringContainsString('ms-fab-menu', $html);
+        $this->assertStringContainsString('role="menu"', $html);
+        $this->assertSame(1, substr_count($html, 'id="sticky-bottom-bar"'));
+        // The old two-pill floating buttons are gone (their container class
+        // and the Telegram pill's title no longer exist; the menu reuses the
+        // WhatsApp link text and the Telegram blue elsewhere on the page).
+        $this->assertStringNotContainsString('bg-[#25D366] hover:bg-[#20ba5a]', $html);
+        $this->assertStringNotContainsString('flex flex-col items-end gap-2.5', $html);
+        $this->assertStringNotContainsString('title="Telegram Bot"', $html);
+        $this->assertStringNotContainsString('floating-lifted', $html);
+        // Phone sticky bar: Call + Book now, phones only.
+        $barStart = strpos($html, 'id="sticky-bottom-bar"');
+        $bar = substr($html, $barStart, 1200);
+        $this->assertStringContainsString('md:hidden', $bar);
+        $this->assertStringContainsString('Book now', $bar);
+        $this->assertStringContainsString('tel:', $bar);
+        // Behaviour: fades in only after scrolling past the hero; hides on
+        // the booking form and while a modal is open.
+        $this->assertStringContainsString('ms-fab-visible', $html);
+        $this->assertStringContainsString('hero.offsetHeight', $html);
+        $this->assertStringContainsString('floating-hidden', $html);
+    }
 }
