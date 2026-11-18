@@ -243,6 +243,20 @@ class ProductionHardeningSecurityTest extends TestCase
         $res->assertHeaderMissing('Strict-Transport-Security');
     }
 
+    // Q5: behind an HTTPS proxy, X-Forwarded-Proto: https must make the
+    // request secure — url('/') is https and HSTS is sent in production.
+    public function test_trusted_proxy_https_forwarding(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+
+        // Plain-http URL, as the proxy forwards it, plus the header.
+        $res = $this->get('http://meashcleaningsolution.com.et/', ['X-Forwarded-Proto' => 'https']);
+        $res->assertStatus(200);
+        $res->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        // og:url is built from url('/'), so it must be https too.
+        $res->assertSee('<meta property="og:url" content="https://meashcleaningsolution.com.et">', false);
+    }
+
     public function test_x_xss_protection_header_is_removed(): void
     {
         $res = $this->get('/');
