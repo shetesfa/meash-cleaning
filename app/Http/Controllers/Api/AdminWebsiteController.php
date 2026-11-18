@@ -41,6 +41,8 @@ class AdminWebsiteController extends Controller
             'company_email' => 'nullable|email|max:128',
             'company_address' => 'nullable|string|max:255',
             'company_address_am' => 'nullable|string|max:255',
+            'map_embed_url' => 'nullable|string|max:2048',
+            'map_link_url' => 'nullable|string|max:2048',
             'social_handle' => 'nullable|string|max:128',
             'working_hours_am' => 'nullable|string|max:255',
             'working_hours_en' => 'nullable|string|max:255',

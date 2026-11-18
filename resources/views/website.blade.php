@@ -29,6 +29,11 @@
   $subtitleAm = $websiteSettings['company_subtitle_am'] ?? 'ከፍተኛ ጥራት የጠበቀ የንግድ ተቋማት የጽዳት አገልግሎት — ሆቴሎች | ሬስቶራንቶች | ካፌዎች | ቢሮዎች';
   $addressAm = $websiteSettings['company_address_am'] ?? 'አያት አደባባይ፣ አዲስ አበባ';
   $addressEn = $websiteSettings['company_address'] ?? 'Ayat Square, Addis Ababa, Ethiopia';
+  // Google Maps URLs come from settings (map_embed_url / map_link_url);
+  // the Ayat Square search links are the safe fallback until the owner
+  // pastes the exact office location in admin settings.
+  $mapEmbedUrl = $websiteSettings['map_embed_url'] ?? 'https://www.google.com/maps?q=Ayat+Square+Addis+Ababa&output=embed';
+  $mapLinkUrl = $websiteSettings['map_link_url'] ?? 'https://maps.google.com/?q=Ayat+Square+Addis+Ababa';
   $email = $websiteSettings['company_email'] ?? 'meashcleaningsolution@gmail.com';
   $hoursAm = $websiteSettings['working_hours_am'] ?? 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)';
   $hoursEn = $websiteSettings['working_hours_en'] ?? 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday & Night Shift by Appointment)';
@@ -2884,7 +2889,7 @@
       <div class="rounded-3xl overflow-hidden border border-navy/10 shadow-lg h-[460px] lg:h-[580px] bg-slate-100 dark:bg-slate-800 relative">
         <iframe
           title="Meash Cleaning Location in Ayat Addis Ababa"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15760.329864205844!2d38.861111!3d9.022778!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b910055555555%3A0x1111111111111111!2sAyat%20Addis%20Ababa!5e0!3m2!1sen!2set!4v1700000000000!5m2!1sen!2set"
+          src="{{ $mapEmbedUrl }}"
           width="100%"
           height="100%"
           style="border:0;"
@@ -2904,7 +2909,7 @@
               <p class="text-xs text-navy/60 dark:text-slate-400">Ayat Square, Addis Ababa, Ethiopia</p>
             </div>
           </div>
-          <a href="https://maps.google.com/?q=Ayat+Square+Addis+Ababa" target="_blank" class="text-xs font-bold bg-navy hover:bg-teal text-white px-3 py-1.5 rounded-lg transition shrink-0">
+          <a href="{{ $mapLinkUrl }}" target="_blank" class="text-xs font-bold bg-navy hover:bg-teal text-white px-3 py-1.5 rounded-lg transition shrink-0">
             Open Map
           </a>
         </div>

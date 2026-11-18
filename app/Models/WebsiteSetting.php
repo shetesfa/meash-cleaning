@@ -86,6 +86,12 @@ class WebsiteSetting extends Model
             'company_email' => 'meashcleaningsolution@gmail.com',
             'company_address' => 'Ayat Square, Addis Ababa, Ethiopia',
             'company_address_am' => 'አያት አደባባይ፣ አዲስ አበባ',
+            // Google Maps: the exact office location is set by the owner in
+            // admin settings. Until then the Ayat Square search links below
+            // are the safe fallback (the old hardcoded embed URL contained
+            // placeholder values 0x1111111111111111 / 4v1700000000000).
+            'map_embed_url' => 'https://www.google.com/maps?q=Ayat+Square+Addis+Ababa&output=embed',
+            'map_link_url' => 'https://maps.google.com/?q=Ayat+Square+Addis+Ababa',
             'social_handle' => '@meashcleaningsolution',
             'working_hours_am' => 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)',
             'working_hours_en' => 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday & Night Shift by Appointment)',
@@ -255,6 +261,8 @@ class WebsiteSetting extends Model
             'company_email',
             'company_address',
             'company_address_am',
+            'map_embed_url',
+            'map_link_url',
             'social_handle',
             'working_hours_am',
             'working_hours_en',
