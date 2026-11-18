@@ -81,17 +81,34 @@ Windows batch scripts are provided in the project root:
 
 ---
 
-## 🐳 Docker Setup
+## 🌐 Hosting (Plesk — the only production host)
 
-To run Meash inside containerized environment:
+The live site runs on Plesk (Ethio Telecom Linux Bronze) at
+https://meashcleaningsolution.com.et, with a Plesk MySQL database
+(`meash_Db`). There is no Render, Docker, or TiDB anymore — the
+`render.yaml`, `Dockerfile`, and `docker/` files were deleted
+(2026-11-19) and every reference to them was removed. Deploys are a
+Git pull in Plesk followed by Composer Install; see the
+post-install-cmd note in `composer.json` (it must stay
+`db:seed --force` only — a Git pull removes it, so check and restore
+it after every pull).
 
-```bash
-# Build and run containers
-docker compose up -d --build
+### Keep the site awake
 
-# Run migrations
-docker compose exec app php artisan migrate --force
-```
+The Plesk PHP-FPM pool is `ondemand`, so the first visit after idle
+pays a cold start. Keep it warm with a free uptime monitor:
+
+1. Create a free account at UptimeRobot (https://uptimerobot.com) or any monitor.
+2. Add an **HTTP(s) monitor** for `https://meashcleaningsolution.com.et/up`
+   every **5 minutes**.
+3. `/up` is a light health check — it answers plain `OK`, touches no
+   database, sets no cookie, and costs ~1 ms.
+
+If the site ever moves back to a host that sleeps when idle, the
+alternative is a paid always-on instance (for example Render's
+Starter web-service plan, **$7/month** as of 2026, 512 MB / 0.5 CPU —
+but that would mean re-creating the whole Render/TiDB setup, so it
+is a last resort, not a plan).
 
 ---
 
