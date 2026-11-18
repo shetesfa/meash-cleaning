@@ -2472,7 +2472,7 @@
 
       <!-- R7: clear progress bar (Step 1 of 4) -->
       <div class="mb-2">
-        <div class="flex items-center justify-between text-[11px] font-bold text-navy/50 mb-1.5">
+        <div class="flex items-center justify-between text-xs font-bold text-navy/50 mb-1.5">
           <span id="wiz-progress-label"><span data-lang-block="am">ደረጃ <b class="wiz-step-num">1</b> ከ 4</span><span data-lang-block="en">Step <b class="wiz-step-num">1</b> of 4</span></span>
           <span id="wiz-progress-pct">25%</span>
         </div>
@@ -2946,7 +2946,7 @@
         <!-- R7: sticky bottom bar inside the form — total + Next always visible. -->
         <div class="sticky bottom-0 z-10 -mx-6 md:-mx-9 mt-6 px-6 md:px-9 py-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur border-t border-navy/10 rounded-b-xl flex items-center justify-between gap-3">
           <div class="min-w-0">
-            <div class="text-[11px] font-bold text-navy/50 uppercase tracking-wider"><span data-lang-block="am">የግምት ድምር</span><span data-lang-block="en">Estimated total</span></div>
+            <div class="text-xs font-bold text-navy/50 uppercase tracking-wider"><span data-lang-block="am">የግምት ድምር</span><span data-lang-block="en">Estimated total</span></div>
             <div id="wiz-total-sticky" class="font-serif font-semibold text-base text-teal-dark truncate"><span data-lang-block="am">አገልግሎት ይምረጡ ዋጋ ለማየት</span><span data-lang-block="en">Choose a service to see the price</span></div>
           </div>
           <button type="button" id="wiz-sticky-next" onclick="wizStickyNext()" class="shrink-0 min-h-[48px] bg-navy hover:bg-teal-dark text-white font-bold text-sm px-6 rounded-xl transition cursor-pointer flex items-center gap-2">
