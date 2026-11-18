@@ -15,15 +15,15 @@ echo.
 set /p choice="ምርጫዎን ያስገቡ [1, 2 ወይም 3] (ነባሪ = 1): "
 
 if "%choice%"=="2" goto CHECK_STATUS
-if "%choice%"=="3" goto SET_RENDER
+if "%choice%"=="3" goto SET_WEBHOOK
 goto LOCAL_POLL
 
-:SET_RENDER
+:SET_WEBHOOK
 echo.
-echo 🌐 ቦቱን ወደ Render Cloud (24/7 Webhook) እያገናኘን ነው...
+echo 🌐 ቦቱን ወደ Plesk Webhook (24/7) እያገናኘን ነው...
 php artisan telegram:webhook set
 echo.
-echo ✅ ቦቱ አሁን በ Render ላይ 24 ሰዓት ያለ ማቋረጥ ይሰራል!
+echo ✅ ቦቱ አሁን በ Plesk ላይ 24 ሰዓት ያለ ማቋረጥ ይሰራል!
 echo ኮምፒውተርዎ ቢጠፋ እንኳን ቴሌግራም ቦቱ መስራቱን ይቀጥላል።
 echo.
 pause
@@ -35,8 +35,8 @@ echo 💻 ቦቱን በ Local ኮምፒውተር ላይ እያስነሳን ነ�
 php artisan telegram:poll
 echo.
 echo -------------------------------------------------------------
-echo ወደ Render Cloud Webhook መመለስ ይፈልጋሉ?
-set /p restore="ወደ Render Webhook ይመለስ? (Y/N, ነባሪ Y): "
+echo ወደ Plesk Webhook መመለስ ይፈልጋሉ?
+set /p restore="ወደ Plesk Webhook ይመለስ? (Y/N, ነባሪ Y): "
 if /i "%restore%"=="n" goto END
 php artisan telegram:webhook set
 :END
