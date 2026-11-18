@@ -164,6 +164,7 @@
 <meta name="twitter:image" content="{{ $ogImage }}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url('/') }}">
+<link rel="canonical" href="{{ url('/') }}">
 
 <!-- LocalBusiness Schema.org JSON-LD Structured Data for Google Search -->
 <script type="application/ld+json">
