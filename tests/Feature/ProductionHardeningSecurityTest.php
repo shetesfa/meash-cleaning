@@ -209,4 +209,41 @@ class ProductionHardeningSecurityTest extends TestCase
         // Cache for update_id must be forgotten so Telegram can retry
         $this->assertFalse(Cache::has($cacheKey));
     }
+
+    // Prompt 12: HSTS only on HTTPS + production; X-XSS-Protection gone.
+
+    public function test_hsts_sent_on_https_in_production(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        // Full https URL: Symfony only marks the request secure when
+        // the request URL itself is https (server HTTPS vars are
+        // overwritten from the URL scheme).
+        $res = $this->get('https://meashcleaningsolution.com.et/');
+        $res->assertStatus(200);
+        $res->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+
+    public function test_hsts_not_sent_on_plain_http_even_in_production(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $res->assertHeaderMissing('Strict-Transport-Security');
+    }
+
+    public function test_hsts_not_sent_on_https_outside_production(): void
+    {
+        // Default test env is "testing": HTTPS alone must not pin HSTS.
+        $res = $this->get('https://meashcleaningsolution.com.et/');
+        $res->assertStatus(200);
+        $res->assertHeaderMissing('Strict-Transport-Security');
+    }
+
+    public function test_x_xss_protection_header_is_removed(): void
+    {
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $res->assertHeaderMissing('X-XSS-Protection');
+    }
 }

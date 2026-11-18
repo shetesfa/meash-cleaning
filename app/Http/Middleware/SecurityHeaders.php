@@ -17,9 +17,18 @@ class SecurityHeaders
 
         // Security headers for defense-in-depth
         $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('X-XSS-Protection', '1; mode=block');
+        // X-XSS-Protection is removed on purpose: modern browsers ignore
+        // it, and its old auditor could turn a reflected value into an
+        // XSS hole instead of blocking it. CSP is the protection now.
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+
+        // HSTS only on real HTTPS traffic in production: sending it over
+        // plain HTTP or on a dev machine would be wrong (browsers ignore
+        // it on HTTP, and a local/staging host must never be pinned).
+        if ($request->secure() && app()->environment('production')) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
 
         // Telegram MiniApp routes need to be embeddable in Telegram Web
         if ($request->is('telegram*') || $request->is('api/telegram*')) {
