@@ -9020,7 +9020,7 @@
                                     <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">አቢሲኒያ ባንክ (Bank of Abyssinia - BOA)</span>
                                     <div>
                                         <label class="text-[11px] text-slate-400 block mb-0.5">የሂሳብ ቁጥር (Account No):</label>
-                                        <input type="text" id="set-pay-boa-no" value="${escapeHtml(s.boa_account_number || '54321678')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
+                                        <input type="text" id="set-pay-boa-no" value="${escapeHtml(s.boa_account_number || '')}" class="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono text-xs">
                                     </div>
                                     <div>
                                         <label class="text-[11px] text-slate-400 block mb-0.5">የአካውንት ስም (Account Name):</label>

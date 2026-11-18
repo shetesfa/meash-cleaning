@@ -113,7 +113,11 @@ class WebsiteSetting extends Model
             'telebirr_account_name' => 'Meash Cleaning Solution',
             'cbe_account_number' => '1000552467891',
             'cbe_account_name' => 'Meash Cleaning Solution',
-            'boa_account_number' => '54321678',
+            // BOA: no real account number known yet — empty on purpose.
+            // '54321678' was a test/placeholder number; the website hides
+            // the Abyssinia line entirely until the real number is typed
+            // in admin settings (see website.blade.php $boaNo guard).
+            'boa_account_number' => '',
             'boa_account_name' => 'Meash Cleaning Solution',
             'awash_account_number' => '01320876543200',
             'awash_account_name' => 'Meash Cleaning Solution',

@@ -39,7 +39,11 @@
   $hoursEn = $websiteSettings['working_hours_en'] ?? 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday & Night Shift by Appointment)';
   $telebirrNo = $websiteSettings['telebirr_account_number'] ?? '0970075509';
   $cbeNo = $websiteSettings['cbe_account_number'] ?? '1000552467891';
-  $boaNo = $websiteSettings['boa_account_number'] ?? '54321678';
+  // BOA: show the Abyssinia line ONLY when a real account number is set.
+  // Empty, or the old test/placeholder number '54321678', hides the line
+  // everywhere (booking payment info uses @if(!empty($boaNo)) below).
+  $boaNo = $websiteSettings['boa_account_number'] ?? '';
+  if (trim((string)$boaNo) === '' || trim((string)$boaNo) === '54321678') $boaNo = '';
   $awashNo = $websiteSettings['awash_account_number'] ?? '01320876543200';
   $tiktokUrl = $websiteSettings['tiktok'] ?? 'https://www.tiktok.com/@meashcleaningsolution';
   $instagramUrl = $websiteSettings['instagram'] ?? 'https://instagram.com/meashcleaningsolution';
