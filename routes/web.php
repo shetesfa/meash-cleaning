@@ -30,9 +30,11 @@ Route::get('/miniapp', function () {
 });
 
 // 3. Master Internal PWA Operating Platform (Owner, Reception, Cleaners, Sales)
+// Throttled: the app shell is a plain GET, so without this one IP could
+// hammer it forever. 60 loads a minute per IP is far above real use.
 Route::get('/app/{any?}', function () {
     return view('app');
-})->where('any', '.*');
+})->where('any', '.*')->middleware('throttle:60,1');
 
 Route::get('/admin/{any?}', function () {
     return redirect('/app');

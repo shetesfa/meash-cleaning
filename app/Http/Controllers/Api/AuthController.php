@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -44,6 +45,16 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($request->input('password'), $user->password)) {
             RateLimiter::hit($throttleKey, 60);
+            // Failed logins go to the audit log: who tried, from where.
+            // Only the login identifier is stored - never the password.
+            AuditLog::logAction(
+                $user?->id,
+                'login_failed',
+                User::class,
+                $user?->id ?? 0,
+                null,
+                ['login' => $login]
+            );
             throw ValidationException::withMessages([
                 'login' => ['The provided credentials do not match our records.'],
             ]);
