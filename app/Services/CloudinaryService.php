@@ -56,7 +56,7 @@ class CloudinaryService
     public function upload(UploadedFile $file): string
     {
         if (!$this->configured()) {
-            throw new \RuntimeException('Cloudinary is not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET to the Render environment variables.');
+            throw new \RuntimeException('Cloudinary is not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET to the Plesk .env file.');
         }
 
         $timestamp = time();
