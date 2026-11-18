@@ -29,6 +29,15 @@
   $subtitleAm = $websiteSettings['company_subtitle_am'] ?? 'ከፍተኛ ጥራት የጠበቀ የንግድ ተቋማት የጽዳት አገልግሎት — ሆቴሎች | ሬስቶራንቶች | ካፌዎች | ቢሮዎች';
   $addressAm = $websiteSettings['company_address_am'] ?? 'አያት አደባባይ፣ አዲስ አበባ';
   $addressEn = $websiteSettings['company_address'] ?? 'Ayat Square, Addis Ababa, Ethiopia';
+  // Business information (footer) — empty means "do not show the line".
+  $tradeLicenseNo = $websiteSettings['trade_license_no'] ?? '';
+  $tinNo = $websiteSettings['tin_no'] ?? '';
+  $vatRegistered = $websiteSettings['vat_registered'] ?? '';
+  // Provable claims — editable from settings; empty removes the claim.
+  $steamClaimAm = $websiteSettings['steam_claim_am'] ?? '160°C የስቲም ቴክኖሎጂ';
+  $steamClaimEn = $websiteSettings['steam_claim_en'] ?? '160°C German Steam Tech';
+  $equipmentClaimAm = $websiteSettings['equipment_claim_am'] ?? 'ደረጃቸውን የጠበቁ ማሽኖች';
+  $equipmentClaimEn = $websiteSettings['equipment_claim_en'] ?? 'Hospital-Grade Equipment';
   // Google Maps URLs come from settings (map_embed_url / map_link_url);
   // the Ayat Square search links are the safe fallback until the owner
   // pastes the exact office location in admin settings.
@@ -1370,8 +1379,8 @@
     <div class="flex flex-col justify-center pr-0 md:pr-10">
       <div class="inline-flex items-center gap-2 text-teal-dark bg-teal-light/40 border border-teal/20 px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide mb-5 w-fit">
         <i data-lucide="shield-check" class="w-4 h-4"></i>
-        <span data-lang-block="am">በህጋዊ ፈቃድ የታገዘ • 160°C የስቲም ቴክኖሎጂ</span>
-        <span data-lang-block="en">Licensed &amp; Insured • 160°C German Steam Tech</span>
+        <span data-lang-block="am">በህጋዊ ፈቃድ የታገዘ@if(!empty($steamClaimAm)) • {{ $steamClaimAm }}@endif</span>
+        <span data-lang-block="en">Licensed &amp; Insured@if(!empty($steamClaimEn)) • {{ $steamClaimEn }}@endif</span>
       </div>
 
       <!-- Slogan Badge (STRICTLY IN ENGLISH EVERYWHERE — DO NOT TRANSLATE TO AMHARIC) -->
@@ -1466,7 +1475,9 @@
   <div class="max-w-7xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-navy/60 text-xs font-bold tracking-wide">
     <span class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ህጋዊ ፈቃድ ያለው ድርጅት</span><span data-lang-block="en">Licensed &amp; Insured Facility Service</span></span>
     <span class="flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የሰለጠኑ ቋሚ ባለሙያዎች</span><span data-lang-block="en">Vetted &amp; Certified Staff</span></span>
-    <span class="flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ደረጃቸውን የጠበቁ ማሽኖች</span><span data-lang-block="en">Hospital-Grade Equipment</span></span>
+    @if(!empty($equipmentClaimAm) || !empty($equipmentClaimEn))
+    <span class="flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">{{ $equipmentClaimAm }}</span><span data-lang-block="en">{{ $equipmentClaimEn }}</span></span>
+    @endif
     <span class="flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">ተለዋዋጭ የስራ ሰዓት</span><span data-lang-block="en">Flexible Scheduling (7 Days)</span></span>
     <span class="flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4 text-teal"></i> <span data-lang-block="am">የተቋማት ዓመታዊ ኮንትራት</span><span data-lang-block="en">Corporate Facility Contracts</span></span>
   </div>
@@ -2983,6 +2994,22 @@
         <li><a href="#gallery" class="hover:text-teal transition">የስራ ጋለሪ (Before &amp; After)</a></li>
         <li><a href="#reviews" class="js-reviews-link hover:text-teal transition">የደንበኞች አስተያየት (Reviews)</a></li>
         <li><a href="#contact" class="hover:text-teal transition">አድራሻ እና ካርታ (Contact)</a></li>
+        @if(!empty($tradeLicenseNo) || !empty($tinNo) || !empty($vatRegistered))
+        <li class="pt-3 mt-1 border-t border-white/10">
+          <p class="text-white font-bold text-xs uppercase tracking-wider mb-2"><span data-lang-block="am">የንግድ መረጃ</span><span data-lang-block="en">Business Information</span></p>
+          <ul class="space-y-1 text-xs">
+            @if(!empty($tradeLicenseNo))
+            <li><span data-lang-block="am">የንግድ ፈቃድ ቁጥር፦ {{ $tradeLicenseNo }}</span><span data-lang-block="en">Trade License No: {{ $tradeLicenseNo }}</span></li>
+            @endif
+            @if(!empty($tinNo))
+            <li><span data-lang-block="am">ቲን ቁጥር፦ {{ $tinNo }}</span><span data-lang-block="en">TIN: {{ $tinNo }}</span></li>
+            @endif
+            @if(!empty($vatRegistered))
+            <li><span data-lang-block="am">ተ.እ.ታ (VAT)፦ {{ $vatRegistered === 'yes' ? 'አዎ' : ($vatRegistered === 'no' ? 'አይደለም' : $vatRegistered) }}</span><span data-lang-block="en">VAT Registered: {{ $vatRegistered === 'yes' ? 'Yes' : ($vatRegistered === 'no' ? 'No' : $vatRegistered) }}</span></li>
+            @endif
+          </ul>
+        </li>
+        @endif
         <li class="pt-2">
           <!-- Staff & Admin Secure Access Button -->
           <button type="button" onclick="openStaffModal()" class="inline-flex items-center gap-1.5 text-xs text-teal hover:text-white transition cursor-pointer py-1 border-b border-teal/40 hover:border-white">

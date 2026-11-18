@@ -86,6 +86,16 @@ class WebsiteSetting extends Model
             'company_email' => 'meashcleaningsolution@gmail.com',
             'company_address' => 'Ayat Square, Addis Ababa, Ethiopia',
             'company_address_am' => 'አያት አደባባይ፣ አዲስ አበባ',
+            // Business information (footer): empty = do not show the line.
+            'trade_license_no' => '',
+            'tin_no' => '',
+            'vat_registered' => '',
+            // Provable claims — editable text, not hardcoded. Clear a value
+            // in admin settings to remove that claim from the website.
+            'steam_claim_am' => '160°C የስቲም ቴክኖሎጂ',
+            'steam_claim_en' => '160°C German Steam Tech',
+            'equipment_claim_am' => 'ደረጃቸውን የጠበቁ ማሽኖች',
+            'equipment_claim_en' => 'Hospital-Grade Equipment',
             // Google Maps: the exact office location is set by the owner in
             // admin settings. Until then the Ayat Square search links below
             // are the safe fallback (the old hardcoded embed URL contained
@@ -269,6 +279,13 @@ class WebsiteSetting extends Model
             'company_email',
             'company_address',
             'company_address_am',
+            'trade_license_no',
+            'tin_no',
+            'vat_registered',
+            'steam_claim_am',
+            'steam_claim_en',
+            'equipment_claim_am',
+            'equipment_claim_en',
             'map_embed_url',
             'map_link_url',
             'social_handle',
