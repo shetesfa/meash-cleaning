@@ -43,7 +43,7 @@
   // pastes the exact office location in admin settings.
   $mapEmbedUrl = $websiteSettings['map_embed_url'] ?? 'https://www.google.com/maps?q=Ayat+Square+Addis+Ababa&output=embed';
   $mapLinkUrl = $websiteSettings['map_link_url'] ?? 'https://maps.google.com/?q=Ayat+Square+Addis+Ababa';
-  $email = $websiteSettings['company_email'] ?? 'meashcleaningsolution@gmail.com';
+  $email = $websiteSettings['contact_email'] ?? $websiteSettings['company_email'] ?? 'meashcleaningsolution@gmail.com';
   $hoursAm = $websiteSettings['working_hours_am'] ?? 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)';
   $hoursEn = $websiteSettings['working_hours_en'] ?? 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday & Night Shift by Appointment)';
   $telebirrNo = $websiteSettings['telebirr_account_number'] ?? '0970075509';

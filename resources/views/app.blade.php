@@ -8926,8 +8926,8 @@
                                     <input type="text" id="set-comp-name" value="${escapeHtml(s.company_name || 'MEASH CLEANING SOLUTION')}" required class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-bold text-slate-300 block mb-1">ይፋዊ ኢሜይል (Company Email)</label>
-                                    <input type="email" id="set-comp-email" value="${escapeHtml(s.company_email || 'meashcleaningsolution@gmail.com')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    <label class="text-xs font-bold text-slate-300 block mb-1">የእውቂያ ኢሜይል (Contact Email — used on website, bot &amp; booking)</label>
+                                    <input type="email" id="set-comp-email" value="${escapeHtml(s.contact_email || s.company_email || 'meashcleaningsolution@gmail.com')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                 </div>
                             </div>
 
@@ -9172,6 +9172,7 @@
                 contact_phone_2: document.getElementById('set-phone-2').value.trim(),
                 company_name: document.getElementById('set-comp-name').value.trim(),
                 company_email: document.getElementById('set-comp-email').value.trim(),
+                contact_email: document.getElementById('set-comp-email').value.trim(),
                 company_slogan: document.getElementById('set-slogan-en').value.trim(),
                 company_slogan_am: document.getElementById('set-slogan-am').value.trim(),
                 company_address_am: document.getElementById('set-address-am').value.trim(),

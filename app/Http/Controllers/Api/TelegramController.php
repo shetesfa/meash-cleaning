@@ -154,7 +154,11 @@ class TelegramController extends Controller
   public function getEmail(): string
   {
     try {
-      return (string)WebsiteSetting::getVal('company_email', 'meashcleaningsolution@gmail.com');
+      // contact_email is the public address; company_email is the
+      // backward-compatible fallback; Gmail is the last resort.
+      $email = trim((string)WebsiteSetting::getVal('contact_email', ''));
+      if ($email === '') $email = trim((string)WebsiteSetting::getVal('company_email', ''));
+      return $email !== '' ? $email : 'meashcleaningsolution@gmail.com';
     } catch (\Throwable $e) {
       return 'meashcleaningsolution@gmail.com';
     }
@@ -1518,7 +1522,7 @@ class TelegramController extends Controller
     $lines = array_values(array_filter([
       "• <b>ዋና ስልክ:</b> {$phone1}",
       ($phone2 && $phone2 !== $phone1) ? "• <b>ተጨማሪ ስልክ:</b> {$phone2}" : '',
-      "• <b>ኢሜይል:</b> meashcleaningsolution@gmail.com",
+      "• <b>ኢሜይል:</b> {$this->getEmail()}",
       $tgSupport ? "• <b>የቴሌግራም ቀጥታ ማውሪያ:</b> {$tgSupport}" : '',
       $hoursAm ? "• <b>የስራ ሰዓት:</b> {$hoursAm}" : '',
       "• <b>አድራሻ:</b> {$addressAm} ({$addressEn})",
@@ -1629,6 +1633,12 @@ class TelegramController extends Controller
   {
     $helpAm = WebsiteSetting::getVal('bot_help_am', "የሚከተሉትን ትዕዛዞች መጠቀም ይችላሉ:\n• <code>/start</code> - ዋናውን ማውጫ ይከፍታል\n• <code>/services</code> - የአገልግሎቶች እና የዋጋ ዝርዝር\n• <code>/book</code> - በ 1 ደቂቃ ውስጥ ቀጠሮ ማስያዣ\n• <code>/status ORD-...</code> - የትዕዛዝ ሁኔታ መከታተያ\n• <code>/contact</code> - የሪሴፕሽን ስልክ አድራሻ\n• <code>/help</code> - ይህንን መመሪያ ያሳያል");
     $helpEn = WebsiteSetting::getVal('bot_help_en', "Available commands:\n• <code>/start</code> - Main menu\n• <code>/services</code> - Services & Pricing\n• <code>/book</code> - 1-Minute Booking\n• <code>/status ORD-...</code> - Track Order\n• <code>/contact</code> - Reception Hotline\n• <code>/help</code> - Help guide");
+    // The stored help text still carries the old default Gmail address;
+    // swap it for the current contact email so the bot help always shows
+    // the address the admin set. (If the admin wrote a different address
+    // in the help text itself, there is nothing to swap and it stays.)
+    $helpAm = str_replace('meashcleaningsolution@gmail.com', $this->getEmail(), (string)$helpAm);
+    $helpEn = str_replace('meashcleaningsolution@gmail.com', $this->getEmail(), (string)$helpEn);
     $phone1 = WebsiteSetting::getVal('contact_phone_1', '0970075509');
 
     $msg = "<b>የሜሽ ቴሌግራም ቦት መመሪያ</b>\n\n" .
@@ -2936,6 +2946,7 @@ class TelegramController extends Controller
     $receptionPhone = WebsiteSetting::getVal('contact_phone_1', '0970075509');
     $telebirrAcc = WebsiteSetting::getVal('telebirr_account_number', '0970075509');
     $cbeAcc = WebsiteSetting::getVal('cbe_account_number', '1000552467891');
+    $contactEmail = $this->getEmail();
 
     $confirmMsg = " <b>እናመሰግናለን {$name}! የቀጠሮ ጥያቄዎ በተሳካ ሁኔታ ተመዝግቧል!</b>\n\n" .
       " <b>የትዕዛዝ ቁጥር:</b> <code>{$order->order_number}</code>\n" .
@@ -2950,7 +2961,8 @@ class TelegramController extends Controller
       "• <b>ንግድ ባንክ (CBE):</b> <code>{$cbeAcc}</code>\n" .
       "• ወይም በቦታው በጥሬ ገንዘብ (Cash)\n\n" .
       " <b>የማረጋገጫ አጭር የጽሁፍ መልዕክት (SMS) ወደ ስልክዎ ({$phone}) ተልኳል።</b>\n" .
-      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ ({$receptionPhone}) ደውሎ ያረጋግጥልዎታል። ስለመረጡን እናመሰግናለን! ";
+      "የሜሽ ሪሴፕሽን ቡድን በቅርቡ በስልክ ({$receptionPhone}) ደውሎ ያረጋግጥልዎታል። ስለመረጡን እናመሰግናለን! " .
+      "\nጥያቄ ካለዎት፦ {$contactEmail}";
 
     $actionButtons = [];
     if ($lat && $lng) {

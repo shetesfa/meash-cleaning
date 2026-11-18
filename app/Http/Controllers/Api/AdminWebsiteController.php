@@ -39,6 +39,7 @@ class AdminWebsiteController extends Controller
             'contact_phone_1' => 'nullable|string|max:32',
             'contact_phone_2' => 'nullable|string|max:32',
             'company_email' => 'nullable|email|max:128',
+            'contact_email' => 'nullable|email|max:128',
             'company_address' => 'nullable|string|max:255',
             'company_address_am' => 'nullable|string|max:255',
             'trade_license_no' => 'nullable|string|max:64',

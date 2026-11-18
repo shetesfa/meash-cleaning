@@ -84,6 +84,11 @@ class WebsiteSetting extends Model
             'contact_phone_1' => '0970075509',
             'contact_phone_2' => '0998142190',
             'company_email' => 'meashcleaningsolution@gmail.com',
+            // The public contact email, used everywhere the site or bot
+            // shows an email (footer, JSON-LD, bot help/contact, booking
+            // confirmation). Same Gmail default; company_email stays as
+            // the backward-compatible fallback when this is empty.
+            'contact_email' => 'meashcleaningsolution@gmail.com',
             'company_address' => 'Ayat Square, Addis Ababa, Ethiopia',
             'company_address_am' => 'አያት አደባባይ፣ አዲስ አበባ',
             // Business information (footer): empty = do not show the line.
@@ -277,6 +282,7 @@ class WebsiteSetting extends Model
             'contact_phone_1',
             'contact_phone_2',
             'company_email',
+            'contact_email',
             'company_address',
             'company_address_am',
             'trade_license_no',
