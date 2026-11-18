@@ -74,6 +74,21 @@
   } catch (\Throwable $e) {
     // Fallback /logo.jpg stays.
   }
+  // Open Graph share image: prefer a dedicated 1200x630 image at
+  // public/images/share.jpg; otherwise use the logo. Always absolute.
+  $ogImage = url($logoSrc);
+  $ogImageWidth = null;
+  $ogImageHeight = null;
+  $sharePath = public_path('images/share.jpg');
+  if (is_file($sharePath)) {
+    $ogImage = url('images/share.jpg');
+    $shareSize = @getimagesize($sharePath);
+    if ($shareSize) { $ogImageWidth = $shareSize[0]; $ogImageHeight = $shareSize[1]; }
+  } elseif (str_starts_with($logoSrc, '/')) {
+    $logoPath = public_path(ltrim($logoSrc, '/'));
+    $logoSize = is_file($logoPath) ? @getimagesize($logoPath) : false;
+    if ($logoSize) { $ogImageWidth = $logoSize[0]; $ogImageHeight = $logoSize[1]; }
+  }
 @endphp
 <html lang="am" data-lang="am" class="dark">
 <head>
@@ -124,7 +139,15 @@
 <!-- Open Graph & Social SEO -->
 <meta property="og:title" content="{{ $companyName }} | {{ $sloganEn }}">
 <meta property="og:description" content="{{ $subtitleEn }} — {{ $sloganEn }} Call {{ $phone1 }} / {{ $phone2 }}.">
-<meta property="og:image" content="{{ $logoSrc }}">
+<meta property="og:image" content="{{ $ogImage }}">
+@if($ogImageWidth && $ogImageHeight)
+<meta property="og:image:width" content="{{ $ogImageWidth }}">
+<meta property="og:image:height" content="{{ $ogImageHeight }}">
+@endif
+<meta property="og:locale" content="am_ET">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ $ogImage }}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url('/') }}">
 
