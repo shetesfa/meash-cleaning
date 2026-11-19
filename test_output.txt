@@ -1,0 +1,378 @@
+
+   PASS  Tests\Unit\EthiopianCalendarServiceTest
+  ✓ ethiopian leap year detection                                        0.05s  
+  ✓ new year and pagume transitions around leap year
+  ✓ gregorian leap year transition in february
+  ✓ to gregorian conversion roundtrip
+  ✓ amharic formatting
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true                                                    0.02s  
+
+   PASS  Tests\Feature\AuthTest
+  ✓ login works by email                                                 4.13s  
+  ✓ login works by phone                                                 0.01s  
+  ✓ login rejects bad password                                           0.01s  
+  ✓ login throttles after five failed attempts                           0.02s  
+
+   PASS  Tests\Feature\AuthorizationTest
+  ✓ cleaners cannot see other teams orders                               0.03s  
+  ✓ cleaners cannot see customers list                                   0.01s  
+  ✓ active users across all roles access authorized endpoints            0.03s  
+  ✓ inactive suspended users are rejected with 403                       0.03s  
+  ✓ role boundary isolation enforced                                     0.01s  
+
+   PASS  Tests\Feature\BoaAccountVisibilityTest
+  ✓ no boa number set hides the abyssinia line                           0.03s  
+  ✓ placeholder number is treated as unset                               0.01s  
+  ✓ real boa number is shown                                             0.01s  
+
+   PASS  Tests\Feature\ContactEmailTest
+  ✓ homepage shows the configured contact email                          0.01s  
+  ✓ homepage defaults to gmail when nothing is set                       0.01s  
+  ✓ public settings expose contact email                                 0.01s  
+  ✓ bot get email prefers contact email then company email               0.01s  
+
+   PASS  Tests\Feature\CustomerReviewAndRatingTest
+  ✓ public website review submission with high rating auto approves      0.19s  
+  ✓ public website review submission with low rating stays unapproved    0.21s  
+  ✓ public website review without phone is rejected                      0.19s  
+  ✓ telegram webhook rate order callback creates feedback                0.25s  
+  ✓ manual send review request from reception or owner                   0.19s  
+  ✓ order completion triggers review notification                        0.19s  
+
+   PASS  Tests\Feature\DeferredFontsCssTest
+  ✓ fonts css is deferred with preload onload                            0.01s  
+  ✓ fonts css stylesheet link exists only in noscript                    0.01s  
+  ✓ meash css stays render blocking                                      0.01s  
+  ✓ fonts css holds only font face rules with swap
+  ✓ ethiopic font preload still present                                  0.01s  
+
+   PASS  Tests\Feature\DirectAssignmentTest
+  ✓ direct assign of teamless cleaner succeeds and creates solo team     0.20s  
+  ✓ direct assign of cleaner with team uses existing team                0.19s  
+  ✓ direct assign of non cleaner fails with clear message                0.18s  
+  ✓ team assignment still works                                          0.22s  
+
+   PASS  Tests\Feature\DirectMessageSendTest
+  ✓ send sms to phone only contact succeeds and is recorded              0.23s  
+  ✓ send sms to known customer records the customer id                   0.23s  
+  ✓ send telegram phone only falls back to sms and is recorded           0.21s  
+  ✓ send without phone or customer fails with clear message              0.19s  
+  ✓ send without message is rejected                                     0.18s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                        0.01s  
+
+   PASS  Tests\Feature\FinalBlockerRepairTest
+  ✓ offline sync concurrency lock never returns already processed and r… 0.01s  
+  ✓ failed first sync can retry successfully and cannot process twice    0.03s  
+  ✓ owner reception sales finance cleaner role sync matrix               0.07s  
+  ✓ clean demo data preserves legitimate organizations named cbe hyatt…  0.02s  
+  ✓ clean demo data works when demo user list is empty and no empty nes… 0.01s  
+  ✓ finance role cannot view staff and leader phone numbers in order sh… 0.03s  
+  ✓ notification anti idor and per user read state                       0.02s  
+  ✓ provision owner command enforces amha and strong password            0.02s  
+  ✓ offline sync prevents cross account uuid hijacking                   0.01s  
+  ✓ offline sync recovers safely from stale in progress records          0.02s  
+  ✓ atomic rollback on transaction failure prevents false completed ide… 0.01s  
+  ✓ clean demo data purges child records through provenance and parent…  0.03s  
+  ✓ order status conflict creation and idempotency are atomic            0.02s  
+  ✓ stale recovery atomic claim prevents simultaneous processing         0.01s  
+  ✓ genuine concurrent requests for same client uuid creates exactly on… 0.02s  
+  ✓ quarantine export and recovery strictly forbidden for non owner      0.01s  
+  ✓ quarantine export and recovery authorized for owner with audit trai… 0.01s  
+
+   PASS  Tests\Feature\FinalReleaseAuditTest
+  ✓ provision owner command creates amha and supports username login     0.02s  
+  ✓ telegram token is never returned in admin settings get or post       0.01s  
+  ✓ reception cannot access or change telegram bot credentials           0.01s  
+  ✓ role based read and write access across all roles                    0.04s  
+  ✓ sync batch strict positive authorization and price tampering preven… 0.03s  
+  ✓ miniapp replay and concurrency atomic protection                     0.50s  
+  ✓ clean demo data command purges all seeder sample entities and prese… 0.04s  
+
+   PASS  Tests\Feature\FullEndToEndSystemFlowTest
+  ✓ flow 1 orders from all four channels and auto sync to broadcast lis… 0.29s  
+  ✓ flow 2 cleaner payment reporting and approval workflow               0.20s  
+  ✓ flow 3 completed order 5 star review and feedback                    0.21s  
+  ✓ flow 4 official brochure and customizable settings live              0.21s  
+  ✓ flow 5 broadcast management telegram dispatch and iphone sms bridge  9.10s  
+
+   PASS  Tests\Feature\HomepageFreezeFixTest
+  ✓ qr images never have empty src                                       0.02s  
+  ✓ fade up has viewport safety net                                      0.01s  
+  ✓ slider match media is guarded                                        0.01s  
+  ✓ missing static files return 404 not homepage                         0.01s  
+  ✓ spa fallback still serves section urls                               0.01s  
+
+   PASS  Tests\Feature\HomepageFreezeObserverTest
+  ✓ only one mutation observer in the whole blade                        0.01s  
+  ✓ observer never watches document body or subtree
+  ✓ observer watches only the modal elements
+  ✓ apply only runs when modal state really changed
+  ✓ apply is idempotent via set cls
+  ✓ reschedule backdrop notifies fab state explicitly
+
+   PASS  Tests\Feature\HomepagePerformanceTest
+  ✓ homepage warm hit runs zero database queries                         0.02s  
+  ✓ homepage sets cache header and no session cookie                     0.01s  
+  ✓ no has table checks on the homepage path                             0.01s  
+  ✓ settings change invalidates the homepage cache                       0.02s  
+  ✓ service change invalidates the homepage cache                        0.02s  
+  ✓ photo change invalidates the homepage cache                          0.02s  
+  ✓ public api get sets no session cookie                                0.01s  
+  ✓ staff app still starts a session                                     0.02s  
+
+   PASS  Tests\Feature\ImageOptimizationTest
+  ✓ logo stays 640 for og image                                          0.01s  
+  ✓ gallery webp files are valid webp
+  ✓ largest flagged images are recompressed
+  ✓ gallery webp total stays under budget
+  ✓ recompressed images keep their dimensions
+
+   PASS  Tests\Feature\LeakedBladeSyntaxTest
+  ✓ homepage renders no raw blade syntax                                 0.03s  
+  ✓ no blade file has a single brace comment                             0.01s  
+
+   PASS  Tests\Feature\MeashChannelAndPaymentTest
+  ✓ order filtering by channel source                                    0.02s  
+  ✓ payment methods normalization and order payment                      0.02s  
+  ✓ dashboard channel and payment breakdown                              0.02s  
+
+   PASS  Tests\Feature\MeashFinanceTest
+  ✓ payment updates order payment status automatically                   0.20s  
+  ✓ profit report calculates real net profit                             0.19s  
+
+   PASS  Tests\Feature\MeashOfflineSyncTest
+  ✓ offline sync batch creates order idempotently                        0.18s  
+  ✓ sync detects conflict when server version diverges                   0.18s  
+  ✓ sync ignores client forged prices and uses catalog prices            0.19s  
+  ✓ sync enforces unpaid status even if client claims paid               0.19s  
+  ✓ sync without token returns 401                                       0.17s  
+  ✓ sync prevents uuid hijacking across different users                  0.23s  
+
+   PASS  Tests\Feature\MeashOrderTest
+  ✓ multi item order calculates totals accurately                        0.19s  
+  ✓ cleaner can complete job and schedule followup                       0.18s  
+
+   PASS  Tests\Feature\MeashTelegramTest
+  ✓ telegram inline query generates rich cards                           0.20s  
+  ✓ telegram mini app booking creates central order                      0.56s  
+
+   PASS  Tests\Feature\OgMetaTest
+  ✓ open graph image is absolute with dimensions and twitter card        0.01s  
+
+   PASS  Tests\Feature\OrderSeenAcceptTest
+  ✓ owner can mark new order as seen                                     0.17s  
+  ✓ reception can mark new order as seen                                 0.18s  
+  ✓ seen fails when order is not new                                     0.18s  
+  ✓ owner can accept new order directly                                  0.18s  
+  ✓ owner can accept seen order                                          0.18s  
+  ✓ accept fails when order already assigned                             0.17s  
+  ✓ cleaner cannot mark seen or accept                                   0.20s  
+  ✓ accepted order shows confirmed state                                 0.19s  
+
+   PASS  Tests\Feature\OwnerCompleteOrderTest
+  ✓ owner can complete assigned order                                    0.19s  
+  ✓ owner can complete from on the way and cleaning                      0.19s  
+  ✓ completion creates review followup                                   0.18s  
+  ✓ complete fails when order is still new                               0.18s  
+  ✓ reception and cleaner cannot use owner complete endpoint             0.17s  
+  ✓ completed order shows completed state                                0.18s  
+
+   PASS  Tests\Feature\PaymentApprovalWorkflowTest
+  ✓ cleaner submitting cash payment sets pending approval and never dir… 0.02s  
+  ✓ cleaner submitting transfer payment sets pending approval with refe… 0.02s  
+  ✓ owner approves payment creates payment record and updates revenue    0.04s  
+  ✓ reception rejects pending payment                                    0.02s  
+  ✓ cleaner cannot approve payment or record direct payment              0.01s  
+  ✓ scenario a partial payment marks order as partially paid             0.02s  
+  ✓ scenario b multiple payments reaching total marks order as paid      0.03s  
+  ✓ scenario c rejected payment does not create revenue                  0.05s  
+  ✓ scenario d pending payment does not count as revenue                 0.02s  
+  ✓ scenario e duplicate approval does not create duplicate payment      0.03s  
+  ✓ scenario f consecutive approvals calculate correct final balance     0.03s  
+  ✓ scenario g sales and cleaners cannot approve payments                0.01s  
+  ✓ order refund records expense and adjusts status                      0.02s  
+  ✓ cleaner cannot submit payment for order assigned to another team     0.01s  
+
+   PASS  Tests\Feature\PhoneOrderAndFilterTest
+  ✓ phone order creation auto creates customer and links appointment     0.03s  
+  ✓ phone order reuses existing customer by phone                        0.02s  
+  ✓ order index filters by team and status aliases                       0.02s  
+  ✓ order index supports large pagination and all flag                   0.01s  
+  ✓ order update accepts team id and status                              0.02s  
+
+   PASS  Tests\Feature\PhotoAltTextTest
+  ✓ gallery thumbnails and steps have caption alts                       0.01s  
+
+   PASS  Tests\Feature\PhotoManagementTest
+  ✓ logo row exists and seeder still seeds 37 photos                     0.18s  
+  ✓ logo migration up is idempotent                                      0.18s  
+  ✓ updating a photo propagates to all rows with the same url            0.18s  
+  ✓ caption only update does not touch sibling rows                      0.18s  
+  ✓ pair fields store update and validate                                0.18s  
+
+   PASS  Tests\Feature\PhotoShapesTest
+  ✓ portraits keep their top and cards keep one height                   0.01s  
+
+   PASS  Tests\Feature\PriceHoursGalleryTest
+  ✓ starting price line removed from homepage                            0.01s  
+  ✓ starting price line removed from blade source                        0.01s  
+  ✓ working hours defaults are 24 7                                      0.01s  
+  ✓ hours seeder rewrites only old mon sat values                        0.01s  
+  ✓ hours seeder leaves a custom admin value alone                       0.01s  
+  ✓ hours seeder rewrites spaced mon sat value                           0.01s  
+  ✓ homepage shows 24 7 hours and no mon sat                             0.01s  
+  ✓ gallery is a horizontal scroll strip                                 0.01s  
+  ✓ homepage renders gallery strip with all photos                       0.01s  
+
+   PASS  Tests\Feature\ProductionHardeningSecurityTest
+  ✓ public settings never exposes bot token or secrets                   0.01s  
+  ✓ unauthorized role cannot update order status                         0.01s  
+  ✓ cleaner cannot submit payment for unassigned team order              0.01s  
+  ✓ sales role cannot submit or approve payments                         0.01s  
+  ✓ finance role can approve and record payments and view profit report  0.04s  
+  ✓ telegram init data with expired auth date is rejected                0.01s  
+  ✓ telegram webhook clears dedup cache on processing failure            0.01s  
+  ✓ hsts sent on https in production                                     0.01s  
+  ✓ hsts not sent on plain http even in production                       0.01s  
+  ✓ hsts not sent on https outside production                            0.01s  
+  ✓ trusted proxy https forwarding                                       0.01s  
+  ✓ x xss protection header is removed                                   0.01s  
+
+   PASS  Tests\Feature\RealDashboardMetricsAndActionsTest
+  ✓ owner dashboard returns real satisfaction metrics and time series    0.03s  
+  ✓ finance profit report returns daily and monthly time series          0.02s  
+  ✓ cleaner my jobs returns real team stats and persists checklist       0.02s  
+  ✓ reception and owner can create draft order and reassign team         0.03s  
+  ✓ subscription creation with inline customer and mrr calculation       0.02s  
+
+   PASS  Tests\Feature\RealDataEndToEndTest
+  ✓ website booking with real data                                       0.18s  
+  ✓ telegram mini app booking with real data                             0.19s  
+  ✓ telegram bot webhook booking flow                                    0.20s  
+  ✓ orders immediately visible to admin and reception                    0.19s  
+  ✓ website order is visible and reconciles through payment              0.21s  
+  ✓ telegram bot interactive chat wizard booking flow                    0.19s  
+
+   PASS  Tests\Feature\ReceptionDashboardTest
+  ✓ reception dashboard loads                                            0.18s  
+  ✓ owner can load reception dashboard                                   0.18s  
+
+   PASS  Tests\Feature\RedesignTest
+  ✓ r1 light is default theme                                            0.01s  
+  ✓ r1 section rhythm and spacing                                        0.01s  
+  ✓ r2 phone first hero                                                  0.01s  
+  ✓ r3 trust bar only verified claims                                    0.01s  
+  ✓ r3 clearing trust setting hides claim                                0.01s  
+  ✓ r4 why meash merged                                                  0.01s  
+  ✓ r4 services tabs                                                     0.01s  
+  ✓ r5 one floating button and sticky bar                                0.01s  
+  ✓ r6 before after block only with complete pair                        0.02s  
+  ✓ gallery side scrolling strip and phone gap fix                       0.01s  
+  ✓ r7 booking form on phones                                            0.01s  
+  ✓ r8 css animations and tap targets                                    0.01s  
+
+   PASS  Tests\Feature\RenderRemovalTest
+  ✓ render files are gone                                                0.01s  
+  ✓ no onrender or tidb references remain in the repo                    0.06s  
+  ✓ up is a light health check                                           0.01s  
+  ✓ webhook url defaults to the app url
+  ✓ mini app points at the real domain
+  ✓ readme documents keeping the site awake
+
+   PASS  Tests\Feature\ResponsiveImagesTest
+  ✓ homepage uses webp picture with dimensions                           0.01s  
+
+   PASS  Tests\Feature\ReviewsLinksVisibilityTest
+  ✓ zero approved reviews returns empty list                             0.01s  
+  ✓ one approved review returns one item                                 0.01s  
+  ✓ homepage has three reviews links wired to the hide logic             0.01s  
+
+   PASS  Tests\Feature\RouteIntegrityTest
+  ✓ all api routes point to valid controller methods                     0.01s  
+
+   PASS  Tests\Feature\SecurityAuditTest
+  ✓ suspended user cannot access api with existing token                 0.01s  
+  ✓ unauthenticated requests are rejected                                0.01s  
+  ✓ cleaners cannot access restricted endpoints                          0.01s  
+  ✓ cleaner cross team access is rejected                                0.01s  
+  ✓ server side order price recalculation                                0.02s  
+  ✓ public tracking privacy and token protection                         0.03s  
+  ✓ public rescheduling requires signed token                            0.01s  
+  ✓ token revocation on logout and password change                       0.03s  
+  ✓ production api sanitizes errors                                      0.01s  
+
+   PASS  Tests\Feature\SmallDesignBugsTest
+  ✓ hero price card does not cover slider controls                       0.01s  
+  ✓ trust discount icon is in the sprite
+  ✓ every static public icon is in the sprite
+  ✓ hours title does not wrap on desktop
+  ✓ mobile page has bottom padding for the sticky bar
+
+   PASS  Tests\Feature\SpeedOptimizationsTest
+  ✓ q1 qr is lazy and font preloaded                                     0.01s  
+  ✓ q2 public page uses sprite and app keeps full lucide                 0.01s  
+  ✓ q3 sw precache is lean and version bumped                            0.01s  
+  ✓ q4 assets are filemtime versioned and page is public cached          0.02s  
+  ✓ q6 security headers come from middleware only                        0.01s  
+  ✓ q7 no tiny text on public page                                       0.01s  
+  ✓ q8 tap targets and floating buttons                                  0.01s  
+  ✓ q9 form autofill labels and 16px inputs                              0.01s  
+
+   PASS  Tests\Feature\StaffAccessTest
+  ✓ homepage keeps one quiet staff link                                  0.01s  
+  ✓ app route and login route are throttled                              0.01s  
+  ✓ failed login is written to the audit log                             0.01s  
+  ✓ failed login for unknown user is also logged                         0.01s  
+  ✓ successful login is not logged as a failure                          0.14s  
+
+   PASS  Tests\Feature\StaffPasswordResetTest
+  ✓ owner can reset staff password                                       0.21s  
+  ✓ staff can log in with the new password                               0.19s  
+  ✓ short or mismatched password is rejected                             0.18s  
+  ✓ non owner cannot reset passwords                                     0.18s  
+  ✓ owner password cannot be reset from this control                     0.17s  
+
+   PASS  Tests\Feature\StaticAssetCacheTest
+  ✓ fonts get one year immutable                                         0.01s  
+  ✓ css js get thirty days without immutable
+  ✓ images get thirty days
+  ✓ service worker is never long cached
+  ✓ manifest gets seven days
+  ✓ cache rules are guarded by ifmodule
+  ✓ every font filename is content hashed
+  ✓ homepage css links stay filemtime versioned
+
+   PASS  Tests\Feature\SyncTest
+  ✓ batch sync returns errors for failed items                           0.03s  
+
+   PASS  Tests\Feature\TailwindCssCoverageTest
+  ✓ button blue background is in the built css                           0.01s  
+  ✓ every arbitrary background color in the blade is built
+  ✓ previously missing classes are built
+
+   PASS  Tests\Feature\TelegramBroadcastImportTest
+  ✓ csv text lines import successfully                                   0.18s  
+  ✓ malformed json is rejected                                           0.18s  
+
+   PASS  Tests\Feature\TelegramOptimizationAndChapaRemovalTest
+  ✓ chapa is rejected in order payment and website booking               0.02s  
+  ✓ telegram webhook deduplication via cache                             0.37s  
+  ✓ sms service handles gateway outage safely without throwing           0.01s  
+  ✓ telegram broadcast chunks and dispatches cleanly                     0.27s  
+
+   PASS  Tests\Feature\TelegramSecurityAndInitDataTest
+  ✓ telegram init data verification algorithm                            0.01s  
+  ✓ set webhook requires sanctum auth and role                           0.37s  
+  ✓ miniapp booking verifies init data and sets trusted user id          0.39s  
+
+   PASS  Tests\Feature\TelegramWebhookTest
+  ✓ telegram webhook returns 401 when secret is missing                  0.01s  
+  ✓ telegram webhook returns 401 when secret is wrong                    0.01s  
+
+  Tests:    266 passed (1552 assertions)
+  Duration: 31.02s
+
