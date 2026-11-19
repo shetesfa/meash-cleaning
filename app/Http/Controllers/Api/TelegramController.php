@@ -464,7 +464,7 @@ class TelegramController extends Controller
           "• ዋና ስልክ: <b>{$phone1}</b>\n" .
           ($phone2 ? "• ተጨማሪ ስልክ: <b>{$phone2}</b>\n" : "") .
           "• ኢሜይል: <b>{$companyEmail}</b>\n\n" .
-          "<b>የስራ ሰዓት:</b> ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)\n" .
+          "<b>የስራ ሰዓት:</b> 24/7 — በማንኛውም ሰዓት፣ ሌሊት ጨምሮ\n" .
           "<b>አድራሻ:</b> {$officeAddress}",
         'buttons' => [
           [
@@ -1511,7 +1511,7 @@ class TelegramController extends Controller
     // stale stored "አዲስ አበባ፣ ኢትዮጵያ"), plus the Amharic street address.
     $addressEn = $this->getAddressEn();
     $addressAm = $this->getAddress();
-    $hoursAm = WebsiteSetting::getVal('working_hours_am', 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)');
+    $hoursAm = WebsiteSetting::getVal('working_hours_am', '24/7 — በማንኛውም ሰዓት፣ ሌሊት ጨምሮ');
     $channelUrl = $this->getTelegramChannelUrl();
     $tgSupport = $this->getTelegramSupportHandle();
     $tgSupportUrl = str_starts_with($tgSupport, 'http') ? $tgSupport : 'https://t.me/' . ltrim($tgSupport, '@');

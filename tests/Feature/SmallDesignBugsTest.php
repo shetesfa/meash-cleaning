@@ -10,6 +10,8 @@ use Tests\TestCase;
  * 1. The floating "From 60 ETB / sqm" card was absolutely positioned
  *    over the slider panel (-bottom-5) and covered the slider arrows
  *    and dots on desktop. It now sits in normal flow below the panel.
+ *    (2026-11-19: the "From … ETB / sqm" starting-price line itself
+ *    was removed; the card now shows only "Free inspection".)
  * 2. The 4th trust-bar item ("Up to 15% discount") had a blank icon
  *    box: its data-lucide name "badge-percent" was not in the 66-icon
  *    inline SVG sprite, so the createIcons() shim skipped it. The
@@ -17,6 +19,8 @@ use Tests\TestCase;
  * 3. "Mon–Sat 8:00–18:00" wrapped mid-time to two lines on desktop.
  *    The hours title now has lg:whitespace-nowrap (the grid was
  *    already equal-width at lg:grid-cols-4).
+ *    (2026-11-19: hours changed to 24/7 — "24/7 — Any time,
+ *    including midnight" — the nowrap treatment stays.)
  * 4. The fixed sticky bottom bar (~64px on phones) covered the footer
  *    and last form fields: the page now has mobile-only bottom
  *    padding for it.

@@ -52,8 +52,8 @@
   $mapEmbedUrl = $websiteSettings['map_embed_url'] ?? 'https://www.google.com/maps?q=Ayat+Square+Addis+Ababa&output=embed';
   $mapLinkUrl = $websiteSettings['map_link_url'] ?? 'https://maps.google.com/?q=Ayat+Square+Addis+Ababa';
   $email = $websiteSettings['contact_email'] ?? $websiteSettings['company_email'] ?? 'meashcleaningsolution@gmail.com';
-  $hoursAm = $websiteSettings['working_hours_am'] ?? 'ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 (እሁድ እና የሌሊት ፈረቃ በቀጠሮ)';
-  $hoursEn = $websiteSettings['working_hours_en'] ?? 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday & Night Shift by Appointment)';
+  $hoursAm = $websiteSettings['working_hours_am'] ?? '24/7 — በማንኛውም ሰዓት፣ ሌሊት ጨምሮ';
+  $hoursEn = $websiteSettings['working_hours_en'] ?? '24/7 — Any time, including midnight';
   $telebirrNo = $websiteSettings['telebirr_account_number'] ?? '0970075509';
   $cbeNo = $websiteSettings['cbe_account_number'] ?? '1000552467891';
   // BOA: show the Abyssinia line ONLY when a real account number is set.
@@ -1088,35 +1088,28 @@
   .ms-step .ms-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
   @media (max-width: 820px) { .ms-steps { grid-template-columns: 1fr; } }
 
-  /* Gallery full-size slider (batch 19) — one large photo at a time */
+  /* Gallery side-scrolling strip (2026-11-19, Tesfa) — the photos sit
+     in one horizontal strip on phones AND desktop: swipe/scroll
+     sideways through them. Same photos, same bilingual captions; tap
+     a photo to open the lightbox. Dots + thumbnails scroll the strip
+     to a photo. The R6 desktop masonry grid is gone. */
   .ms-gal-slider { position: relative; }
-  .ms-gal-stage { position: relative; border-radius: 20px; overflow: hidden; background: #0d2c49; box-shadow: 0 8px 22px rgba(8,42,74,.10); aspect-ratio: 16/10; touch-action: pan-y; cursor: grab; }
+  .ms-gal-stage { position: relative; display: flex; gap: 16px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: thin; padding-bottom: 4px; touch-action: pan-x pan-y; cursor: grab; }
   .ms-gal-stage.ms-dragging { cursor: grabbing; }
-  .ms-gal-slide { position: absolute; inset: 0; opacity: 0; transition: opacity .45s ease; pointer-events: none; margin: 0; }
-  .ms-gal-slide.on { opacity: 1; pointer-events: auto; }
+  .ms-gal-slide { position: relative; flex: none; width: min(78vw, 420px); aspect-ratio: 4/3; scroll-snap-align: start; opacity: 1; pointer-events: auto; margin: 0; border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 8px 22px rgba(8,42,74,.10); }
   .ms-gal-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .ms-gal-slide .ms-gal-cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 16px 13px; color: #fff; font-weight: 700; font-size: .93rem; background: linear-gradient(transparent, rgba(4,20,36,.85)); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .ms-gal-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.4); background: rgba(3,14,25,.45); color: #fff; display: grid; place-items: center; cursor: pointer; z-index: 3; }
-  .ms-gal-prev { left: 12px; }
-  .ms-gal-next { right: 12px; }
-  .ms-gal-count { position: absolute; top: 12px; right: 12px; background: rgba(3,14,25,.55); color: #fff; font-size: .75rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; z-index: 3; }
+  /* The one-at-a-time slider chrome is not used by the strip: the
+     arrows and counter sat inside the stage and would scroll away
+     with it. Dots + thumbnails below do the navigating. The buttons
+     stay in the DOM (hidden) so the gallery script still finds them. */
+  .ms-gal-nav, .ms-gal-count { display: none; }
   .ms-gal-dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
   .ms-gal-thumbs { display: flex; gap: 10px; margin-top: 12px; overflow-x: auto; padding-bottom: 4px; }
   .ms-gal-thumb { flex: none; width: 84px; aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; border: 2px solid transparent; padding: 0; cursor: pointer; background: #0d2c49; }
   .ms-gal-thumb.on { border-color: #3E8ECC; }
   .ms-gal-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  @media (max-width: 820px) { .ms-gal-stage { aspect-ratio: 4/3; } }
-  /* R6: on desktop the gallery is a masonry grid (same photos, same
-     lightbox — tap a tile to open it); the slider chrome (arrows, dots,
-     thumbs, counter) is hidden. Phones keep the slider. */
-  @media (min-width: 821px) {
-    .ms-gal-stage { aspect-ratio: auto; overflow: visible; background: transparent; box-shadow: none; border-radius: 0; cursor: default; column-count: 3; column-gap: 16px; }
-    .ms-gal-slide { position: relative; opacity: 1; pointer-events: auto; break-inside: avoid; margin: 0 0 16px; border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 8px 22px rgba(8,42,74,.10); }
-    .ms-gal-slide picture { height: auto; }
-    .ms-gal-slide img { height: auto; }
-    .ms-gal-nav, .ms-gal-count, .ms-gal-dots, .ms-gal-thumbs { display: none; }
-  }
-  /* R6: fix the empty gap under the gallery thumbnails on phones — the
+  /* Fix the empty gap under the gallery thumbnails on phones — the
      section's bottom padding was stacking with the next section's top. */
   @media (max-width: 820px) {
     .ms-gal-sec { padding-bottom: 2.5rem; }
@@ -1253,7 +1246,7 @@
       </span>
       <span class="hidden lg:flex items-center gap-1.5 text-teal-400 font-semibold">
         <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
-        <span data-lang-block="am">ስልክ እና ቴሌግራም፦ ሰኞ–ቅዳሜ 2:00–12:00</span><span data-lang-block="en">Calls &amp; Telegram: Mon–Sat 8:00–18:00</span>
+        <span data-lang-block="am">24/7 — በማንኛውም ሰዓት፣ ሌሊት ጨምሮ</span><span data-lang-block="en">24/7 — Any time, including midnight</span>
       </span>
     </div>
 
@@ -1748,14 +1741,12 @@
           </div>
         </div>
       </div>
-      @php $floorSvc = $activeServices->firstWhere('code', 'floor_ceramic'); @endphp
       {{-- F4: the price card sits in normal flow BELOW the slider panel.
            It used to be absolute -bottom-5 over the panel and covered the
            slider arrows and dots on desktop. --}}
       <div class="hidden md:flex mt-4 items-center gap-3 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-navy/10 px-4 py-3">
         <div class="w-10 h-10 rounded-xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="sparkles" class="w-5 h-5"></i></div>
         <div class="leading-tight">
-          <div class="font-bold text-sm text-navy dark:text-white"><span data-lang-block="am">ከ {{ number_format($floorSvc?->base_price ?? 60) }} ETB / ካሬ ሜትር ጀምሮ</span><span data-lang-block="en">From {{ number_format($floorSvc?->base_price ?? 60) }} ETB/sqm</span></div>
           <div class="text-xs text-navy/60 dark:text-slate-300"><span data-lang-block="am">ነፃ የቦታ ምልከታ</span><span data-lang-block="en">Free inspection</span></div>
         </div>
       </div>
@@ -1774,8 +1765,8 @@
 @php
   $trustFreeAm = $websiteSettings['trust_free_inspection_am'] ?? 'ነፃ የቦታ ምልከታ';
   $trustFreeEn = $websiteSettings['trust_free_inspection_en'] ?? 'Free inspection';
-  $trustHoursAm = $websiteSettings['trust_hours_am'] ?? 'ከሰኞ እስከ ቅዳሜ 8:00–18:00';
-  $trustHoursEn = $websiteSettings['trust_hours_en'] ?? 'Mon–Sat 8:00–18:00';
+  $trustHoursAm = $websiteSettings['trust_hours_am'] ?? '24/7 — በማንኛውም ሰዓት፣ ሌሊት ጨምሮ';
+  $trustHoursEn = $websiteSettings['trust_hours_en'] ?? '24/7 — Any time, including midnight';
   $trustLicAm = $websiteSettings['trust_licensed_am'] ?? 'ህጋዊ ፈቃድ ያለው ድርጅት';
   $trustLicEn = $websiteSettings['trust_licensed_en'] ?? 'Licensed & Insured';
   $trustWeeklyDiscount = (int)($pricingRules['weekly_discount'] ?? 15);
@@ -1796,7 +1787,7 @@
       <div class="ms-card ms-fade-up flex items-center gap-3 md:gap-4 p-4 md:p-5">
         <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="clock" class="w-5 h-5"></i></div>
         <div class="min-w-0">
-          {{-- F4: lg:whitespace-nowrap keeps "Mon–Sat 8:00–18:00" on one line
+          {{-- F4: lg:whitespace-nowrap keeps "24/7" on one line
                on desktop (it wrapped mid-time before). The grid is already
                equal-width (grid-cols-2 lg:grid-cols-4). --}}
           <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white lg:whitespace-nowrap"><span data-lang-block="am">{{ $trustHoursAm }}</span><span data-lang-block="en">{{ $trustHoursEn }}</span></div>
@@ -2310,11 +2301,12 @@
       </div>
     </div>
 
-    <!-- Gallery full-size slider — one large photo at a time (batch 19).
-         Same admin-managed data as before ($galleryOrder, $galleryByFile,
-         $photoSrc); tap a photo to open the lightbox. -->
+    <!-- Gallery side-scrolling strip (2026-11-19) — one horizontal row
+         of photos; swipe/scroll sideways. Same admin-managed data as
+         before ($galleryOrder, $galleryByFile, $photoSrc); tap a photo
+         to open the lightbox. -->
     <div class="ms-gal-slider" id="ms-gal-slider">
-      <div class="ms-gal-stage" id="ms-gal-stage" tabindex="0" role="region" aria-label="Work gallery slider">
+      <div class="ms-gal-stage" id="ms-gal-stage" tabindex="0" role="region" aria-label="Work gallery, scroll sideways to see more photos">
         @foreach($galleryOrder as $gidx => $gfile)
           @php $gp = $galleryByFile[$gfile]; $galDims = $photoDims($gfile); $galSrcset = $photoSrcset($gfile); @endphp
           <figure class="ms-gal-slide{{ $gidx === 0 ? ' on' : '' }}" data-ms-gal="{{ $gidx }}" data-ms-full="{{ $photoSrc($gfile) }}" data-ms-srcset="{{ $galSrcset }}" data-ms-w="{{ $galDims[0] ?? '' }}" data-ms-h="{{ $galDims[1] ?? '' }}" data-ms-cap-am="{{ $gp['am'] }}" data-ms-cap-en="{{ $gp['en'] }}" aria-label="{{ $gp['en'] }}">
@@ -5167,10 +5159,11 @@
       layout(); restart();
     }
 
-    /* ---------- Gallery: full-size slider + lightbox (batch 19) ----------
-       One large photo at a time: arrows, dots, counter, thumbnails,
-       keyboard, and the same hand-drag pattern as the hero slider
-       (slide follows the finger/mouse, snaps to the nearest photo).
+    /* ---------- Gallery: side-scrolling strip + lightbox (2026-11-19) ----
+       The photos sit in one horizontal strip: swipe/scroll sideways
+       (native scrolling), dots + thumbnails scroll the strip to a
+       photo, keyboard arrows move one photo at a time. No autoplay —
+       the strip must not scroll away from the photo being looked at.
        Tapping a photo (not a drag) opens the lightbox. */
     var galStage = document.getElementById('ms-gal-stage');
     if (galStage) {
@@ -5195,12 +5188,19 @@
         gThumbs.forEach(function (t, i) { t.classList.toggle('on', i === gActive); });
         if (gCount) gCount.textContent = (gActive + 1) + ' / ' + gSlides.length;
       }
-      function gGoTo(i) { gActive = (i + gSlides.length) % gSlides.length; gLayout(); }
+      function gGoTo(i) {
+        gActive = (i + gSlides.length) % gSlides.length;
+        gLayout();
+        // Scroll the strip so the chosen photo sits at its left edge.
+        var target = gSlides[gActive];
+        if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+      }
       function gNext() { gGoTo(gActive + 1); }
       function gPrev() { gGoTo(gActive - 1); }
       function gRestart() {
-        if (gTimer) clearInterval(gTimer);
-        if (!reduceMotion) gTimer = setInterval(gNext, 5000);
+        // No autoplay for the strip: it scrolls by user action only,
+        // so it never scrolls away from the photo being looked at.
+        if (gTimer) { clearInterval(gTimer); gTimer = null; }
       }
       document.getElementById('ms-gal-next').addEventListener('click', function () { gNext(); gRestart(); });
       document.getElementById('ms-gal-prev').addEventListener('click', function () { gPrev(); gRestart(); });
@@ -5230,18 +5230,22 @@
         if (!gDragging) return;
         gDragging = false;
         galStage.classList.remove('ms-dragging');
-        var dx = e.clientX - gStartX;
-        var now = Date.now(), dt = now - gLastT;
-        var vel = dt > 0 ? (e.clientX - gLastX) / dt : 0;
-        if (Math.abs(dx) > 40 || (Math.abs(vel) > 0.45 && Math.abs(dx) > 25)) {
-          if (dx < 0) gNext(); else gPrev();
-        } else if (!gDragged && allowTap) {
-          // Tap (no drag): open the lightbox. This must live here and
-          // not only on the slide's click handler, because
-          // setPointerCapture above retargets the click to the stage,
-          // so the figure's click listener may never fire. A cancelled
-          // pointer (e.g. a vertical page scroll) must not open it.
-          openLb(gActive);
+        // The strip scrolls natively, so a drag must NOT advance to the
+        // next/previous photo — that would fight the user's scroll.
+        if (!gDragged && allowTap) {
+          // Tap (no drag): open the lightbox for the photo under the
+          // finger/mouse. This must live here and not only on the
+          // slide's click handler, because setPointerCapture above
+          // retargets the click to the stage, so the figure's click
+          // listener may never fire. A cancelled pointer (e.g. a
+          // vertical page scroll) must not open it.
+          var tapped = null;
+          if (document.elementFromPoint) {
+            var el = document.elementFromPoint(e.clientX, e.clientY);
+            tapped = el && el.closest ? el.closest('.ms-gal-slide') : null;
+          }
+          var idx = tapped ? gSlides.indexOf(tapped) : -1;
+          openLb(idx >= 0 ? idx : gActive);
         }
         gLayout(); gRestart();
       }

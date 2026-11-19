@@ -45,6 +45,11 @@ class DatabaseSeeder extends Seeder
                 $this->seedEssentialServices();
             }
 
+            // 2026-11-19: working hours changed to 24/7. Runs on every
+            // deploy seed, but only rewrites rows that still carry the old
+            // Mon-Sat wording (see the seeder) — admin edits are safe.
+            $this->call(UpdateWorkingHoursTo247Seeder::class);
+
             // Seed the admin-managed website photos (only when the
             // photos table is empty — PhotoSeeder guards itself, so
             // admin edits are never overwritten).

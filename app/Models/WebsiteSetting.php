@@ -130,11 +130,10 @@ class WebsiteSetting extends Model
             'map_link_url' => 'https://maps.google.com/?q=Ayat+Square+Addis+Ababa',
             'social_handle' => '@meashcleaningsolution',
             // Working hours — ONE source of truth (these two keys), reused
-            // everywhere on the site. No "24/7" anywhere: phones and
-            // Telegram are answered Mon-Sat 8:00-18:00; urgent requests by
-            // message anytime; night shift for companies by appointment.
-            'working_hours_am' => 'ስልክ እና ቴሌግራም፦ ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 ይመለሳል፤ አስቸኳይ ጥያቄዎች በመልእክት በማንኛውም ጊዜ። የሌሊት ፈረቃ ለድርጅቶች በቀጠሮ።',
-            'working_hours_en' => 'Calls and Telegram: answered Mon-Sat 8:00-18:00; urgent requests by message anytime. Night shift for companies by appointment.',
+            // everywhere on the site. Open 24/7: any time, including
+            // midnight (owner decision 2026-11-19).
+            'working_hours_am' => '24/7 — በማንኛውም ሰዓት፣ ሌሊት ጨምሮ',
+            'working_hours_en' => '24/7 — Any time, including midnight',
             // R3 trust bar — ONLY verified claims, each editable from admin.
             // Clear a value in admin settings to remove that claim from the bar.
             // "Up to 15% off" is NOT a setting here: it is derived from
@@ -142,8 +141,8 @@ class WebsiteSetting extends Model
             // "VAT invoice" is deliberately NOT a claim: no VAT value is stored.
             'trust_free_inspection_am' => 'ነፃ የቦታ ምልከታ',
             'trust_free_inspection_en' => 'Free inspection',
-            'trust_hours_am' => 'ከሰኞ እስከ ቅዳሜ 8:00–18:00',
-            'trust_hours_en' => 'Mon–Sat 8:00–18:00',
+            'trust_hours_am' => '24/7 — በማንኛውም ሰዓት፣ ሌሊት ጨምሮ',
+            'trust_hours_en' => '24/7 — Any time, including midnight',
             'trust_licensed_am' => 'ህጋዊ ፈቃድ ያለው ድርጅት',
             'trust_licensed_en' => 'Licensed & Insured',
             'telegram_channel' => 'https://t.me/meashdeepcleanning',

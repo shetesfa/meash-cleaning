@@ -89,8 +89,9 @@ class RedesignTest extends TestCase
         // Exactly two primary hero buttons: Get Quote & Book + round Call.
         $this->assertStringContainsString('Get Quote &amp; Book', $hero);
         $this->assertStringContainsString('tel:', $hero);
-        // Desktop floating card on the photo: real price, free inspection.
-        $this->assertStringContainsString('ETB/sqm', $hero);
+        // Desktop card below the photo: free inspection only — the
+        // "From 60 ETB / sqm" starting-price line was removed (2026-11-19).
+        $this->assertStringNotContainsString('ETB/sqm', $hero);
         $this->assertStringContainsString('Free inspection', $hero);
         // Phone stage is compact so the first screen fits 390x844.
         $res->assertSee('.ms-stage { height: 330px; }', false);
@@ -110,7 +111,7 @@ class RedesignTest extends TestCase
 
         // The four verified claims are present.
         $this->assertStringContainsString('Free inspection', $trust);
-        $this->assertStringContainsString('Mon–Sat 8:00–18:00', $trust);
+        $this->assertStringContainsString('24/7', $trust);
         $this->assertStringContainsString('Licensed &amp; Insured', $trust);
         // Discount comes from the real pricing rules (weekly 15 = maximum).
         // R8 wraps the number in a count-up span, so assert the pieces.
@@ -298,7 +299,8 @@ class RedesignTest extends TestCase
     }
 
     // R6: before/after block shows ONLY with a complete pair; the gallery
-    // is a masonry grid on desktop, and the phone thumb gap is tightened.
+    // is a side-scrolling strip (2026-11-19, was a masonry grid on
+    // desktop), and the phone thumb gap is tightened.
     public function test_r6_before_after_block_only_with_complete_pair(): void
     {
         // No pairs in the data yet: the block stays hidden.
@@ -338,15 +340,22 @@ class RedesignTest extends TestCase
         $this->assertStringContainsString('See the difference yourself', $block);
     }
 
-    public function test_r6_masonry_gallery_and_phone_gap_fix(): void
+    // 2026-11-19 (Tesfa): the gallery is a side-scrolling strip on
+    // phones AND desktop — the R6 masonry grid is gone. The phone
+    // thumb gap fix stays.
+    public function test_gallery_side_scrolling_strip_and_phone_gap_fix(): void
     {
         $res = $this->get('/');
         $res->assertStatus(200);
         $html = $res->getContent();
-        // Desktop masonry: 3 columns, slider chrome hidden; phones keep
-        // the slider (the masonry rules live inside min-width: 821px).
-        $this->assertStringContainsString('column-count: 3;', $html);
-        $this->assertStringContainsString('.ms-gal-nav, .ms-gal-count, .ms-gal-dots, .ms-gal-thumbs { display: none; }', $html);
+        // Strip: flex row, horizontal scroll, snap; no masonry grid.
+        $this->assertStringContainsString('scroll-snap-type: x mandatory', $html);
+        $this->assertStringNotContainsString('column-count: 3;', $html);
+        // Dots + thumbnails stay visible (they scroll the strip);
+        // arrows + counter are hidden (they sat inside the stage).
+        $this->assertStringContainsString('id="ms-gal-dots"', $html);
+        $this->assertStringContainsString('id="ms-gal-thumbs"', $html);
+        $this->assertStringContainsString('.ms-gal-nav, .ms-gal-count { display: none; }', $html);
         // The lightbox wiring is untouched: tapping a tile still opens it.
         $this->assertStringContainsString('openLb(i)', $html);
         $this->assertStringContainsString('id="ms-lightbox"', $html);

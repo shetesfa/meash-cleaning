@@ -8956,11 +8956,11 @@
                             <div class="grid sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">የስራ ሰዓት በአማርኛ (Working Hours AM)</label>
-                                    <input type="text" id="set-hours-am" value="${escapeHtml(s.working_hours_am || 'ስልክ እና ቴሌግራም፦ ከሰኞ እስከ ቅዳሜ ከጠዋቱ 2:00 እስከ ምሽቱ 12:00 ይመለሳል፤ አስቸኳይ ጥያቄዎች በመልእክት በማንኛውም ጊዜ። የሌሊት ፈረቃ ለድርጅቶች በቀጠሮ።')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    <input type="text" id="set-hours-am" value="${escapeHtml(s.working_hours_am || '24/7 — በማንኛውም ሰዓት፣ ሌሊት ጨምሮ')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                 </div>
                                 <div>
                                     <label class="text-xs font-bold text-slate-300 block mb-1">የስራ ሰዓት በእንግሊዝኛ (Working Hours EN)</label>
-                                    <input type="text" id="set-hours-en" value="${escapeHtml(s.working_hours_en || 'Calls and Telegram: answered Mon-Sat 8:00-18:00; urgent requests by message anytime. Night shift for companies by appointment.')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                    <input type="text" id="set-hours-en" value="${escapeHtml(s.working_hours_en || '24/7 — Any time, including midnight')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                 </div>
                             </div>
 
@@ -8977,11 +8977,11 @@
                                     </div>
                                     <div>
                                         <label class="text-xs font-bold text-slate-300 block mb-1">የስራ ሰዓት በአማርኛ (Trust Hours AM)</label>
-                                        <input type="text" id="set-trust-hours-am" value="${escapeHtml(s.trust_hours_am || 'ከሰኞ እስከ ቅዳሜ 8:00–18:00')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                        <input type="text" id="set-trust-hours-am" value="${escapeHtml(s.trust_hours_am || '24/7 — በማንኛውም ሰዓት፣ ሌሊት ጨምሮ')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                     </div>
                                     <div>
                                         <label class="text-xs font-bold text-slate-300 block mb-1">የስራ ሰዓት በእንግሊዝኛ (Trust Hours EN)</label>
-                                        <input type="text" id="set-trust-hours-en" value="${escapeHtml(s.trust_hours_en || 'Mon–Sat 8:00–18:00')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
+                                        <input type="text" id="set-trust-hours-en" value="${escapeHtml(s.trust_hours_en || '24/7 — Any time, including midnight')}" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-cyan-400">
                                     </div>
                                     <div>
                                         <label class="text-xs font-bold text-slate-300 block mb-1">ፈቃድ በአማርኛ (Licensed AM)</label>
