@@ -226,7 +226,19 @@
     <link rel="preload" href="/fonts/font-1-f7346798.woff2" as="font" type="font/woff2" crossorigin>
     <!-- Q4: filemtime() versions — the URL changes whenever the file
          changes, so the 30-day cache never serves a stale file. -->
-    <link rel="stylesheet" href="/css/fonts.css?v={{ filemtime(public_path('css/fonts.css')) }}">
+    <!-- S3 (2026-11-19): fonts.css is deferred (preload + onload swap)
+         so it no longer blocks first render (~150ms on the 8:52 AM
+         Lighthouse run). Safe: the file holds ONLY @font-face rules,
+         all with font-display: swap, so text paints at once in a
+         fallback font and swaps to the Ethiopic font when it loads.
+         The <noscript> fallback covers JS-off browsers. -->
+    <link rel="preload" href="/css/fonts.css?v={{ filemtime(public_path('css/fonts.css')) }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/css/fonts.css?v={{ filemtime(public_path('css/fonts.css')) }}"></noscript>
+    <!-- S3: meash.css stays a normal render-blocking stylesheet on
+         purpose — it carries every Tailwind utility and custom style
+         the hero depends on, and deferring it would flash the hero
+         unstyled. Its 12.1 KiB transfer is small; the remaining
+         ~450ms of blocking is Slow-4G round-trip time, not size. -->
     <link rel="stylesheet" href="/css/meash.css?v={{ filemtime(public_path('css/meash.css')) }}">
 
     <!-- Self-Hosted Vendor Libraries -->
