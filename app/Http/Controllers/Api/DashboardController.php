@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Feedback;
 use App\Models\Followup;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Proforma;

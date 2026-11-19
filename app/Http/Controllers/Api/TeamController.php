@@ -484,6 +484,51 @@ class TeamController extends Controller
     }
 
     /**
+     * A4: Owner-only password reset for a staff user.
+     * The Staff Directory had no edit/password control, so the owner could
+     * not reset a staff member's password. Same 12-character strength rule
+     * as storeEmployee / changePassword. The owner account itself is never
+     * reset from this control.
+     */
+    public function resetEmployeePassword(Request $request, $id): JsonResponse
+    {
+        $request->validate([
+            'password' => [
+                'required',
+                'string',
+                'confirmed',
+                Password::min(12)->letters()->mixedCase()->numbers()->symbols(),
+            ],
+        ]);
+
+        $employee = \App\Models\User::findOrFail($id);
+
+        if ($employee->role === 'owner') {
+            return response()->json([
+                'success' => false,
+                'message' => 'የባለቤቱ የይለፍ ቃል ከዚህ መቀየር አይቻልም (The owner password cannot be reset here).',
+            ], 422);
+        }
+
+        $employee->password = \Illuminate\Support\Facades\Hash::make($request->input('password'));
+        $employee->save();
+
+        AuditLog::logAction(
+            $request->user()?->id,
+            'employee_password_reset',
+            \App\Models\User::class,
+            $employee->id,
+            null,
+            ['user_id' => $employee->id, 'username' => $employee->username]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "የ{$employee->name} የይለፍ ቃል ተቀይሯል (Password reset).",
+        ]);
+    }
+
+    /**
      * Get single employee complete dossier: Monthly paid history & work history
      */
     public function getEmployeeHistory(Request $request, $id): JsonResponse

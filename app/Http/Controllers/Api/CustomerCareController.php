@@ -374,11 +374,15 @@ class CustomerCareController extends Controller
         $cleanPhone = SmsService::normalizeEthiopianPhone($phone);
         $result = SmsService::sendDirectSms($cleanPhone, $validated['message']);
 
+        // A5: $customer is null for phone-only sends; AuditLog::logAction
+        // requires a non-nullable int id (auditable_id is NOT NULL), so a
+        // null here threw a TypeError and the whole send 500'd. 0 is the
+        // codebase's existing "no related record" convention (SmsService).
         AuditLog::logAction(
             $request->user()?->id,
             'customer_care_sms_sent',
             Customer::class,
-            $customer?->id,
+            $customer?->id ?? 0,
             null,
             [
                 'phone' => $cleanPhone,
@@ -438,7 +442,7 @@ class CustomerCareController extends Controller
                         $request->user()?->id,
                         'customer_care_telegram_sent',
                         Customer::class,
-                        $customer?->id,
+                        $customer?->id ?? 0,
                         null,
                         [
                             'chat_id' => $chatId,
@@ -468,7 +472,7 @@ class CustomerCareController extends Controller
                 $request->user()?->id,
                 'customer_care_telegram_routed_to_sms',
                 Customer::class,
-                $customer?->id,
+                $customer?->id ?? 0,
                 null,
                 [
                     'phone' => $cleanPhone,

@@ -3348,6 +3348,15 @@
                                                             ክፍያ
                                                         </button>
                                                     ` : '')}
+                                                    ${(currentUser.role === 'owner' || currentUser.role === 'reception') && o.order_status === 'new' ? `
+                                                    <button onclick="ownerOrderAction(${o.id}, 'seen', this)" class="px-2.5 py-1 bg-violet-950/90 hover:bg-violet-900 text-violet-300 font-bold text-[11px] rounded-lg border border-violet-500/40 transition-colors" title="ትዕዛዙን እንደታየ ምልክት አድርግ (Mark seen)">ታይቷል</button>
+                                                    ` : ''}
+                                                    ${(currentUser.role === 'owner' || currentUser.role === 'reception') && (o.order_status === 'new' || o.order_status === 'pending_confirmation') ? `
+                                                    <button onclick="ownerOrderAction(${o.id}, 'accept', this)" class="px-2.5 py-1 bg-teal-950/90 hover:bg-teal-900 text-teal-300 font-bold text-[11px] rounded-lg border border-teal-500/40 transition-colors" title="ትዕዛዙን ተቀበል (Accept order)">ተቀበል</button>
+                                                    ` : ''}
+                                                    ${currentUser.role === 'owner' && (o.order_status === 'assigned' || o.order_status === 'on_the_way' || o.order_status === 'cleaning') ? `
+                                                    <button onclick="ownerOrderAction(${o.id}, 'complete', this)" class="px-2.5 py-1 bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 font-bold text-[11px] rounded-lg border border-emerald-500/40 transition-colors" title="ትዕዛዙን እንደተጠናቀቀ ምልክት አድርግ (Mark complete)">ተጠናቋል</button>
+                                                    ` : ''}
                                                     <button onclick="confirmAndAssignOrder(${o.id})" class="px-2.5 py-1 bg-blue-950/90 hover:bg-blue-900 text-blue-300 font-bold text-[11px] rounded-lg border border-blue-500/40 transition-colors" title="የፅዳት ሰራተኛ መድብ">ሰራተኛ</button>
                                                     <button onclick="printOrderInvoice(${o.id}, this)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px] rounded-lg border border-amber-500/40 transition" title="ደረሰኝ አትም (Print Invoice)">ደረሰኝ</button>
                                                     <button data-phone="${escapeHtml(o.customer_phone || o.customer?.phone || '')}" data-name="${escapeHtml(o.customer_name || o.customer?.full_name || o.customer?.name || '')}" onclick="openDirectSmsModal(this.dataset.phone, this.dataset.name)" class="px-2.5 py-1 bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 font-bold text-[11px] rounded-lg border border-cyan-500/30">SMS</button>
@@ -5747,6 +5756,12 @@
                                                             <i data-lucide="banknote" class="w-3.5 h-3.5 text-amber-400"></i>
                                                             <span>ደመወዝ ክፈል</span>
                                                         </button>
+                                                        ${currentUser.role === 'owner' ? `
+                                                        <button onclick="openResetPasswordModal(${e.id}, '${e.name.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 border border-violet-500/30 font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-sm" title="የይለፍ ቃል ቀይር (Reset password)">
+                                                            <i data-lucide="lock" class="w-3.5 h-3.5 text-violet-400"></i>
+                                                            <span>ይለፍ ቃል</span>
+                                                        </button>
+                                                        ` : ''}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -5966,6 +5981,69 @@
         // ==========================================
         // PAYROLL / SALARY PAYMENT MODAL & SUBMIT
         // ==========================================
+        // A4: owner-only staff password reset modal.
+        function openResetPasswordModal(employeeId, employeeName) {
+            const container = document.getElementById('generic-modal-container');
+            container.innerHTML = `
+                <div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="lock" class="w-5 h-5 text-violet-400"></i>
+                                    <span>የይለፍ ቃል ቀይር (Reset Password)</span>
+                                </h3>
+                                <p class="text-[11px] text-slate-400">ለ${employeeName} አዲስ የይለፍ ቃል ያስገቡ።</p>
+                            </div>
+                            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                        </div>
+                        <form onsubmit="submitResetPassword(event, ${employeeId})" class="space-y-3 text-xs">
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">አዲስ የይለፍ ቃል *</label>
+                                <input id="reset-password-new" type="password" required minlength="12" autocomplete="new-password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" placeholder="ቢያንስ 12 ፊደል">
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-bold mb-1">አዲሱን የይለፍ ቃል እንደገና ያስገቡ *</label>
+                                <input id="reset-password-confirm" type="password" required minlength="12" autocomplete="new-password" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" placeholder="ይለፍ ቃሉን ያረጋግጡ">
+                            </div>
+                            <p class="text-[11px] text-slate-400">የይለፍ ቃሉ ቢያንስ 12 ፊደል መሆን አለበት — ትልቅና ትንሽ ፊደል፣ ቁጥር እና ምልክት መያዝ አለበት።</p>
+                            <div class="flex justify-end gap-2 pt-1">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 cursor-pointer">ሰርዝ</button>
+                                <button type="submit" class="px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl cursor-pointer">ይለፍ ቃል ቀይር</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function submitResetPassword(event, employeeId) {
+            event.preventDefault();
+            const password = document.getElementById('reset-password-new').value;
+            const confirm = document.getElementById('reset-password-confirm').value;
+            if (password !== confirm) {
+                alert('የይለፍ ቃሎቹ አይመሳሰሉም — እንደገና ያረጋግጡ (Passwords do not match).');
+                return;
+            }
+            try {
+                const res = await apiFetch(`/api/employees/${employeeId}/reset-password`, {
+                    method: 'POST',
+                    body: JSON.stringify({ password: password, password_confirmation: confirm })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast(data.message || 'የይለፍ ቃል ተቀይሯል (Password reset)', 'success');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት: ' + (data.message || (data.errors ? Object.values(data.errors).flat().join(' ') : 'የይለፍ ቃል መቀየር አልተቻለም')));
+                }
+            } catch (err) {
+                alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+            }
+        }
+
         async function openPayrollModal(preselectedEmployeeId = null, preselectedEmployeeName = '') {
             const container = document.getElementById('generic-modal-container');
             const res = await apiFetch('/api/employees');
@@ -10199,6 +10277,24 @@
                                         <span>ተመላሽ ክፍያ (Refund)</span>
                                     </button>
                                 ` : ''}
+                                ${(currentUser.role === 'owner' || currentUser.role === 'reception') && o.order_status === 'new' ? `
+                                    <button onclick="ownerOrderAction(${o.id}, 'seen', this)" class="px-4 py-2 bg-violet-950/80 hover:bg-violet-900 border border-violet-500/40 text-violet-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
+                                        <i data-lucide="eye" class="w-4 h-4 text-violet-400"></i>
+                                        <span>ታይቷል (Seen)</span>
+                                    </button>
+                                ` : ''}
+                                ${(currentUser.role === 'owner' || currentUser.role === 'reception') && (o.order_status === 'new' || o.order_status === 'pending_confirmation') ? `
+                                    <button onclick="ownerOrderAction(${o.id}, 'accept', this)" class="px-4 py-2 bg-teal-950/80 hover:bg-teal-900 border border-teal-500/40 text-teal-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
+                                        <i data-lucide="check-circle" class="w-4 h-4 text-teal-400"></i>
+                                        <span>ተቀበል (Accept)</span>
+                                    </button>
+                                ` : ''}
+                                ${currentUser.role === 'owner' && (o.order_status === 'assigned' || o.order_status === 'on_the_way' || o.order_status === 'cleaning') ? `
+                                    <button onclick="ownerOrderAction(${o.id}, 'complete', this)" class="px-4 py-2 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
+                                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+                                        <span>ተጠናቋል (Complete)</span>
+                                    </button>
+                                ` : ''}
                                 ${o.order_status !== 'completed' && o.order_status !== 'cancelled' ? `
                                     <button onclick="closeModal(); confirmAndAssignOrder(${o.id});" class="px-4 py-2 bg-blue-950/80 hover:bg-blue-900 border border-blue-500/40 text-blue-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer">
                                         <i data-lucide="user-check" class="w-4 h-4 text-blue-400"></i>
@@ -10551,6 +10647,33 @@
                 }
             } catch (e) {
                 alert('የግንኙነት ችግር: ' + e.message);
+            }
+        }
+
+        // A1/A3: owner + reception order lifecycle actions (seen / accept / complete).
+        // POSTs to /api/orders/{id}/{action}; on success shows a toast and
+        // refreshes the list; on failure shows the server error — never silent.
+        async function ownerOrderAction(orderId, action, btn) {
+            const labels = { seen: 'ታይቷል (Seen)', accept: 'ተቀበል (Accept)', complete: 'ተጠናቋል (Complete)' };
+            if (action === 'complete' && !confirm('ትዕዛዙን እንደተጠናቀቀ ምልክት ማድረግ ይፈልጋሉ? (Mark this order as completed?)')) return;
+            if (btn) btn.disabled = true;
+            try {
+                const res = await apiFetch(`/api/orders/${orderId}/${action}`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast(data.message || (labels[action] + ' ✓'), 'success');
+                    closeModal();
+                    loadActiveTab();
+                } else {
+                    alert('ስህተት: ' + (data.message || 'ድርጊቱን ማከናወን አልተቻለም'));
+                }
+            } catch (err) {
+                alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+            } finally {
+                if (btn) btn.disabled = false;
             }
         }
 

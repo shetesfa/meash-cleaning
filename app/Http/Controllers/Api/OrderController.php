@@ -724,6 +724,135 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * A1: Mark an order as seen (new -> pending_confirmation).
+     * Owner + reception only (enforced by the route middleware).
+     */
+    public function markSeen(Request $request, Order $order): JsonResponse
+    {
+        if ($order->order_status !== 'new') {
+            return response()->json([
+                'success' => false,
+                'message' => 'ትዕዛዙ አስቀድሞ ታይቷል (Order already seen).',
+            ], 422);
+        }
+
+        $old = $order->toArray();
+        $order->order_status = 'pending_confirmation';
+        $order->version += 1;
+        $order->save();
+
+        AuditLog::logAction(
+            $request->user()?->id,
+            'order_seen',
+            Order::class,
+            $order->id,
+            $old,
+            $order->toArray()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ትዕዛዙ ታይቷል (Order marked as seen).',
+            'order' => $order->fresh(['customer', 'assignedTeam', 'items']),
+        ]);
+    }
+
+    /**
+     * A1: Accept an order (new / pending_confirmation -> confirmed).
+     * Owner + reception only (enforced by the route middleware).
+     */
+    public function acceptOrder(Request $request, Order $order): JsonResponse
+    {
+        if (!in_array($order->order_status, ['new', 'pending_confirmation'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ትዕዛዙ በዚህ ሁኔታ መቀበል አይቻልም (Order cannot be accepted from this state).',
+            ], 422);
+        }
+
+        $old = $order->toArray();
+        $order->order_status = 'confirmed';
+        $order->version += 1;
+        $order->save();
+
+        AuditLog::logAction(
+            $request->user()?->id,
+            'order_accepted',
+            Order::class,
+            $order->id,
+            $old,
+            $order->toArray()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ትዕዛዙ ተቀብሏል (Order accepted).',
+            'order' => $order->fresh(['customer', 'assignedTeam', 'items']),
+        ]);
+    }
+
+    /**
+     * A3: Mark an order complete (assigned / on_the_way / cleaning -> completed).
+     * Owner only (enforced by the route middleware). Reuses the same
+     * completion mechanics as the cleaner flow (TeamController@handleJobAction)
+     * and the generic status update: completed_at, completion_notes,
+     * review follow-up row, OrderLifecycleService review trigger.
+     */
+    public function completeOrder(Request $request, Order $order): JsonResponse
+    {
+        if (!in_array($order->order_status, ['assigned', 'on_the_way', 'cleaning'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ትዕዛዙ በዚህ ሁኔታ እንደተጠናቀቀ ምልክት ማድረግ አይቻልም (Order cannot be marked complete from this state).',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'completion_notes' => 'nullable|string',
+        ]);
+
+        $old = $order->toArray();
+        $order->order_status = 'completed';
+        if (!$order->completed_at) {
+            $order->completed_at = now();
+        }
+        if (!empty($validated['completion_notes'])) {
+            $order->completion_notes = $validated['completion_notes'];
+        }
+        $order->version += 1;
+        $order->save();
+
+        AuditLog::logAction(
+            $request->user()?->id,
+            'order_completed',
+            Order::class,
+            $order->id,
+            $old,
+            $order->toArray()
+        );
+
+        \App\Models\Followup::firstOrCreate(
+            [
+                'order_id' => $order->id,
+                'type' => 'review',
+            ],
+            [
+                'customer_id' => $order->customer_id,
+                'due_date' => \Carbon\Carbon::today(),
+                'status' => 'pending',
+                'notes' => 'Post-service customer satisfaction & review follow-up',
+            ]
+        );
+        OrderLifecycleService::checkCompletionAndTriggerReview($order);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ትዕዛዙ እንደተጠናቀቀ ምልክት ተደርጓል (Order marked as completed).',
+            'order' => $order->fresh(['customer', 'assignedTeam', 'items']),
+        ]);
+    }
+
     public function assignTeam(Request $request, Order $order): JsonResponse
     {
         $validated = $request->validate([
@@ -738,18 +867,39 @@ class OrderController extends Controller
         $workerId = $validated['worker_id'] ?? null;
 
         // If a specific worker was selected directly
+        // A2: a team-less cleaner used to be refused with 422 ("worker has
+        // no team, create a team first") and the owner had no way to assign
+        // them directly — the assign modal just failed. Auto-create a
+        // visible solo team for the cleaner instead (loud, not silent: the
+        // team shows up in the Teams list by name and the response says so).
+        $soloTeamCreated = false;
         if ($workerId && !$teamId) {
+            $worker = \App\Models\User::findOrFail($workerId);
             $member = \App\Models\TeamMember::where('user_id', $workerId)->first();
             $leaderTeam = \App\Models\CleaningTeam::where('team_leader_id', $workerId)->first();
             $teamId = $member?->cleaning_team_id ?? $leaderTeam?->id;
 
             if (!$teamId) {
-                // Do NOT auto-create a team: a silent one-person team hides
-                // a staffing mistake. The admin must create the team first.
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ይህ ሰራተኛ የትም ቡድን አባል አይደለም። እባክዎ መጀመሪያ ቡድን ይፍጠሩ ወይም ሰራተኛውን ወደ ነባር ቡድን ያክሉት (Assign failed: worker has no team).',
-                ], 422);
+                if ($worker->role !== 'cleaner') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'በቀጥታ መመደብ የሚቻለው የፅዳት ሰራተኛ ብቻ ነው (Only a cleaner can be assigned directly).',
+                    ], 422);
+                }
+                $soloTeam = \App\Models\CleaningTeam::create([
+                    'team_name' => $worker->name . ' (Solo)',
+                    'team_leader_id' => $worker->id,
+                    'phone' => $worker->phone,
+                    'status' => 'active',
+                ]);
+                \App\Models\TeamMember::firstOrCreate([
+                    'cleaning_team_id' => $soloTeam->id,
+                    'user_id' => $worker->id,
+                ], [
+                    'role_in_team' => 'leader',
+                ]);
+                $teamId = $soloTeam->id;
+                $soloTeamCreated = true;
             }
         }
 
@@ -794,7 +944,9 @@ class OrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'ሰራተኛው/ቡድኑ ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል::',
+            'message' => $soloTeamCreated
+                ? 'ሰራተኛው ተመድቧል — አዲስ የብቸኛ ቡድን ተፈጥሯል (Cleaner assigned; a solo team was created).'
+                : 'ሰራተኛው/ቡድኑ ለትዕዛዙ በተሳካ ሁኔታ ተመድቧል::',
             'order' => $order->fresh(['customer', 'assignedTeam', 'items']),
         ]);
     }

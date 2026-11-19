@@ -91,6 +91,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::match(['put', 'patch', 'post'], '/orders/{order}/update', [OrderController::class, 'update'])->middleware('role:owner,reception');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->middleware('role:owner,reception,cleaner');
     Route::post('/orders/{order}/assign-team', [OrderController::class, 'assignTeam'])->middleware('role:owner,reception');
+    Route::post('/orders/{order}/seen', [OrderController::class, 'markSeen'])->middleware('role:owner,reception');
+    Route::post('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->middleware('role:owner,reception');
+    Route::post('/orders/{order}/complete', [OrderController::class, 'completeOrder'])->middleware('role:owner');
     Route::post('/orders/{order}/submit-payment', [OrderController::class, 'submitPayment'])->middleware('role:owner,reception,cleaner');
     Route::post('/orders/{order}/approve-payment', [OrderController::class, 'approvePayment'])->middleware('role:owner,reception,finance');
     Route::post('/orders/{order}/payments/{payment}/approve', [OrderController::class, 'approvePayment'])->middleware('role:owner,reception,finance');
@@ -112,6 +115,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/teams', [TeamController::class, 'store'])->middleware('role:owner,reception');
     Route::get('/employees', [TeamController::class, 'getEmployees'])->middleware('role:owner,reception');
     Route::post('/employees', [TeamController::class, 'storeEmployee'])->middleware('role:owner');
+    Route::post('/employees/{id}/reset-password', [TeamController::class, 'resetEmployeePassword'])->middleware('role:owner');
     Route::get('/employees/{id}/history', [TeamController::class, 'getEmployeeHistory'])->middleware('role:owner,reception,finance');
     Route::get('/teams/my-jobs', [TeamController::class, 'myJobs'])->middleware('role:cleaner,owner');
     Route::post('/teams/jobs/{order}/action', [TeamController::class, 'handleJobAction'])->middleware('role:cleaner,owner');
