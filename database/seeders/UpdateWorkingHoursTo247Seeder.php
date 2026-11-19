@@ -29,11 +29,15 @@ class UpdateWorkingHoursTo247Seeder extends Seeder
         ];
 
         // Markers of the old Mon-Sat wordings (the seeded defaults).
+        // Note: the live working_hours_en value uses a SPACED hyphen
+        // ("Mon - Sat: 8:00 AM - 6:00 PM (Sunday & Night Shift by
+        // Appointment)") — 'Mon - Sat' must be listed, or that row is
+        // silently skipped (found live 2026-11-19 after the first deploy).
         $oldMarkers = [
             'working_hours_am' => ['ሰኞ'],
-            'working_hours_en' => ['Mon-Sat', 'Mon–Sat'],
+            'working_hours_en' => ['Mon-Sat', 'Mon–Sat', 'Mon - Sat'],
             'trust_hours_am' => ['ሰኞ'],
-            'trust_hours_en' => ['Mon-Sat', 'Mon–Sat'],
+            'trust_hours_en' => ['Mon-Sat', 'Mon–Sat', 'Mon - Sat'],
         ];
 
         foreach ($new as $key => $value) {

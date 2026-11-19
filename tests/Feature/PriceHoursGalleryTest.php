@@ -72,6 +72,17 @@ class PriceHoursGalleryTest extends TestCase
         $this->assertSame('Custom hours set in admin', WebsiteSetting::where('key', 'working_hours_am')->first()->value);
     }
 
+    public function test_hours_seeder_rewrites_spaced_mon_sat_value(): void
+    {
+        // Exact live working_hours_en value (spaced hyphen) — the first
+        // deploy missed it because the markers only had 'Mon-Sat'/'Mon–Sat'.
+        WebsiteSetting::create(['key' => 'working_hours_en', 'value' => 'Mon - Sat: 8:00 AM - 6:00 PM (Sunday & Night Shift by Appointment)', 'group' => 'general']);
+
+        (new UpdateWorkingHoursTo247Seeder)->run();
+
+        $this->assertSame('24/7 — Any time, including midnight', WebsiteSetting::where('key', 'working_hours_en')->first()->value);
+    }
+
     public function test_homepage_shows_24_7_hours_and_no_mon_sat(): void
     {
         $res = $this->get('/');
