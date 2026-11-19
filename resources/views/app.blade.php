@@ -3821,7 +3821,7 @@
             const phone = document.getElementById('direct-sms-phone')?.value || '';
             const message = document.getElementById('direct-sms-message')?.value || '';
             if (!phone.trim() || !message.trim()) {
-                alert('እባክዎ የተቀባይ ስልክ እና የመልእክት ይዘት ያስገቡ።');
+                showToast('እባክዎ የተቀባይ ስልክ እና የመልእክት ይዘት ያስገቡ።', 'error');
                 if (btn) { btn.disabled = false; btn.innerText = originalText; }
                 return;
             }
@@ -3834,12 +3834,15 @@
                 const data = await res.json();
                 if (res.ok && data.success) {
                     closeModal();
-          alert(' ' + (data.message || 'ተመዝግቧል — SMS አልተላከም (logged only, no gateway)'));
+                    // B2 (same defect as the 1-to-1 send): showToast, not
+                    // alert() — automated browsers auto-dismiss native
+                    // alerts, so the send looked silent.
+                    showToast(data.message || 'ተመዝግቧል — SMS አልተላከም (logged only, no gateway)', 'success');
                 } else {
-          alert(' ስህተት: ' + (data.message || 'ኤስኤምኤስ መላክ አልተቻለም።'));
+                    showToast('ስህተት: ' + (data.message || 'ኤስኤምኤስ መላክ አልተቻለም።'), 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ስህተት: ' + err.message);
+                showToast('የግንኙነት ስህተት: ' + err.message, 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerText = originalText; }
             }
@@ -10655,7 +10658,31 @@
         // refreshes the list; on failure shows the server error — never silent.
         async function ownerOrderAction(orderId, action, btn) {
             const labels = { seen: 'ታይቷል (Seen)', accept: 'ተቀበል (Accept)', complete: 'ተጠናቋል (Complete)' };
-            if (action === 'complete' && !confirm('ትዕዛዙን እንደተጠናቀቀ ምልክት ማድረግ ይፈልጋሉ? (Mark this order as completed?)')) return;
+            // B1: two-tap confirm for 'complete' (same pattern as the Telegram
+            // delete / review request). No native confirm() — automated
+            // browsers auto-dismiss those, so the button looked dead: the
+            // request never fired, no toast, no reload, no status change.
+            if (action === 'complete') {
+                const armKey = 'complete-order-' + orderId;
+                if (!window._broadcastDeleteArmed) window._broadcastDeleteArmed = {};
+                const origHtml = btn ? btn.innerHTML : '';
+                if (!window._broadcastDeleteArmed[armKey]) {
+                    window._broadcastDeleteArmed[armKey] = true;
+                    if (btn) {
+                        btn.classList.add('bg-red-600', 'text-white');
+                        btn.innerText = 'ትዕዛዙን እንደተጠናቀቀ ምልክት ማድረግ ይፈልጋሉ? (Mark this order as completed?)';
+                    }
+                    setTimeout(() => {
+                        window._broadcastDeleteArmed[armKey] = false;
+                        if (btn && btn.isConnected) {
+                            btn.classList.remove('bg-red-600', 'text-white');
+                            btn.innerHTML = origHtml;
+                        }
+                    }, 4000);
+                    return;
+                }
+                window._broadcastDeleteArmed[armKey] = false;
+            }
             if (btn) btn.disabled = true;
             try {
                 const res = await apiFetch(`/api/orders/${orderId}/${action}`, {
@@ -10668,10 +10695,10 @@
                     closeModal();
                     loadActiveTab();
                 } else {
-                    alert('ስህተት: ' + (data.message || 'ድርጊቱን ማከናወን አልተቻለም'));
+                    showToast('ስህተት: ' + (data.message || 'ድርጊቱን ማከናወን አልተቻለም'), 'error');
                 }
             } catch (err) {
-                alert('የሰርቨር ግንኙነት ችግር: ' + err.message);
+                showToast('የሰርቨር ግንኙነት ችግር: ' + err.message, 'error');
             } finally {
                 if (btn) btn.disabled = false;
             }
@@ -10749,7 +10776,7 @@
             const channel = document.querySelector('input[name="direct-msg-channel"]:checked')?.value || 'telegram';
             const msg = (document.getElementById('direct-care-msg')?.value || '').trim();
             if (!msg) {
-                alert('እባክዎ የመልእክት ዝርዝር ያስገቡ!');
+                showToast('እባክዎ የመልእክት ዝርዝር ያስገቡ!', 'error');
                 return;
             }
 
@@ -10771,13 +10798,16 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    alert(' ' + data.message);
+                    // B2: showToast, not alert() — automated browsers
+                    // auto-dismiss native alerts, so the modal just closed
+                    // with no visible feedback and the send looked silent.
+                    showToast(data.message || 'መልእክቱ ተመዝግቧል', 'success');
                     closeModal();
                 } else {
-                    alert('ስህተት፡ ' + (data.message || 'መልእክቱን መላክ አልተቻለም!'));
+                    showToast('ስህተት፡ ' + (data.message || 'መልእክቱን መላክ አልተቻለም!'), 'error');
                 }
             } catch (err) {
-                alert('የኔትወርክ ስህተት፡ ' + err.message);
+                showToast('የኔትወርክ ስህተት፡ ' + err.message, 'error');
             } finally {
                 if (btn) {
                     btn.disabled = false;
