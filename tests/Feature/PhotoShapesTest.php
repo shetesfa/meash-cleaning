@@ -14,6 +14,14 @@ class PhotoShapesTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // 2026-11-23: the homepage shows DB photo rows only (no
+        // hardcoded fallback), so seed the rows this test reads.
+        $this->seed();
+    }
+
     public function test_portraits_keep_their_top_and_cards_keep_one_height(): void
     {
         $res = $this->get('/');

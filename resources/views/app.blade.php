@@ -8543,6 +8543,10 @@
         window._photosFilter = window._photosFilter || 'all';
         window._photosSearch = window._photosSearch || '';
         window._photoDeleteArmed = window._photoDeleteArmed || {};
+        // Last uploaded photo (id) — shown pinned at the top of the
+        // Photos tab with a clear banner until the tab is re-opened.
+        window._photosJustAdded = window._photosJustAdded || null;
+        window._photoAddAllArmed = window._photoAddAllArmed || false;
 
         async function renderWebsiteCmsModule(container) {
             container.innerHTML = `
@@ -8659,6 +8663,7 @@
                 renderCmsAboutTab(container);
             } else if (currentCmsSubTab === 'photos') {
                 container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">ፎቶዎችን በመጫን ላይ...</div>`;
+                window._photosJustAdded = null; // re-opening the tab clears the just-uploaded banner
                 try {
                     if (!cmsServicesData.length) {
                         try {
@@ -9594,18 +9599,26 @@
             }
         }
 
-        // Sub-tab 5: Photos — every website image, controlled from here
+        // Sub-tab 5: Photos — every website image, controlled from here.
+        // The 4 places a photo can appear on the site, in plain words
+        // (2026-11-23, Tesfa): each entry says WHERE on the page it
+        // shows, so the owner always knows where an upload will land.
         const PHOTO_SECTIONS = [
-            { id: 'hero', label_en: 'Hero slider', label_am: 'ዋና ስላይደር' },
-            { id: 'service', label_en: 'Service cards', label_am: 'የአገልግሎት ካርዶች' },
-            { id: 'gallery', label_en: 'Gallery', label_am: 'ጋለሪ' },
-            { id: 'feature', label_en: 'How we deliver', label_am: 'ፍጹም ጽዳት እንዴት እናደርሳለን' },
-            { id: 'logo', label_en: 'Website logo', label_am: 'የድረ-ገጽ ሎጎ' },
+            { id: 'hero', label_en: 'Hero slider', label_am: 'ዋና ስላይደር', where_am: 'በገጹ ላይኛው ክፍል የሚንሸራተት ትልቅ ፎቶ (upper side-scroll)' },
+            { id: 'service', label_en: 'Service cards', label_am: 'የአገልግሎት ካርዶች', where_am: 'የአገልግሎት ካርዶች ላይ ያለው ፎቶ (product / service cards)' },
+            { id: 'gallery', label_en: 'Gallery', label_am: 'ጋለሪ', where_am: 'ከታች ያለው ትልቅ የሚንሸራተት የፎቶዎች ረድፍ (big side-scroll underneath)' },
+            { id: 'feature', label_en: 'How we deliver', label_am: 'ፍጹም ጽዳት እንዴት እናደርሳለን', where_am: 'ከመግለጫ ጽሑፍ ጋር ያለው ረድፍ (strip with description text)' },
+            { id: 'logo', label_en: 'Website logo', label_am: 'የድረ-ገጽ ሎጎ', where_am: 'በገጹ ላይኛው ማዕዘን ያለው ሎጎ (site logo)' },
         ];
 
         function photoSectionLabel(section) {
             const s = PHOTO_SECTIONS.find(x => x.id === section);
             return s ? s.label_en + ' (' + s.label_am + ')' : section;
+        }
+
+        function photoSectionWhere(section) {
+            const s = PHOTO_SECTIONS.find(x => x.id === section);
+            return s ? s.where_am : '';
         }
 
         function photosVisibleList() {
@@ -9632,13 +9645,40 @@
             ).join('');
             const filterBtn = (key, label) => '<button type="button" onclick="setPhotosFilter(\'' + key + '\')" class="px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ' + (window._photosFilter === key ? 'bg-cyan-600 text-white shadow' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800') + '">' + label + '</button>';
 
+            // Just-uploaded photo: pinned at the very top with a clear
+            // banner (file name, place, status, next step) so the owner
+            // always sees what he just added. The photo is hidden from
+            // its section list below while the banner shows it.
+            let justAddedHtml = '';
+            const justAdded = window._photosJustAdded ? cmsPhotosData.find(p => p.id === window._photosJustAdded) : null;
+            if (justAdded) {
+                const fileName = String(justAdded.url || '').split('/').pop().split('?')[0] || justAdded.url || '';
+                const secIdx = cmsPhotosData.filter(p => p.section === justAdded.section).indexOf(justAdded);
+                const justAddedStatus = justAdded.status === 'added'
+                    ? '<p class="text-xs text-emerald-300 font-bold mt-1">ሁኔታ፦ Added — በጣቢያ ላይ ይታያል ✓</p>'
+                    : '<p class="text-xs text-amber-300 font-bold mt-1">ሁኔታ፦ Not added — በጣቢያ ላይ ገና አይታይም።</p>'
+                    + '<p class="text-xs text-slate-300 mt-1">ቀጣይ እርምጃ፦ ከታች ባለው ካርድ ላይ <b class="text-white">“Add to site”</b> ን ጫን — ከዛ በጣቢያ ላይ ይታያል።</p>';
+                justAddedHtml = '<div id="ph-just-added" class="bg-cyan-950/60 border-2 border-cyan-400 rounded-3xl p-4 space-y-3 shadow-xl">'
+                    + '<div class="flex items-start justify-between gap-3">'
+                    + '<div><p class="text-sm font-black text-white">✓ አዲስ ፎቶ ታክሏል — ' + escapeHtml(fileName) + '</p>'
+                    + '<p class="text-xs text-cyan-200 mt-1">ቦታ፦ ' + photoSectionLabel(justAdded.section) + ' — ' + photoSectionWhere(justAdded.section) + '</p>'
+                    + justAddedStatus + '</div>'
+                    + '<button type="button" onclick="window._photosJustAdded = null; renderCmsPhotosTab(document.getElementById(\'cms-tab-content\'));" class="shrink-0 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-lg border border-slate-700 cursor-pointer" aria-label="Close">✕</button>'
+                    + '</div>'
+                    + '<div class="ring-2 ring-cyan-400 rounded-2xl overflow-hidden">' + renderPhotoCard(justAdded, secIdx) + '</div>'
+                    + '</div>';
+            }
+
             let sectionsHtml = '';
             const filterActive = (window._photosFilter && window._photosFilter !== 'all') || ((window._photosSearch || '').trim() !== '');
             PHOTO_SECTIONS.forEach(sec => {
                 const secAll = cmsPhotosData.filter(p => p.section === sec.id);
                 const secAdded = secAll.filter(p => p.status === 'added').length;
                 const secList = list.filter(p => p.section === sec.id);
+                // The pinned photo above is not repeated in its section list.
+                const secShown = justAdded ? secList.filter(p => p.id !== justAdded.id) : secList;
                 if (!secList.length && secAll.length) return; // hidden by current filter
+                if (!secShown.length && secList.length) return; // only the pinned photo is here — it shows in the banner above
                 // Batch 19: when a search/filter is active the heading
                 // shows the FILTERED count ("3 shown of 14"), not the
                 // unfiltered totals.
@@ -9646,12 +9686,15 @@
                     ? secList.length + ' shown of ' + secAll.length
                     : secAdded + ' Added / ' + secAll.length + ' total';
                 sectionsHtml += '<div class="space-y-3">'
-                    + '<div class="flex items-center justify-between"><h4 class="text-sm font-bold text-white">' + sec.label_en + ' <span class="text-slate-400 font-semibold">(' + sec.label_am + ')</span></h4>'
-                    + '<span class="text-[11px] font-bold text-slate-400">' + secCountLabel + '</span></div>';
-                if (!secList.length) {
+                    + '<div><div class="flex items-center justify-between gap-2"><h4 class="text-sm font-bold text-white">' + sec.label_en + ' <span class="text-slate-400 font-semibold">(' + sec.label_am + ')</span></h4>'
+                    + '<span class="text-[11px] font-bold text-slate-400 shrink-0">' + secCountLabel + '</span></div>'
+                    + '<p class="text-[11px] text-slate-500 mt-0.5">' + sec.where_am + '</p></div>';
+                if (!secShown.length) {
                     sectionsHtml += '<p class="text-xs text-slate-500 bg-slate-900 border border-dashed border-slate-800 rounded-2xl px-4 py-6 text-center">በዚህ ክፍል ገና ፎቶ የለም — ከላይ ካለው upload control ጨምር።</p>';
                 } else {
-                    sectionsHtml += '<div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">' + secList.map(p => renderPhotoCard(p, secAll.indexOf(p))).join('') + '</div>';
+                    // Plain vertical list (2026-11-23): one photo per row,
+                    // top to bottom — no side-scrolling strips in admin.
+                    sectionsHtml += '<div class="space-y-3">' + secShown.map(p => renderPhotoCard(p, secAll.indexOf(p))).join('') + '</div>';
                 }
                 sectionsHtml += '</div>';
             });
@@ -9669,6 +9712,8 @@
                             <span class="px-3 py-1.5 rounded-lg bg-amber-950 border border-amber-500/30 text-amber-400">${notAdded} Not added</span>
                         </div>
                     </div>
+
+                    ${justAddedHtml}
 
                     ${cmsPhotosCloudinary
                         ? '<p class="text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-xl px-3.5 py-2.5">Cloudinary ተገናኝቷል — ፎቶ መጫን ይቻላል።</p>'
@@ -9695,13 +9740,13 @@
                                 <input type="text" name="title_am" maxlength="255" placeholder="ለምሳሌ፡ የኩሽና ጽዳት" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400">
                             </div>
                             <div>
-                                <label class="text-xs font-bold text-slate-300 block mb-1">የት ይገባል? (Belongs to)</label>
+                                <label class="text-xs font-bold text-slate-300 block mb-1">የት ይገባል? (Where will it show on the site?)</label>
                                 <select name="section" onchange="document.getElementById('ph-new-service-wrap').style.display = this.value === 'service' ? 'block' : 'none'" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-cyan-400 cursor-pointer">
-                                    <option value="hero">Hero slider</option>
-                                    <option value="gallery">Gallery</option>
-                                    <option value="service">Service card</option>
-                                    <option value="feature">Feature strip</option>
-                                    <option value="logo">Website logo</option>
+                                    <option value="hero">ዋና ስላይደር (Hero slider) — በገጹ ላይኛው ክፍል የሚንሸራተት ትልቅ ፎቶ</option>
+                                    <option value="gallery">ጋለሪ (Gallery) — ከታች ያለው ትልቅ የሚንሸራተት የፎቶዎች ረድፍ</option>
+                                    <option value="service">የአገልግሎት ካርዶች (Service cards) — የአገልግሎት ካርዶች ላይ ያለው ፎቶ</option>
+                                    <option value="feature">ፍጹም ጽዳት እንዴት እናደርሳለን (How we deliver) — ከመግለጫ ጽሑፍ ጋር ያለው ረድፍ</option>
+                                    <option value="logo">የድረ-ገጽ ሎጎ (Website logo) — በገጹ ላይኛው ማዕዘን ያለው ሎጎ</option>
                                 </select>
                             </div>
                             <div id="ph-new-service-wrap" style="display:none">
@@ -9736,6 +9781,7 @@
                         ${filterBtn('all', 'ሁሉም (All)')}
                         ${filterBtn('added', 'Added')}
                         ${filterBtn('not_added', 'Not added')}
+                        ${notAdded > 0 ? '<button type="button" onclick="addAllPhotosToSite(this)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg cursor-pointer shadow">ሁሉንም ወደ ጣቢያ ጨምር (Add all ' + notAdded + ' Not added)</button>' : ''}
                         <div class="flex items-center gap-2 ml-auto">
                             <input type="text" id="ph-search-input" value="${escapeHtml(window._photosSearch || '')}" placeholder="Caption ፈልግ..." onkeydown="if(event.key==='Enter'){ window._photosSearch = this.value; renderCmsPhotosTab(document.getElementById('cms-tab-content')); }" class="w-48 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-white text-xs focus:outline-none focus:border-cyan-500">
                             <button type="button" onclick="window._photosSearch = document.getElementById('ph-search-input').value; renderCmsPhotosTab(document.getElementById('cms-tab-content'));" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 cursor-pointer">ፈልግ</button>
@@ -9760,7 +9806,7 @@
                     : (p.section === 'feature' && typeof idxInSection === 'number' ? ' • Step ' + (idxInSection + 1) + ' (ደረጃ ' + (idxInSection + 1) + ')' : ''))
                 + (p.pair_id ? ' • Pair ' + escapeHtml(p.pair_id) + (p.role ? ' (' + (p.role === 'before' ? 'Before' : 'After') + ')' : '') : '');
             return '<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">'
-                + '<div class="relative"><img src="' + escapeHtml(p.src) + '" alt="' + escapeHtml(p.title_en || p.title_am || 'Photo') + '" class="w-full h-40 object-cover" loading="lazy">'
+                + '<div class="relative"><img src="' + escapeHtml(p.src) + '" alt="' + escapeHtml(p.title_en || p.title_am || 'Photo') + '" class="w-full h-56 object-cover" loading="lazy">'
                 + '<span class="absolute top-2 left-2">' + badge + '</span></div>'
                 + '<div class="p-3.5 space-y-2.5">'
                 + '<div><label class="text-[10px] font-bold text-slate-400 block mb-0.5">Caption EN</label>'
@@ -9836,10 +9882,44 @@
             }
         }
 
+        // Publish every Not added photo at once (two-tap confirm, same
+        // pattern as Delete — native confirm() auto-dismisses here).
+        async function addAllPhotosToSite(btn) {
+            if (!window._photoAddAllArmed) {
+                window._photoAddAllArmed = true;
+                btn.dataset.origText = btn.innerText;
+                btn.innerText = 'እርግጠኛ ነህ? ሁሉንም Not added ፎቶዎች ወደ ጣቢያ ለመጨመር እንደገና ጠቅ አድርግ';
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+                btn.classList.add('bg-amber-600', 'hover:bg-amber-500');
+                setTimeout(() => {
+                    window._photoAddAllArmed = false;
+                    if (btn.isConnected) {
+                        btn.innerText = btn.dataset.origText || 'ሁሉንም ወደ ጣቢያ ጨምር';
+                        btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+                        btn.classList.remove('bg-amber-600', 'hover:bg-amber-500');
+                    }
+                }, 4000);
+                return;
+            }
+            window._photoAddAllArmed = false;
+            btn.disabled = true;
+            try {
+                const res = await apiFetch('/api/admin/website/photos/add-all', { method: 'POST' });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(d.message || ('Add all failed (' + res.status + ')'));
+                alert(d.message || 'Photos added to the site.');
+                refreshPhotosTab();
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
         async function deletePhoto(id, btn) {
             if (!window._photoDeleteArmed[id]) {
                 window._photoDeleteArmed[id] = true;
-                btn.innerText = 'እርግጠኛ ነህ? እንደገና ጠቅ አድርግ';
+                btn.innerText = 'እርግጠኛ ነህ? ለመሰረዝ እንደገና ጠቅ አድርግ';
                 btn.classList.add('bg-red-600', 'text-white');
                 setTimeout(() => {
                     window._photoDeleteArmed[id] = false;
@@ -9888,7 +9968,14 @@
                 msg.innerText = d.message || 'Photo added.';
                 form.reset();
                 document.getElementById('ph-new-service-wrap').style.display = 'none';
-                refreshPhotosTab();
+                // Pin the new photo at the top with a clear banner: show
+                // all photos (no filter) and scroll the banner into view.
+                window._photosJustAdded = d.photo ? d.photo.id : null;
+                window._photosFilter = 'all';
+                window._photosSearch = '';
+                await refreshPhotosTab();
+                const justEl = document.getElementById('ph-just-added');
+                if (justEl) justEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } catch (err) {
                 msg.className = 'text-xs font-bold text-red-400';
                 msg.innerText = err.message;

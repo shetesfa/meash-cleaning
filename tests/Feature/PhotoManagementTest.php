@@ -140,4 +140,154 @@ class PhotoManagementTest extends TestCase
         ]);
         $res->assertStatus(422);
     }
+
+    /**
+     * 2026-11-23: deleting ONLY the 9 AI rows must remove exactly
+     * those photos from the site while the 5 real photos keep showing.
+     * (Tesfa deleted the Gemini-generated rows in admin; the old
+     * `count() > 0` gates resurrected them from the hardcoded lists.)
+     */
+    public function test_deleting_only_ai_rows_keeps_real_photos_and_removes_ai_photos(): void
+    {
+        $aiFiles = [
+            'living-room.jpg', 'hotel-restaurant.jpg', 'office-polisher.jpg',
+            'bedroom.jpg', 'bathroom.jpg', 'sofa-carpet-steam.jpg',
+            'windows-ladder.jpg', 'post-construction.jpg', 'kitchen.jpg',
+        ];
+        $realFiles = [
+            'office-cleaning.jpg', 'villa-carpet.jpg', 'sofa-steam.jpg',
+            'rope-access.jpg', 'facade-scaffold.jpg',
+        ];
+
+        Photo::where('section', '!=', 'logo')->get()->each(function (Photo $photo) use ($aiFiles) {
+            foreach ($aiFiles as $aiFile) {
+                if (str_ends_with($photo->url, $aiFile)) {
+                    $photo->delete();
+                }
+            }
+        });
+
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+
+        foreach ($realFiles as $file) {
+            $this->assertStringContainsString($file, $html, "Real photo {$file} must still show.");
+        }
+        foreach ($aiFiles as $file) {
+            $this->assertStringNotContainsString($file, $html, "Deleted AI photo {$file} must not reappear.");
+        }
+    }
+
+    /**
+     * 2026-11-23: a section with zero Added rows shows no fallback
+     * photos — the DB is the truth, fallbacks apply only on a DB error.
+     */
+    public function test_section_with_zero_added_rows_shows_no_fallback_photos(): void
+    {
+        Photo::where('section', '!=', 'logo')->get()->each->delete();
+
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+
+        foreach ([
+            'office-cleaning.jpg', 'villa-carpet.jpg', 'sofa-steam.jpg',
+            'rope-access.jpg', 'facade-scaffold.jpg', 'living-room.jpg',
+            'hotel-restaurant.jpg', 'office-polisher.jpg', 'bedroom.jpg',
+            'bathroom.jpg', 'sofa-carpet-steam.jpg', 'windows-ladder.jpg',
+            'post-construction.jpg', 'kitchen.jpg',
+        ] as $file) {
+            $this->assertStringNotContainsString($file, $html, "Fallback photo {$file} must not show with zero Added rows.");
+        }
+
+        // The page itself still renders: services, booking, prices.
+        $this->assertStringContainsString('Get Quote', $html);
+        $this->assertStringContainsString('Book Now', $html);
+    }
+
+    /**
+     * 2026-11-23: DB rows are the source of truth — a single hero /
+     * gallery / service row shows its own photo, never a fallback.
+     */
+    public function test_homepage_with_only_db_rows_shows_db_photos_not_fallbacks(): void
+    {
+        Photo::where('section', '!=', 'logo')->get()->each->delete();
+
+        Photo::create(['url' => 'https://example.com/real-hero.jpg', 'title_en' => 'Real hero', 'section' => 'hero', 'status' => 'added', 'sort_order' => 0]);
+        Photo::create(['url' => 'https://example.com/real-gallery.jpg', 'title_en' => 'Real gallery', 'section' => 'gallery', 'status' => 'added', 'sort_order' => 0]);
+        Photo::create(['url' => 'https://example.com/real-glass.jpg', 'title_en' => 'Real glass', 'section' => 'service', 'service_code' => 'glass', 'status' => 'added', 'sort_order' => 0]);
+
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+
+        $this->assertStringContainsString('real-hero.jpg', $html);
+        $this->assertStringContainsString('real-gallery.jpg', $html);
+        $this->assertStringContainsString('real-glass.jpg', $html);
+        $this->assertStringNotContainsString('living-room.jpg', $html);
+        $this->assertStringNotContainsString('office-cleaning.jpg', $html);
+    }
+
+    /**
+     * 2026-11-23: the feature strip renders only the rows that exist —
+     * one row means one step photo and no undefined-index error (the
+     * old code padded missing steps with fallback photos).
+     */
+    public function test_feature_strip_with_one_row_renders_without_error(): void
+    {
+        Photo::where('section', '!=', 'logo')->get()->each->delete();
+
+        Photo::create(['url' => 'https://example.com/real-step.jpg', 'title_en' => 'Real step', 'section' => 'feature', 'status' => 'added', 'sort_order' => 0]);
+
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $html = $res->getContent();
+
+        $this->assertStringContainsString('real-step.jpg', $html);
+        $this->assertStringNotContainsString('facade-scaffold.jpg', $html);
+    }
+
+    /**
+     * 2026-11-23: the bulk "Add all Not added to site" endpoint
+     * publishes every Not added photo at once and clears the homepage
+     * cache, so the photos show on the site immediately.
+     */
+    public function test_add_all_publishes_every_not_added_photo(): void
+    {
+        // Start from an empty photo table so the feature strip (which
+        // shows at most 3 rows) renders exactly the rows this test adds.
+        Photo::where('section', '!=', 'logo')->get()->each->delete();
+
+        Photo::create(['url' => 'https://example.com/bulk-hero.jpg', 'title_en' => 'Bulk hero', 'section' => 'hero', 'status' => 'not_added', 'sort_order' => 50]);
+        Photo::create(['url' => 'https://example.com/bulk-gallery.jpg', 'title_en' => 'Bulk gallery', 'section' => 'gallery', 'status' => 'not_added', 'sort_order' => 50]);
+        Photo::create(['url' => 'https://example.com/bulk-feature.jpg', 'title_en' => 'Bulk feature', 'section' => 'feature', 'status' => 'not_added', 'sort_order' => 50]);
+
+        $res = $this->actingAs($this->owner)->postJson('/api/admin/website/photos/add-all');
+        $res->assertStatus(200);
+        $res->assertJson(['success' => true]);
+        $res->assertJsonPath('added_count', 3);
+
+        $this->assertSame(0, Photo::where('status', 'not_added')->count());
+
+        // The newly published photos show on the homepage right away.
+        $home = $this->get('/');
+        $home->assertStatus(200);
+        $home->assertSee('bulk-hero.jpg');
+        $home->assertSee('bulk-gallery.jpg');
+        $home->assertSee('bulk-feature.jpg');
+    }
+
+    /**
+     * 2026-11-23: the logo keeps its own fallback — deleting the logo
+     * row still shows the real /logo.jpg file (unlike gallery photos).
+     */
+    public function test_logo_still_falls_back_to_logo_file(): void
+    {
+        Photo::where('section', 'logo')->delete();
+
+        $res = $this->get('/');
+        $res->assertStatus(200);
+        $res->assertSee('/logo.jpg');
+    }
 }

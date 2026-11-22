@@ -207,6 +207,27 @@ class PhotoController extends Controller
     }
 
     /**
+     * Publish every Not added photo at once (admin "Add all to site"
+     * button). Query-builder update bypasses model events, so the
+     * homepage photo cache is cleared explicitly here.
+     */
+    public function addAll(): JsonResponse
+    {
+        $count = Photo::where('status', Photo::STATUS_NOT_ADDED)->update([
+            'status' => Photo::STATUS_ADDED,
+        ]);
+        Photo::forgetHomepageCache();
+
+        return response()->json([
+            'success' => true,
+            'message' => $count === 1
+                ? '1 photo added to the site.'
+                : $count . ' photos added to the site.',
+            'added_count' => $count,
+        ]);
+    }
+
+    /**
      * Flip Added <-> Not added (publish / hide from the website).
      */
     public function toggleStatus(Photo $photo): JsonResponse

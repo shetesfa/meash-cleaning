@@ -1489,56 +1489,60 @@
     return '/images/gallery/' . ltrim($file, '/');
   };
 
-  // Live photos from the admin-managed `photos` table. Any failure
-  // (table missing, DB down) keeps the fallback lists above.
-  $galleryPhotos = $fallbackPhotos;
-  $servicePhoto = $fallbackServicePhoto;
-  $galleryOrder = $fallbackGalleryOrder;
-  $featurePhotos = $fallbackFeaturePhotos;
-  $galleryByFile = collect($galleryPhotos)->keyBy('file');
+  // Live photos from the admin-managed `photos` table — the DB is the
+  // truth per section. A section with zero Added rows renders NO
+  // photos for that section: deleting a photo in admin really removes
+  // it from the site (2026-11-23: the old `count() > 0` gates fell
+  // back to the hardcoded lists whenever a section was emptied, so
+  // deleted AI photos kept coming back). The hardcoded lists apply
+  // ONLY when the DB query itself throws (table missing / DB down),
+  // so the site still renders something on a DB outage. An empty DB
+  // therefore means an empty photo area — expected until the owner
+  // uploads real photos in admin.
+  $galleryPhotos = [];
+  $servicePhoto = [];
+  $galleryOrder = [];
+  $featurePhotos = [];
+  $galleryByFile = collect([]);
+  $dbServiceRows = collect([]);
   try {
     // F5: reuse the cached collection from the logo block above
     // (falls back to one cached query if that block was skipped).
     $dbPhotos = $homepagePhotos ?? \App\Models\Photo::homepagePhotos();
-    if ($dbPhotos && $dbPhotos->count() > 0) {
-      $hero = $dbPhotos->where('section', 'hero')->values();
-      if ($hero->count() > 0) {
-        $galleryPhotos = $hero->map(function ($row) {
-          return ['file' => $row->url, 'code' => $row->service_code, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
-        })->all();
-      }
-      $svcRows = $dbPhotos->where('section', 'service')->values();
-      if ($svcRows->count() > 0) {
-        $dbServicePhoto = [];
-        foreach ($svcRows as $row) {
-          if ($row->service_code) $dbServicePhoto[$row->service_code] = $row->url;
-        }
-        if (!empty($dbServicePhoto)) $servicePhoto = $dbServicePhoto;
-      }
-      $galRows = $dbPhotos->where('section', 'gallery')->values();
-      if ($galRows->count() > 0) {
-        $galleryOrder = $galRows->pluck('url')->all();
-      }
-      $featRows = $dbPhotos->where('section', 'feature')->values();
-      if ($featRows->count() > 0) {
-        $featurePhotos = $featRows->take(3)->map(function ($row) {
-          return ['file' => $row->url, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
-        })->all();
-        // Pad to 3 steps with the fallback so no step ever loses its photo.
-        while (count($featurePhotos) < 3) {
-          $featurePhotos[] = $fallbackFeaturePhotos[count($featurePhotos)];
-        }
-      }
-      // Gallery lookup must also include gallery-section rows: a photo
-      // can be in the gallery without being in the hero slider, and the
-      // slider below looks every gallery file up in this map.
-      $galleryByFile = collect($galleryPhotos)->keyBy('file');
-      foreach ($galRows as $row) {
-        $galleryByFile[$row->url] = ['file' => $row->url, 'code' => $row->service_code, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
-      }
+    $hero = $dbPhotos->where('section', 'hero')->values();
+    $galleryPhotos = $hero->map(function ($row) {
+      return ['file' => $row->url, 'code' => $row->service_code, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
+    })->all();
+    $svcRows = $dbPhotos->where('section', 'service')->values();
+    $dbServiceRows = $svcRows;
+    $dbServicePhoto = [];
+    foreach ($svcRows as $row) {
+      if ($row->service_code) $dbServicePhoto[$row->service_code] = $row->url;
+    }
+    $servicePhoto = $dbServicePhoto;
+    $galRows = $dbPhotos->where('section', 'gallery')->values();
+    $galleryOrder = $galRows->pluck('url')->all();
+    $featRows = $dbPhotos->where('section', 'feature')->values();
+    // No fallback padding: a step with no photo row shows its text
+    // only (each step photo below renders only when its row exists).
+    $featurePhotos = $featRows->take(3)->map(function ($row) {
+      return ['file' => $row->url, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
+    })->all();
+    // Gallery lookup must also include gallery-section rows: a photo
+    // can be in the gallery without being in the hero slider, and the
+    // slider below looks every gallery file up in this map.
+    $galleryByFile = collect($galleryPhotos)->keyBy('file');
+    foreach ($galRows as $row) {
+      $galleryByFile[$row->url] = ['file' => $row->url, 'code' => $row->service_code, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
     }
   } catch (\Throwable $e) {
-    // Fallback lists above stay in place; the site keeps working.
+    // DB unreachable: fall back to the hardcoded lists so the site
+    // keeps working. This is the ONLY case the fallbacks are used.
+    $galleryPhotos = $fallbackPhotos;
+    $servicePhoto = $fallbackServicePhoto;
+    $galleryOrder = $fallbackGalleryOrder;
+    $featurePhotos = $fallbackFeaturePhotos;
+    $galleryByFile = collect($galleryPhotos)->keyBy('file');
   }
   // R2: the hero slider never shows rope-access.jpg — it is the red
   // "POPULAR" storefront photo: another company's sign plus readable
@@ -1547,13 +1551,13 @@
   $galleryPhotos = array_values(array_filter($galleryPhotos, function ($ph) {
       return basename((string)($ph['file'] ?? '')) !== 'rope-access.jpg';
   }));
-  // Safety net: sections fall back independently, so a gallery file
-  // must always resolve in the lookup even if it is not in the hero
-  // slider rows (otherwise the slider below errors).
-  $fallbackByFile = collect($fallbackPhotos)->keyBy('file');
+  // Safety net: every gallery file must resolve in the lookup even if
+  // it is not in the hero slider rows (otherwise the slider below
+  // errors). DB rows only — no fallback file or caption is injected
+  // here, so a deleted photo can never reappear through this map.
   foreach ($galleryOrder as $gfile) {
     if (!isset($galleryByFile[$gfile])) {
-      $galleryByFile[$gfile] = $fallbackByFile[$gfile] ?? ['file' => $gfile, 'code' => null, 'am' => '', 'en' => ''];
+      $galleryByFile[$gfile] = ['file' => $gfile, 'code' => null, 'am' => '', 'en' => ''];
     }
   }
   // Caption lookup by bare filename, for honest alt text: a service card
@@ -1564,6 +1568,14 @@
     $base = basename((string)$key);
     if (!isset($captionByFile[$base])) {
       $captionByFile[$base] = ['am' => (string)($row['am'] ?? ''), 'en' => (string)($row['en'] ?? '')];
+    }
+  }
+  // Service-card rows carry the captions for service photos (the
+  // business cards and home service cards look captions up by file).
+  foreach ($dbServiceRows as $row) {
+    $base = basename((string)$row->url);
+    if (!isset($captionByFile[$base])) {
+      $captionByFile[$base] = ['am' => (string)($row->title_am ?: $row->title_en), 'en' => (string)($row->title_en ?: $row->title_am)];
     }
   }
   foreach ($fallbackPhotos as $row) {
@@ -1728,6 +1740,7 @@
     <!-- Hero Visual — 3D coverflow slider with real Meash work photos (first on phones — R2) -->
     <div class="relative order-1 md:order-2">
       <div class="ms-hero-glow" aria-hidden="true"></div>
+      @if(count($galleryPhotos) > 0)
       <div class="ms-hero-panel">
         <div class="ms-stage" id="ms-stage" role="region" aria-roledescription="carousel" aria-label="Meash cleaning work photos" tabindex="0">
           @foreach($galleryPhotos as $gi => $p)
@@ -1753,6 +1766,7 @@
           </div>
         </div>
       </div>
+      @endif
       {{-- F4: the price card sits in normal flow BELOW the slider panel.
            It used to be absolute -bottom-5 over the panel and covered the
            slider arrows and dots on desktop. --}}
@@ -1971,7 +1985,9 @@
        Business = the 6 commercial sectors (photos + prices from the mapped
        real service — the old fake codes office/hotel_clean/restaurant_clean/
        hall_chair_clean fell back to service 1; the Book buttons now preselect
-       the real service). Home = the 6 DB services. #commercial stays as an
+       the real service). Business card photos come from the admin
+       service-photo rows ($servicePhoto); a card with no row shows no
+       photo instead of a hardcoded file (2026-11-23). Home = the 6 DB services. #commercial stays as an
        anchor above so old links land here on the Business tab. --}}
   <div class="flex flex-wrap gap-2 mb-8" role="tablist" aria-label="Service categories">
     <button type="button" role="tab" aria-selected="true" data-service-tab="business" onclick="showServiceTab('business')" class="ms-tab-btn"><i data-lucide="building-2" class="w-5 h-5"></i><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></button>
@@ -1979,7 +1995,8 @@
   </div>
   <div id="tab-business" class="ms-svc-grid ms-swipe" role="tabpanel" aria-label="Business services">
       <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
-        <div class="ms-ph">{!! $responsiveImg('/images/gallery/office-cleaning.jpg', $captionByFile['office-cleaning.jpg']['am'] ?? '' !== '' ? $captionByFile['office-cleaning.jpg']['am'] ?? '' : 'Office &amp; Corporate Cleaning', $captionByFile['office-cleaning.jpg']['en'] ?? '' !== '' ? $captionByFile['office-cleaning.jpg']['en'] ?? '' : 'Office &amp; Corporate Cleaning', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        @php $bizPhoto = $servicePhoto['floor_ceramic'] ?? null; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Office &amp; Corporate Cleaning'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Office &amp; Corporate Cleaning'; @endphp
+        @if($bizPhoto)<div class="ms-ph">{!! $responsiveImg($bizPhoto, $bizAltAm, $bizAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>@endif
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
           <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
@@ -1999,7 +2016,8 @@
         </div>
       </article>
       <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
-        <div class="ms-ph">{!! $responsiveImg('/images/gallery/villa-carpet.jpg', $captionByFile['villa-carpet.jpg']['am'] ?? '' !== '' ? $captionByFile['villa-carpet.jpg']['am'] ?? '' : 'Hotel &amp; Hospitality Sanitization', $captionByFile['villa-carpet.jpg']['en'] ?? '' !== '' ? $captionByFile['villa-carpet.jpg']['en'] ?? '' : 'Hotel &amp; Hospitality Sanitization', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        @php $bizPhoto = $servicePhoto['facilities_general'] ?? null; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Hotel &amp; Hospitality Sanitization'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Hotel &amp; Hospitality Sanitization'; @endphp
+        @if($bizPhoto)<div class="ms-ph">{!! $responsiveImg($bizPhoto, $bizAltAm, $bizAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>@endif
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
           <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
@@ -2019,7 +2037,8 @@
         </div>
       </article>
       <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
-        <div class="ms-ph">{!! $responsiveImg('/images/gallery/hotel-restaurant.jpg', $captionByFile['hotel-restaurant.jpg']['am'] ?? '' !== '' ? $captionByFile['hotel-restaurant.jpg']['am'] ?? '' : 'Restaurant &amp; Café Cleaning', $captionByFile['hotel-restaurant.jpg']['en'] ?? '' !== '' ? $captionByFile['hotel-restaurant.jpg']['en'] ?? '' : 'Restaurant &amp; Café Cleaning', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        @php $bizPhoto = $servicePhoto['kitchen_dining'] ?? null; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Restaurant &amp; Café Cleaning'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Restaurant &amp; Café Cleaning'; @endphp
+        @if($bizPhoto)<div class="ms-ph">{!! $responsiveImg($bizPhoto, $bizAltAm, $bizAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>@endif
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
           <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
@@ -2039,7 +2058,8 @@
         </div>
       </article>
       <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
-        <div class="ms-ph">{!! $responsiveImg('/images/gallery/sofa-carpet-steam.jpg', $captionByFile['sofa-carpet-steam.jpg']['am'] ?? '' !== '' ? $captionByFile['sofa-carpet-steam.jpg']['am'] ?? '' : 'Auditorium &amp; Hall Chairs', $captionByFile['sofa-carpet-steam.jpg']['en'] ?? '' !== '' ? $captionByFile['sofa-carpet-steam.jpg']['en'] ?? '' : 'Auditorium &amp; Hall Chairs', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        @php $bizPhoto = $servicePhoto['upholstery_carpet'] ?? null; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Auditorium &amp; Hall Chairs'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Auditorium &amp; Hall Chairs'; @endphp
+        @if($bizPhoto)<div class="ms-ph">{!! $responsiveImg($bizPhoto, $bizAltAm, $bizAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>@endif
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
           <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
@@ -2059,7 +2079,8 @@
         </div>
       </article>
       <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
-        <div class="ms-ph">{!! $responsiveImg('/images/gallery/facade-scaffold.jpg', $captionByFile['facade-scaffold.jpg']['am'] ?? '' !== '' ? $captionByFile['facade-scaffold.jpg']['am'] ?? '' : 'Commercial Glass Facades', $captionByFile['facade-scaffold.jpg']['en'] ?? '' !== '' ? $captionByFile['facade-scaffold.jpg']['en'] ?? '' : 'Commercial Glass Facades', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        @php $bizPhoto = $servicePhoto['glass'] ?? null; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Commercial Glass Facades'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Commercial Glass Facades'; @endphp
+        @if($bizPhoto)<div class="ms-ph">{!! $responsiveImg($bizPhoto, $bizAltAm, $bizAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>@endif
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
           <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
@@ -2079,7 +2100,8 @@
         </div>
       </article>
       <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
-        <div class="ms-ph">{!! $responsiveImg('/images/gallery/office-polisher.jpg', $captionByFile['office-polisher.jpg']['am'] ?? 'Long-Term Cleaning SLAs', $captionByFile['office-polisher.jpg']['en'] ?? 'Long-Term Cleaning SLAs', ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>
+        @php $bizPhoto = $servicePhoto['facilities_general'] ?? null; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Long-Term Cleaning SLAs'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Long-Term Cleaning SLAs'; @endphp
+        @if($bizPhoto)<div class="ms-ph">{!! $responsiveImg($bizPhoto, $bizAltAm, $bizAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>@endif
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
           <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
@@ -2197,19 +2219,19 @@
         <span class="ms-num font-serif">01.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">አገልግሎትዎን ይዘዙ</span><span data-lang-block="en">Book your service</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">አገልግሎቱን፣ ቀኑን እና ቦታውን ይምረጡ። መጠኑን ይንገሩን — በካሬ ሜትር፣ በወንበር ወይም በስራ።</span><span data-lang-block="en">Choose the service, date and place. Tell us the size — per square metre, per seat or per job.</span></p>
-        <div class="ms-ph">{!! $responsiveImg($featurePhotos[0]['file'], $featurePhotos[0]['am'], $featurePhotos[0]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>
+        @if(isset($featurePhotos[0]))<div class="ms-ph">{!! $responsiveImg($featurePhotos[0]['file'], $featurePhotos[0]['am'], $featurePhotos[0]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>@endif
       </div>
       <div class="ms-step ms-fade-up">
         <span class="ms-num font-serif">02.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">ቡድናችን ይደርሳል</span><span data-lang-block="en">Our team arrives</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">ዩኒፎርም የለበሰ ቡድን ከሙያዊ ማሽኖች እና ደህንነቱ የተጠበቀ ሳሙናዎች ጋር ይደርሳል።</span><span data-lang-block="en">A uniformed crew arrives with professional machines and safe detergents.</span></p>
-        <div class="ms-ph">{!! $responsiveImg($featurePhotos[1]['file'], $featurePhotos[1]['am'], $featurePhotos[1]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>
+        @if(isset($featurePhotos[1]))<div class="ms-ph">{!! $responsiveImg($featurePhotos[1]['file'], $featurePhotos[1]['am'], $featurePhotos[1]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>@endif
       </div>
       <div class="ms-step ms-fade-up">
         <span class="ms-num font-serif">03.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">በትኩስነቱ ይደሰቱ</span><span data-lang-block="en">Enjoy the freshness</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">እንጨርሳለን፣ እርስዎ ይፈትሹ። ንጹህ ወለሎች፣ የሚያብረቀርቅ መስታወት እና እንደ አዲስ የሚሸት ቦታ።</span><span data-lang-block="en">We finish, you inspect. Spotless floors, shining glass and a space that smells new again.</span></p>
-        <div class="ms-ph">{!! $responsiveImg($featurePhotos[2]['file'], $featurePhotos[2]['am'], $featurePhotos[2]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>
+        @if(isset($featurePhotos[2]))<div class="ms-ph">{!! $responsiveImg($featurePhotos[2]['file'], $featurePhotos[2]['am'], $featurePhotos[2]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>@endif
       </div>
     </div>
   </div>
@@ -2288,6 +2310,7 @@
 </section>
 @endif
 
+@if(count($galleryOrder) > 0)
 <section id="gallery" class="ms-sec ms-gal-sec py-16 md:py-24 bg-white dark:bg-slate-900 border-b border-navy/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="flex flex-col md:flex-row md:items-end justify-between mb-14">
@@ -2343,7 +2366,9 @@
     </div>
   </div>
 </section>
+@endif
 
+@if(count($galleryOrder) > 0)
 <!-- Lightbox for the gallery (Meash modern) -->
 <div class="ms-lb" id="ms-lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
   <button class="ms-lb-close" id="ms-lb-close" type="button" aria-label="Close viewer">
@@ -2362,6 +2387,7 @@
     <button id="ms-lb-next" type="button" aria-label="Next photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 5.5 6 6.5-6 6.5"/></svg></button>
   </div>
 </div>
+@endif
 
 <!-- ================= REVIEWS / TESTIMONIALS ================= -->
 <section id="reviews" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900 border-b border-navy/10"><div class="max-w-7xl mx-auto px-4 sm:px-6">

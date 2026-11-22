@@ -345,6 +345,10 @@ class RedesignTest extends TestCase
     // thumb gap fix stays.
     public function test_gallery_side_scrolling_strip_and_phone_gap_fix(): void
     {
+        // 2026-11-23: the homepage shows DB photo rows only (no
+        // hardcoded fallback), so seed the rows this test reads.
+        $this->seed();
+
         $res = $this->get('/');
         $res->assertStatus(200);
         $html = $res->getContent();
@@ -419,6 +423,9 @@ class RedesignTest extends TestCase
     public function test_r8_css_animations_and_tap_targets(): void
     {
         $this->seedEssentialServices();
+        // 2026-11-23: the homepage shows DB photo rows only (no
+        // hardcoded fallback) — seed photos (services already seeded).
+        $this->seed(\Database\Seeders\PhotoSeeder::class);
 
         $res = $this->get('/');
         $res->assertStatus(200);

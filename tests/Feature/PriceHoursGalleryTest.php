@@ -105,6 +105,10 @@ class PriceHoursGalleryTest extends TestCase
 
     public function test_homepage_renders_gallery_strip_with_all_photos(): void
     {
+        // 2026-11-23: the homepage shows DB photo rows only (no
+        // hardcoded fallback), so seed the rows this test reads.
+        $this->seed();
+
         $res = $this->get('/');
         $res->assertStatus(200);
         $html = $res->getContent();

@@ -220,6 +220,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // protection as the rest of the Website CMS.
         Route::get('/photos', [PhotoController::class, 'index']);
         Route::post('/photos', [PhotoController::class, 'store']);
+        Route::post('/photos/add-all', [PhotoController::class, 'addAll']);
         Route::match(['put', 'patch'], '/photos/{photo}', [PhotoController::class, 'update']);
         Route::post('/photos/{photo}/toggle-status', [PhotoController::class, 'toggleStatus']);
         Route::delete('/photos/{photo}', [PhotoController::class, 'destroy']);

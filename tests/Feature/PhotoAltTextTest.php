@@ -16,6 +16,14 @@ class PhotoAltTextTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // 2026-11-23: the homepage shows DB photo rows only (no
+        // hardcoded fallback), so seed the rows this test reads.
+        $this->seed();
+    }
+
     public function test_gallery_thumbnails_and_steps_have_caption_alts(): void
     {
         $res = $this->get('/');
