@@ -279,6 +279,43 @@ class PhotoManagementTest extends TestCase
     }
 
     /**
+     * 2026-11-23: the bulk "Add all" button's two-tap confirm silently
+     * never fired — the armed flag expired after 4s, so a slow second
+     * tap just re-armed instead of publishing (observed live, tried
+     * 3 times). The armed state is now a window-level timestamp that
+     * survives re-renders and lasts 60s, and the Photos tab renders
+     * the armed button from it. There is no JS test harness in this
+     * repo, so this test guards the fix at the template level.
+     */
+    public function test_add_all_button_arm_state_survives_rerender_and_lasts_60s(): void
+    {
+        $blade = file_get_contents(base_path('resources/views/app.blade.php'));
+        $this->assertNotFalse($blade);
+
+        // Armed state is a window-level timestamp, not a plain boolean.
+        $this->assertStringContainsString('window._photoAddAllArmedAt', $blade);
+        $this->assertStringContainsString('ADD_ALL_ARM_MS', $blade);
+        $this->assertStringNotContainsString('window._photoAddAllArmed = true;', $blade);
+        $this->assertStringNotContainsString('window._photoAddAllArmed = false;', $blade);
+
+        // The Photos tab renders the armed button from that state, so a
+        // re-render between the two taps keeps the confirm visible.
+        $this->assertStringContainsString("isAddAllArmed() ? 'እርግጠኛ ነህ?", $blade);
+
+        // The confirm handler itself: the second tap checks the
+        // window-level armed state and fires the endpoint, with no
+        // 4-second auto-disarm inside it.
+        $start = strpos($blade, 'async function addAllPhotosToSite');
+        $this->assertNotFalse($start);
+        $end = strpos($blade, 'async function deletePhoto', $start);
+        $this->assertNotFalse($end);
+        $fn = substr($blade, $start, $end - $start);
+        $this->assertStringContainsString('isAddAllArmed()', $fn);
+        $this->assertStringContainsString('/api/admin/website/photos/add-all', $fn);
+        $this->assertStringNotContainsString('4000', $fn);
+    }
+
+    /**
      * 2026-11-23: the logo keeps its own fallback — deleting the logo
      * row still shows the real /logo.jpg file (unlike gallery photos).
      */

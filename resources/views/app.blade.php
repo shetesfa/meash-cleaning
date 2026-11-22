@@ -8546,7 +8546,14 @@
         // Last uploaded photo (id) — shown pinned at the top of the
         // Photos tab with a clear banner until the tab is re-opened.
         window._photosJustAdded = window._photosJustAdded || null;
-        window._photoAddAllArmed = window._photoAddAllArmed || false;
+        // Bulk "Add all" two-tap confirm: the armed state is a
+        // window-level timestamp, so it survives any re-render of the
+        // Photos tab. It expires after 60s, not 4s — the old 4s
+        // timeout silently disarmed before a slow second tap could
+        // land, so the confirm tap just re-armed and nothing ever
+        // published.
+        window._photoAddAllArmedAt = window._photoAddAllArmedAt || 0;
+        window._photoAddAllArmedTimer = window._photoAddAllArmedTimer || null;
 
         async function renderWebsiteCmsModule(container) {
             container.innerHTML = `
@@ -9781,7 +9788,7 @@
                         ${filterBtn('all', 'ሁሉም (All)')}
                         ${filterBtn('added', 'Added')}
                         ${filterBtn('not_added', 'Not added')}
-                        ${notAdded > 0 ? '<button type="button" onclick="addAllPhotosToSite(this)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg cursor-pointer shadow">ሁሉንም ወደ ጣቢያ ጨምር (Add all ' + notAdded + ' Not added)</button>' : ''}
+                        ${notAdded > 0 ? '<button type="button" onclick="addAllPhotosToSite(this)" class="px-3 py-1.5 ' + (isAddAllArmed() ? 'bg-amber-600 hover:bg-amber-500' : 'bg-emerald-600 hover:bg-emerald-500') + ' text-white font-bold text-xs rounded-lg cursor-pointer shadow">' + (isAddAllArmed() ? 'እርግጠኛ ነህ? ሁሉንም Not added ፎቶዎች ወደ ጣቢያ ለመጨመር እንደገና ጠቅ አድርግ' : 'ሁሉንም ወደ ጣቢያ ጨምር (Add all ' + notAdded + ' Not added)') + '</button>' : ''}
                         <div class="flex items-center gap-2 ml-auto">
                             <input type="text" id="ph-search-input" value="${escapeHtml(window._photosSearch || '')}" placeholder="Caption ፈልግ..." onkeydown="if(event.key==='Enter'){ window._photosSearch = this.value; renderCmsPhotosTab(document.getElementById('cms-tab-content')); }" class="w-48 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-white text-xs focus:outline-none focus:border-cyan-500">
                             <button type="button" onclick="window._photosSearch = document.getElementById('ph-search-input').value; renderCmsPhotosTab(document.getElementById('cms-tab-content'));" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 cursor-pointer">ፈልግ</button>
@@ -9882,26 +9889,42 @@
             }
         }
 
-        // Publish every Not added photo at once (two-tap confirm, same
-        // pattern as Delete — native confirm() auto-dismisses here).
+        // Bulk "Add all" two-tap confirm. The armed state is a
+        // window-level timestamp (ADD_ALL_ARM_MS), so it survives any
+        // re-render of the Photos tab, and the render function above
+        // shows the armed button again after a re-render. The old
+        // code used a 4s timeout that silently disarmed before a slow
+        // second tap could land, so the confirm tap just re-armed and
+        // nothing ever published.
+        const ADD_ALL_ARM_MS = 60000;
+
+        function isAddAllArmed() {
+            return !!window._photoAddAllArmedAt && (Date.now() - window._photoAddAllArmedAt) < ADD_ALL_ARM_MS;
+        }
+
+        function clearAddAllArm() {
+            window._photoAddAllArmedAt = 0;
+            if (window._photoAddAllArmedTimer) {
+                clearTimeout(window._photoAddAllArmedTimer);
+                window._photoAddAllArmedTimer = null;
+            }
+        }
+
         async function addAllPhotosToSite(btn) {
-            if (!window._photoAddAllArmed) {
-                window._photoAddAllArmed = true;
-                btn.dataset.origText = btn.innerText;
+            if (!isAddAllArmed()) {
+                window._photoAddAllArmedAt = Date.now();
+                if (window._photoAddAllArmedTimer) clearTimeout(window._photoAddAllArmedTimer);
+                window._photoAddAllArmedTimer = setTimeout(() => {
+                    clearAddAllArm();
+                    const tab = document.getElementById('cms-tab-content');
+                    if (tab) renderCmsPhotosTab(tab);
+                }, ADD_ALL_ARM_MS);
                 btn.innerText = 'እርግጠኛ ነህ? ሁሉንም Not added ፎቶዎች ወደ ጣቢያ ለመጨመር እንደገና ጠቅ አድርግ';
                 btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
                 btn.classList.add('bg-amber-600', 'hover:bg-amber-500');
-                setTimeout(() => {
-                    window._photoAddAllArmed = false;
-                    if (btn.isConnected) {
-                        btn.innerText = btn.dataset.origText || 'ሁሉንም ወደ ጣቢያ ጨምር';
-                        btn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
-                        btn.classList.remove('bg-amber-600', 'hover:bg-amber-500');
-                    }
-                }, 4000);
                 return;
             }
-            window._photoAddAllArmed = false;
+            clearAddAllArm();
             btn.disabled = true;
             try {
                 const res = await apiFetch('/api/admin/website/photos/add-all', { method: 'POST' });
