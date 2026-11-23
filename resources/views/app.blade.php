@@ -8709,6 +8709,7 @@
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-800/80 text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-800">
                                 <tr>
+                                    <th class="p-3.5">ፎቶ</th>
                                     <th class="p-3.5">መለያ / ኮድ</th>
                                     <th class="p-3.5">የአገልግሎት ስም (አማርኛ / EN)</th>
                                     <th class="p-3.5">መነሻ ዋጋ (ETB)</th>
@@ -8720,6 +8721,11 @@
                             <tbody class="divide-y divide-slate-800 text-slate-300">
                                 ${cmsServicesData.map(s => `
                                     <tr class="hover:bg-slate-800/50 transition">
+                                        <td class="p-3.5">
+                                            ${s.photo_url
+                                                ? `<img src="${escapeHtml(s.photo_url)}" alt="" class="h-14 w-20 object-cover rounded-lg border border-slate-700">`
+                                                : `<div class="h-14 w-20 flex flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-slate-700 text-slate-500 text-center px-1"><span class="text-[10px] font-bold">ፎቶ የለም</span><span class="text-[9px] leading-tight">Photos → Service cards</span></div>`}
+                                        </td>
                                         <td class="p-3.5 font-mono text-cyan-400 font-bold">${s.code}</td>
                                         <td class="p-3.5">
                                             <div class="font-bold text-white text-sm">${s.name_am || s.name_en}</div>

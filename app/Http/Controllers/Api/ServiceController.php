@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Photo;
 use App\Models\Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,30 @@ class ServiceController extends Controller
     public function all(): JsonResponse
     {
         $services = Service::orderBy('sort_order')->get();
+
+        // Card photo per service, from the admin-managed `photos` table:
+        // the Added service-section row for the service's code. This is
+        // the same source of truth as the public service cards
+        // (website.blade.php builds the same map, last row per code
+        // wins). Null when no row exists — never a hardcoded fallback
+        // file (e3ecd63: deleted photos stay deleted).
+        $servicePhoto = [];
+        $rows = Photo::where('section', 'service')
+            ->where('status', Photo::STATUS_ADDED)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+        foreach ($rows as $row) {
+            if ($row->service_code) {
+                $servicePhoto[$row->service_code] = Photo::resolveUrl($row->url);
+            }
+        }
+
+        $services = $services->map(function (Service $service) use ($servicePhoto) {
+            $service->photo_url = $servicePhoto[$service->code] ?? null;
+            return $service;
+        });
+
         return response()->json($services);
     }
 
