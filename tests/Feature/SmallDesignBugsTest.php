@@ -63,13 +63,18 @@ class SmallDesignBugsTest extends TestCase
         $this->assertSame([], $missing, 'Public-page icons missing from the sprite: ' . implode(', ', $missing));
     }
 
-    public function test_hours_title_does_not_wrap_on_desktop(): void
+    public function test_hours_title_wraps_fully_on_desktop(): void
     {
         $blade = $this->bladeHtml();
         // Equal-width trust items (already the case at lg).
         $this->assertStringContainsString('grid grid-cols-2 lg:grid-cols-4', $blade);
-        // The hours title keeps the time on one line on desktop.
-        $this->assertStringContainsString('lg:whitespace-nowrap"><span data-lang-block="am">{{ $trustHoursAm }}</span>', $blade);
+        // The hours title WRAPS: the old lg:whitespace-nowrap kept the
+        // short "Mon–Sat 8:00–18:00" on one line, but the long
+        // "24/7 — Any time, including midnight" string overflowed its
+        // ~170px text column and was cut off mid-word ("includin").
+        // The full time must be present and no nowrap class may clip it.
+        $this->assertStringContainsString('24/7 — Any time, including midnight', $blade);
+        $this->assertStringNotContainsString('lg:whitespace-nowrap"><span data-lang-block="am">{{ $trustHoursAm }}</span>', $blade);
     }
 
     public function test_mobile_page_has_bottom_padding_for_the_sticky_bar(): void

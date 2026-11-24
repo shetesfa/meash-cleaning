@@ -38,7 +38,7 @@ for (const kebab of kebabNames) {
   symbols += `  <symbol id="lucide-${kebab}" viewBox="0 0 24 24">${children.map(nodeToSvg).join('')}</symbol>\n`;
 }
 
-const out = `{{-- Q2: inline SVG sprite — only the 67 icons the public page uses,
+const out = `{{-- Q2: inline SVG sprite — only the ${kebabNames.length} icons the public page uses,
      extracted from public/vendor/lucide.min.js (see scripts/build-lucide-sprite.cjs
      and the icon list in scripts/lucide-sprite-icons.txt).
      The full 359 KB lucide.min.js is kept for /app only. Symbols are

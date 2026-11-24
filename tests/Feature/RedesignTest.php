@@ -390,11 +390,14 @@ class RedesignTest extends TestCase
         // Service names clamp to two lines; the price sits on the right.
         $this->assertStringContainsString('ms-clamp2', $step1);
         // The total shows "Choose a service to see the price" — no 60 ETB
-        // in the totals — until a service is chosen.
-        $this->assertStringContainsString('id="wiz-total"', $book);
+        // in the totals — until a service is chosen. One total only:
+        // the step-1 "Estimated total + Next" bar duplicated the sticky
+        // bar and was removed (2026-11-24); the single totals are
+        // wiz-total-2 (step 4, "Total to pay") and the sticky bar.
+        $this->assertStringNotContainsString('id="wiz-total"', $book);
+        $this->assertStringContainsString('id="wiz-total-2"', $book);
         $this->assertStringContainsString('Choose a service to see the price', $book);
         $this->assertStringContainsString('id="wiz-total-sticky"', $book);
-        $this->assertStringNotContainsString('id="wiz-total" class="font-serif font-semibold text-lg sm:text-xl text-teal-dark">60 ETB', $book);
         // JS state starts with nothing selected.
         $this->assertStringContainsString('let selectedSvcId = null;', $html);
         $this->assertStringNotContainsString('FIRST_WIZARD_SVC', $html);

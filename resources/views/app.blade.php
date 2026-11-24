@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>MEASH CLEANING SOLUTION | Staff & Admin Login</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0F172A">
@@ -40,7 +41,7 @@
     </script>
     <!-- Engines -->
     <script src="/js/meash-i18n.js"></script>
-    <script src="/js/meash-offline.js?v=2.3"></script>
+    <script src="/js/meash-offline.js?v=2.4"></script>
     <script>
         // Universal Fail-Safe: Ensure cacheItems exists on MeashOfflineEngine & window.meashOffline
         (function() {
@@ -1009,14 +1010,18 @@
             try {
                 let res = await fetch(url, { ...options, headers });
 
-                // Update online status on any successful response
-                if (res.ok) {
-                    if (window.meashOffline && !window.meashOffline.isOnline) {
-                        window.meashOffline.isOnline = true;
-                        window.meashOffline.updateOnlineStatus();
-                    }
-                    setOfflineBanner(false);
+                // Any HTTP response at all proves the server IS reachable —
+                // a 401/403/429/500 is an application answer, not offline.
+                // The old code only restored online state on res.ok, so one
+                // transient network blip followed by a 403/500 left /app
+                // stuck in Offline Mode with 0 records forever: the error
+                // responses never cleared the banner or the pill.
+                if (window.meashOffline && typeof window.meashOffline.setOnlineState === 'function') {
+                    window.meashOffline.setOnlineState(true);
+                } else if (window.meashOffline) {
+                    window.meashOffline.isOnline = true;
                 }
+                setOfflineBanner(false);
 
                 // 401: do NOT nuke the session on a single 401. A transient
                 // 401 (deploy restart race, proxy hiccup, token propagation
@@ -1060,9 +1065,14 @@
                 return res;
             } catch (netErr) {
                 console.warn('API fetch network error for ' + url + ':', netErr.message);
-                if (window.meashOffline && window.meashOffline.isOnline) {
+                // A thrown fetch error (DNS, refused connection, aborted)
+                // is the ONLY signal that the server is unreachable.
+                // Route it through setOnlineState so listeners (pill,
+                // banner, sync queue) all hear the same transition.
+                if (window.meashOffline && typeof window.meashOffline.setOnlineState === 'function') {
+                    window.meashOffline.setOnlineState(false);
+                } else if (window.meashOffline) {
                     window.meashOffline.isOnline = false;
-                    window.meashOffline.updateOnlineStatus();
                 }
                 // noStaleCache: callers rendering admin-editable data (CMS
                 // services/settings) must NEVER render silently stale cached

@@ -1437,11 +1437,12 @@
 
 @php
   // Website photos — admin-managed via the `photos` table (admin Photos
-  // page), with the hardcoded lists below as the FALLBACK. The public
-  // site reads status = 'added' rows per section (hero slider, service
-  // cards, gallery, feature strip); if the table is empty, missing, or
-  // the query fails, the fallback lists are used, so the live site can
-  // never break. Prices on slider slides still come from the live
+  // page). The public site reads status = 'added' rows per section (hero
+  // slider, service cards, gallery, feature strip). The hardcoded lists
+  // below are used ONLY when the DB query itself throws (table missing /
+  // DB down) — never when the table is empty. An empty section renders
+  // no photos: deleting a photo in admin really removes it from the
+  // site (2026-11-23). Prices on slider slides still come from the live
   // $services data (never hardcoded) via the service `code` below.
   $fallbackPhotos = [
     ['file' => 'office-cleaning.jpg', 'code' => 'floor_ceramic', 'am' => 'የወለል ማሽን ጽዳት', 'en' => 'Floor machine cleaning'],
@@ -1519,16 +1520,16 @@
     foreach ($svcRows as $row) {
       if ($row->service_code) $dbServicePhoto[$row->service_code] = $row->url;
     }
-    $servicePhoto = array_merge($fallbackServicePhoto, $dbServicePhoto);
+    $servicePhoto = $dbServicePhoto;
     $galRows = $dbPhotos->where('section', 'gallery')->values();
     $galleryOrder = $galRows->pluck('url')->all();
     $featRows = $dbPhotos->where('section', 'feature')->values();
     $featurePhotos = $featRows->take(3)->map(function ($row) {
       return ['file' => $row->url, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
     })->all();
-    while (count($featurePhotos) < 3 && isset($fallbackFeaturePhotos[count($featurePhotos)])) {
-      $featurePhotos[] = $fallbackFeaturePhotos[count($featurePhotos)];
-    }
+    // NO fallback padding here: a step with no DB row renders no photo
+    // (the @if(isset($featurePhotos[N])) guards below). Padding with
+    // hardcoded files resurrected photos the owner deleted in admin.
     // Gallery lookup must also include gallery-section rows: a photo
     // can be in the gallery without being in the hero slider, and the
     // slider below looks every gallery file up in this map.
@@ -1818,9 +1819,12 @@
       <div class="ms-card ms-fade-up flex items-center gap-3 md:gap-4 p-4 md:p-5">
         <div class="w-11 h-11 md:w-12 md:h-12 shrink-0 rounded-2xl bg-[#3E8ECC]/10 text-[#2F6FA8] flex items-center justify-center"><i data-lucide="clock" class="w-5 h-5"></i></div>
         <div class="min-w-0">
-          {{-- F4: lg:whitespace-nowrap keeps "24/7" on one line
-               on desktop (it wrapped mid-time before). The grid is already
-               equal-width (grid-cols-2 lg:grid-cols-4). --}}
+          {{-- The hours title WRAPS on purpose: the old F4
+               lg:whitespace-nowrap kept the short "Mon–Sat 8:00–18:00"
+               on one line, but the long "24/7 — Any time, including
+               midnight" string overflowed its ~170px text column and
+               was cut off mid-word ("includin"). Wrapping shows the
+               whole time on every screen size. --}}
           <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">{{ $trustHoursAm }}</span><span data-lang-block="en">{{ $trustHoursEn }}</span></div>
           <div class="text-xs md:text-sm text-navy/60 dark:text-slate-300 leading-snug"><span data-lang-block="am">የስራ ሰዓት</span><span data-lang-block="en">Working hours</span></div>
         </div>
@@ -2130,7 +2134,23 @@
     @forelse($activeServices as $idx => $svc)
       @php
         $svcNum = $idx + 1;
-        $unitLabel = ($svc->unit && $svc->unit !== 'service') ? ' / ' . $svc->unit : '';
+        $unitRaw = strtolower(trim((string)($svc->unit ?? '')));
+        $unitAm = match ($unitRaw) {
+          'sqm' => 'ካሬ ሜትር',
+          'seat' => 'ወንበር',
+          'piece' => 'እቃ',
+          'room' => 'ክፍል',
+          'hour' => 'ሰዓት',
+          default => 'አገልግሎት',
+        };
+        $unitEn = match ($unitRaw) {
+          'sqm' => 'sqm',
+          'seat' => 'seat',
+          'piece' => 'piece',
+          'room' => 'room',
+          'hour' => 'hour',
+          default => 'service',
+        };
         $svcPhoto = $servicePhoto[$svc->code] ?? null;
         $iconName = $svc->icon ?: match($svc->code) {
           'floor_ceramic' => 'sparkles',
@@ -2164,7 +2184,7 @@
             <span data-lang-block="en">{{ $svc->description_en ?: $svc->description_am }}</span>
           </p>
           <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
-            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" data-svc-price="{{ $svc->id }}" data-svc-unit="{{ $svc->unit ?: 'service' }}">{{ number_format($svc->base_price) }} ETB{{ $unitLabel }}</div>
+            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal svc-price" data-svc-price="{{ $svc->id }}" data-svc-unit="{{ $svc->unit ?: 'service' }}">{{ number_format($svc->base_price) }} ETB @if($svc->unit && $svc->unit !== 'service') / <span data-lang-block="am">{{ $unitAm }}</span><span data-lang-block="en">{{ $unitEn }}</span>@endif</div>
             <a href="#book" onclick="preselectService('{{ $svc->code }}')" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
               <span data-lang-block="am">ቀጠሮ ያዙ</span><span data-lang-block="en">Book Now</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>
             </a>
@@ -2333,7 +2353,7 @@
           <span data-lang-block="en">Tap any photo to view it full-screen.</span>
         </p>
       </div>
-      <div class="mt-6 md:mt-0 flex items-center gap-3">
+      <div id="gallery-book-cta" class="mt-6 md:mt-0 flex items-center gap-3">
         <a href="#book" class="bg-navy hover:bg-teal-dark text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 min-h-[44px]">
           <i data-lucide="sparkles" class="w-5 h-5"></i>
           <span data-lang-block="am">የእርሶንም ያጽዱ</span><span data-lang-block="en">Book Transformation</span>
@@ -3571,6 +3591,7 @@
       }
       syncGregToEth();
     }
+
     if (window.lucide) lucide.createIcons();
   }
 
@@ -3750,6 +3771,11 @@
       if (trackInput) trackInput.placeholder = 'የትዕዛዝ ቁጥር ያስገቡ (ምሳሌ፡ MEASH-000001)...';
     }
 
+    // Re-render prices so unit labels follow the new language.
+    // Guarded: setLang also runs once on page load, before the price
+    // state below exists — the flag is set after the first render.
+    if (window.__meashPricesReady) { renderPrices(); updateWizardTotal(); }
+
     if (window.lucide) lucide.createIcons();
   }
 
@@ -3872,18 +3898,33 @@
     return v.toLocaleString() + ' ' + currency;
   }
 
+  // Unit labels follow the page language. renderPrices() used to write
+  // the raw DB unit code ("sqm", "seat") into every price, wiping out
+  // the bilingual spans and showing English codes in Amharic mode.
+  // Prices re-render on language switch (setLang calls renderPrices
+  // once prices are initialised — see window.__meashPricesReady).
+  const unitLabels = {
+    am: { sqm: 'ካሬ ሜትር', seat: 'ወንበር', piece: 'እቃ', room: 'ክፍል', hour: 'ሰዓት', service: 'አገልግሎት' },
+    en: { sqm: 'sqm', seat: 'seat', piece: 'piece', room: 'room', hour: 'hour', service: 'service' },
+  };
+  function unitLabel(unit) {
+    const lang = document.documentElement.getAttribute('data-lang') || 'am';
+    const map = unitLabels[lang] || unitLabels.am;
+    return map[unit] || unit;
+  }
+
   function renderPrices(){
     document.querySelectorAll('.svc-price').forEach(el => {
       const id = el.getAttribute('data-svc-price');
       if (servicePrices[id] != null) {
         const unit = el.getAttribute('data-svc-unit');
-        el.textContent = formatPrice(servicePrices[id]) + (unit && unit !== 'service' ? ' / ' + unit : '');
+        el.textContent = formatPrice(servicePrices[id]) + (unit && unit !== 'service' ? ' / ' + unitLabel(unit) : '');
       }
     });
     document.querySelectorAll('.wiz-price').forEach(el => {
       const id = el.getAttribute('data-wiz-price');
       const unit = el.getAttribute('data-wiz-unit');
-      if (servicePrices[id] != null) el.textContent = servicePrices[id].toLocaleString() + ' ' + currency + (unit ? ' / ' + unit : '');
+      if (servicePrices[id] != null) el.textContent = servicePrices[id].toLocaleString() + ' ' + currency + (unit ? ' / ' + unitLabel(unit) : '');
     });
   }
   // NOTE: renderPrices()/updateWizardTotal() are called after the wizard state
@@ -4071,6 +4112,7 @@
   // Initial price render — placed here, after the wizard state above exists.
   renderPrices();
   updateWizardTotal();
+  window.__meashPricesReady = true;
 
   // Clear the whole booking wizard back to its initial state (R7: no
   // service preselected after a reset either).
@@ -5455,16 +5497,20 @@
 </div>
 
 <!-- R5: fab + sticky bar behaviour — fade in after the hero, hide on the
-     booking form (it has its own bar, R7) and while a modal is open. -->
+     booking form (it has its own bar, R7), while a modal is open, and
+     while the gallery "Book Transformation" button is passing through
+     the fab's bottom-right corner zone (it used to slide underneath
+     the bubble mid-scroll). -->
 <script>
   (function () {
     var fab = document.getElementById('floating-actions');
     var bar = document.getElementById('sticky-bottom-bar');
     var hero = document.getElementById('hero');
     var book = document.getElementById('book');
+    var cta = document.getElementById('gallery-book-cta');
     var toggle = document.getElementById('fab-toggle');
     if (!fab || !bar) return;
-    var pastHero = false, onBook = false, modalOpen = false;
+    var pastHero = false, onBook = false, onCta = false, modalOpen = false;
     function anyModalOpen() {
       var staff = document.getElementById('staff-auth-modal');
       if (staff && !staff.classList.contains('hidden')) return true;
@@ -5482,9 +5528,9 @@
       else if (el.classList.contains(cls)) { el.classList.remove(cls); }
     }
     function apply() {
-      var show = pastHero && !onBook && !modalOpen;
+      var show = pastHero && !onBook && !onCta && !modalOpen;
       setCls(fab, 'ms-fab-visible', show);
-      setCls(fab, 'floating-hidden', modalOpen || onBook);
+      setCls(fab, 'floating-hidden', modalOpen || onBook || onCta);
       setCls(bar, 'ms-bar-visible', show);
       setCls(bar, 'ms-bar-hidden', !show);
       if (!show) closeMenu();
@@ -5519,6 +5565,18 @@
           apply();
         });
       }, { rootMargin: '0px 0px -80px 0px' }).observe(book);
+    }
+    // Hide the bubble while the gallery "Book Transformation" button is
+    // in the bottom ~20% of the viewport — the fab's corner zone. The
+    // top 80% is cut out of the observation root, so the button only
+    // counts as intersecting while it is low enough to collide.
+    if ('IntersectionObserver' in window && cta) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          onCta = e.isIntersecting;
+          apply();
+        });
+      }, { rootMargin: '-80% 0px 0px 0px' }).observe(cta);
     }
     var ticking = false;
     window.addEventListener('scroll', function () {

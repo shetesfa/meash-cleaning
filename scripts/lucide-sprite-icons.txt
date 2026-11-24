@@ -24,6 +24,7 @@ facebook
 file-check-2
 gift
 globe
+heart-handshake
 home
 hotel
 image
@@ -47,6 +48,7 @@ plus-circle
 qr-code
 receipt
 repeat
+rotate-ccw
 search
 send
 shield-check

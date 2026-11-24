@@ -38,8 +38,9 @@ class HomepageFreezeFixTest extends TestCase
     // FIX 1: QR <img> tags must never carry src="" — an empty src makes
     // the browser re-request the document URL, i.e. each QR img
     // re-downloaded the whole 370 KB homepage (and held a PHP-FPM
-    // worker). Both now use a 1x1 transparent GIF data URI until the
-    // QR script replaces src with the generated QR code.
+    // worker). The 1x1 transparent GIF placeholder is gone: both QRs
+    // are now real goQR.me SVG files in public/assets, served with
+    // their real src from the first paint (2026-11-24).
     public function test_qr_images_never_have_empty_src(): void
     {
         $this->seedEssentialServices();
@@ -49,9 +50,13 @@ class HomepageFreezeFixTest extends TestCase
         $html = $res->getContent();
 
         $this->assertStringNotContainsString('src=""', $html);
-        $this->assertSame(2, substr_count($html, 'src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"'));
+        $this->assertStringNotContainsString('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', $html);
         $this->assertStringContainsString('id="qr-website"', $html);
         $this->assertStringContainsString('id="qr-telegram"', $html);
+        $this->assertStringContainsString('/assets/qr-website.svg"', $html);
+        $this->assertStringContainsString('/assets/qr-telegram.svg"', $html);
+        $this->assertFileExists(public_path('assets/qr-website.svg'));
+        $this->assertFileExists(public_path('assets/qr-telegram.svg'));
     }
 
     // FIX 2: R8 fade-up must have a safety net — if the
@@ -101,6 +106,10 @@ class HomepageFreezeFixTest extends TestCase
         $this->get('/fonts/does-not-exist.woff2')->assertStatus(404);
         $this->get('/assets/does-not-exist.png')->assertStatus(404);
         $this->get('/favicon-unknown.png')->assertStatus(404);
+        // Unknown non-section paths 404 too — /toggle-status used to
+        // return the homepage with HTTP 200 and got indexed by Google
+        // as a duplicate homepage.
+        $this->get('/toggle-status')->assertStatus(404);
     }
 
     // The SPA fallback still serves genuine website section URLs.

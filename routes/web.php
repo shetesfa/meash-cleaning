@@ -111,10 +111,21 @@ Route::get('/sitemap.xml', function () {
     return response($xml, 200)->header('Content-Type', 'application/xml');
 });
 
-// 5. Fallback route: Return HTTP 404 for any unregistered web or API endpoint.
-//    Prevents invalid paths (e.g. /toggle-status) from returning HTTP 200 duplicate homepages,
-//    while keeping /app/{any?} and defined routes fully working.
+// 5. Fallback route: genuine website section URLs (nav links,
+//    bookmarks, old links) still serve the single-page site — they are
+//    real sections, not unknown paths. Every other unregistered path
+//    404s, so garbage URLs like /toggle-status are never indexed by
+//    Google as duplicate homepages. /app/{any?} and all defined routes
+//    are registered above, so this never shadows them.
 Route::fallback(function () {
+    $section = trim(request()->path(), '/');
+    $sections = ['about', 'services', 'commercial', 'gallery', 'reviews', 'contact', 'track', 'book', 'booking', 'how', 'process', 'advantage'];
+    if (in_array($section, $sections, true)) {
+        return response()->view('website')->header('Cache-Control', 'public, max-age=60');
+    }
+    if (request()->is('api/*')) {
+        return response()->json(['message' => 'Not Found.'], 404);
+    }
     abort(404);
 });
 

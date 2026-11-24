@@ -114,7 +114,14 @@ class MeashOfflineEngine {
         }
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            // 10s, not 4s: on this host a cold PHP-FPM worker answers
+            // /api/ping in 2-8s (spikes to ~26s), so a 4s abort declared
+            // the app offline on every cold start and the 15s re-check
+            // aborted the same way — Offline Mode could never recover
+            // through the ping path. A timeout still leaves the previous
+            // state untouched (see below); only navigator going offline,
+            // or a later successful ping, changes it.
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
             const res = await fetch('/api/ping', {
                 method: 'GET',
                 cache: 'no-cache',
