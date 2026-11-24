@@ -111,28 +111,11 @@ Route::get('/sitemap.xml', function () {
     return response($xml, 200)->header('Content-Type', 'application/xml');
 });
 
-// 5. SPA fallback — direct visits, refreshes and bookmarks of website
-//    sections (e.g. /services, /booking) serve the single-page site
-//    instead of HTTP 404. Registered last so it never shadows /app/*,
-//    /guide, /ping, /health, /telegram-miniapp or any defined route.
-//    API paths keep their JSON 404 behaviour.
+// 5. Fallback route: Return HTTP 404 for any unregistered web or API endpoint.
+//    Prevents invalid paths (e.g. /toggle-status) from returning HTTP 200 duplicate homepages,
+//    while keeping /app/{any?} and defined routes fully working.
 Route::fallback(function () {
-    if (request()->is('api/*')) {
-        abort(404);
-    }
-    // FIX (freeze): a missing static file used to return the whole 370 KB
-    // homepage HTML with HTTP 200 — every miss wasted a full page download
-    // (and a PHP-FPM worker) and could be cached by the service worker as
-    // that asset. Real 404 for asset-looking paths; the SPA fallback stays
-    // for genuine website section URLs only.
-    if (request()->is([
-        'images/*', 'css/*', 'js/*', 'vendor/*', 'fonts/*', 'assets/*',
-        'storage/*', 'favicon.ico', 'favicon-*.png', 'apple-touch-icon.png',
-        'manifest.json', 'sw.js', 'offline.html',
-    ])) {
-        abort(404);
-    }
-    return view('website');
+    abort(404);
 });
 
 

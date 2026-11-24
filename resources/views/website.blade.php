@@ -1054,7 +1054,7 @@
      instead of the centre crop cutting heads off. Card heights do not
      change: .ms-slide and .ms-gal-stage keep their fixed aspect-ratio. */
   img.ms-portrait { object-position: center top; }
-  .ms-slide img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-user-drag: none; }
+  .ms-slide img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block; -webkit-user-drag: none; }
   .ms-slide figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 34px 16px 13px; color: #fff; background: linear-gradient(transparent, rgba(4,20,36,.85)); font-weight: 700; font-size: .92rem; }
   .ms-slide figcaption .ms-cap-name { display: block; }
   .ms-slide figcaption .ms-cap-price { display: block; font-size: .82rem; color: #7dd3fc; font-weight: 800; margin-top: 2px; }
@@ -1416,11 +1416,11 @@
       <div class="pt-2 space-y-2 border-t border-slate-200 dark:border-slate-800">
         <a href="tel:{{ $phone1 }}" class="w-full py-3 px-4 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-teal-600/20">
           <i data-lucide="phone-call" class="w-4 h-4"></i>
-          <span>ቀጥታ ይደውሉ፡ {{ $phone1 }}</span>
+          <span><span data-lang-block="am">ቀጥታ ይደውሉ፡ {{ $phone1 }}</span><span data-lang-block="en">Call Us: {{ $phone1 }}</span></span>
         </a>
         <a href="{{ $websiteSettings['telegram_bot'] ?? 'https://t.me/meash_cleaning_solution_bot' }}" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 px-4 rounded-xl bg-[#0088cc] hover:bg-[#0077b5] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow">
           <i data-lucide="send" class="w-4 h-4"></i>
-          <span>ቴሌግራም ቦት (Telegram Order)</span>
+          <span><span data-lang-block="am">ቴሌግራም ቦት</span><span data-lang-block="en">Telegram Booking Bot</span></span>
         </a>
       </div>
     </div>
@@ -1429,7 +1429,7 @@
     <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 space-y-2">
       <a href="#book" onclick="closeMobileNav()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal to-teal-dark text-white font-black text-xs flex items-center justify-center gap-2 shadow-md" style="background-color: #3E8ECC; color: #FFFFFF;">
         <i data-lucide="calendar" class="w-4 h-4 text-white"></i>
-        <span class="text-white font-black">ዋጋ አስላ / ቀጠሮ ያዝ (Book Now)</span>
+        <span class="text-white font-black"><span data-lang-block="am">ዋጋ አስላ / ቀጠሮ ያዝ</span><span data-lang-block="en">Estimate Price &amp; Book Now</span></span>
       </a>
     </div>
   </div>
@@ -1519,15 +1519,16 @@
     foreach ($svcRows as $row) {
       if ($row->service_code) $dbServicePhoto[$row->service_code] = $row->url;
     }
-    $servicePhoto = $dbServicePhoto;
+    $servicePhoto = array_merge($fallbackServicePhoto, $dbServicePhoto);
     $galRows = $dbPhotos->where('section', 'gallery')->values();
     $galleryOrder = $galRows->pluck('url')->all();
     $featRows = $dbPhotos->where('section', 'feature')->values();
-    // No fallback padding: a step with no photo row shows its text
-    // only (each step photo below renders only when its row exists).
     $featurePhotos = $featRows->take(3)->map(function ($row) {
       return ['file' => $row->url, 'am' => $row->title_am ?: $row->title_en, 'en' => $row->title_en ?: $row->title_am];
     })->all();
+    while (count($featurePhotos) < 3 && isset($fallbackFeaturePhotos[count($featurePhotos)])) {
+      $featurePhotos[] = $fallbackFeaturePhotos[count($featurePhotos)];
+    }
     // Gallery lookup must also include gallery-section rows: a photo
     // can be in the gallery without being in the hero slider, and the
     // slider below looks every gallery file up in this map.
@@ -1564,9 +1565,13 @@
   // or step photo must be described by what the picture really shows,
   // not by the service name. DB captions win; fallbacks fill the gaps.
   $captionByFile = [];
+  foreach ($fallbackPhotos as $fb) {
+    $base = basename((string)$fb['file']);
+    $captionByFile[$base] = ['am' => (string)($fb['am'] ?? ''), 'en' => (string)($fb['en'] ?? '')];
+  }
   foreach ($galleryByFile as $key => $row) {
     $base = basename((string)$key);
-    if (!isset($captionByFile[$base])) {
+    if (!isset($captionByFile[$base]) || !empty($row['am'])) {
       $captionByFile[$base] = ['am' => (string)($row['am'] ?? ''), 'en' => (string)($row['en'] ?? '')];
     }
   }
@@ -1816,7 +1821,7 @@
           {{-- F4: lg:whitespace-nowrap keeps "24/7" on one line
                on desktop (it wrapped mid-time before). The grid is already
                equal-width (grid-cols-2 lg:grid-cols-4). --}}
-          <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white lg:whitespace-nowrap"><span data-lang-block="am">{{ $trustHoursAm }}</span><span data-lang-block="en">{{ $trustHoursEn }}</span></div>
+          <div class="font-extrabold text-base md:text-lg leading-tight text-navy dark:text-white"><span data-lang-block="am">{{ $trustHoursAm }}</span><span data-lang-block="en">{{ $trustHoursEn }}</span></div>
           <div class="text-xs md:text-sm text-navy/60 dark:text-slate-300 leading-snug"><span data-lang-block="am">የስራ ሰዓት</span><span data-lang-block="en">Working hours</span></div>
         </div>
       </div>
@@ -2189,7 +2194,7 @@
       </article>
     @endforelse
     <!-- Contract CTA card (from the approved sample) -->
-    <article class="ms-svc ms-svc-cta">
+    <article class="ms-svc ms-svc-cta col-span-full md:col-span-2 lg:col-span-3" style="grid-column: 1 / -1;">
       <div class="ms-bd">
         <h3 class="font-serif font-bold text-xl"><span data-lang-block="am">በየሳምንቱ ጽዳት ይፈልጋሉ?</span><span data-lang-block="en">Need cleaning every week?</span></h3>
         <p class="text-sm"><span data-lang-block="am">ለቢሮዎች፣ ሆቴሎች፣ ግቢዎች እና ሕንፃዎች የሚደገም የጽዳት እቅዶች — ተመሳሳይ ቡድን በመደበኛ መርሃ ግብር።</span><span data-lang-block="en">Recurring cleaning plans for offices, hotels, compounds and buildings — the same crew on a regular schedule.</span></p>
@@ -2264,7 +2269,7 @@
         <i data-lucide="phone-call" class="w-4 h-4"></i>
         <span>{{ $phone1 }} / {{ $phone2 }}</span>
       </a>
-      <a href="#book" class="w-full sm:w-auto bg-white hover:bg-slate-100 text-navy font-black text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow">
+      <a href="#book" class="w-full sm:w-auto bg-white hover:bg-slate-100 !text-slate-900 font-black text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow" style="color: #0f172a !important;">
         <i data-lucide="calendar" class="w-4 h-4 text-teal"></i>
         <span data-lang-block="am">ቀጠሮ ያስይዙ</span><span data-lang-block="en">Book Now</span>
       </a>
@@ -2446,7 +2451,7 @@
                (and held a PHP-FPM worker). A 1x1 transparent GIF data URI
                loads instantly with no request; the QR script replaces src
                with the generated QR data URL when the card scrolls into view. --}}
-          <img id="qr-website" data-qr="{{ url('/') }}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Website QR Code" class="w-36 h-36 rounded-lg">
+          <img id="qr-website" data-qr="{{ url('/') }}" src="{{ asset('assets/qr-website.svg') }}" alt="Website QR Code" class="w-36 h-36 rounded-lg object-contain">
         </div>
         <h4 class="font-bold text-sm text-navy dark:text-white flex items-center gap-1.5 mb-1">
           <i data-lucide="globe" class="w-4 h-4 text-teal"></i> Website Direct Booking
@@ -2457,7 +2462,7 @@
       <!-- Telegram Bot QR -->
       <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-md border border-navy/10 flex flex-col items-center">
         <div class="p-3 bg-white rounded-xl shadow-inner border border-gray-100 mb-4">
-          <img id="qr-telegram" data-qr="https://t.me/meash_cleaning_solution_bot" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Telegram Bot QR Code" class="w-36 h-36 rounded-lg">
+          <img id="qr-telegram" data-qr="https://t.me/meash_cleaning_solution_bot" src="{{ asset('assets/qr-telegram.svg') }}" alt="Telegram Bot QR Code" class="w-36 h-36 rounded-lg object-contain">
         </div>
         <h4 class="font-bold text-sm text-navy dark:text-white flex items-center gap-1.5 mb-1">
           <i data-lucide="bot" class="w-4 h-4 text-teal"></i> Telegram Mini App &amp; Bot
@@ -2610,16 +2615,23 @@
               @php
                 $wIcon = $iconList[$ws->code] ?? 'sparkles';
                 $wPrice = (float)$ws->base_price;
-                // Batch 11a: real unit label — there is no pricing_unit_am
-                // column on services, so the old fallback printed the raw
-                // DB code ("sqm") / "unit" instead of an Amharic label.
-                $wUnit = match (strtolower(trim((string)($ws->unit ?? '')))) {
+                // Real unit label with bilingual support
+                $wUnitRaw = strtolower(trim((string)($ws->unit ?? '')));
+                $wUnitAm = match ($wUnitRaw) {
                   'sqm' => 'ካሬ ሜትር',
                   'seat' => 'ወንበር',
                   'piece' => 'እቃ',
                   'room' => 'ክፍል',
                   'hour' => 'ሰዓት',
                   default => 'አገልግሎት',
+                };
+                $wUnitEn = match ($wUnitRaw) {
+                  'sqm' => 'sqm',
+                  'seat' => 'seat',
+                  'piece' => 'piece',
+                  'room' => 'room',
+                  'hour' => 'hour',
+                  default => 'service',
                 };
                 $wNameAm = $ws->name_am ?: $ws->name_en;
                 $wNameEn = $ws->name_en ?: $ws->name_am;
@@ -2630,8 +2642,8 @@
                   <span data-lang-block="am">{{ $wNameAm }}</span>
                   <span data-lang-block="en">{{ $wNameEn }}</span>
                 </span>
-                <span class="text-sm font-bold text-teal-dark shrink-0 wiz-price" data-wiz-price="{{ $ws->id }}" data-wiz-unit="{{ $wUnit }}">
-                  {{ number_format($wPrice) }} ETB / {{ $wUnit }}
+                <span class="text-sm font-bold text-teal-dark shrink-0 wiz-price" data-wiz-price="{{ $ws->id }}" data-wiz-unit="{{ $wUnitRaw }}">
+                  {{ number_format($wPrice) }} ETB / <span data-lang-block="am">{{ $wUnitAm }}</span><span data-lang-block="en">{{ $wUnitEn }}</span>
                 </span>
               </button>
             @endforeach
@@ -2645,15 +2657,12 @@
             <span id="qty-display" class="font-serif font-semibold text-xl w-8 text-center text-navy">1</span>
             <button type="button" onclick="changeQty(1)" class="w-11 h-11 rounded-xl border border-navy/15 font-bold cursor-pointer hover:bg-fog text-navy">+</button>
           </div>
-          <div class="bg-teal-light rounded-md px-4 py-3 mt-4 mb-5 flex items-center justify-between">
-            <span class="text-xs sm:text-sm font-semibold text-teal-dark"><span data-lang-block="am">የግምት ድምር (Estimated Price)</span><span data-lang-block="en">Estimated total</span></span>
-            <span id="wiz-total" class="font-serif font-semibold text-base sm:text-lg text-teal-dark"><span data-lang-block="am">አገልግሎት ይምረጡ ዋጋ ለማየት</span><span data-lang-block="en">Choose a service to see the price</span></span>
+          <div class="flex items-center justify-between pt-3">
+            <button type="button" onclick="resetWizard()" class="text-xs font-bold text-navy/50 hover:text-red-600 py-2 cursor-pointer flex items-center gap-1.5 transition">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span data-lang-block="am">ቀጠሮውን አጽዳ</span><span data-lang-block="en">Clear booking</span>
+            </button>
           </div>
-          <button type="button" onclick="resetWizard()" class="w-full mt-1 text-xs font-bold text-navy/50 hover:text-red-600 py-2 cursor-pointer"><span data-lang-block="am">↺ ቀጠሮውን አጽዳ</span><span data-lang-block="en">↺ Clear booking</span></button>
-          <button type="button" onclick="validateStep1AndContinue()" class="w-full bg-navy hover:bg-teal-dark text-white font-bold py-3.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 min-h-[48px]">
-            <span data-lang-block="am">ቀጣይ: አድራሻ ያስገቡ</span><span data-lang-block="en">Next: Address &amp; Location</span>
-            <i data-lucide="arrow-right" class="w-5 h-5"></i>
-          </button>
         </div>
 
         <!-- STEP 2 -->
@@ -3237,7 +3246,8 @@
       </div>
       <p class="text-xs text-teal-light font-semibold mb-3">"Your Environment, Our Responsibility."</p>
       <p class="text-xs text-white/70 leading-relaxed mb-3">
-        ሜሽ የጽዳት አገልግሎት ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማትና ለመኖሪያ ቤቶች ፕሪሚየም የጥልቅ ጽዳት አገልግሎት የሚሰጥ ተቋም ነው።
+        <span data-lang-block="am">ሜሽ የጽዳት አገልግሎት ዋና መሥሪያ ቤቱ በአያት አደባባይ የሚገኝ፣ ህጋዊ ፈቃድ ያለው እና ለንግድ ተቋማትና ለመኖሪያ ቤቶች ፕሪሚየም የጥልቅ ጽዳት አገልግሎት የሚሰጥ ተቋም ነው።</span>
+        <span data-lang-block="en">Meash Cleaning Solution is a fully licensed company headquartered at Ayat Square, providing premium commercial and residential deep cleaning services in Addis Ababa.</span>
       </p>
       <div class="font-bold text-white text-sm space-y-1">
         <p class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-teal"></i> <a href="tel:{{ $phone1 }}" class="hover:text-teal transition">{{ $phone1 }}</a></p>
@@ -3245,24 +3255,30 @@
       </div>
     </div>
     <div>
-      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ይፋዊ የጽዳት አገልግሎቶች</p>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">
+        <span data-lang-block="am">ይፋዊ የጽዳት አገልግሎቶች</span>
+        <span data-lang-block="en">Our Official Services</span>
+      </p>
       <ul class="space-y-2 text-xs">
         @forelse($activeServices as $s)
-          <li><a href="#services" onclick="preselectService('{{ $s->code }}')" class="hover:text-teal transition">{{ $s->name_am ?: $s->name_en }}</a></li>
+          <li><a href="#services" onclick="preselectService('{{ $s->code }}')" class="hover:text-teal transition"><span data-lang-block="am">{{ $s->name_am ?: $s->name_en }}</span><span data-lang-block="en">{{ $s->name_en ?: $s->name_am }}</span></a></li>
         @empty
-          <li><a href="#services" class="hover:text-teal transition">የወለል፣ የተቋማትና የሶፋ ጥልቅ ጽዳት</a></li>
+          <li><a href="#services" class="hover:text-teal transition"><span data-lang-block="am">የወለል፣ የተቋማትና የሶፋ ጥልቅ ጽዳት</span><span data-lang-block="en">Floor, Facilities &amp; Sofa Deep Cleaning</span></a></li>
         @endforelse
       </ul>
     </div>
     <div>
-      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ድርጅት እና መረጃ</p>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">
+        <span data-lang-block="am">ድርጅት እና መረጃ</span>
+        <span data-lang-block="en">Company &amp; Info</span>
+      </p>
       <ul class="space-y-2 text-xs">
-        <li><a href="#about" class="hover:text-teal transition">ስለ እኛ (About Us)</a></li>
-        <li><a href="#advantage" class="hover:text-teal transition">ለምን ሜሽን ይመርጣሉ? (5 Pillars)</a></li>
-        <li><a href="#process" class="hover:text-teal transition">ቀላል አሰራራችን (5-Step Process)</a></li>
-        <li><a href="#gallery" class="hover:text-teal transition">የስራ ጋለሪ (Before &amp; After)</a></li>
-        <li><a href="#reviews" class="js-reviews-link hover:text-teal transition">የደንበኞች አስተያየት (Reviews)</a></li>
-        <li><a href="#contact" class="hover:text-teal transition">አድራሻ እና ካርታ (Contact)</a></li>
+        <li><a href="#about" class="hover:text-teal transition"><span data-lang-block="am">ስለ እኛ</span><span data-lang-block="en">About Us</span></a></li>
+        <li><a href="#advantage" class="hover:text-teal transition"><span data-lang-block="am">ለምን ሜሽን ይመርጣሉ?</span><span data-lang-block="en">Why Choose Meash</span></a></li>
+        <li><a href="#process" class="hover:text-teal transition"><span data-lang-block="am">ቀላል አሰራራችን</span><span data-lang-block="en">Our Process</span></a></li>
+        <li><a href="#gallery" class="hover:text-teal transition"><span data-lang-block="am">የስራ ጋለሪ</span><span data-lang-block="en">Projects Gallery</span></a></li>
+        <li><a href="#reviews" class="js-reviews-link hover:text-teal transition"><span data-lang-block="am">የደንበኞች አስተያየት</span><span data-lang-block="en">Customer Reviews</span></a></li>
+        <li><a href="#contact" class="hover:text-teal transition"><span data-lang-block="am">አድራሻ እና ካርታ</span><span data-lang-block="en">Contact &amp; Map</span></a></li>
         @if(!empty($tradeLicenseNo) || !empty($tinNo) || !empty($vatRegistered))
         <li class="pt-3 mt-1 border-t border-white/10">
           <p class="text-white font-bold text-xs uppercase tracking-wider mb-2"><span data-lang-block="am">የንግድ መረጃ</span><span data-lang-block="en">Business Information</span></p>
@@ -3291,7 +3307,10 @@
       </ul>
     </div>
     <div>
-      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">ማህበራዊ ትስስር ({{ $socialHandle }})</p>
+      <p class="text-white font-bold text-sm uppercase tracking-wider mb-4">
+        <span data-lang-block="am">ማህበራዊ ትስስር ({{ $socialHandle }})</span>
+        <span data-lang-block="en">Connect With Us ({{ $socialHandle }})</span>
+      </p>
       <ul class="space-y-2 text-xs">
         <li><a href="{{ $telegramChannelUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="send" class="w-3.5 h-3.5 text-teal"></i> Telegram Channel (@meashdeepcleanning)</a></li>
         <li><a href="{{ $websiteSettings['telegram_support_url'] ?? 'https://t.me/meashcleaning' }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="message-circle" class="w-3.5 h-3.5 text-teal"></i> Direct Telegram (@meashcleaning)</a></li>
@@ -3301,7 +3320,8 @@
         <li><a href="{{ $facebookUrl }}" target="_blank" class="hover:text-teal flex items-center gap-1.5 transition"><i data-lucide="facebook" class="w-3.5 h-3.5 text-teal"></i> Facebook</a></li>
       </ul>
       <div class="mt-4 pt-4 border-t border-white/10 text-xs text-white/50">
-        {{ $addressAm }} ({{ $addressEn }})
+        <span data-lang-block="am">{{ $addressAm }}</span>
+        <span data-lang-block="en">{{ $addressEn }}</span>
       </div>
     </div>
   </div>
@@ -3712,6 +3732,24 @@
       var alt = (l === 'am') ? img.getAttribute('data-alt-am') : img.getAttribute('data-alt-en');
       if (alt) img.setAttribute('alt', alt);
     });
+
+    // Update input placeholders for selected language
+    const nameInput = document.getElementById('quickMsgName');
+    const phoneInput = document.getElementById('quickMsgPhone');
+    const msgInput = document.getElementById('quickMsgText');
+    const trackInput = document.getElementById('track-input');
+    if (l === 'en') {
+      if (nameInput) nameInput.placeholder = 'Your full name (e.g. John Doe)';
+      if (phoneInput) phoneInput.placeholder = '09xxxxxxxx (Phone number)';
+      if (msgInput) msgInput.placeholder = 'How can we help you? (e.g. Office cleaning quote)';
+      if (trackInput) trackInput.placeholder = 'Enter Order Number (e.g. MEASH-000001)...';
+    } else {
+      if (nameInput) nameInput.placeholder = 'ሙሉ ስም (ለምሳሌ፡ አበበ ከበደ)';
+      if (phoneInput) phoneInput.placeholder = '09xxxxxxxx (ስልክ ቁጥር)';
+      if (msgInput) msgInput.placeholder = 'የሚፈልጉትን አገልግሎት ወይም ጥያቄዎን እዚህ ይጻፉ...';
+      if (trackInput) trackInput.placeholder = 'የትዕዛዝ ቁጥር ያስገቡ (ምሳሌ፡ MEASH-000001)...';
+    }
+
     if (window.lucide) lucide.createIcons();
   }
 
@@ -3802,14 +3840,30 @@
           if (window.lucide) lucide.createIcons();
         }
       } else {
-        // No approved reviews yet: hide the testimonials section entirely
-        // instead of showing invented quotes or a fake aggregate.
         if (aggBlock) aggBlock.classList.add('hidden');
-        hideReviewsSection();
+        document.getElementById('reviews')?.classList.remove('hidden');
+        document.querySelectorAll('.js-reviews-link').forEach(function (el) { el.classList.remove('hidden'); });
+        const grid = document.getElementById('dynamic-reviews-grid');
+        if (grid) {
+          grid.innerHTML = `
+            <div class="col-span-full text-center py-8 bg-fog/30 dark:bg-slate-800/30 rounded-2xl border border-navy/10 dark:border-white/10 p-6">
+              <i data-lucide="heart-handshake" class="w-10 h-10 text-teal mx-auto mb-2 opacity-80"></i>
+              <h4 class="font-bold text-base text-navy dark:text-white mb-1">
+                <span data-lang-block="am">የደንበኞቻችንን አስተያየት በከፍተኛ ክብር እንቀበላለን!</span>
+                <span data-lang-block="en">We value our clients' feedback!</span>
+              </h4>
+              <p class="text-sm text-navy/60 dark:text-slate-300 max-w-md mx-auto">
+                <span data-lang-block="am">አገልግሎታችንን ተጠቅመው ያጠናቀቁ ደንበኞች በትዕዛዝ መከታተያ ገጻችን (#track) በኩል አስተያየታቸውን ማስቀመጥ ይችላሉ።</span>
+                <span data-lang-block="en">Clients can submit their reviews directly after service completion through our order tracking portal (#track).</span>
+              </p>
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons();
+        }
       }
     } catch (e) {
       console.warn('Could not load dynamic reviews:', e);
-      hideReviewsSection();
+      document.querySelectorAll('.js-reviews-link').forEach(function (el) { el.classList.remove('hidden'); });
     }
   }
 
@@ -4567,11 +4621,18 @@
     const box = document.getElementById('track-result');
     if (!q) {
       box.classList.remove('hidden');
-      box.innerHTML = '<div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">እባክዎ ትክክለኛ የትዕዛዝ መለያ ቁጥር (ምሳሌ፡ MEASH-000001) ያስገቡ።</div>';
+      box.innerHTML = `<div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+        <span data-lang-block="am">እባክዎ ትክክለኛ የትዕዛዝ መለያ ቁጥር (ምሳሌ፡ MEASH-000001) ያስገቡ።</span>
+        <span data-lang-block="en">Please enter a valid order number (e.g., MEASH-000001).</span>
+      </div>`;
       return;
     }
     box.classList.remove('hidden');
-    box.innerHTML = '<div class="p-6 text-center text-navy/60"><div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-teal mr-2"></div> በመፈለግ ላይ...</div>';
+    box.innerHTML = `<div class="p-6 text-center text-navy/60">
+      <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-teal mr-2"></div>
+      <span data-lang-block="am">በመፈለግ ላይ...</span>
+      <span data-lang-block="en">Searching order records...</span>
+    </div>`;
     try {
       const res = await fetch(`/api/public/track-order?tracking_id=${encodeURIComponent(q)}`, {
         headers: { 'Accept': 'application/json' }
@@ -4765,16 +4826,27 @@
         if (window.lucide) lucide.createIcons();
 
       } else {
-        const notFoundMsg = res.status === 429
-          ? 'እባክዎ ጥቂት ሰከንዶች ቆይተው እንደገና ይሞክሩ (Too many requests)።'
-          : (data.message || 'ይቅርታ፣ በዚህ ቁጥር የተያዘ ትዕዛዝ አልተገኘም። እባክዎ በትክክል መጻፉን ያረጋግጡ።');
+        const isAm = (document.documentElement.getAttribute('data-lang') || 'am') === 'am';
+        let notFoundMsg = '';
+        if (res.status === 429) {
+          notFoundMsg = isAm
+            ? 'እባክዎ ጥቂት ሰከንዶች ቆይተው እንደገና ይሞክሩ (Too many requests)።'
+            : 'Too many requests. Please wait a few seconds and try again.';
+        } else {
+          notFoundMsg = isAm
+            ? (data.message || 'ይቅርታ፣ በዚህ ቁጥር የተያዘ ትዕዛዝ አልተገኘም። እባክዎ በትክክል መጻፉን ያረጋግጡ።')
+            : (data.message_en || 'Sorry, no order was found with this tracking ID. Please check and try again.');
+        }
         box.innerHTML = `<div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
           ${escapeHtml(notFoundMsg)}
         </div>`;
       }
     } catch (err) {
       console.error('Track order error:', err);
-      box.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-xs">የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ በ {{ $phone1 }} በቀጥታ ይደውሉ።</div>';
+      box.innerHTML = `<div class="p-4 rounded-xl bg-red-50 text-red-700 text-xs">
+        <span data-lang-block="am">የኔትወርክ ግንኙነት ስህተት አጋጥሟል። እባክዎ በ {{ $phone1 }} በቀጥታ ይደውሉ።</span>
+        <span data-lang-block="en">Network connection error. Please call us directly at {{ $phone1 }}.</span>
+      </div>`;
     }
   }
 
@@ -5195,6 +5267,12 @@
       stage.addEventListener('pointerup', dragEnd);
       stage.addEventListener('pointercancel', dragEnd);
       layout(); restart();
+      window.addEventListener('pageshow', function () {
+        if (stage) {
+          active = 0; pos = 0;
+          layout(); restart();
+        }
+      });
     }
 
     /* ---------- Gallery: side-scrolling strip + lightbox (2026-11-19) ----

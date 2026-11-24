@@ -12,6 +12,9 @@
     <link rel="apple-touch-icon" href="/assets/icon-192.png">
 
         <!-- Fonts & Minified Compiled CSS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/fonts.css">
     <link rel="stylesheet" href="/css/meash.css?v=20261117b">
 
@@ -86,6 +89,9 @@
             font-family: 'Plus Jakarta Sans', 'Noto Sans Ethiopic', sans-serif;
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
+        }
+        input, textarea, select, button, ::placeholder, .font-mono, #sidebar-eth-time, code, kbd, pre {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Ethiopic', sans-serif !important;
         }
         #mobile-bottom-nav {
             padding-bottom: max(0.5rem, var(--sab));
@@ -217,15 +223,10 @@
 
         <!-- 3. Right: Compact Language + Website + Logout -->
         <div class="flex items-center gap-1 sm:gap-2">
-            <!-- Language Toggle (Compact) — HIDDEN: the admin is Amharic-only
-                 by design (zero data-i18n bindings; every module renders
-                 hardcoded Amharic). The toggle only switched the ~11 sidebar
-                 labels, so EN looked dead while the whole page stayed
-                 Amharic. A real bilingual admin is a separate translation
-                 job; until then no dead control is shown. -->
-            <div class="hidden items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 text-[10px] sm:text-[11px]">
-                <button type="button" onclick="window.meashI18n.setLanguage('en')" class="px-1.5 py-0.5 rounded font-bold hover:bg-slate-700 text-slate-400" id="app-lang-en">EN</button>
-                <button type="button" onclick="window.meashI18n.setLanguage('am')" class="px-1.5 py-0.5 rounded font-bold hover:bg-slate-700 text-cyan-300" id="app-lang-am">አማ</button>
+            <!-- Language Toggle (Bilingual Admin Switch) -->
+            <div class="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 text-[10px] sm:text-[11px]">
+                <button type="button" onclick="toggleAdminLang('en')" class="px-2 py-0.5 rounded font-bold hover:bg-slate-700 text-slate-400 cursor-pointer transition" id="app-lang-en">EN</button>
+                <button type="button" onclick="toggleAdminLang('am')" class="px-2 py-0.5 rounded font-bold bg-slate-700 text-cyan-300 cursor-pointer transition" id="app-lang-am">አማ</button>
             </div>
 
             <!-- Reload / Force Refresh Cache -->
@@ -233,9 +234,10 @@
                 <i data-lucide="rotate-cw" class="w-4 h-4"></i>
             </button>
 
-            <!-- Website link (Desktop only to save mobile space) -->
-            <a href="/" target="_blank" title="የደንበኞች ድረ-ገጽ እይ" class="hidden sm:flex p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800/60 rounded-xl transition-colors">
-                <i data-lucide="globe" class="w-4 h-4"></i>
+            <!-- Explicit View Website Link -->
+            <a href="/" target="_blank" title="የደንበኞች ድረ-ገጽ እይ (View Website)" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 text-slate-400 hover:text-cyan-400 hover:bg-slate-800/60 rounded-xl text-xs font-semibold transition-colors">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                <span class="hidden md:inline">ድረ-ገጽ</span>
             </a>
 
             <!-- Clean Logout Button -->
@@ -293,9 +295,9 @@
                 <div id="sidebar-eth-date" class="space-y-0.5">
                     <p class="text-cyan-400 font-bold text-xs" id="sidebar-eth-date-main">— ዓ.ም</p>
                     <p class="text-slate-500 font-semibold text-[10px]" id="sidebar-gc-date-sub">—</p>
-                    <p class="text-slate-600 font-mono text-[10px]">
+                    <p class="text-slate-400 text-[10px]">
                         <span id="sidebar-eth-time">—</span>
-                        <span class="text-slate-700 mx-1">•</span>
+                        <span class="text-slate-600 mx-1">•</span>
                         <span id="sidebar-gc-time">—</span>
                     </p>
                 </div>
@@ -971,7 +973,13 @@
             const headers = Object.assign({
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             }, options.headers || {});
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (csrfToken && !headers['X-CSRF-TOKEN']) {
+                headers['X-CSRF-TOKEN'] = csrfToken;
+            }
 
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
@@ -980,10 +988,9 @@
             const method = (options.method || 'GET').toUpperCase();
             const isGet = (method === 'GET');
             const cacheKey = 'meash_api_cache_' + url;
-            const isOffline = !navigator.onLine || (window.meashOffline && !window.meashOffline.isOnline);
 
-            // 1. FAST OFFLINE PATH FOR GET REQUESTS (0ms response)
-            if (isGet && isOffline) {
+            // 1. FAST OFFLINE PATH ONLY WHEN THE BROWSER IS GENUINELY OFFLINE
+            if (isGet && !navigator.onLine) {
                 setOfflineBanner(true);
                 const cached = localStorage.getItem(cacheKey);
                 if (cached) {
@@ -998,9 +1005,18 @@
                 return createMockResponse(fallback, 200, url);
             }
 
-            // 2. ONLINE OR NON-GET REQUESTS
+            // 2. ONLINE OR NON-GET REQUESTS (Always try network first)
             try {
                 let res = await fetch(url, { ...options, headers });
+
+                // Update online status on any successful response
+                if (res.ok) {
+                    if (window.meashOffline && !window.meashOffline.isOnline) {
+                        window.meashOffline.isOnline = true;
+                        window.meashOffline.updateOnlineStatus();
+                    }
+                    setOfflineBanner(false);
+                }
 
                 // 401: do NOT nuke the session on a single 401. A transient
                 // 401 (deploy restart race, proxy hiccup, token propagation
@@ -1044,6 +1060,10 @@
                 return res;
             } catch (netErr) {
                 console.warn('API fetch network error for ' + url + ':', netErr.message);
+                if (window.meashOffline && window.meashOffline.isOnline) {
+                    window.meashOffline.isOnline = false;
+                    window.meashOffline.updateOnlineStatus();
+                }
                 // noStaleCache: callers rendering admin-editable data (CMS
                 // services/settings) must NEVER render silently stale cached
                 // rows as if they were live — a failed live fetch must
@@ -1121,7 +1141,7 @@
                 { id: 'sales', label_en: 'Sales CRM', label_am: 'የውጭ ሽያጭ CRM', icon: 'trending-up' },
                 { id: 'finance', label_en: 'Finance & Expenses', label_am: 'ፋይናንስ እና ወጪዎች', icon: 'wallet' },
                 { id: 'care', label_en: 'Customer Care', label_am: 'የደንበኞች እንክብካቤ', icon: 'heart-handshake' },
-                { id: 'campaigns', label_en: 'ማስታወቂያ እና ፕሮሞሽን', label_am: 'የማስታወቂያ ዘመቻ', icon: 'send' },
+                { id: 'campaigns', label_en: 'Marketing & Promotions', label_am: 'የማስታወቂያ ዘመቻ', icon: 'send' },
                 { id: 'website_cms', label_en: 'Website & CMS', label_am: 'የድረ-ገጽ ማስተዳደሪያ', icon: 'globe' },
                 { id: 'settings', label_en: 'System Settings', label_am: 'የሲስተም ቅንብሮች', icon: 'settings' },
             ],
@@ -1131,13 +1151,13 @@
                 { id: 'subscriptions', label_en: 'Subscriptions', label_am: 'የደንበኝነት እቅዶች', icon: 'repeat' },
                 { id: 'calendar', label_en: 'Appointments', label_am: 'የቀጠሮዎች ካላንደር', icon: 'calendar' },
                 { id: 'customers', label_en: 'Customer CRM', label_am: 'የደንበኞች መረጃ', icon: 'users' },
-                { id: 'care', label_en: 'Follow-up & ክፍት ቅሬታዎች', label_am: 'ክትትል እና ቅሬታዎች', icon: 'phone-call' },
+                { id: 'care', label_en: 'Follow-up & Complaints', label_am: 'ክትትል እና ቅሬታዎች', icon: 'phone-call' },
                 { id: 'finance', label_en: 'Payments & Revenue', label_am: 'ክፍያዎች እና ገቢ', icon: 'credit-card' },
                 { id: 'website_cms', label_en: 'Website CMS', label_am: 'የድረ-ገጽ ማስተዳደሪያ', icon: 'globe' },
                 { id: 'settings', label_en: 'System Settings', label_am: 'የሲስተም ቅንብሮች (SMS)', icon: 'settings' },
             ],
             cleaner: [
-                { id: 'cleaner_jobs', label_en: "የዛሬ ስራዎች", label_am: 'የዛሬ ስራዎች', icon: 'check-square' },
+                { id: 'cleaner_jobs', label_en: "Today's Jobs", label_am: 'የዛሬ ስራዎች', icon: 'check-square' },
                 { id: 'cleaner_upcoming', label_en: 'Upcoming', label_am: 'ቀጣይ ስራዎች', icon: 'calendar' },
                 { id: 'cleaner_history', label_en: 'Completed', label_am: 'የተጠናቀቁ ስራዎች', icon: 'clock' },
             ],
@@ -1214,6 +1234,8 @@
                     setOfflineBanner(true, '🌐 Back Online — መረጃዎች Sync እየሆኑ ነው...', true);
                     loadActiveTab();
                     preloadAllAdminOfflineData().catch(() => {});
+                } else {
+                    setOfflineBanner(false);
                 }
             });
 
@@ -1233,6 +1255,24 @@
                 }
             });
         }
+
+        function toggleAdminLang(lang) {
+            if (window.meashI18n) window.meashI18n.setLanguage(lang);
+            const btnEn = document.getElementById('app-lang-en');
+            const btnAm = document.getElementById('app-lang-am');
+            if (btnEn && btnAm) {
+                if (lang === 'en') {
+                    btnEn.className = 'px-2 py-0.5 rounded font-bold bg-slate-700 text-cyan-300 cursor-pointer transition';
+                    btnAm.className = 'px-2 py-0.5 rounded font-bold hover:bg-slate-700 text-slate-400 cursor-pointer transition';
+                } else {
+                    btnAm.className = 'px-2 py-0.5 rounded font-bold bg-slate-700 text-cyan-300 cursor-pointer transition';
+                    btnEn.className = 'px-2 py-0.5 rounded font-bold hover:bg-slate-700 text-slate-400 cursor-pointer transition';
+                }
+            }
+            renderNavigation();
+            loadActiveTab();
+        }
+        window.toggleAdminLang = toggleAdminLang;
 
         function setupPwaPrompt() {
             window.addEventListener('beforeinstallprompt', (e) => {
@@ -6928,7 +6968,7 @@
                         <div>
                             <label class="block text-slate-300 font-bold text-xs mb-1">የመልእክቱ ሙሉ ዝርዝር (Message Body) *</label>
                             <textarea id="inpage-bc-message" rows="4" placeholder="የማስታወቂያውን መልእክት እዚህ ይጻፉ..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white text-xs leading-relaxed focus:outline-none focus:border-cyan-500">ውድ {name}፤ የሜሽ ክሊኒንግ ልዩ የጥልቅ ጽዳት አገልግሎት ቅናሽ ተዘጋጅቶ ይጠብቆታል። አሁኑኑ በ 0970075509 ደውለው ቀጠሮዎን ያስይዙ!</textarea>
-                            <p class="text-[11px] text-cyan-400 mt-1">ማስታወሻ፦ <code>{name}</code> ወይም <code>{ስም}</code> የሚለውን ተጠቅመው የእያንዳንዱን ደንበኛ ስም በሲስተሙ ማካተት ይችላሉ::</p>
+                            <p class="text-[11px] text-cyan-400 mt-1">ማስታወሻ፦ <span class="font-bold text-white bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{name}</span> ወይም <span class="font-bold text-white bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">{ስም}</span> የሚለውን ተጠቅመው የእያንዳንዱን ደንበኛ ስም በሲስተሙ ማካተት ይችላሉ::</p>
                         </div>
                     </div>
 
@@ -8196,7 +8236,7 @@
                                 <div>
                                     <label class="block text-slate-400 mb-1">የቦት ቶከን (Bot Token ከ @BotFather)</label>
                                     <div class="flex items-center gap-2">
-                                        <input type="text" id="setting-tg-token" placeholder="አዲስ ቶከን ካለዎት እዚህ ያስገቡ..." class="w-full bg-slate-800 border border-slate-700 focus:border-sky-500 rounded-xl px-3 py-2 text-white font-mono text-xs">
+                                        <input type="text" id="setting-tg-token" placeholder="አዲስ ቶከን ካለዎት እዚህ ያስገቡ..." class="w-full bg-slate-800 border border-slate-700 focus:border-sky-500 rounded-xl px-3 py-2 text-white text-xs">
                                     </div>
                                     <span class="text-[10px] text-slate-400 mt-1 block">ቶከኑን ከቀየሩ ወይም አዲስ ካስገቡ ከታች ያለውን "አገናኝ" የሚለውን ይጫኑ::</span>
                                 </div>
@@ -11300,16 +11340,46 @@
         }
 
         function handleSalesVisitOrgChange(orgId) {
+            const newOrgRow = document.getElementById('visit-new-org-row');
+            const newOrgInput = document.getElementById('visit-new-org-name');
+            const phoneLabel = document.getElementById('visit-phone-label');
+            const phoneInput = document.getElementById('visit-phone');
+            const contactInput = document.getElementById('visit-contact');
+
+            if (orgId === 'new') {
+                if (newOrgRow) newOrgRow.classList.remove('hidden');
+                if (newOrgInput) {
+                    newOrgInput.required = true;
+                    newOrgInput.focus();
+                }
+                if (phoneLabel) phoneLabel.innerHTML = 'ስልክ ቁጥር <span class="text-red-400 font-bold">*</span>';
+                if (phoneInput) {
+                    phoneInput.required = true;
+                    phoneInput.placeholder = '09xxxxxxxx (አስገዳጅ)';
+                    phoneInput.value = '';
+                }
+                if (contactInput) {
+                    contactInput.placeholder = 'ያነጋገሩት ኃላፊ ስም';
+                }
+                return;
+            }
+
+            if (newOrgRow) newOrgRow.classList.add('hidden');
+            if (newOrgInput) newOrgInput.required = false;
+
+            if (phoneLabel) phoneLabel.innerHTML = 'ስልክ ቁጥር <span class="text-slate-500 font-normal text-[10px]">(አማራጭ - ከተቀየረ)</span>';
+            if (phoneInput) {
+                phoneInput.required = false;
+            }
+
             if (!orgId || !window._salesOrgsCache) return;
             const selected = window._salesOrgsCache.find(o => o.id == orgId);
-            const contactInput = document.getElementById('visit-contact');
-            const phoneInput = document.getElementById('visit-phone');
             if (selected) {
                 if (contactInput) {
                     contactInput.placeholder = selected.contact_person ? `አስቀድሞ የተመዘገበ፡ ${selected.contact_person}` : 'ያነጋገሩት ኃላፊ ስም';
                 }
                 if (phoneInput) {
-                    phoneInput.placeholder = selected.phone ? `አስቀድሞ የተመዘገበ፡ ${selected.phone}` : 'ስልክ ቁጥር';
+                    phoneInput.placeholder = selected.phone ? `አስቀድሞ የተመዘገበ፡ ${selected.phone}` : '0911...';
                 }
             }
         }
@@ -11341,7 +11411,11 @@
                                 ${orgs.length > 0 ? `
                                     <select id="visit-org" onchange="handleSalesVisitOrgChange(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold mb-2">
                                         ${orgs.map(o => `<option value="${o.id}">${o.name} (${o.industry || 'ተቋም'}) - ${o.address || 'አዲስ አበባ'}</option>`).join('')}
+                                        <option value="new">+ አዲስ ድርጅት አካትት...</option>
                                     </select>
+                                    <div id="visit-new-org-row" class="hidden mb-2">
+                                        <input type="text" id="visit-new-org-name" placeholder="የአዲሱ ድርጅት ስም (ለምሳሌ፡ አቢሲንያ ሆቴል)" class="w-full bg-slate-800 border border-cyan-500/50 rounded-xl px-3 py-2 text-white">
+                                    </div>
                                 ` : `
                                     <input type="text" id="visit-new-org-name" required placeholder="የድርጅቱ ስም (ለምሳሌ፡ አቢሲንያ ሆቴል)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white mb-2">
                                 `}
@@ -11352,8 +11426,8 @@
                                     <input type="text" id="visit-contact" placeholder="${defaultContactPlaceholder}" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
                                 </div>
                                 <div>
-                                    <label class="block text-slate-400 mb-1">ስልክ ቁጥር <span class="text-slate-500 font-normal text-[10px]">(አማራጭ - ከተቀየረ)</span></label>
-                                    <input type="tel" id="visit-phone" placeholder="${defaultPhonePlaceholder}" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+                                    <label id="visit-phone-label" class="block text-slate-400 mb-1">ስልክ ቁጥር ${orgs.length === 0 ? '<span class="text-red-400 font-bold">*</span>' : '<span class="text-slate-500 font-normal text-[10px]">(አማራጭ - ከተቀየረ)</span>'}</label>
+                                    <input type="tel" id="visit-phone" ${orgs.length === 0 ? 'required' : ''} placeholder="${orgs.length === 0 ? '09xxxxxxxx (አስገዳጅ)' : defaultPhonePlaceholder}" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
@@ -11400,7 +11474,7 @@
                 let contact = document.getElementById('visit-contact')?.value.trim();
                 let phone = document.getElementById('visit-phone')?.value.trim();
 
-                if (!orgId) {
+                if (!orgId || orgId === 'new') {
                     const orgNameInput = document.getElementById('visit-new-org-name');
                     const orgName = orgNameInput ? orgNameInput.value.trim() : 'ተቋም';
                     // Batch 11a: never create an organization on the fake
@@ -12481,7 +12555,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-slate-300 font-bold mb-1">የመነሻ ዋጋ (Base Price) *</label>
-                                    <input type="number" id="sub-base-price" required min="100" placeholder="ለምሳሌ፡ 2000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono">
+                                    <input type="number" id="sub-base-price" required min="100" placeholder="ለምሳሌ፡ 2000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white">
                                 </div>
                             </div>
 

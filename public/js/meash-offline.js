@@ -28,6 +28,9 @@ class MeashOfflineEngine {
         this.setupNetworkListeners();
         this.updateOnlineStatus();
 
+        // Perform an immediate connectivity check on startup
+        this.checkConnectivity().catch(() => {});
+
         if (this.isOnline) {
             setTimeout(() => this.syncQueue(), 1500);
         }
@@ -93,34 +96,59 @@ class MeashOfflineEngine {
         });
     }
 
+    setOnlineState(online) {
+        const changed = (this.isOnline !== online);
+        this.isOnline = online;
+        if (changed) {
+            this.updateOnlineStatus();
+            if (online) {
+                this.syncQueue();
+            }
+        }
+    }
+
+    async checkConnectivity() {
+        if (!navigator.onLine) {
+            this.setOnlineState(false);
+            return false;
+        }
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch('/api/ping', {
+                method: 'GET',
+                cache: 'no-cache',
+                headers: { 'Accept': 'application/json' },
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            if (res.ok) {
+                this.setOnlineState(true);
+                return true;
+            }
+        } catch (_) {}
+        // If fetch failed but navigator says online, don't hastily declare offline unless navigator also dropped
+        if (!navigator.onLine) {
+            this.setOnlineState(false);
+            return false;
+        }
+        return this.isOnline;
+    }
+
     setupNetworkListeners() {
         window.addEventListener('online', () => {
-            this.isOnline = true;
-            this.updateOnlineStatus();
-            this.syncQueue();
+            this.checkConnectivity();
         });
 
         window.addEventListener('offline', () => {
-            this.isOnline = false;
-            this.updateOnlineStatus();
+            this.setOnlineState(false);
         });
 
         setInterval(() => {
             if (navigator.onLine) {
-                fetch('/api/ping', { method: 'GET', cache: 'no-cache' })
-                    .then(res => {
-                        if (res.ok && !this.isOnline) {
-                            this.isOnline = true;
-                            this.updateOnlineStatus();
-                            this.syncQueue();
-                        }
-                    })
-                    .catch(() => {
-                        if (this.isOnline) {
-                            this.isOnline = false;
-                            this.updateOnlineStatus();
-                        }
-                    });
+                this.checkConnectivity();
+            } else if (this.isOnline) {
+                this.setOnlineState(false);
             }
         }, 15000);
     }
