@@ -10357,13 +10357,6 @@
                 input.value = '';
             }
         }
-                refreshPhotosTab();
-            } catch (err) {
-                alert(err.message);
-            } finally {
-                input.value = '';
-            }
-        }
         // ==========================================
         window._calendarView = window._calendarView || 'all';
         window._calendarSource = window._calendarSource || '';
