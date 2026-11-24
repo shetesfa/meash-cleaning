@@ -1619,37 +1619,12 @@
         $beforeAfterPairs[] = ['id' => $pid, 'before' => $roles['before'], 'after' => $roles['after']];
       }
     }
-    if (empty($beforeAfterPairs)) {
-      $beforeAfterPairs[] = [
-        'id' => 'demo-sofa',
-        'before' => (object)[
-          'url' => 'sofa-carpet-steam.jpg',
-          'title_en' => 'Sofa steam clean — Before',
-          'title_am' => 'የሶፋ ስቲም እጥበት — ከዚህ በፊት',
-        ],
-        'after' => (object)[
-          'url' => 'sofa-steam.jpg',
-          'title_en' => 'Sofa steam clean — After',
-          'title_am' => 'የሶፋ ስቲም እጥበት — ከዚህ በኋላ',
-        ],
-      ];
-    }
+    // No demo pair: when the admin has no Before/After pairs, the
+    // section stays hidden (RedesignTest R6). A hardcoded demo pair
+    // would resurrect deleted photos and show a sofa the business
+    // never cleaned — delete means delete.
   } catch (\Throwable $e) {
-    $beforeAfterPairs = [
-      [
-        'id' => 'demo-sofa',
-        'before' => (object)[
-          'url' => 'sofa-carpet-steam.jpg',
-          'title_en' => 'Sofa steam clean — Before',
-          'title_am' => 'የሶፋ ስቲም እጥበት — ከዚህ በፊት',
-        ],
-        'after' => (object)[
-          'url' => 'sofa-steam.jpg',
-          'title_en' => 'Sofa steam clean — After',
-          'title_am' => 'የሶፋ ስቲም እጥበት — ከዚህ በኋላ',
-        ],
-      ],
-    ];
+    $beforeAfterPairs = [];
   }
   // Responsive images: local gallery JPGs have -800.webp / -1600.webp
   // variants on disk (quality ~80). A local file renders as <picture>
@@ -2140,7 +2115,7 @@
         </div>
       </article>
       <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
-        @php $bizPhoto = $servicePhoto['post_construction'] ?? 'post-construction.jpg'; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Post-Construction Handover & Long-Term Cleaning SLAs'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Post-Construction Handover & Long-Term Cleaning SLAs'; @endphp
+        @php $bizPhoto = $servicePhoto['post_construction'] ?? null; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Post-Construction Handover & Long-Term Cleaning SLAs'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Post-Construction Handover & Long-Term Cleaning SLAs'; @endphp
         @if($bizPhoto)<div class="ms-ph">{!! $responsiveImg($bizPhoto, $bizAltAm, $bizAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>@endif
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
@@ -2287,8 +2262,7 @@
         <span class="ms-num font-serif">03.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">በትኩስነቱ ይደሰቱ</span><span data-lang-block="en">Enjoy the freshness</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">እንጨርሳለን፣ እርስዎ ይፈትሹ። ንጹህ ወለሎች፣ የሚያብረቀርቅ መስታወት እና እንደ አዲስ የሚሸት ቦታ።</span><span data-lang-block="en">We finish, you inspect. Spotless floors, shining glass and a space that smells new again.</span></p>
-        @php $step3Photo = $featurePhotos[2] ?? ['file' => 'living-room.jpg', 'am' => 'በትኩስነቱ ይደሰቱ — ንጹህና ያማረ ቦታ', 'en' => 'Enjoy the freshness — pristine clean space']; @endphp
-        <div class="ms-ph">{!! $responsiveImg($step3Photo['file'], $step3Photo['am'], $step3Photo['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>
+        @if(isset($featurePhotos[2]))<div class="ms-ph">{!! $responsiveImg($featurePhotos[2]['file'], $featurePhotos[2]['am'], $featurePhotos[2]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>@endif
       </div>
     </div>
   </div>
