@@ -111,7 +111,18 @@ Route::get('/sitemap.xml', function () {
     return response($xml, 200)->header('Content-Type', 'application/xml');
 });
 
-// 5. Fallback route: genuine website section URLs (nav links,
+// 5. Static /storage fallback to serve uploads reliably even if public/storage symlink is missing on Plesk
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+    if (!file_exists($filePath) || !is_file($filePath)) {
+        abort(404);
+    }
+    return response()->file($filePath, [
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where('path', '.*');
+
+// 6. Fallback route: genuine website section URLs (nav links,
 //    bookmarks, old links) still serve the single-page site — they are
 //    real sections, not unknown paths. Every other unregistered path
 //    404s, so garbage URLs like /toggle-status are never indexed by

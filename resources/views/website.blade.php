@@ -1039,11 +1039,11 @@
   }
 
   /* ============ MEASH MODERN (approved sample) — hero 3D slider, photo service cards, 3-step, gallery ============ */
-  .ms-hero-panel { background: linear-gradient(160deg, #0A2A4A 0%, #061A30 78%); border-radius: 1.25rem; overflow: hidden; position: relative; box-shadow: 0 25px 50px rgba(6,26,48,.35); }
-  .ms-stage { position: relative; height: 520px; perspective: 1400px; outline: none; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
+  .ms-hero-panel { background: linear-gradient(160deg, #0A2A4A 0%, #061A30 78%); border-radius: 1.25rem; overflow: hidden; position: relative; box-shadow: 0 25px 50px rgba(6,26,48,.35); width: 100%; }
+  .ms-stage { position: relative; height: 520px; perspective: 1400px; outline: none; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; width: 100%; overflow: hidden; }
   .ms-stage.ms-dragging { cursor: grabbing; }
   .ms-stage.ms-dragging .ms-slide { transition: none; }
-  .ms-slide { position: absolute; top: 50%; left: 50%; width: min(302px, 64vw); aspect-ratio: 3/4; border-radius: 22px; overflow: hidden; background: #0d2c49; box-shadow: 0 30px 60px rgba(0,0,0,.45); transition: transform .65s cubic-bezier(.22,.9,.28,1), opacity .65s ease, filter .65s ease; will-change: transform; cursor: pointer; border: 1px solid rgba(255,255,255,.14); margin: 0; }
+  .ms-slide { position: absolute; top: 50%; left: 50%; width: min(320px, 70vw); aspect-ratio: 3/4; border-radius: 22px; overflow: hidden; background: #0d2c49; box-shadow: 0 30px 60px rgba(0,0,0,.45); transition: transform .65s cubic-bezier(.22,.9,.28,1), opacity .65s ease, filter .65s ease; will-change: transform; cursor: pointer; border: 1px solid rgba(255,255,255,.14); margin: 0; }
   /* Responsive <picture> wrappers (P10): the picture must fill its
      frame exactly like the bare <img> did, or the img's height:100%
      has nothing to resolve against. */
@@ -1083,6 +1083,8 @@
     .ms-svc-grid.ms-swipe { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 10px; scrollbar-width: thin; }
     .ms-svc-grid.ms-swipe .ms-svc { flex: 0 0 78%; scroll-snap-align: start; }
   }
+  /* Fix: Specificity for tab hiding across mobile and desktop */
+  #tab-business.hidden, #tab-home.hidden, .ms-svc-grid.hidden { display: none !important; }
   /* R4: service tabs (Business / Home). */
   .ms-tab-btn { min-height: 48px; padding: .75rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: .875rem; color: #0F172A; background: #fff; border: 1px solid rgba(15,23,42,.12); cursor: pointer; transition: background .2s ease, color .2s ease, border-color .2s ease; display: inline-flex; align-items: center; gap: .5rem; }
   .ms-tab-btn[aria-selected="true"] { background: #3E8ECC; border-color: #3E8ECC; color: #fff; box-shadow: 0 4px 12px rgba(62,142,204,.35); }
@@ -1135,7 +1137,7 @@
   /* R6: before/after comparison slider. */
   .ms-ba { position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 22px rgba(8,42,74,.10); aspect-ratio: 16/10; background: #0d2c49; }
   .ms-ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-  .ms-ba .ms-ba-after { clip-path: inset(0 0 0 var(--ba-pos, 50%)); }
+  .ms-ba .ms-ba-after { clip-path: inset(0 0 0 var(--ba-pos, 50%)); -webkit-clip-path: inset(0 0 0 var(--ba-pos, 50%)); }
   .ms-ba .ms-ba-tag { position: absolute; top: 12px; z-index: 2; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: rgba(3,14,25,.55); padding: 4px 10px; border-radius: 999px; }
   .ms-ba .ms-ba-tag-before { left: 12px; }
   .ms-ba .ms-ba-tag-after { right: 12px; }
@@ -1617,8 +1619,37 @@
         $beforeAfterPairs[] = ['id' => $pid, 'before' => $roles['before'], 'after' => $roles['after']];
       }
     }
+    if (empty($beforeAfterPairs)) {
+      $beforeAfterPairs[] = [
+        'id' => 'demo-sofa',
+        'before' => (object)[
+          'url' => 'sofa-carpet-steam.jpg',
+          'title_en' => 'Sofa steam clean — Before',
+          'title_am' => 'የሶፋ ስቲም እጥበት — ከዚህ በፊት',
+        ],
+        'after' => (object)[
+          'url' => 'sofa-steam.jpg',
+          'title_en' => 'Sofa steam clean — After',
+          'title_am' => 'የሶፋ ስቲም እጥበት — ከዚህ በኋላ',
+        ],
+      ];
+    }
   } catch (\Throwable $e) {
-    $beforeAfterPairs = [];
+    $beforeAfterPairs = [
+      [
+        'id' => 'demo-sofa',
+        'before' => (object)[
+          'url' => 'sofa-carpet-steam.jpg',
+          'title_en' => 'Sofa steam clean — Before',
+          'title_am' => 'የሶፋ ስቲም እጥበት — ከዚህ በፊት',
+        ],
+        'after' => (object)[
+          'url' => 'sofa-steam.jpg',
+          'title_en' => 'Sofa steam clean — After',
+          'title_am' => 'የሶፋ ስቲም እጥበት — ከዚህ በኋላ',
+        ],
+      ],
+    ];
   }
   // Responsive images: local gallery JPGs have -800.webp / -1600.webp
   // variants on disk (quality ~80). A local file renders as <picture>
@@ -2109,7 +2140,7 @@
         </div>
       </article>
       <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
-        @php $bizPhoto = $servicePhoto['facilities_general'] ?? null; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Long-Term Cleaning SLAs'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Long-Term Cleaning SLAs'; @endphp
+        @php $bizPhoto = $servicePhoto['post_construction'] ?? 'post-construction.jpg'; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Post-Construction Handover & Long-Term Cleaning SLAs'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Post-Construction Handover & Long-Term Cleaning SLAs'; @endphp
         @if($bizPhoto)<div class="ms-ph">{!! $responsiveImg($bizPhoto, $bizAltAm, $bizAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>@endif
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
@@ -2256,7 +2287,8 @@
         <span class="ms-num font-serif">03.</span>
         <h3 class="font-bold text-lg text-navy dark:text-white mt-2 mb-1.5"><span data-lang-block="am">በትኩስነቱ ይደሰቱ</span><span data-lang-block="en">Enjoy the freshness</span></h3>
         <p class="text-navy/65 dark:text-slate-300 text-sm"><span data-lang-block="am">እንጨርሳለን፣ እርስዎ ይፈትሹ። ንጹህ ወለሎች፣ የሚያብረቀርቅ መስታወት እና እንደ አዲስ የሚሸት ቦታ።</span><span data-lang-block="en">We finish, you inspect. Spotless floors, shining glass and a space that smells new again.</span></p>
-        @if(isset($featurePhotos[2]))<div class="ms-ph">{!! $responsiveImg($featurePhotos[2]['file'], $featurePhotos[2]['am'], $featurePhotos[2]['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>@endif
+        @php $step3Photo = $featurePhotos[2] ?? ['file' => 'living-room.jpg', 'am' => 'በትኩስነቱ ይደሰቱ — ንጹህና ያማረ ቦታ', 'en' => 'Enjoy the freshness — pristine clean space']; @endphp
+        <div class="ms-ph">{!! $responsiveImg($step3Photo['file'], $step3Photo['am'], $step3Photo['en'], ['sizes' => '(max-width: 820px) 100vw, 33vw']) !!}</div>
       </div>
     </div>
   </div>
@@ -4015,8 +4047,14 @@
     });
     var biz = document.getElementById('tab-business');
     var home = document.getElementById('tab-home');
-    if (biz) biz.classList.toggle('hidden', tab !== 'business');
-    if (home) home.classList.toggle('hidden', tab !== 'home');
+    if (biz) {
+      biz.classList.toggle('hidden', tab !== 'business');
+      biz.style.display = (tab === 'business' ? '' : 'none');
+    }
+    if (home) {
+      home.classList.toggle('hidden', tab !== 'home');
+      home.style.display = (tab === 'home' ? '' : 'none');
+    }
   }
 
   function selectServiceForBooking(svc, id){
@@ -5238,7 +5276,7 @@
       function layout() {
         slides.forEach(function (s, i) {
           var off = i - pos, ao = Math.abs(off);
-          var x = off * 56, z = -ao * 190, r = Math.max(-34, Math.min(34, -off * 34));
+          var x = off * 52, z = -ao * 190, r = Math.max(-34, Math.min(34, -off * 34));
           s.style.transform = 'translate(-50%,-50%) translateX(' + x + '%) translateZ(' + z + 'px) rotateY(' + r + 'deg)';
           s.style.zIndex = String(20 - Math.floor(ao));
           s.style.opacity = ao > 2.5 ? '0' : (ao <= 1 ? '1' : String(1 - (ao - 1) * 0.55));

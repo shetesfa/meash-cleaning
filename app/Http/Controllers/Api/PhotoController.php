@@ -88,7 +88,7 @@ class PhotoController extends Controller
         if (empty($url)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Choose a photo file or paste an image URL.',
+                'message' => 'Choose a photo file or enter an image URL / እባክዎ የፎቶ ፋይል ይምረጡ ወይም URL ያስገቡ።',
             ], 422);
         }
 
@@ -104,9 +104,11 @@ class PhotoController extends Controller
             'sort_order' => $validated['sort_order'] ?? (int) (Photo::where('section', $validated['section'])->max('sort_order') ?? -1) + 1,
         ]);
 
+        Photo::forgetHomepageCache();
+
         return response()->json([
             'success' => true,
-            'message' => 'Photo added as Not added. Use “Add to site” to publish it.',
+            'message' => 'Photo added successfully as Not added. Click “Add to site” to publish. / ፎቶው ተጨምሯል፤ በጣቢያው ላይ ለማሳየት “Add to site” ን ጠቅ ያድርጉ።',
             'photo' => $this->present($photo),
         ], 201);
     }
@@ -234,10 +236,66 @@ class PhotoController extends Controller
     {
         $photo->status = $photo->isAdded() ? Photo::STATUS_NOT_ADDED : Photo::STATUS_ADDED;
         $photo->save();
+        Photo::forgetHomepageCache();
 
         return response()->json([
             'success' => true,
-            'message' => $photo->isAdded() ? 'Photo is now Added — it shows on the website.' : 'Photo is now Not added — hidden from the website.',
+            'message' => $photo->isAdded() ? 'Photo is now Added — visible on the website / ፎቶው በድረ-ገጹ ላይ ይታያል ✓' : 'Photo is now Not added — hidden from the website / ፎቶው ከድረ-ገጹ ተደብቋል',
+            'photo' => $this->present($photo),
+        ]);
+    }
+
+    /**
+     * Move photo up or down within its section.
+     */
+    public function reorder(Request $request, Photo $photo): JsonResponse
+    {
+        $direction = $request->input('direction', 'up'); // 'up' or 'down'
+        $siblings = Photo::where('section', $photo->section)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        $index = $siblings->search(fn ($p) => $p->id === $photo->id);
+        if ($index === false) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Photo not found in section',
+            ], 404);
+        }
+
+        $swapIndex = ($direction === 'up') ? $index - 1 : $index + 1;
+        if ($swapIndex < 0 || $swapIndex >= $siblings->count()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Photo is already at the boundary',
+                'photo' => $this->present($photo),
+            ]);
+        }
+
+        $other = $siblings[$swapIndex];
+
+        // Ensure orders are strictly distinct integers
+        $currentOrder = $photo->sort_order;
+        $otherOrder = $other->sort_order;
+        if ($currentOrder === $otherOrder) {
+            foreach ($siblings as $i => $item) {
+                $item->update(['sort_order' => $i * 10]);
+            }
+            $photo->refresh();
+            $other->refresh();
+            $currentOrder = $photo->sort_order;
+            $otherOrder = $other->sort_order;
+        }
+
+        $photo->update(['sort_order' => $otherOrder]);
+        $other->update(['sort_order' => $currentOrder]);
+
+        Photo::forgetHomepageCache();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Photo reordered successfully / የፎቶ ቅደም ተከተል ተስተካክሏል',
             'photo' => $this->present($photo),
         ]);
     }
@@ -251,10 +309,11 @@ class PhotoController extends Controller
         $cloudinary->deleteByUrl($photo->url);
         $this->deleteLocalFile($photo->url);
         $photo->delete();
+        Photo::forgetHomepageCache();
 
         return response()->json([
             'success' => true,
-            'message' => 'Photo deleted.',
+            'message' => 'Photo deleted successfully / ፎቶው ሙሉ በሙሉ ተሰርዟል',
         ]);
     }
 
@@ -279,11 +338,19 @@ class PhotoController extends Controller
     {
         $dir = storage_path('app/public/gallery');
         if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
+            @mkdir($dir, 0775, true);
         }
-        $extension = strtolower($file->getClientOriginalExtension());
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'jpg');
         $name = 'upload-' . time() . '-' . Str::random(8) . '.' . $extension;
         $file->move($dir, $name);
+
+        // Best effort: ensure public/storage symlink is linked if permitted
+        try {
+            $symlink = public_path('storage');
+            if (!file_exists($symlink)) {
+                @symlink(storage_path('app/public'), $symlink);
+            }
+        } catch (\Throwable) {}
 
         return '/storage/gallery/' . $name;
     }

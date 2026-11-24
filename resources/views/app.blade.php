@@ -982,6 +982,10 @@
                 headers['X-CSRF-TOKEN'] = csrfToken;
             }
 
+            if (options.body instanceof FormData) {
+                delete headers['Content-Type'];
+            }
+
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
@@ -8773,8 +8777,16 @@
                                     <tr class="hover:bg-slate-800/50 transition">
                                         <td class="p-3.5">
                                             ${s.photo_url
-                                                ? `<img src="${escapeHtml(s.photo_url)}" alt="" class="h-14 w-20 object-cover rounded-lg border border-slate-700">`
-                                                : `<div class="h-14 w-20 flex flex-col items-center justify-center gap-0.5 rounded-lg border border-dashed border-slate-700 text-slate-500 text-center px-1"><span class="text-[10px] font-bold">ፎቶ የለም</span><span class="text-[9px] leading-tight">Photos → Service cards</span></div>`}
+                                                ? `<div class="relative group inline-block">
+                                                    <img src="${escapeHtml(s.photo_url)}" alt="" class="h-14 w-20 object-cover rounded-lg border border-slate-700 shadow">
+                                                    <button type="button" onclick="openEditServicePhotoModal(${s.id})" title="ፎቶ ቀይር" class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition rounded-lg flex items-center justify-center text-cyan-300 font-bold text-[11px] cursor-pointer">
+                                                        ✎ ቀይር
+                                                    </button>
+                                                   </div>`
+                                                : `<button type="button" onclick="openEditServicePhotoModal(${s.id})" class="h-14 w-20 flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-cyan-500/50 hover:border-cyan-400 bg-cyan-950/20 text-cyan-400 hover:text-cyan-300 text-center px-1 transition cursor-pointer">
+                                                    <i data-lucide="image-plus" class="w-4 h-4"></i>
+                                                    <span class="text-[9px] font-bold">+ ፎቶ ምረጥ</span>
+                                                   </button>`}
                                         </td>
                                         <td class="p-3.5 font-mono text-cyan-400 font-bold">${s.code}</td>
                                         <td class="p-3.5">
@@ -8797,6 +8809,9 @@
                                         </td>
                                         <td class="p-3.5 text-right">
                                             <div class="flex items-center justify-end gap-1.5">
+                                                <button type="button" onclick="openEditServicePhotoModal(${s.id})" title="የአገልግሎት ፎቶ ምረጥ/ቀይር" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-purple-500/30 text-purple-400 hover:bg-purple-950 transition cursor-pointer flex items-center gap-1">
+                                                    <i data-lucide="image" class="w-3 h-3"></i> ፎቶ
+                                                </button>
                                                 <button type="button" onclick="openEditServiceNameModal(${s.id})" title="የአገልግሎት ስም አስተካክል" class="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-950 transition cursor-pointer">
                                                     ✎ ስም
                                                 </button>
@@ -8934,16 +8949,176 @@
             }
         }
 
+        function openEditServicePhotoModal(id) {
+            const s = cmsServicesData.find(x => x.id === id);
+            if (!s) {
+                showToast('አገልግሎቱን ማግኘት አልተቻለም።', 'error');
+                return;
+            }
+            const currentImg = s.photo_url || '';
+            const existingPhotos = Array.isArray(cmsPhotosData) ? cmsPhotosData : [];
+            const photoPickers = existingPhotos.slice(0, 16).map(p => `
+                <div onclick="selectServiceModalPhoto('${escapeHtml(p.src || p.url)}')" class="cursor-pointer group relative rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 aspect-video bg-slate-950 transition">
+                    <img src="${escapeHtml(p.src || p.url)}" alt="" class="w-full h-full object-cover">
+                    <span class="absolute inset-0 bg-cyan-600/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[10px] font-bold">ምረጥ</span>
+                </div>
+            `).join('');
+
+            const modalHtml = `
+                <div id="cms-edit-service-photo-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-4 text-white max-h-[90vh] overflow-y-auto">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                            <h3 class="font-bold text-base flex items-center gap-2">
+                                <i data-lucide="image" class="w-4 h-4 text-cyan-400"></i>
+                                <span>የአገልግሎት ፎቶ ማስተካከያ (${escapeHtml(s.name_am || s.name_en)})</span>
+                            </h3>
+                            <button type="button" onclick="document.getElementById('cms-edit-service-photo-modal').remove()" class="text-slate-400 hover:text-white cursor-pointer">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <form onsubmit="saveServicePhoto(event, ${s.id})" class="space-y-4 text-xs">
+                            <div class="p-3 bg-slate-950 rounded-2xl border border-slate-800 flex items-center gap-3">
+                                <div id="svc-photo-preview-box" class="w-24 h-16 rounded-xl border border-slate-700 overflow-hidden bg-slate-900 flex items-center justify-center shrink-0">
+                                    ${currentImg ? `<img id="svc-photo-preview" src="${escapeHtml(currentImg)}" class="w-full h-full object-cover">` : `<span id="svc-photo-preview" class="text-slate-500 text-[10px]">ፎቶ የለም</span>`}
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-bold text-white text-xs">${escapeHtml(s.name_am || s.name_en)} (${escapeHtml(s.code)})</div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">ይህ ፎቶ በዋናው ድረ-ገጽ የአገልግሎት ካርዶች ላይ በቀጥታ ይታያል።</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-slate-300 font-bold block mb-1">1. አዲስ የፎቶ ፋይል ጫን (Upload Photo File)</label>
+                                <input type="file" id="svc-edit-file" accept="image/*" onchange="previewSelectedServiceFile(this)" class="w-full text-xs text-slate-300 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:bg-cyan-600 file:text-white file:font-bold file:text-xs file:cursor-pointer">
+                            </div>
+
+                            <div>
+                                <label class="text-slate-300 font-bold block mb-1">2. ወይም የፎቶ URL ለጥፍ (or Paste Image URL)</label>
+                                <input type="text" id="svc-edit-url" value="${escapeHtml(currentImg)}" placeholder="/images/gallery/... ወይም https://..." oninput="previewServiceUrl(this.value)" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-xs focus:border-cyan-400">
+                            </div>
+
+                            ${photoPickers ? `
+                            <div>
+                                <label class="text-slate-300 font-bold block mb-1.5">3. ወይም ከነባር የጋለሪ ፎቶዎች ምረጥ (Pick from Gallery):</label>
+                                <div class="grid grid-cols-4 gap-2 p-2 bg-slate-950/70 border border-slate-800 rounded-2xl max-h-36 overflow-y-auto">
+                                    ${photoPickers}
+                                </div>
+                            </div>
+                            ` : ''}
+
+                            <div class="pt-2 flex justify-between items-center gap-2">
+                                <button type="button" onclick="clearServicePhotoInput()" class="text-amber-400 hover:text-amber-300 text-xs font-bold cursor-pointer">ፎቶ አስወግድ</button>
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="document.getElementById('cms-edit-service-photo-modal').remove()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold cursor-pointer">ይቅር</button>
+                                    <button type="submit" id="btn-save-svc-photo" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold cursor-pointer shadow-lg shadow-cyan-600/20">ፎቶውን መዝግብ</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            lucide.createIcons();
+        }
+
+        function previewSelectedServiceFile(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const box = document.getElementById('svc-photo-preview-box');
+                    if (box) box.innerHTML = `<img id="svc-photo-preview" src="${e.target.result}" class="w-full h-full object-cover">`;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function previewServiceUrl(url) {
+            const box = document.getElementById('svc-photo-preview-box');
+            if (box) {
+                if (url.trim()) {
+                    box.innerHTML = `<img id="svc-photo-preview" src="${escapeHtml(url.trim())}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<span class=\"text-red-400 text-[10px]\">ስህተት</span>'">`;
+                } else {
+                    box.innerHTML = `<span class="text-slate-500 text-[10px]">ፎቶ የለም</span>`;
+                }
+            }
+        }
+
+        function selectServiceModalPhoto(url) {
+            const urlInput = document.getElementById('svc-edit-url');
+            if (urlInput) urlInput.value = url;
+            const fileInput = document.getElementById('svc-edit-file');
+            if (fileInput) fileInput.value = '';
+            previewServiceUrl(url);
+        }
+
+        function clearServicePhotoInput() {
+            const urlInput = document.getElementById('svc-edit-url');
+            if (urlInput) urlInput.value = '';
+            const fileInput = document.getElementById('svc-edit-file');
+            if (fileInput) fileInput.value = '';
+            previewServiceUrl('');
+        }
+
+        async function saveServicePhoto(e, id) {
+            e.preventDefault();
+            const fileInput = document.getElementById('svc-edit-file');
+            const urlInput = document.getElementById('svc-edit-url');
+            const btn = document.getElementById('btn-save-svc-photo');
+            btn.disabled = true;
+            btn.innerText = 'በመመዝገብ ላይ...';
+
+            try {
+                let res;
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    const fd = new FormData();
+                    fd.append('photo', fileInput.files[0]);
+                    fd.append('_method', 'PUT');
+                    res = await apiFetch(`/api/services/${id}`, { method: 'POST', body: fd });
+                } else {
+                    const photoUrl = urlInput ? urlInput.value.trim() : '';
+                    res = await apiFetch(`/api/services/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ photo_url: photoUrl })
+                    });
+                }
+
+                const d = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    showToast('የአገልግሎት ፎቶው በተሳካ ሁኔታ ተዘምኗል!', 'success');
+                    document.getElementById('cms-edit-service-photo-modal')?.remove();
+                    await loadCmsTabData();
+                } else {
+                    showToast('ስህተት፡ ' + (d.message || 'ፎቶ ማስተካከል አልተቻለም'), 'error');
+                }
+            } catch (err) {
+                showToast('የግንኙነት ችግር፡ ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'ፎቶውን መዝግብ';
+            }
+        }
+
         function openAddServiceModal() {
+            const existingPhotos = Array.isArray(cmsPhotosData) ? cmsPhotosData : [];
+            const photoPickers = existingPhotos.slice(0, 12).map(p => `
+                <div onclick="document.getElementById('new-svc-photo-url').value='${escapeHtml(p.src || p.url)}'" class="cursor-pointer group relative rounded-xl overflow-hidden border border-slate-700 hover:border-cyan-400 aspect-video bg-slate-950 transition">
+                    <img src="${escapeHtml(p.src || p.url)}" alt="" class="w-full h-full object-cover">
+                    <span class="absolute inset-0 bg-cyan-600/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[9px] font-bold">ምረጥ</span>
+                </div>
+            `).join('');
+
             const modalHtml = `
                 <div id="cms-add-service-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 text-white">
+                    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-4 text-white max-h-[90vh] overflow-y-auto">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                             <h3 class="font-bold text-base flex items-center gap-2">
                                 <i data-lucide="plus-circle" class="w-4 h-4 text-cyan-400"></i>
                                 <span>አዲስ አገልግሎት መመዝገቢያ</span>
                             </h3>
-              <button type="button" onclick="document.getElementById('cms-add-service-modal').remove()" class="text-slate-400 hover:text-white"></button>
+                            <button type="button" onclick="document.getElementById('cms-add-service-modal').remove()" class="text-slate-400 hover:text-white cursor-pointer">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
                         </div>
                         <form onsubmit="submitNewService(event)" class="space-y-3 text-xs">
                             <div>
@@ -8972,9 +9147,30 @@
                                 <label class="text-slate-400 block mb-1">አጭር መግለጫ (Description)</label>
                                 <textarea id="new-svc-desc" rows="2" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white"></textarea>
                             </div>
+
+                            <div class="p-3 bg-slate-950 rounded-2xl border border-slate-800 space-y-2">
+                                <label class="text-cyan-400 font-bold block">የአገልግሎት ፎቶ ምረጥ (Service Card Photo)</label>
+                                <div>
+                                    <label class="text-slate-400 block mb-1">ፎቶ ፋይል (File Upload)</label>
+                                    <input type="file" id="new-svc-photo-file" accept="image/*" class="w-full text-xs text-slate-300 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-cyan-600 file:text-white file:font-bold file:text-xs">
+                                </div>
+                                <div>
+                                    <label class="text-slate-400 block mb-1">ወይም ፎቶ URL ለጥፍ (Photo URL)</label>
+                                    <input type="text" id="new-svc-photo-url" placeholder="https://... ወይም ከታች ካሉት ምረጥ" class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-xs focus:border-cyan-400">
+                                </div>
+                                ${photoPickers ? `
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block mb-1">ወይም ከጋለሪ ምረጥ (Click to choose):</span>
+                                    <div class="grid grid-cols-4 gap-1.5 max-h-24 overflow-y-auto">
+                                        ${photoPickers}
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+
                             <div class="pt-2 flex justify-end gap-2">
-                                <button type="button" onclick="document.getElementById('cms-add-service-modal').remove()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">ይቅር</button>
-                                <button type="submit" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold">አስቀምጥ</button>
+                                <button type="button" onclick="document.getElementById('cms-add-service-modal').remove()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold cursor-pointer">ይቅር</button>
+                                <button type="submit" id="btn-submit-new-svc" class="px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold cursor-pointer shadow-lg shadow-cyan-600/20">አስቀምጥ</button>
                             </div>
                         </form>
                     </div>
@@ -8986,33 +9182,66 @@
 
         async function submitNewService(e) {
             e.preventDefault();
-            const payload = {
-                code: document.getElementById('new-svc-code').value.trim().toLowerCase().replace(/\s+/g, '_'),
-                name_am: document.getElementById('new-svc-name-am').value.trim(),
-                name_en: document.getElementById('new-svc-name-en').value.trim(),
-                base_price: parseFloat(document.getElementById('new-svc-price').value),
-                unit: document.getElementById('new-svc-unit').value.trim(),
-                description_am: document.getElementById('new-svc-desc').value.trim(),
-                description_en: document.getElementById('new-svc-desc').value.trim(),
-                is_active: true
-            };
+            const btn = document.getElementById('btn-submit-new-svc');
+            btn.disabled = true;
+            btn.innerText = 'በመመዝገብ ላይ...';
+
+            const code = document.getElementById('new-svc-code').value.trim().toLowerCase().replace(/\s+/g, '_');
+            const nameAm = document.getElementById('new-svc-name-am').value.trim();
+            const nameEn = document.getElementById('new-svc-name-en').value.trim();
+            const basePrice = parseFloat(document.getElementById('new-svc-price').value);
+            const unit = document.getElementById('new-svc-unit').value.trim();
+            const desc = document.getElementById('new-svc-desc').value.trim();
+            const fileInput = document.getElementById('new-svc-photo-file');
+            const urlInput = document.getElementById('new-svc-photo-url');
+            const photoUrl = urlInput ? urlInput.value.trim() : '';
 
             try {
-                const res = await apiFetch('/api/services', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const d = await res.json();
-                if (res.ok) {
-                    alert('አዲሱ አገልግሎት በተሳካ ሁኔታ ተመዝግቧል!');
-                    document.getElementById('cms-add-service-modal')?.remove();
-                    loadCmsTabData();
+                let res;
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    const fd = new FormData();
+                    fd.append('code', code);
+                    fd.append('name_am', nameAm);
+                    fd.append('name_en', nameEn);
+                    fd.append('base_price', basePrice);
+                    fd.append('unit', unit);
+                    fd.append('description_am', desc);
+                    fd.append('description_en', desc);
+                    fd.append('is_active', '1');
+                    fd.append('photo', fileInput.files[0]);
+                    res = await apiFetch('/api/services', { method: 'POST', body: fd });
                 } else {
-                    alert('ስህተት፡ ' + (d.message || JSON.stringify(d.errors)));
+                    const payload = {
+                        code,
+                        name_am: nameAm,
+                        name_en: nameEn,
+                        base_price: basePrice,
+                        unit,
+                        description_am: desc,
+                        description_en: desc,
+                        is_active: true,
+                        photo_url: photoUrl || null
+                    };
+                    res = await apiFetch('/api/services', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                const d = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    showToast('አዲሱ አገልግሎት በተሳካ ሁኔታ ተመዝግቧል!', 'success');
+                    document.getElementById('cms-add-service-modal')?.remove();
+                    await loadCmsTabData();
+                } else {
+                    showToast('ስህተት፡ ' + (d.message || JSON.stringify(d.errors || {})), 'error');
                 }
             } catch (err) {
-                alert('የግንኙነት ችግር፡ ' + err.message);
+                showToast('የግንኙነት ችግር፡ ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'አስቀምጥ';
             }
         }
 
@@ -9886,13 +10115,15 @@
                 + '<option value="after"' + (p.role === 'after' ? ' selected' : '') + '>After</option>'
                 + '</select></div></div>'
                 + '<p class="text-[11px] text-slate-500 font-semibold">' + categoryLine + '</p>'
-                + '<div class="flex flex-wrap gap-1.5 pt-1">'
+                + '<div class="flex flex-wrap items-center gap-1.5 pt-1">'
                 + '<button type="button" onclick="savePhotoCaptions(' + p.id + ')" class="px-2.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[11px] rounded-lg cursor-pointer">Caption አስቀምጥ</button>'
                 + '<button type="button" onclick="togglePhotoStatus(' + p.id + ')" class="px-2.5 py-1.5 ' + (added ? 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700' : 'bg-emerald-600 hover:bg-emerald-500 text-white') + ' font-bold text-[11px] rounded-lg cursor-pointer">' + (added ? 'Hide from site' : 'Add to site') + '</button>'
                 + '<button type="button" onclick="document.getElementById(\'ph-change-' + p.id + '\').click()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] rounded-lg border border-slate-700 cursor-pointer">Change photo</button>'
+                + '<button type="button" onclick="reorderPhoto(' + p.id + ', \'up\')" title="ወደ ላይ ውሰድ (Move Up)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg border border-slate-700 cursor-pointer">↑ ወደ ላይ</button>'
+                + '<button type="button" onclick="reorderPhoto(' + p.id + ', \'down\')" title="ወደ ታች ውሰድ (Move Down)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg border border-slate-700 cursor-pointer">↓ ወደ ታች</button>'
                 + '<button type="button" onclick="deletePhoto(' + p.id + ', this)" class="px-2.5 py-1.5 bg-slate-800 hover:bg-red-900/60 text-red-300 font-bold text-[11px] rounded-lg border border-slate-700 cursor-pointer">Delete</button>'
                 + '</div>'
-                + '<p class="text-[11px] text-slate-500">Hide = ከጣቢያ ይደበቃል, ፎቶው አይሰረዝም • Delete = ሙሉ ለሙሉ ይሰረዛል (Hide hides it from the site without deleting it; Delete removes it permanently)</p>'
+                + '<p class="text-[11px] text-slate-500">Hide = ከጣቢያ ይደበቃል, ፎቶው አይሰረዝም • Delete = ሙሉ ለሙሉ ይሰረዛል • ↑/↓ = በገጹ ላይ የፎቶውን ቅደም ተከተል ይቀይራል</p>'
                 + '<input type="file" id="ph-change-' + p.id + '" accept="image/*" class="hidden" onchange="changePhotoFile(' + p.id + ', this)">'
                 + '</div></div>';
         }
@@ -9911,7 +10142,23 @@
                 cmsPhotosStorage = d.storage || 'local';
                 renderCmsPhotosTab(document.getElementById('cms-tab-content'));
             } catch (e) {
-                alert('ፎቶዎችን ማደስ አልተቻለም፡ ' + e.message);
+                showToast('ፎቶዎችን ማደስ አልተቻለም፡ ' + e.message, 'error');
+            }
+        }
+
+        async function reorderPhoto(id, direction) {
+            try {
+                const res = await apiFetch('/api/admin/website/photos/' + id + '/reorder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ direction })
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(d.message || ('Reorder failed (' + res.status + ')'));
+                showToast(d.message || 'የፎቶ ቅደም ተከተል ተስተካክሏል', 'success');
+                await refreshPhotosTab();
+            } catch (err) {
+                showToast('ስህተት፡ ' + err.message, 'error');
             }
         }
 
@@ -9923,14 +10170,20 @@
             try {
                 const res = await apiFetch('/api/admin/website/photos/' + id, {
                     method: 'PUT',
-                    body: JSON.stringify({ title_en: en ? en.value.trim() : null, title_am: am ? am.value.trim() : null, pair_id: pair ? (pair.value.trim() || null) : null, role: role ? (role.value || null) : null })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title_en: en ? en.value.trim() : null,
+                        title_am: am ? am.value.trim() : null,
+                        pair_id: pair ? (pair.value.trim() || null) : null,
+                        role: role ? (role.value || null) : null
+                    })
                 });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.message || ('Save failed (' + res.status + ')'));
-                alert('Caption ተቀምጧል!');
+                showToast('Caption እና የጥንድ መረጃው ተቀምጧል!', 'success');
                 refreshPhotosTab();
             } catch (err) {
-                alert(err.message);
+                showToast('ስህተት፡ ' + err.message, 'error');
             }
         }
 
@@ -9939,19 +10192,13 @@
                 const res = await apiFetch('/api/admin/website/photos/' + id + '/toggle-status', { method: 'POST' });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.message || ('Toggle failed (' + res.status + ')'));
+                showToast(d.message || 'ሁኔታው ተቀይሯል', 'success');
                 refreshPhotosTab();
             } catch (err) {
-                alert(err.message);
+                showToast('ስህተት፡ ' + err.message, 'error');
             }
         }
 
-        // Bulk "Add all" two-tap confirm. The armed state is a
-        // window-level timestamp (ADD_ALL_ARM_MS), so it survives any
-        // re-render of the Photos tab, and the render function above
-        // shows the armed button again after a re-render. The old
-        // code used a 4s timeout that silently disarmed before a slow
-        // second tap could land, so the confirm tap just re-armed and
-        // nothing ever published.
         const ADD_ALL_ARM_MS = 60000;
 
         function isAddAllArmed() {
@@ -9986,10 +10233,10 @@
                 const res = await apiFetch('/api/admin/website/photos/add-all', { method: 'POST' });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.message || ('Add all failed (' + res.status + ')'));
-                alert(d.message || 'Photos added to the site.');
+                showToast(d.message || 'Photos added to the site.', 'success');
                 refreshPhotosTab();
             } catch (err) {
-                alert(err.message);
+                showToast('ስህተት፡ ' + err.message, 'error');
             } finally {
                 btn.disabled = false;
             }
@@ -10014,15 +10261,13 @@
                 const res = await apiFetch('/api/admin/website/photos/' + id, { method: 'DELETE' });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.message || ('Delete failed (' + res.status + ')'));
+                showToast(d.message || 'ፎቶው ተሰርዟል', 'success');
                 refreshPhotosTab();
             } catch (err) {
-                alert(err.message);
+                showToast('ስህተት፡ ' + err.message, 'error');
             }
         }
 
-        // File uploads use raw fetch (apiFetch forces a JSON content type,
-        // which breaks multipart FormData). POST + _method=PUT lets
-        // Laravel read the multipart body on the update route.
         async function uploadNewPhoto(e) {
             e.preventDefault();
             const form = document.getElementById('ph-upload-form');
@@ -10030,34 +10275,62 @@
             const msg = document.getElementById('ph-upload-msg');
             const fd = new FormData(form);
             const file = fd.get('photo');
+            const urlVal = (fd.get('url') || '').trim();
+            const section = fd.get('section');
+            const serviceCode = fd.get('service_code');
+
+            if ((!file || !file.size) && !urlVal) {
+                showToast('እባክዎ የፎቶ ፋይል ይምረጡ ወይም የፎቶ URL ያስገቡ። (Please choose a photo file or enter an image URL)', 'error');
+                if (msg) {
+                    msg.className = 'text-xs font-bold text-red-400';
+                    msg.innerText = 'የፎቶ ፋይል ወይም URL ያስፈልጋል';
+                }
+                return;
+            }
+
+            if (section === 'service' && !serviceCode) {
+                showToast('የአገልግሎት ካርድ ፎቶ አገልግሎት መምረጥ ያስፈልገዋል። (Please select a service for service card photo)', 'error');
+                if (msg) {
+                    msg.className = 'text-xs font-bold text-red-400';
+                    msg.innerText = 'አገልግሎት ይምረጡ';
+                }
+                return;
+            }
+
             if (!file || !file.size) fd.delete('photo');
-            if (!fd.get('url')) fd.delete('url');
+            if (!urlVal) fd.delete('url');
+
             btn.disabled = true;
             btn.innerText = 'በመጫን ላይ...';
             try {
-                const token = await getAuthToken();
-                const res = await fetch('/api/admin/website/photos', {
+                const res = await apiFetch('/api/admin/website/photos', {
                     method: 'POST',
-                    headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token },
                     body: fd
                 });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.message || ('Upload failed (' + res.status + ')'));
-                msg.className = 'text-xs font-bold text-emerald-400';
-                msg.innerText = d.message || 'Photo added.';
+                showToast(d.message || 'ፎቶው በተሳካ ሁኔታ ተጨምሯል!', 'success');
+                if (msg) {
+                    msg.className = 'text-xs font-bold text-emerald-400';
+                    msg.innerText = d.message || 'Photo added.';
+                }
                 form.reset();
-                document.getElementById('ph-new-service-wrap').style.display = 'none';
-                // Pin the new photo at the top with a clear banner: show
-                // all photos (no filter) and scroll the banner into view.
+                const wrap = document.getElementById('ph-new-service-wrap');
+                if (wrap) wrap.style.display = 'none';
+
                 window._photosJustAdded = d.photo ? d.photo.id : null;
                 window._photosFilter = 'all';
                 window._photosSearch = '';
                 await refreshPhotosTab();
+
                 const justEl = document.getElementById('ph-just-added');
                 if (justEl) justEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } catch (err) {
-                msg.className = 'text-xs font-bold text-red-400';
-                msg.innerText = err.message;
+                showToast('ስህተት፡ ' + err.message, 'error');
+                if (msg) {
+                    msg.className = 'text-xs font-bold text-red-400';
+                    msg.innerText = err.message;
+                }
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'ፎቶ ጨምር (Add photo)';
@@ -10070,15 +10343,20 @@
             fd.append('photo', input.files[0]);
             fd.append('_method', 'PUT');
             try {
-                const token = await getAuthToken();
-                const res = await fetch('/api/admin/website/photos/' + id, {
+                const res = await apiFetch('/api/admin/website/photos/' + id, {
                     method: 'POST',
-                    headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token },
                     body: fd
                 });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.message || ('Change failed (' + res.status + ')'));
-                alert(d.message || 'ፎቶ ተቀይሯል!');
+                showToast(d.message || 'ፎቶ ተቀይሯል!', 'success');
+                refreshPhotosTab();
+            } catch (err) {
+                showToast('ስህተት፡ ' + err.message, 'error');
+            } finally {
+                input.value = '';
+            }
+        }
                 refreshPhotosTab();
             } catch (err) {
                 alert(err.message);

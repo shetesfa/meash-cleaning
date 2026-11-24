@@ -223,6 +223,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/photos/add-all', [PhotoController::class, 'addAll']);
         Route::match(['put', 'patch'], '/photos/{photo}', [PhotoController::class, 'update']);
         Route::post('/photos/{photo}/toggle-status', [PhotoController::class, 'toggleStatus']);
+        Route::post('/photos/{photo}/reorder', [PhotoController::class, 'reorder']);
         Route::delete('/photos/{photo}', [PhotoController::class, 'destroy']);
     });
 
