@@ -298,7 +298,7 @@
     color-scheme: light;
 
     --bg: #0B1220;
-    --bg-soft: #0F172A;
+    --bg-soft: #18293d;
     --surface: #162032;
     --surface-2: #1E293B;
     --line: #23354E;
@@ -310,7 +310,7 @@
     --text-muted: #94A3B8;
     --text-faint: #64748B;
 
-    --brand: #3E8ECC;
+    --brand: #448ecb;
     --brand-bright: #5FA9DD;
 
     --radius-sm: 10px;
@@ -320,7 +320,7 @@
     --ease: cubic-bezier(.22, .61, .36, 1);
     --shadow-card: 0 1px 2px rgba(0,0,0,.35), 0 12px 32px -12px rgba(0,0,0,.55);
     --shadow-lift: 0 2px 4px rgba(0,0,0,.4), 0 24px 48px -16px rgba(0,0,0,.65);
-    --ring: 0 0 0 3px rgba(95, 169, 221, .35);
+    --ring: 0 0 0 3px rgba(68, 142, 203, .35);
   }
 
   /* ---------- Base ---------- */
@@ -611,26 +611,26 @@
   html.light {
     color-scheme: light;
 
-    /* Complete Light Mode Design Tokens */
-    --bg: #F8FAFC;
-    --bg-soft: #F1F5F9;
+    /* Complete Light Mode Design Tokens — calibrated to Meash Logo Colors */
+    --bg: #F0F6FB;
+    --bg-soft: #E5F0F8;
     --surface: #FFFFFF;
-    --surface-2: #F8FAFC;
-    --line: #E2E8F0;
-    --line-soft: #EDF2F7;
+    --surface-2: #F0F6FB;
+    --line: #DCE8F2;
+    --line-soft: #EBF3F9;
 
-    --text: #0F172A;
-    --text-strong: #020617;
-    --text-body: #1E293B;
-    --text-muted: #334155;
-    --text-faint: #64748B;
+    --text: #18293d;
+    --text-strong: #0D1E30;
+    --text-body: #1E2E42;
+    --text-muted: #334860;
+    --text-faint: #5C7088;
 
-    --brand: #3E8ECC;
+    --brand: #448ecb;
     --brand-bright: #2F6FA8;
 
-    --shadow-card: 0 1px 3px rgba(15, 23, 42, .06), 0 10px 24px -4px rgba(15, 23, 42, .08);
-    --shadow-lift: 0 4px 6px -1px rgba(15, 23, 42, .08), 0 20px 25px -5px rgba(15, 23, 42, .12);
-    --ring: 0 0 0 3px rgba(62, 142, 204, .22);
+    --shadow-card: 0 1px 3px rgba(24, 41, 61, .06), 0 10px 24px -4px rgba(24, 41, 61, .08);
+    --shadow-lift: 0 4px 6px -1px rgba(24, 41, 61, .08), 0 20px 25px -5px rgba(24, 41, 61, .12);
+    --ring: 0 0 0 3px rgba(68, 142, 203, .22);
 
     background-color: var(--bg);
   }
@@ -707,7 +707,7 @@
     border-color: #E2E8F0 !important;
   }
   html.light .bg-fog {
-    background-color: #F8FAFC !important;
+    background-color: #F0F6FB !important;
   }
   html.light .bg-slate-50, html.light .bg-gray-50 {
     background-color: #F8FAFC !important;
@@ -1039,7 +1039,7 @@
   }
 
   /* ============ MEASH MODERN (approved sample) — hero 3D slider, photo service cards, 3-step, gallery ============ */
-  .ms-hero-panel { background: linear-gradient(160deg, #0A2A4A 0%, #061A30 78%); border-radius: 1.25rem; overflow: hidden; position: relative; box-shadow: 0 25px 50px rgba(6,26,48,.35); width: 100%; }
+  .ms-hero-panel { background: linear-gradient(160deg, #18293d 0%, #0d1e30 78%); border-radius: 1.25rem; overflow: hidden; position: relative; box-shadow: 0 25px 50px rgba(13,30,48,.35); width: 100%; }
   .ms-stage { position: relative; height: 520px; perspective: 1400px; outline: none; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; width: 100%; overflow: hidden; }
   .ms-stage.ms-dragging { cursor: grabbing; }
   .ms-stage.ms-dragging .ms-slide { transition: none; }
@@ -2115,22 +2115,22 @@
         </div>
       </article>
       <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
-        @php $bizPhoto = $servicePhoto['post_construction'] ?? null; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Post-Construction Handover & Long-Term Cleaning SLAs'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Post-Construction Handover & Long-Term Cleaning SLAs'; @endphp
+        @php $bizPhoto = $servicePhoto['post_construction'] ?? 'post-construction.jpg'; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Customer Loyalty & Re-cleaning Warranty'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Customer Loyalty & Re-cleaning Warranty'; @endphp
         @if($bizPhoto)<div class="ms-ph">{!! $responsiveImg($bizPhoto, $bizAltAm, $bizAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>@endif
         <div class="ms-bd">
-          <span class="ms-tag"><span data-lang-block="am">ለድርጅቶች</span><span data-lang-block="en">Business</span></span>
+          <span class="ms-tag"><span data-lang-block="am">ልዩ ዋስትና እና ቅናሽ</span><span data-lang-block="en">Loyalty &amp; Warranty</span></span>
           <h3 class="font-serif font-bold text-xl text-navy dark:text-white">
-            <span data-lang-block="am">ቋሚ የጽዳት ኮንትራት ውል</span>
-            <span data-lang-block="en">Long-Term Cleaning SLAs</span>
+            <span data-lang-block="am">የድጋሚ ጽዳት ቅናሽ እና የ 2 ሳምንት ዋስትና</span>
+            <span data-lang-block="en">Re-Cleaning Discount &amp; 14-Day Warranty</span>
           </h3>
           <p class="text-navy/65 dark:text-slate-300 text-sm mt-1 flex-1 ms-clamp2">
-            <span data-lang-block="am">ሳምንታዊ፣ በየ 15 ቀኑ ወይም ወርሃዊ ቋሚ የጽዳት ውል ከቋሚ ሰራተኞች እና ክትትል ጋር። ለኤምባሲዎች፣ ባንኮች እና ድርጅቶች።</span>
-            <span data-lang-block="en">Dedicated daily/weekly cleaners, site supervisors, and guaranteed SLA replacements for NGOs &amp; banks.</span>
+            <span data-lang-block="am">በስምዎ ተመዝግበው የጊዜ ቅናሽ ያግኙ፡ በ 2 ሳምንት ውስጥ ቢበላሽ በነፃ (Free) እናስተካክላለን! ለድጋሚ ፅዳት በ 1 ወር 50%፣ በ 2 ወር 30%፣ በ 4 ወር 20%፣ እስከ 8 ወር 15% ቅናሽ።</span>
+            <span data-lang-block="en">Tracked by your name &amp; phone: 14-day 100% free re-touch guarantee! Return discounts: 50% off in 1 mo, 30% off in 2 mos, 20% off in 4 mos, and 15% off up to 8 mos.</span>
           </p>
           <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
-            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal"><span data-lang-block="am">እስከ {{ (int)($pricingRules['weekly_discount'] ?? 15) }}% ቅናሽ</span><span data-lang-block="en">Up to {{ (int)($pricingRules['weekly_discount'] ?? 15) }}% off</span></div>
-            <a href="tel:{{ $phone1 }}" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
-              <i data-lucide="phone-call" class="w-4 h-4"></i> <span data-lang-block="am">ደውለው ይወያዩ</span><span data-lang-block="en">Call to discuss</span>
+            <div class="font-serif font-bold text-lg text-teal-dark dark:text-teal"><span data-lang-block="am">በ 2 ሳምንት በነፃ • እስከ 50% ቅናሽ</span><span data-lang-block="en">Free in 2 Wks • Up to 50% OFF</span></div>
+            <a href="#book" class="text-xs font-bold bg-navy text-white hover:bg-teal px-4 py-2 rounded-xl transition flex items-center gap-1.5 shrink-0 cursor-pointer min-h-[44px]">
+              <i data-lucide="shield-check" class="w-4 h-4"></i> <span data-lang-block="am">ቀጠሮ ያስይዙ</span><span data-lang-block="en">Book Now</span>
             </a>
           </div>
         </div>
@@ -2219,12 +2219,56 @@
         </div>
       </article>
     @endforelse
-    <!-- Contract CTA card (from the approved sample) -->
-    <article class="ms-svc ms-svc-cta col-span-full md:col-span-2 lg:col-span-3" style="grid-column: 1 / -1;">
-      <div class="ms-bd">
-        <h3 class="font-serif font-bold text-xl"><span data-lang-block="am">በየሳምንቱ ጽዳት ይፈልጋሉ?</span><span data-lang-block="en">Need cleaning every week?</span></h3>
-        <p class="text-sm"><span data-lang-block="am">ለቢሮዎች፣ ሆቴሎች፣ ግቢዎች እና ሕንፃዎች የሚደገም የጽዳት እቅዶች — ተመሳሳይ ቡድን በመደበኛ መርሃ ግብር።</span><span data-lang-block="en">Recurring cleaning plans for offices, hotels, compounds and buildings — the same crew on a regular schedule.</span></p>
-        <a href="#services" onclick="showServiceTab('business'); return false;" class="inline-flex items-center justify-center gap-2 bg-teal hover:bg-teal-dark text-white font-bold text-sm px-5 py-3 rounded-lg transition w-fit"><span data-lang-block="am">ኮንትራት ያግኙ</span><span data-lang-block="en">Get a Contract</span></a>
+    <!-- Customer Loyalty & Re-cleaning Warranty Banner -->
+    <article class="ms-svc ms-svc-cta col-span-full md:col-span-2 lg:col-span-3 p-6 sm:p-8" style="grid-column: 1 / -1; background: linear-gradient(150deg, #18293d 0%, #0d1e30 100%);">
+      <div class="ms-bd p-0">
+        <div class="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider mb-2">
+          <i data-lucide="award" class="w-4 h-4"></i>
+          <span data-lang-block="am">የሜሽ የደንበኞች ታማኝነት እና የጊዜ ዋስትና መርሃ-ግብር</span>
+          <span data-lang-block="en">MEASH CUSTOMER LOYALTY &amp; TIME-BASED WARRANTY</span>
+        </div>
+        <h3 class="font-serif font-bold text-2xl text-white">
+          <span data-lang-block="am">ለድጋሚ ደንበኞቻችን በስምዎ የሚጠበቁ ልዩ ቅናሾች እና ነፃ ዋስትና</span>
+          <span data-lang-block="en">Exclusive Return Discounts &amp; Free Guarantee Tracked by Name</span>
+        </h3>
+        <p class="text-sm text-slate-200 mt-1 max-w-2xl">
+          <span data-lang-block="am">አንድ ጊዜ የሜሽ ደንበኛ ከሆኑ ስምዎና ስልክዎ በሲስተማችን ተመዝግቦ ይያዛል፤ በሚቀጥለው ጽዳትዎ እንደ ጊዜው ርዝማኔ ትልቅ ቅናሽ ያገኛሉ፡</span>
+          <span data-lang-block="en">Once you clean with Meash, your history is remembered. Enjoy tiered return discounts and our signature 14-day touch-up warranty:</span>
+        </p>
+
+        <!-- 5 Tiers Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-4 w-full">
+          <div class="bg-white/10 backdrop-blur border border-amber-300/30 rounded-xl p-3 text-center">
+            <span class="inline-block px-2 py-0.5 bg-amber-400 text-slate-900 font-black text-[11px] rounded uppercase mb-1">100% ነፃ (FREE)</span>
+            <div class="font-bold text-white text-xs"><span data-lang-block="am">በ 2 ሳምንት ውስጥ</span><span data-lang-block="en">Within 2 Weeks</span></div>
+            <p class="text-[11px] text-amber-200 mt-1"><span data-lang-block="am">ቢበላሽ ወይም እድፍ ቢፈጠር በነፃ ድጋሚ ማስተካከል</span><span data-lang-block="en">Free touch-up if soiled or spotted</span></p>
+          </div>
+          <div class="bg-white/10 backdrop-blur border border-teal-300/30 rounded-xl p-3 text-center">
+            <span class="inline-block px-2 py-0.5 bg-[#448ecb] text-white font-black text-[11px] rounded uppercase mb-1">50% ቅናሽ (OFF)</span>
+            <div class="font-bold text-white text-xs"><span data-lang-block="am">በ 1 ወር ውስጥ</span><span data-lang-block="en">Within 1 Month</span></div>
+            <p class="text-[11px] text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት የግማሽ ዋጋ (50%) ቅናሽ</span><span data-lang-block="en">Half price for re-cleaning</span></p>
+          </div>
+          <div class="bg-white/10 backdrop-blur border border-white/15 rounded-xl p-3 text-center">
+            <span class="inline-block px-2 py-0.5 bg-sky-500 text-white font-black text-[11px] rounded uppercase mb-1">30% ቅናሽ (OFF)</span>
+            <div class="font-bold text-white text-xs"><span data-lang-block="am">በ 2 ወር ውስጥ</span><span data-lang-block="en">Within 2 Months</span></div>
+            <p class="text-[11px] text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት 30% ቅናሽ</span><span data-lang-block="en">30% off for re-cleaning</span></p>
+          </div>
+          <div class="bg-white/10 backdrop-blur border border-white/15 rounded-xl p-3 text-center">
+            <span class="inline-block px-2 py-0.5 bg-indigo-500 text-white font-black text-[11px] rounded uppercase mb-1">20% ቅናሽ (OFF)</span>
+            <div class="font-bold text-white text-xs"><span data-lang-block="am">በ 4 ወር ውስጥ</span><span data-lang-block="en">Within 4 Months</span></div>
+            <p class="text-[11px] text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት 20% ቅናሽ</span><span data-lang-block="en">20% off for re-cleaning</span></p>
+          </div>
+          <div class="bg-white/10 backdrop-blur border border-white/15 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
+            <span class="inline-block px-2 py-0.5 bg-blue-600 text-white font-black text-[11px] rounded uppercase mb-1">15% ቅናሽ (OFF)</span>
+            <div class="font-bold text-white text-xs"><span data-lang-block="am">ከ 5 - 8 ወር</span><span data-lang-block="en">5 to 8 Months</span></div>
+            <p class="text-[11px] text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት 15% ቅናሽ</span><span data-lang-block="en">15% off for re-cleaning</span></p>
+          </div>
+        </div>
+
+        <div class="pt-4 flex flex-wrap gap-3">
+          <a href="#book" class="inline-flex items-center justify-center gap-2 bg-[#448ecb] hover:bg-[#357ebd] text-white font-bold text-sm px-6 py-3 rounded-xl transition shadow-lg"><i data-lucide="sparkles" class="w-4 h-4"></i><span data-lang-block="am">ቀጠሮ ያስይዙ &bull; ቅናሹን ያግኙ</span><span data-lang-block="en">Book &amp; Claim Discount</span></a>
+          <a href="tel:{{ $phone1 }}" class="inline-flex items-center justify-center gap-2 bg-white/15 hover:bg-white/25 text-white font-bold text-sm px-5 py-3 rounded-xl transition"><i data-lucide="phone-call" class="w-4 h-4"></i><span>{{ $phone1 }}</span></a>
+        </div>
       </div>
     </article>
     </div>
@@ -2273,30 +2317,30 @@
 
 
 <!-- ================= CUSTOMER GUARANTEE & PROMISE BANNER ================= -->
-<section class="py-16 bg-gradient-to-r from-slate-900 via-navy to-slate-900 text-white border-b border-navy/10 relative overflow-hidden">
+<section class="py-16 bg-gradient-to-r from-[#18293d] via-[#0d1e30] to-[#18293d] text-white border-b border-navy/10 relative overflow-hidden">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 grid lg:grid-cols-[1.2fr_.8fr] gap-8 items-center">
     <div>
       <div class="inline-flex items-center gap-2 text-amber-300 font-bold text-xs uppercase tracking-wider mb-3 bg-amber-400/10 border border-amber-400/20 px-3 py-1 rounded-full">
         <i data-lucide="shield-check" class="w-4 h-4"></i>
-        <span data-lang-block="am">የደንበኛ ዋስትና (Customer Guarantee)</span>
-        <span data-lang-block="en">OUR PROMISE &amp; GUARANTEE</span>
+        <span data-lang-block="am">የሜሽ የ 2 ሳምንት ነፃ ዋስትና እና የደንበኛ ቃል ኪዳን</span>
+        <span data-lang-block="en">14-DAY 100% FREE GUARANTEE &amp; PROMISE</span>
       </div>
       <h3 class="font-serif font-bold text-2xl sm:text-3xl text-white leading-snug mb-3">
-        <span data-lang-block="am">"የጥራት ማረጋገጫችን እኛ አካባቢዎን ማጽዳት ብቻ ሳይሆን ንፅህናው ዘላቂ እንዲሆን እንሰራለን። እያንዳንዱ ሥራ የእርስዎን መመዘኛ ማሟላቱን የሚያረጋግጥ የተመደበ ተቆጣጣሪ (Supervisor) እንመድባለን።"</span>
-        <span data-lang-block="en">"We don't just clean; we maintain environments. Every service is backed by a dedicated supervisor to ensure your precise standards are met every single time."</span>
+        <span data-lang-block="am">"በ 2 ሳምንት ውስጥ ቢበላሽ በነፃ እናስተካክላለን — በስምዎና በስልክዎ የሚጠበቅ የጊዜ ቅናሽ ዋስትና!"</span>
+        <span data-lang-block="en">"14-Day 100% Free Re-touch if Soiled — Tiered Return Discounts Tracked by Your Name!"</span>
       </h3>
-      <p class="text-white/80 text-sm leading-relaxed">
-        <span data-lang-block="am">ለድርጅትዎ ንፅህና ዝግጁ ነዎት? የድርጅትዎን ገጽታ ዛሬውኑ ያድሱ። ስለ ጽዳቱ ለእኛ ይተውልንና እርስዎ ሥራዎ ላይ ብቻ ትኩረት ያድርጉ።</span>
-        <span data-lang-block="en">Ready for a Cleaner, Healthier Workspace? Partner with Meash Cleaning Solution today. Let us handle the details while you drive your business growth.</span>
+      <p class="text-white/85 text-sm leading-relaxed">
+        <span data-lang-block="am">እያንዳንዱ ስራ በቦታው ተቆጣጣሪ (Supervisor) ይመረመራል። ከተሰራ በኋላ በ 2 ሳምንት ውስጥ ማንኛውም እድፍ ቢፈጠር በነፃ እንመልሳለን፤ ለድጋሚ ጽዳትዎ በ 1 ወር 50%፣ በ 2 ወር 30%፣ በ 4 ወር 20%፣ እስከ 8 ወር 15% ቅናሽ በስምዎ ተመዝግቦ ይጠብቆታል።</span>
+        <span data-lang-block="en">Every service is verified on-site. If any spot or soil appears within 14 days, we fix it 100% free. Returning clients enjoy 50% off in 1 mo, 30% in 2 mos, 20% in 4 mos, and 15% up to 8 mos — remembered by your name.</span>
       </p>
     </div>
     <div class="flex flex-col sm:flex-row items-center justify-end gap-3.5">
-      <a href="tel:{{ $phone1 }}" class="w-full sm:w-auto bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-teal-600/30">
+      <a href="tel:{{ $phone1 }}" class="w-full sm:w-auto bg-[#448ecb] hover:bg-[#357ebd] text-white font-bold text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-[#448ecb]/30">
         <i data-lucide="phone-call" class="w-4 h-4"></i>
         <span>{{ $phone1 }} / {{ $phone2 }}</span>
       </a>
       <a href="#book" class="w-full sm:w-auto bg-white hover:bg-slate-100 !text-slate-900 font-black text-sm px-6 py-3.5 rounded-xl transition flex items-center justify-center gap-2 shadow" style="color: #0f172a !important;">
-        <i data-lucide="calendar" class="w-4 h-4 text-teal"></i>
+        <i data-lucide="calendar" class="w-4 h-4 text-[#448ecb]"></i>
         <span data-lang-block="am">ቀጠሮ ያስይዙ</span><span data-lang-block="en">Book Now</span>
       </a>
     </div>
@@ -2308,7 +2352,7 @@
 {{-- R6: before/after slider — only when at least one complete pair exists.
      Pairs are created in admin (Photos): two photos, same pair name, one
      role Before and one role After, both Added. Drag the handle to compare. --}}
-<section id="before-after" class="ms-sec py-16 md:py-24 bg-[#F4F8FC] dark:bg-slate-900 border-b border-navy/10">
+<section id="before-after" class="ms-sec py-16 md:py-24 bg-[#F0F6FB] dark:bg-slate-900 border-b border-navy/10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6">
     <div class="max-w-2xl mb-10">
       <div class="inline-flex items-center gap-2 text-teal-dark font-bold text-xs tracking-wider uppercase mb-3 ms-sec-label bg-teal/10 px-3.5 py-1.5 rounded-full">
@@ -2954,40 +2998,47 @@
           <input id="book-name" type="text" autocomplete="name" aria-label="Full name" placeholder="Full name / ሙሉ ስም" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
           <input id="book-phone" type="tel" inputmode="tel" autocomplete="tel" aria-label="Phone" placeholder="Phone / ስልክ ቁጥር (09...)" class="w-full mb-3 rounded-md border border-navy/15 px-4 py-3 text-sm" required>
 
-          <!-- Recurring Subscription Plan Selector -->
-          <div class="mb-4 p-3.5 rounded-xl bg-teal-light/50 border border-teal/20">
+          <!-- Customer Loyalty & Re-cleaning Discount Selector -->
+          <div class="mb-4 p-3.5 rounded-xl bg-[#EBF4FA] dark:bg-slate-800/80 border border-[#448ecb]/30">
             <label class="block text-xs font-bold text-teal-dark uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <i data-lucide="repeat" class="w-3.5 h-3.5 text-teal"></i>
-              <span data-lang-block="am">የአገልግሎት ድግግሞሽ እና የቅናሽ እቅድ (Contract Plan)</span>
-              <span data-lang-block="en">Service Frequency &amp; Contract Plan</span>
+              <i data-lucide="award" class="w-3.5 h-3.5 text-[#448ecb]"></i>
+              <span data-lang-block="am">የደንበኛ አይነት እና የድጋሚ ጽዳት ቅናሽ (Loyalty &amp; Re-cleaning Plan)</span>
+              <span data-lang-block="en">Customer Loyalty &amp; Re-cleaning Plan</span>
             </label>
-            <div class="grid grid-cols-2 gap-2 text-xs">
-              <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
-                <input type="radio" name="sub_plan" value="one_time" checked onchange="updateSubscriptionDiscount()" class="text-teal focus:ring-teal">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white dark:bg-slate-700/60 border border-navy/15 cursor-pointer hover:border-[#448ecb] transition">
+                <input type="radio" name="sub_plan" value="first_time" checked onchange="updateSubscriptionDiscount()" class="text-[#448ecb] focus:ring-[#448ecb]">
                 <div>
-                  <span class="font-bold block text-navy text-xs"><span data-lang-block="am">የአንድ ጊዜ</span><span data-lang-block="en">One-time</span></span>
-                  <span class="text-xs text-navy/50"><span data-lang-block="am">መደበኛ ዋጋ</span><span data-lang-block="en">Standard Rate</span></span>
+                  <span class="font-bold block text-navy dark:text-white text-xs"><span data-lang-block="am">አዲስ ደንበኛ (የመጀመሪያ ጽዳት)</span><span data-lang-block="en">First-Time Client</span></span>
+                  <span class="text-xs text-[#2F6FA8] font-semibold"><span data-lang-block="am">የ 2 ሳምንት ነፃ ዋስትና (14-Day Free Touch-Up)</span><span data-lang-block="en">14-Day Free Guarantee</span></span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
-                <input type="radio" name="sub_plan" value="weekly" onchange="updateSubscriptionDiscount()" class="text-teal focus:ring-teal">
+              <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white dark:bg-slate-700/60 border border-navy/15 cursor-pointer hover:border-[#448ecb] transition">
+                <input type="radio" name="sub_plan" value="m1" onchange="updateSubscriptionDiscount()" class="text-[#448ecb] focus:ring-[#448ecb]">
                 <div>
-                  <span class="font-bold block text-navy text-xs"><span data-lang-block="am">በየሳምንቱ</span><span data-lang-block="en">Weekly</span></span>
-                  <span class="text-xs font-extrabold text-teal-dark">15% ቅናሽ (15% OFF)</span>
+                  <span class="font-bold block text-navy dark:text-white text-xs"><span data-lang-block="am">ድጋሚ ደንበኛ (በ 1 ወር ውስጥ)</span><span data-lang-block="en">Return Client (Within 1 Month)</span></span>
+                  <span class="text-xs font-extrabold text-[#2F6FA8]">50% ቅናሽ (50% OFF)</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
-                <input type="radio" name="sub_plan" value="biweekly" onchange="updateSubscriptionDiscount()" class="text-teal focus:ring-teal">
+              <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white dark:bg-slate-700/60 border border-navy/15 cursor-pointer hover:border-[#448ecb] transition">
+                <input type="radio" name="sub_plan" value="m2" onchange="updateSubscriptionDiscount()" class="text-[#448ecb] focus:ring-[#448ecb]">
                 <div>
-                  <span class="font-bold block text-navy text-xs"><span data-lang-block="am">በየሁለት ሳምንቱ</span><span data-lang-block="en">Bi-weekly</span></span>
-                  <span class="text-xs font-extrabold text-teal-dark">10% ቅናሽ (10% OFF)</span>
+                  <span class="font-bold block text-navy dark:text-white text-xs"><span data-lang-block="am">ድጋሚ ደንበኛ (በ 2 ወር ውስጥ)</span><span data-lang-block="en">Return Client (Within 2 Months)</span></span>
+                  <span class="text-xs font-extrabold text-[#2F6FA8]">30% ቅናሽ (30% OFF)</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-navy/15 cursor-pointer hover:border-teal transition">
-                <input type="radio" name="sub_plan" value="monthly" onchange="updateSubscriptionDiscount()" class="text-teal focus:ring-teal">
+              <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white dark:bg-slate-700/60 border border-navy/15 cursor-pointer hover:border-[#448ecb] transition">
+                <input type="radio" name="sub_plan" value="m4" onchange="updateSubscriptionDiscount()" class="text-[#448ecb] focus:ring-[#448ecb]">
                 <div>
-                  <span class="font-bold block text-navy text-xs"><span data-lang-block="am">በየወሩ</span><span data-lang-block="en">Monthly</span></span>
-                  <span class="text-xs font-extrabold text-teal-dark">5% ቅናሽ (5% OFF)</span>
+                  <span class="font-bold block text-navy dark:text-white text-xs"><span data-lang-block="am">ድጋሚ ደንበኛ (በ 4 ወር ውስጥ)</span><span data-lang-block="en">Return Client (Within 4 Months)</span></span>
+                  <span class="text-xs font-extrabold text-[#2F6FA8]">20% ቅናሽ (20% OFF)</span>
+                </div>
+              </label>
+              <label class="flex items-center gap-2 p-2.5 rounded-lg bg-white dark:bg-slate-700/60 border border-navy/15 cursor-pointer hover:border-[#448ecb] transition sm:col-span-2">
+                <input type="radio" name="sub_plan" value="m5_8" onchange="updateSubscriptionDiscount()" class="text-[#448ecb] focus:ring-[#448ecb]">
+                <div>
+                  <span class="font-bold block text-navy dark:text-white text-xs"><span data-lang-block="am">ድጋሚ ደንበኛ (ከ 5 እስከ 8 ወር)</span><span data-lang-block="en">Return Client (5 to 8 Months)</span></span>
+                  <span class="text-xs font-extrabold text-[#2F6FA8]">15% ቅናሽ (15% OFF)</span>
                 </div>
               </label>
             </div>
@@ -4047,40 +4098,27 @@
     updateWizardTotal();
   }
 
-  let selectedSubPlan = 'one_time';
+  let selectedSubPlan = 'first_time';
   let livePricingRules = @json($pricingRules);
   const subPlanDiscounts = {
+    first_time: 0,
     one_time: 0,
-    weekly: Number(livePricingRules?.weekly_discount ?? 15),
-    biweekly: Number(livePricingRules?.biweekly_discount ?? 10),
-    monthly: Number(livePricingRules?.monthly_discount ?? 5)
+    m1: 50,
+    m2: 30,
+    m4: 20,
+    m5_8: 15
   };
-
-  // Fetch live settings asynchronously to keep pricing and accounts always fresh
-  (async function loadLiveSettings() {
-    try {
-      const res = await fetch('/api/public/settings');
-      if (res.ok) {
-        const d = await res.json();
-        if (d.pricing_rules) {
-          livePricingRules = d.pricing_rules;
-          subPlanDiscounts.weekly = Number(d.pricing_rules.weekly_discount ?? 15);
-          subPlanDiscounts.biweekly = Number(d.pricing_rules.biweekly_discount ?? 10);
-          subPlanDiscounts.monthly = Number(d.pricing_rules.monthly_discount ?? 5);
-        }
-      }
-    } catch (_) {}
-  })();
 
   function updateSubscriptionDiscount(){
     const checked = document.querySelector('input[name="sub_plan"]:checked');
-    selectedSubPlan = checked ? checked.value : 'one_time';
-    const discPercent = subPlanDiscounts[selectedSubPlan] || 0;
+    selectedSubPlan = checked ? checked.value : 'first_time';
+    const discPercent = subPlanDiscounts[selectedSubPlan] != null ? subPlanDiscounts[selectedSubPlan] : 0;
     const totalEl2 = document.getElementById('wiz-total-2');
+    const stickyEl = document.getElementById('wiz-total-sticky');
     if (!selectedSvcId) { if (totalEl2) totalEl2.innerHTML = `<span data-lang-block="am">አገልግሎት ይምረጡ ዋጋ ለማየት</span><span data-lang-block="en">Choose a service to see the price</span>`; return; }
     const price = servicePrices[selectedSvcId] || 0;
     const baseTotal = price * wizardQty;
-    const discountAmount = (baseTotal * discPercent) / 100;
+    const discountAmount = Math.round((baseTotal * discPercent) / 100);
     const finalTotal = Math.max(0, baseTotal - discountAmount);
 
     if (totalEl2) {
@@ -4091,14 +4129,25 @@
       }
     }
 
+    if (stickyEl && discPercent > 0) {
+      stickyEl.innerHTML = `<span class="line-through text-xs opacity-60 mr-1.5">${baseTotal.toLocaleString()} ETB</span> ${finalTotal.toLocaleString()} ETB`;
+    }
+
     const hint = document.getElementById('sub-discount-hint');
     const hintText = document.getElementById('sub-discount-text');
     if (hint && hintText) {
+      hint.classList.remove('hidden');
       if (discPercent > 0) {
-        hint.classList.remove('hidden');
-        hintText.innerText = `${selectedSubPlan === 'weekly' ? 'የሳምንት' : (selectedSubPlan === 'biweekly' ? 'የ2 ሳምንት' : 'የወር')} እቅድ ስለመረጡ ${discPercent}% (${discountAmount.toLocaleString()} ብር) ቅናሽ አግኝተዋል!`;
+        const labels = {
+          m1: 'በ 1 ወር ውስጥ ለድጋሚ ጽዳት 50%',
+          m2: 'በ 2 ወር ውስጥ ለድጋሚ ጽዳት 30%',
+          m4: 'በ 4 ወር ውስጥ ለድጋሚ ጽዳት 20%',
+          m5_8: 'ከ 5-8 ወር ውስጥ ለድጋሚ ጽዳት 15%'
+        };
+        const planName = labels[selectedSubPlan] || `${discPercent}%`;
+        hintText.innerText = `${planName} (${discountAmount.toLocaleString()} ብር) ቅናሽ ተቀንሶልዎታል!`;
       } else {
-        hint.classList.add('hidden');
+        hintText.innerText = 'አዲስ ደንበኛ: የ 2 ሳምንት ሙሉ ነፃ የጥራት ዋስትና (14-Day Free Touch-Up Warranty) ተካቷል!';
       }
     }
   }
@@ -4211,7 +4260,7 @@
     const btn = document.getElementById('btn-submit-booking');
     btn.disabled = true;
     const unitPrice = servicePrices[selectedSvcId] || 0;
-    const plan = document.querySelector('input[name="sub_plan"]:checked')?.value || 'one_time';
+    const plan = document.querySelector('input[name="sub_plan"]:checked')?.value || 'first_time';
     const payMethod = document.querySelector('input[name="web_payment_method"]:checked')?.value || 'cash';
     const payload = {
       customer_name: document.getElementById('book-name').value,
@@ -4225,7 +4274,7 @@
       appointment_time_slot: document.getElementById('book-time-slot').value,
       subscription_plan: plan,
       payment_method: payMethod,
-      notes: (document.getElementById('book-notes').value || 'Website booking') + ' | Property: ' + (document.getElementById('book-property-type')?.value || 'residential'),
+      notes: (document.getElementById('book-notes').value || 'Website booking') + ' | Loyalty Plan: ' + plan + ' | Property: ' + (document.getElementById('book-property-type')?.value || 'residential'),
       items: [{
         service_id: selectedSvcId,
         item_name: svcNames[selectedSvc] || 'Cleaning Service',
