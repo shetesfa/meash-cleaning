@@ -2115,7 +2115,7 @@
         </div>
       </article>
       <article class="ms-svc ms-fade-up bg-white dark:bg-slate-800 border border-navy/10 dark:border-white/10">
-        @php $bizPhoto = $servicePhoto['post_construction'] ?? 'post-construction.jpg'; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Customer Loyalty & Re-cleaning Warranty'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Customer Loyalty & Re-cleaning Warranty'; @endphp
+        @php $bizPhoto = $servicePhoto['post_construction'] ?? null; $bizCap = $bizPhoto ? ($captionByFile[basename((string)$bizPhoto)] ?? null) : null; $bizAltAm = ($bizCap['am'] ?? '') !== '' ? $bizCap['am'] : 'Customer Loyalty & Re-cleaning Warranty'; $bizAltEn = ($bizCap['en'] ?? '') !== '' ? $bizCap['en'] : 'Customer Loyalty & Re-cleaning Warranty'; @endphp
         @if($bizPhoto)<div class="ms-ph">{!! $responsiveImg($bizPhoto, $bizAltAm, $bizAltEn, ['sizes' => '(max-width: 900px) 50vw, 33vw']) !!}</div>@endif
         <div class="ms-bd">
           <span class="ms-tag"><span data-lang-block="am">ልዩ ዋስትና እና ቅናሽ</span><span data-lang-block="en">Loyalty &amp; Warranty</span></span>
@@ -2239,29 +2239,29 @@
         <!-- 5 Tiers Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-4 w-full">
           <div class="bg-white/10 backdrop-blur border border-amber-300/30 rounded-xl p-3 text-center">
-            <span class="inline-block px-2 py-0.5 bg-amber-400 text-slate-900 font-black text-[11px] rounded uppercase mb-1">100% ነፃ (FREE)</span>
+            <span class="inline-block px-2 py-0.5 bg-amber-400 text-slate-900 font-black text-xs rounded uppercase mb-1">100% ነፃ (FREE)</span>
             <div class="font-bold text-white text-xs"><span data-lang-block="am">በ 2 ሳምንት ውስጥ</span><span data-lang-block="en">Within 2 Weeks</span></div>
-            <p class="text-[11px] text-amber-200 mt-1"><span data-lang-block="am">ቢበላሽ ወይም እድፍ ቢፈጠር በነፃ ድጋሚ ማስተካከል</span><span data-lang-block="en">Free touch-up if soiled or spotted</span></p>
+            <p class="text-xs text-amber-200 mt-1"><span data-lang-block="am">ቢበላሽ ወይም እድፍ ቢፈጠር በነፃ ድጋሚ ማስተካከል</span><span data-lang-block="en">Free touch-up if soiled or spotted</span></p>
           </div>
           <div class="bg-white/10 backdrop-blur border border-teal-300/30 rounded-xl p-3 text-center">
-            <span class="inline-block px-2 py-0.5 bg-[#448ecb] text-white font-black text-[11px] rounded uppercase mb-1">50% ቅናሽ (OFF)</span>
+            <span class="inline-block px-2 py-0.5 bg-[#448ecb] text-white font-black text-xs rounded uppercase mb-1">50% ቅናሽ (OFF)</span>
             <div class="font-bold text-white text-xs"><span data-lang-block="am">በ 1 ወር ውስጥ</span><span data-lang-block="en">Within 1 Month</span></div>
-            <p class="text-[11px] text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት የግማሽ ዋጋ (50%) ቅናሽ</span><span data-lang-block="en">Half price for re-cleaning</span></p>
+            <p class="text-xs text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት የግማሽ ዋጋ (50%) ቅናሽ</span><span data-lang-block="en">Half price for re-cleaning</span></p>
           </div>
           <div class="bg-white/10 backdrop-blur border border-white/15 rounded-xl p-3 text-center">
-            <span class="inline-block px-2 py-0.5 bg-sky-500 text-white font-black text-[11px] rounded uppercase mb-1">30% ቅናሽ (OFF)</span>
+            <span class="inline-block px-2 py-0.5 bg-sky-500 text-white font-black text-xs rounded uppercase mb-1">30% ቅናሽ (OFF)</span>
             <div class="font-bold text-white text-xs"><span data-lang-block="am">በ 2 ወር ውስጥ</span><span data-lang-block="en">Within 2 Months</span></div>
-            <p class="text-[11px] text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት 30% ቅናሽ</span><span data-lang-block="en">30% off for re-cleaning</span></p>
+            <p class="text-xs text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት 30% ቅናሽ</span><span data-lang-block="en">30% off for re-cleaning</span></p>
           </div>
           <div class="bg-white/10 backdrop-blur border border-white/15 rounded-xl p-3 text-center">
-            <span class="inline-block px-2 py-0.5 bg-indigo-500 text-white font-black text-[11px] rounded uppercase mb-1">20% ቅናሽ (OFF)</span>
+            <span class="inline-block px-2 py-0.5 bg-indigo-500 text-white font-black text-xs rounded uppercase mb-1">20% ቅናሽ (OFF)</span>
             <div class="font-bold text-white text-xs"><span data-lang-block="am">በ 4 ወር ውስጥ</span><span data-lang-block="en">Within 4 Months</span></div>
-            <p class="text-[11px] text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት 20% ቅናሽ</span><span data-lang-block="en">20% off for re-cleaning</span></p>
+            <p class="text-xs text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት 20% ቅናሽ</span><span data-lang-block="en">20% off for re-cleaning</span></p>
           </div>
           <div class="bg-white/10 backdrop-blur border border-white/15 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
-            <span class="inline-block px-2 py-0.5 bg-blue-600 text-white font-black text-[11px] rounded uppercase mb-1">15% ቅናሽ (OFF)</span>
+            <span class="inline-block px-2 py-0.5 bg-blue-600 text-white font-black text-xs rounded uppercase mb-1">15% ቅናሽ (OFF)</span>
             <div class="font-bold text-white text-xs"><span data-lang-block="am">ከ 5 - 8 ወር</span><span data-lang-block="en">5 to 8 Months</span></div>
-            <p class="text-[11px] text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት 15% ቅናሽ</span><span data-lang-block="en">15% off for re-cleaning</span></p>
+            <p class="text-xs text-slate-200 mt-1"><span data-lang-block="am">ለድጋሚ ጽዳት 15% ቅናሽ</span><span data-lang-block="en">15% off for re-cleaning</span></p>
           </div>
         </div>
 
@@ -4773,7 +4773,7 @@
 
         let subBadge = '';
         if (ord.subscription_plan && ord.subscription_plan !== 'one_time') {
-          const pNames = { weekly: 'የሳምንት (Weekly - 15% OFF)', biweekly: 'የ2 ሳምንት (Bi-weekly - 10% OFF)', monthly: 'የወር (Monthly - 5% OFF)' };
+          const pNames = { weekly: 'የሳምንት (Weekly - 15% OFF)', biweekly: 'የ2 ሳምንት (Bi-weekly - 10% OFF)', monthly: 'የወር (Monthly - 5% OFF)', first_time: 'የመጀመሪያ (First time)', m1: 'ድጋሚ በ 1 ወር (50% OFF)', m2: 'ድጋሚ በ 2 ወር (30% OFF)', m4: 'ድጋሚ በ 4 ወር (20% OFF)', m5_8: 'ድጋሚ በ 5-8 ወር (15% OFF)' };
           subBadge = `<div class="mt-2 text-xs font-bold text-teal-dark bg-teal-light px-3 py-1 rounded-lg inline-flex items-center gap-1.5">
             <i data-lucide="repeat" class="w-3.5 h-3.5 text-teal"></i>
             <span>${pNames[ord.subscription_plan] || ord.subscription_plan}</span>

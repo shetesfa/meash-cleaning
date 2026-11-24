@@ -67,7 +67,11 @@ class PublicWebsiteController extends Controller
             'longitude' => 'nullable|numeric',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time_slot' => 'required|string|max:64',
-            'subscription_plan' => 'nullable|string|in:one_time,weekly,biweekly,monthly',
+            // Loyalty tiers (2026-11-24): the website booking form sends
+            // first_time / m1 / m2 / m4 / m5_8 (see subPlanDiscounts in
+            // website.blade.php). They are one-off return discounts, NOT
+            // recurring plans — no Subscription profile is created for them.
+            'subscription_plan' => 'nullable|string|in:one_time,first_time,weekly,biweekly,monthly,m1,m2,m4,m5_8',
             'payment_method' => 'nullable|string|in:cash,telebirr,cbe,cbe_birr,bank_transfer',
             'notes' => 'nullable|string',
             'marketing_consent' => 'nullable|boolean',
@@ -129,6 +133,14 @@ class PublicWebsiteController extends Controller
                 'biweekly' => (float)($pricingRules['biweekly_discount'] ?? 10.0),
                 'monthly' => (float)($pricingRules['monthly_discount'] ?? 5.0),
                 'one_time' => 0.0,
+                // Fixed loyalty tiers — must match subPlanDiscounts in
+                // website.blade.php (50% in 1 mo, 30% in 2 mos, 20% in
+                // 4 mos, 15% up to 8 mos). first_time = no discount.
+                'first_time' => 0.0,
+                'm1' => 50.0,
+                'm2' => 30.0,
+                'm4' => 20.0,
+                'm5_8' => 15.0,
             ];
             $discPercent = $discRates[$plan] ?? 0.0;
 
@@ -196,37 +208,44 @@ class PublicWebsiteController extends Controller
             $order->subtotal = $subtotalCalc;
             $order->total = $subtotalCalc;
 
-            // Apply subscription recurring discount if selected
+            // Apply subscription / loyalty discount if selected
             if ($discPercent > 0) {
                 $subDiscount = round(($subtotalCalc * $discPercent) / 100.0, 2);
                 $order->subscription_discount = $subDiscount;
                 $order->discount = $subDiscount;
                 $order->total = max(0, $subtotalCalc - $subDiscount);
 
-                // Create recurring subscription profile
-                $startDate = Carbon::parse($order->appointment_date);
-                $nextDate = match ($plan) {
-                    'weekly' => $startDate->copy()->addWeek(),
-                    'biweekly' => $startDate->copy()->addWeeks(2),
-                    'monthly' => $startDate->copy()->addMonth(),
-                    default => null,
-                };
+                // A recurring subscription profile is ONLY for the
+                // recurring plans. Loyalty tiers (m1/m2/m4/m5_8) are
+                // one-off return discounts — they must not create a
+                // Subscription row (plan_type only holds
+                // weekly/biweekly/monthly).
+                if (in_array($plan, ['weekly', 'biweekly', 'monthly'], true)) {
+                    // Create recurring subscription profile
+                    $startDate = Carbon::parse($order->appointment_date);
+                    $nextDate = match ($plan) {
+                        'weekly' => $startDate->copy()->addWeek(),
+                        'biweekly' => $startDate->copy()->addWeeks(2),
+                        'monthly' => $startDate->copy()->addMonth(),
+                        default => null,
+                    };
 
-                Subscription::create([
-                    'customer_id' => $customer->id,
-                    'plan_type' => $plan,
-                    'discount_percent' => $discPercent,
-                    'service_summary' => implode(', ', $itemsSummary),
-                    'base_price' => $subtotalCalc,
-                    'discounted_price' => max(0, $subtotalCalc - $subDiscount),
-                    'billing_cycle' => $plan,
-                    'preferred_day' => $startDate->format('l'),
-                    'preferred_time_slot' => $order->appointment_time_slot,
-                    'start_date' => $startDate,
-                    'next_service_date' => $nextDate,
-                    'status' => 'active',
-                    'notes' => "Auto-created from website booking #{$orderNumber}",
-                ]);
+                    Subscription::create([
+                        'customer_id' => $customer->id,
+                        'plan_type' => $plan,
+                        'discount_percent' => $discPercent,
+                        'service_summary' => implode(', ', $itemsSummary),
+                        'base_price' => $subtotalCalc,
+                        'discounted_price' => max(0, $subtotalCalc - $subDiscount),
+                        'billing_cycle' => $plan,
+                        'preferred_day' => $startDate->format('l'),
+                        'preferred_time_slot' => $order->appointment_time_slot,
+                        'start_date' => $startDate,
+                        'next_service_date' => $nextDate,
+                        'status' => 'active',
+                        'notes' => "Auto-created from website booking #{$orderNumber}",
+                    ]);
+                }
             }
             $order->save();
 

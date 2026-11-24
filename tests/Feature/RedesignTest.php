@@ -39,7 +39,9 @@ class RedesignTest extends TestCase
         $res->assertSee('class="ms-sec py-16 md:py-24', false);
         // The 5-step process section was removed in R4 (only the 3-step
         // process remains); the deep navy block is now ONLY the final CTA.
-        $res->assertSee('bg-gradient-to-r from-slate-900 via-navy to-slate-900', false);
+        // (2026-11-24 loyalty palette: the guarantee section's gradient
+        // is now the logo-blue #18293d → #0d1e30 → #18293d.)
+        $res->assertSee('bg-gradient-to-r from-[#18293d] via-[#0d1e30] to-[#18293d]', false);
         $res->assertDontSee('id="process" class="ms-sec bg-navy', false);
         // One consistent heading system exists.
         $res->assertSee('.ms-sec-label', false);
@@ -221,7 +223,9 @@ class RedesignTest extends TestCase
         $this->assertStringContainsString('id="tab-business"', $svc);
         $this->assertStringContainsString('id="tab-home"', $svc);
 
-        // Business tab: the 6 commercial sectors, with photos and real prices.
+        // Business tab: 5 commercial sectors + the Loyalty & Warranty
+        // card (2026-11-24: it replaced the Long-Term Cleaning SLAs card),
+        // with photos and real prices.
         $bizStart = strpos($svc, 'id="tab-business"');
         $bizEnd = strpos($svc, 'id="tab-home"');
         $biz = substr($svc, $bizStart, $bizEnd - $bizStart);
@@ -231,7 +235,8 @@ class RedesignTest extends TestCase
         $this->assertStringContainsString('Restaurant &amp; Café Cleaning', $biz);
         $this->assertStringContainsString('Auditorium &amp; Hall Chairs', $biz);
         $this->assertStringContainsString('Commercial Glass Facades', $biz);
-        $this->assertStringContainsString('Long-Term Cleaning SLAs', $biz);
+        $this->assertStringContainsString('Re-Cleaning Discount &amp; 14-Day Warranty', $biz);
+        $this->assertStringContainsString('Loyalty &amp; Warranty', $biz);
         $this->assertStringContainsString('3,500 ETB', $biz);
         $this->assertStringContainsString('3,000 ETB', $biz);
         $this->assertStringContainsString('70 ETB / sqm', $biz);
